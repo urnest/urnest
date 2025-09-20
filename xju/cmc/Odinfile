@@ -25,6 +25,7 @@ perflog.py.test+(%py-opts):py3.exec.cov
 ThreadMutexLockCondition.py.test+(%py-opts):py3.exec.cov
 Process.py.test+(%py-opts):py3.exec.cov
 AsyncTaskMutexLockCondition.py.test+(%py-opts):py3.exec.cov
+AsyncThread.py.test+(%py-opts):py3.exec.cov
 AsyncServiceQueue.py.test+(%py-opts):py3.exec.cov
 
 %py-opts==<<

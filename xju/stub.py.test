@@ -18,7 +18,7 @@
 from xju.stub import SyncFunctionStub
 from functools import partial
 from typing import Callable
-from asyncio import run,wait_for,timeout
+from asyncio import run,wait_for,timeout,sleep,Timeout
 
 from xju.assert_ import Assert
 from xju.cmc import AsyncThread
@@ -34,9 +34,18 @@ class X:
     async def drive(self) -> str:
         "drive"
         try:
+            await sleep(0.5)
             return self.f(8, 'red', d=2.2)
         except Exception as e:
             raise in_function_context(X.drive,vars()) from None
+        pass
+    async def drive_slowly(self) -> str:
+        "drive slowly"
+        try:
+            await sleep(10)
+            return await self.drive()
+        except Exception as e:
+            raise in_function_context(X.drive_slowly,vars()) from None
         pass
 
 async def test1():
@@ -55,6 +64,7 @@ async def test1():
             Assert(await t.result)=='yep'
             pass
         # check what happens when stub_f() raises an exception
+        # during call to object_being_tested.drive()
         with AsyncThread(object_being_tested.drive) as t:
             c=await stub_f.called()
             # note that at this point, the thread running object_being_tested.drive()
@@ -68,7 +78,48 @@ async def test1():
             else:
                 assert False, x
             pass
-        pass
-    pass
 
+        # check what happens when stub_f called with wrong params i.e. assert fails
+        try:
+            with AsyncThread(object_being_tested.drive) as t:
+                with await stub_f.called() as c:
+                    # note that at this point, the thread running object_being_tested.drive()
+                    # is blocked, waiting for us to supply a result for the stub_f() call it has made
+                    Assert( (c.params.a,c.params.b,c.params.d) )==(9,'red',2.2)  # type: ignore  # need mypy plugin
+                    c.return_('yep')
+                    Assert(await t.result)=='yep'
+                    pass
+                pass
+            pass
+        except Exception as e:
+            Assert(readable_repr(e))=="(8, 'red', 2.2) is not equal to (9, 'red', 2.2)"
+            pass
+        else:
+            assert False
+    # REVISIT:
+    # /home/xju/urnest/xju/stub.py:94: failed to with Lock(self.guard) as l: because
+    # /home/xju/urnest/xju/cmc/__init__.py:580: release unlocked lock
+    # check what happens when stub_f() is not called in time
+    # during call to object_being_tested.drive()
+    # try:
+    #         async with timeout(0.01):
+    #             c=await stub_f.called(max_time_to_cancel=Duration(0.02))
+    #             pass
+    #         pass
+    #     pass
+    # except TimeoutError as e:
+    #     Assert(readable_repr(e))==''
+    # else:
+    #     assert False, 'should have timed out'
+    #     pass
+    # pass
+
+    # coverage
+    try:
+        SyncFunctionStub(real_f, Duration(0.01))(7,'sed')
+    except Exception as e:
+        Assert(readable_repr(e))=="Failed to do (fake) call to function with args (7, 'sed') and kwargs {} because\nTimeoutError."
+    else:
+        assert False
+        
 run(test1())

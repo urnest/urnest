@@ -15,7 +15,7 @@
 #
 from asyncio import Future,Queue,get_running_loop
 from inspect import BoundArguments,Signature,signature
-from typing import Callable,Any
+from typing import Callable,Any,Self
 from xju.time import now,Duration,Timestamp
 from xju.cmc import Lock,Mutex,Condition
 from xju.xn import in_function_context
@@ -41,6 +41,13 @@ class FunctionCalled:
         self.changed=Condition(self.guard)
         self.result = Future()
         pass
+    def __enter__(self) -> Self:
+        return self
+    def __exit__(self, t, e, b) -> None:
+        if not self.result.done():
+            with Lock(self.guard) as l:
+                self.result.cancel()
+                self.changed.notify_all(l)
     def return_(self, result) -> None:
         with Lock(self.guard) as l:
             self.result.set_result(result)
@@ -90,15 +97,12 @@ class SyncFunctionStub:
         wrap this function with asyncio.timeout to provide an overall timeout
         i.e. to actually trigger that cancellation
         """
-        try:
-            with Lock(self.guard) as l:
-                while not self.calls_in_progress:
-                    await get_running_loop().run_in_executor(
-                        None, self.changed.wait_for, l, max_time_to_cancel)
-                    pass
-                return self.calls_in_progress.pop(0)
-        except Exception:
-            raise in_function_context(SyncFunctionStub.called,vars()) from None
+        with Lock(self.guard) as l:
+            while not self.calls_in_progress:
+                await get_running_loop().run_in_executor(
+                    None, self.changed.wait_for, l, max_time_to_cancel)
+                pass
+            return self.calls_in_progress.pop(0)
         pass
 
     def __call__(self, *args, **kwargs) -> Any:

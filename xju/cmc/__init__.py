@@ -1305,28 +1305,37 @@ class AsyncThread(Generic[T]):
         self.f=f
         self.result=self.client_loop.create_future()
         pass
+
+    async def amain(self) -> T:
+        return await self.f()
+
     def __enter__(self) -> Self:
+        """await self.f() in new thread with new event loop
+           - result becomes available in self.f
+           - context exit before result stops the new threads event loop
+        """
         def main():
             try:
-                result=self.loop.run_until_complete(self.f())
+                result=self.loop.run_until_complete(self.task)
                 def done(result=result) -> None:
                     self.result.set_result(result)
                     pass
                 self.client_loop.call_soon_threadsafe(done)
                 pass
-            except Exception as e:
+            except BaseException as e:
                 def failed(e=e) -> None:
                     self.result.set_exception(e)
                     pass
                 self.client_loop.call_soon_threadsafe(failed)
                 pass
             pass
+        self.task: asyncio.Task=self.loop.create_task(self.amain())
         self.t=Thread(main, lambda: None)
         self.t.__enter__()
         return self
     def __exit__(self, *_) -> None:
         if self.t:
-            self.loop.stop()
+            self.loop.call_soon_threadsafe(self.task.cancel)
             self.t.__exit__(*_)
             pass
         pass
