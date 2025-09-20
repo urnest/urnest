@@ -32,7 +32,10 @@ from xju.json_codec import (
     CustomStringKeyClassCodec,
     CustomNonStringKeyClassCodec,
     PythonAttrName,
-    JsonAttrName
+    JsonAttrName,
+    BackRefCodecImpl,
+    NoopCodecImpl,
+    indent,
 )
 
 from typing import cast,Type,Literal,Any,Self,NewType,Generic,TypeVar,Callable,Union,Final,ClassVar
@@ -1811,3 +1814,37 @@ except:
 else:
     jsonschema.validate(codec(B).encode(And( (Or( ('1','2',[]) ),'3',[And( ('4','6',[]) )]) )),
                         codec(B).get_json_schema())
+    pass
+
+# backref can't ever be used as json object key, but for coverage:
+Assert(BackRefCodecImpl(NoopCodecImpl(str)).get_object_key_json_schema({}))=={'$ref': '#/definitions/str'}
+Assert(BackRefCodecImpl(NoopCodecImpl(str)).typescript_as_object_key_type())==TypeScriptSourceCode("string")
+Assert(BackRefCodecImpl(NoopCodecImpl(str)).get_typescript_isa_key(TypeScriptSourceCode("x"),typescript_namespace))==TypeScriptSourceCode("(typeof (x) == 'string')")
+Assert(BackRefCodecImpl(NoopCodecImpl(str)).get_typescript_asa_key(TypeScriptSourceCode("x"),typescript_namespace))==TypeScriptSourceCode("((v: any): string => {\n    if (typeof v !== 'string' /* string */) throw new Error(`${v} is not a string it is a ${typeof v}`);\n    return v as string;\n})(x)")
+
+# coverage of nested Self
+@dataclass
+class SList:
+    @dataclass
+    class Tail:
+        val: int
+        next: Self | None
+    val: int
+    tail: Tail | None
+    pass
+
+Assert(codec(SList).encode(SList(3,SList.Tail(5,None))))=={'val': 3, 'tail': {'val': 5, 'next': None}}
+
+@dataclass
+class TSList:
+    @dataclass
+    class Tail(Generic[Q]):
+        val: Q
+        next: Self | None
+    val: int
+    tail: Tail[int] | None
+    pass
+
+Assert(codec(TSList).encode(TSList(3,TSList.Tail(5,None))))=={'val': 3, 'tail': {'val': 5, 'next': None}}
+
+Assert(indent(4, TypeScriptSourceCode('')))==''

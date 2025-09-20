@@ -2721,8 +2721,8 @@ def _explodeSchemaRec(
         if type(t) is _UnionGenericAlias:
             return UnionCodecImpl(get_args(t),
                                   {at:_explodeSchema(at, type_var_map,codec_backrefs) for at in get_args(t)})
-        if t is Self:
-            return codec_backrefs[Self]
+        # note t Self is handled in _explodeSchema
+
         if type(t) is _GenericAlias:
             if type(get_origin(t)) is _SpecialForm and str(get_origin(t))=="typing.Final":
                 return _explodeSchema(get_args(t)[0],type_var_map,codec_backrefs)

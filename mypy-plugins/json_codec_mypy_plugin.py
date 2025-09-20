@@ -403,6 +403,10 @@ def verify_type_encodable(
                                 if not isinstance(attr_node.node.type, KnownExpressionType.__args__):
                                     raise CodecParamInvalid(f"{t.type._fullname}.{attr_name} type ({attr_node.node.type}) is not encodable")
                                 verify_type_encodable(attr_node.node.type,checker_api,seen)
+                                
+                            case SymbolNode() if isinstance(attr_node.node, TypeInfo):
+                                # e.g. nested class def
+                                pass
                             case SymbolNode() if not isinstance(attr_node.node, (FuncDef, OverloadedFuncDef, Decorator) ):
                                 raise CodecParamInvalid(f"{t.type._fullname}.{attr_name} unexpected {attr_node.node}")
                             case None:
