@@ -26,7 +26,6 @@ from xju.json_codec import (
     AnyJsonCodecImpl,
     encode_attr_as,
     dont_encode_attr,
-    TypeScriptBackRefs,
     TypeScriptSourceCode,
     TypeScriptNamespace,
     CustomClassCodec,

@@ -6,7 +6,7 @@ from types import NoneType
 from ipaddress import IPv4Address,IPv4Interface
 from xju.json_codec import codec, TypeScriptNamespace, TypeScriptSourceCode, TypeScriptNamespace
 from xju.json_codec import TypeScriptUQN, AnyJsonCodecImpl, encode_attr_as, PythonAttrName, JsonAttrName
-from xju.json_codec import JsonType,TypeScriptBackRefs, dont_encode_attr
+from xju.json_codec import JsonType, dont_encode_attr
 from xju.json_codec import CustomNonStringKeyClassCodec,CustomClassCodec,CustomStringKeyClassCodec
 from xju.misc import ByteCount
 from xju.newtype import Str
@@ -1685,7 +1685,7 @@ else:
 Assert(codec(O).typescript_as_object_key_type())==TypeScriptSourceCode("string /* O */")
 
 try:
-    AnyJsonCodecImpl().typescript_as_object_key_type(None)
+    AnyJsonCodecImpl().typescript_as_object_key_type()
 except Exception as e:
     Assert(readable_repr(e))=='any is not allowed as a typescript object key type'
 else:
@@ -1731,13 +1731,6 @@ except Exception as e:
 else:
     assert False
     pass
-
-back_refs=TypeScriptBackRefs(
-    type_back_ref=lambda: TypeScriptSourceCode("fred"),
-    as_object_key_type_back_ref=lambda: TypeScriptSourceCode("jock"),
-    isa_back_ref=lambda x: TypeScriptSourceCode("ann"),
-    asa_back_ref=lambda x: TypeScriptSourceCode("polly")
-)
 
 try:
     codec(list[int]).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)
@@ -1959,7 +1952,7 @@ else:
     pass
 
 try:
-    AnyJsonCodecImpl().get_typescript_isa_key(TypeScriptSourceCode('k'),namespace,None)
+    AnyJsonCodecImpl().get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)
 except Exception as e:
     Assert(readable_repr(e))=='any is not allowed as a typescript object key type'
 else:
@@ -1983,7 +1976,7 @@ else:
     pass
 
 try:
-    AnyJsonCodecImpl().get_typescript_asa_key(TypeScriptSourceCode('k'),namespace,None)
+    AnyJsonCodecImpl().get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)
 except Exception as e:
     Assert(readable_repr(e))=='any is not allowed as a typescript object key type'
 else:
