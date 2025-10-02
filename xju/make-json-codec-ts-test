@@ -300,11 +300,34 @@ codec(B).add_typescript_alias(namespace, [TypeScriptUQN('B')])
 codec(And).ensure_typescript_defs(namespace)
 codec(Or).ensure_typescript_defs(namespace)
 
+@dataclass(init=False)
+class MixedEnumValue:
+    def __init__(self, *args, **argv):
+        match len(args):
+            case 0:
+                self.k = argv['k']
+                self.v = argv['v']
+            case 1:
+                self.k, self.v = args[0].k, args[0].v
+            case _:
+                self.k, self.v = args
+
+    k: int
+    v: str
+
+class MixedEnum(MixedEnumValue, Enum):
+    a = MixedEnumValue(1, 'fred')
+    b = MixedEnumValue(2, 'jock')
+    pass
+
+mixed_enum_codec=codec(MixedEnum)
+mixed_enum_codec.ensure_typescript_defs(namespace)
+
 print(namespace.get_formatted_defs())
 
 print(f'''\
 function str(x:any):string {{ return `${{x}}`; }}
-function isObject(x:any):x is object {{ return typeof(x) === 'object'; }}
+function isObject(x:any):x is object {{ return x !== null && typeof(x) === 'object'; }}
 function assert_equal<T>(x:T, y:T){{
     if (Array.isArray(x) && Array.isArray(y)){{
         assert_arrays_equal<any>(x,y);
@@ -312,7 +335,7 @@ function assert_equal<T>(x:T, y:T){{
     else if (isObject(x) && isObject(y)){{
         assert_objects_equal(x,y);
     }}
-    else if (!(x==y)){{
+    else if (!(x===y)){{
         throw new Error(`${{format_(x)}} != ${{format_(y)}}`);
     }}
 }}
@@ -837,7 +860,7 @@ const test_aaaa=() => {{
         assert_never_reached();
     }}
     catch(e){{
-        assert_x_contains_y(str(e), "Error: [object Object] is not a {{ [key: string /* j ock|O.a|string ** Surname ** */]: number }} because Error: element 1 s is invalid because Error: 1 s is not a string /* j ock|O.a|string ** Surname ** */ because Error: (string) 1 s is not the string j ock and the string 1 s is not O.a and 1 s does not match pattern ^\\\\S*$");
+        assert_x_contains_y(str(e), 'Error: [object Object] is not a {{ [key: string /* j ock|O.a|string ** Surname ** */]: number }} because Error: element 1 s is invalid because Error: 1 s is not a string /* j ock|O.a|string ** Surname ** */ because Error: (string) 1 s is not the string j ock and "1 s" != "fred" and 1 s does not match pattern ^\\\\S*$');
     }}
 
     assert_true({indent(8,codec(dict[Literal["j ock"]|Literal[O.a]|Surname,int]).get_typescript_isa(TypeScriptSourceCode('{"1": 8, "true": 9}'),namespace))});
@@ -876,7 +899,7 @@ const test_bbbb=() => {{
         assert_never_reached();
     }}
     catch(e){{
-        assert_x_contains_y(str(e), "Error: [object Object] is not a {{ [key: string /* Pnum */]: number }} because Error: element ann is invalid because Error: ann is not a string /* Pnum */ key because Error: the string ann is not Pnum.a and the string ann is not Pnum.b");
+        assert_x_contains_y(str(e), 'Error: [object Object] is not a {{ [key: string /* Pnum */]: number }} because Error: element ann is invalid because Error: "ann" is not a string /* Pnum */ key because Error: "ann" != "aa" and "ann" != "bb"');
     }}
 
     assert_true({indent(8,codec(dict[Pnum,int]).get_typescript_isa(TypeScriptSourceCode('{"bb": 8, "aa": 9}'),namespace))});
@@ -1464,10 +1487,33 @@ print(f'''
         assert_never_reached();
     }}
     catch(e){{
-        assert_x_contains_y(str(e), "Error: 9 is not a O because Error: the number 9 is not O.a and the number 9 is not O.b");
+        assert_x_contains_y(str(e), 'Error: 9 is not a O because Error: 9 != "fred" and 9 != "jock"');
     }}
     if (isInstanceOfO(x)) {{
         throw new Error(`${{x}} (of type ${{typeof x}}) is (unexpectedly) a O`);
+    }}
+}})();
+''')
+
+print(f'''
+//enum with mixed in type
+(() => {{
+    var x:any = {{"k":1,"v":"fred"}};;
+    var y:MixedEnum = asInstanceOfMixedEnum(x);
+    assert_equal(y, {{"k":1,"v":"fred"}});
+    if (!isInstanceOfMixedEnum(x)) {{
+        throw new Error(`${{x}} (of type ${{typeof x}}) is not a MixedEnum`);
+    }}
+    x = "fred";
+    try{{
+        y = asInstanceOfMixedEnum(x);
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), 'Error: "fred" is not a MixedEnum because Error: "fred" != {{ k:1; v:"fred";}} and "fred" != {{ k:2; v:"jock";}}');
+    }}
+    if (isInstanceOfMixedEnum(x)) {{
+        throw new Error(`${{x}} (of type ${{typeof x}}) is (unexpectedly) a MixedEnum`);
     }}
 }})();
 ''')
@@ -1534,7 +1580,7 @@ print(f'''
         assert_never_reached();
     }}
     catch(e){{
-        assert_x_contains_y(str(e), "Error: the object 7,ann is not O.a");
+        assert_x_contains_y(str(e), 'Error: [7,"ann"] != "fred"');
     }}
     assert_true({o_a_codec.get_typescript_isa(TypeScriptSourceCode("'fred'"),namespace)});
     var v="jock";

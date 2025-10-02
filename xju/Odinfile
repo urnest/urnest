@@ -420,11 +420,11 @@ print(open(sys.argv[1]).read().replace('# generated Int methods here...',int_met
     '# generated Float methods here...',float_methods).replace(
     '# generated Bool methods here...',bool_methods))
 
-%json_codec_typescript_test==()+cmd=(%json_codec_typescript_test.sh) (%json_codec_typescript_test_ts)+need=(%json_codec_typescript_test_ts/json_codec_typescript_test.ts):exec.output
+%json_codec_typescript_test==()+cmd=(%json_codec_typescript_test.sh) (%json_codec_typescript_test_ts.dir)+need=(%json_codec_typescript_test_ts.dir/json_codec_typescript_test.ts):exec.output
 
-%json_codec_typescript_test_exec_files_tar==()+cmd=(%json_codec_typescript_test.sh) (%json_codec_typescript_test_ts)+need=(%json_codec_typescript_test_ts/json_codec_typescript_test.ts):exec/files.tar
+%json_codec_typescript_test_ts.dir==(make-json-codec-ts-test+(%py-opts):py3.exec.output)+cmd=cat '>json_codec_typescript_test.ts':output
 
-%json_codec_typescript_test_ts==(make-json-codec-ts-test+(%py-opts):py3.exec.output)+cmd=cat '>json_codec_typescript_test.ts':output
+%json_codec_typescript_test.ts==%json_codec_typescript_test_ts.dir/json_codec_typescript_test.ts
 
 %json_codec_typescript_test.sh==!<<
 #!/bin/sh

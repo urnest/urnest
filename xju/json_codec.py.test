@@ -55,6 +55,30 @@ import xju
 
 x:Any
 
+# mixed-in enum type
+@dataclass(init=False)
+class MixedEnumValue:
+    def __init__(self, *args, **argv):
+        match len(args):
+            case 0:
+                self.k = argv['k']
+                self.v = argv['v']
+            case 1:
+                self.k, self.v = args[0].k, args[0].v
+            case _:
+                self.k, self.v = args
+
+    k: int
+    v: str
+
+class MixedEnum(MixedEnumValue, Enum):
+    a = MixedEnumValue(1, 'fred')
+    b = MixedEnumValue(2, 'jock')
+    pass
+
+Assert(codec(MixedEnum).encode(MixedEnum.a)) == {'k': 1, 'v': 'fred'}
+Assert(codec(MixedEnum).decode({'k': 1, 'v': 'fred'})) == MixedEnum.a
+
 # int,str,bool,float,None map directly
 
 Assert(codec(int).decode(3))==3
@@ -537,7 +561,6 @@ except Exception as e:
     Assert(readable_repr(e))=="Failed to encode <enum 'O'> value 7.1 because\n7.1 (of type float) is not a O."
 else:
     assert False, x
-    
 
 # type unions, e.g. str|int match either type
 
@@ -1116,7 +1139,7 @@ Assert(codec(Timestamp).get_json_schema())=={'$ref': '#/definitions/xju.time.Tim
 Assert(codec(Fred).get_json_schema())=={'$ref': "#/definitions/Literal['fred']", '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {"Literal['fred']": {'type': 'string', 'enum': ['fred']}}}
 Assert(codec(SevenOrEight).get_json_schema())=={'$ref': '#/definitions/Literal[7]|Literal[8]', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'Literal[7]': {'type': 'number', 'enum': [7]}, 'Literal[8]': {'type': 'number', 'enum': [8]}, 'Literal[7]|Literal[8]': {'oneOf': [{'$ref': '#/definitions/Literal[7]'}, {'$ref': '#/definitions/Literal[8]'}]}}}
 Assert(codec(LiterallyFalse).get_json_schema())=={'$ref': '#/definitions/Literal[False]', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'Literal[False]': {'type': 'boolean', 'enum': [False]}}}
-Assert(codec(O).get_json_schema())=={'$ref': '#/definitions/O', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'self.get_type_fqn().a': {'type': 'string', 'enum': ['fred']}, 'self.get_type_fqn().b': {'type': 'integer', 'enum': [7]}, 'O': {'oneOf': [{'$ref': '#/definitions/self.get_type_fqn().a'}, {'$ref': '#/definitions/self.get_type_fqn().b'}]}}}
+Assert(codec(O).get_json_schema())=={'$ref': '#/definitions/O', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'O.a': {'type': 'string', 'enum': ['fred']}, 'O.b': {'type': 'integer', 'enum': [7]}, 'O': {'oneOf': [{'$ref': '#/definitions/O.a'}, {'$ref': '#/definitions/O.b'}]}}}
 
 Assert(codec(Address).get_json_schema())=={
     '$ref': '#/definitions/Address', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema',
@@ -1140,7 +1163,7 @@ Assert(codec(Address).get_json_schema())=={
 
 Assert(codec(IpV4Addr).get_json_schema())=={'description': 'IpV4Addr', 'type': 'string', 'pattern': r'^([0-9]|([1][0-9])|([1][0-9][0-9])|(2[1-4][0-9])|(25[0-5]))[.]([0-9]|([1][0-9])|([1][0-9][0-9])|(2[1-4][0-9])|(25[0-5]))[.]([0-9]|([1][0-9])|([1][0-9][0-9])|(2[1-4][0-9])|(25[0-5]))[.]([0-9]|([1][0-9])|([1][0-9][0-9])|(2[1-4][0-9])|(25[0-5]))$', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}}
 
-
+Assert(codec(MixedEnum).get_json_schema())=={'$ref': '#/definitions/MixedEnum', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'MixedEnumValue': {'description': 'MixedEnumValue', 'type': 'object', 'properties': {'k': {'type': 'integer'}, 'v': {'type': 'string'}}}, 'MixedEnum.a': {'$ref': '#/definitions/MixedEnumValue', 'enum': [{'k': 1, 'v': 'fred'}]}, 'MixedEnum.b': {'$ref': '#/definitions/MixedEnumValue', 'enum': [{'k': 2, 'v': 'jock'}]}, 'MixedEnum': {'oneOf': [{'$ref': '#/definitions/MixedEnum.a'}, {'$ref': '#/definitions/MixedEnum.b'}]}}}
 
 # recursive via Self
 class LeafTag:pass
@@ -1288,6 +1311,15 @@ else:
         {'7':'b'},codec(dict[Literal[AnIntEnum.a],str]).get_json_schema())
     jsonschema.validate(
         {'7':'b'},codec(dict[AnIntEnum,str]).get_json_schema())
+    jsonschema.validate(
+        {'k': 1, 'v': 'fred'},codec(MixedEnum).get_json_schema())
+    try:
+        jsonschema.validate(
+        {'k': 1, 'v': 'jock'},codec(MixedEnum).get_json_schema())
+    except Exception as e:
+        Assert(readable_repr(e))=="{'k': 1, 'v': 'jock'} is not valid under any of the given schemas\n\nFailed validating 'oneOf' in schema:\n    {'oneOf': [{'$ref': '#/definitions/MixedEnum.a'},\n               {'$ref': '#/definitions/MixedEnum.b'}]}\n\nOn instance:\n    {'k': 1, 'v': 'jock'}"
+    else:
+        assert False
     pass
 
 # internal: codecs' encode()s must verify correct type passed in, otherwise
@@ -1567,7 +1599,7 @@ namespace xju {
         export function asInstanceOfTimestamp(v: any): Timestamp
         {
             try{
-                if (typeof v !== \'number\') throw new Error(`${v} is a ${typeof v}`);
+                if (typeof v !== 'number') throw new Error(`${v} is a ${typeof v}`);
                 return v;
             }
             catch(e:any){
@@ -1576,7 +1608,78 @@ namespace xju {
         }
         export function isInstanceOfTimestamp(v:any): v is number
         {
-            return typeof v === \'number\';
+            return typeof v === 'number';
+        }
+    }
+    
+    export namespace ts {
+        export function str(x:any):string { return `${x}`; }
+        export function isObject(x:any):x is object { return x !== null && typeof(x) === 'object'; }
+        export function assertEqual<T>(x:T, y:T){
+            if (Array.isArray(x) && Array.isArray(y)){
+                assertArraysEqual<any>(x,y);
+            }
+            else if (isObject(x) && isObject(y)){
+                assertObjectsEqual(x,y);
+            }
+            else if (!(x===y)){
+                throw new Error(`${format_(x)} != ${format_(y)}`);
+            }
+        }
+        export function format_<T>(a:T): string {
+            if (Array.isArray(a)) return formatArray(a);
+            if (isObject(a)) return formatObject(a);
+            return JSON.stringify(a);
+        }
+        export function formatArray<T>(a:Array<T>): string {
+            if(a.length==0) return "[]";
+            if(a.length==1) return `[${format_(a[0])}]`;
+            var result=`${a[0]}`;
+            for(var i=1;i!=a.length;++i) result=result+`,${format_(a[i])}`;
+            return `[${result}]`;
+        }
+        export function formatObject<T>(a:T): string {
+            var result="{";
+            for(const k in a) result=result+` ${k}:${format_(a[k])};`;
+            return result+"}";
+        }
+        export function assertArraysEqual<T>(x:Array<T>, y:Array<T>){
+            try{
+                try{
+                    assertEqual(x.length, y.length);
+                }
+                catch(e:any){
+                    throw new Error(`arrays of different length because ${e}`);
+                }
+                var i;
+                for(i=0; i!=x.length; ++i){
+                    try{
+                        assertEqual<T>(x[i],y[i]);
+                    }
+                    catch(e:any){
+                        throw new Error(`array element ${i} ${format_(x[i])} != ${format_(y[i])}`);
+                    }
+                }
+            }
+            catch(e:any){
+                throw new Error(`array ${format_(x)} != array ${format_(y)} because ${e}`);
+            }
+        }
+        export function assertObjectsEqual(x:object, y:object){
+            try{
+                var xKeys=new Array<keyof object>();
+                var yKeys=new Array<keyof object>();
+                for(const k in x){if (x.hasOwnProperty(k)) xKeys.push(k as keyof object);}
+                for(const k in y){if (y.hasOwnProperty(k)) yKeys.push(k as keyof object);}
+                assertArraysEqual(xKeys,yKeys);
+                for(var i=0; i!=xKeys.length; ++i){
+                    const k = xKeys[i];
+                    assertEqual(x[k],y[k]);
+                }
+            }
+            catch(e){
+                throw new Error(`object ${format_(x)} != object ${format_(y)} because ${e}`);
+            }
         }
     }
 }
@@ -1588,40 +1691,54 @@ enum O {
 
 function asInstanceOfO(v: any): O
 {
-    return ((v: any): O => {try{
+    return (((v: any): O => {try{
         var es = new Array<string>();
         try{
-            ((v: any): O.a => {
-                if (v !== O.a) throw new Error(`the ${typeof v} ${v} is not O.a`);
-                return v as O.a;
+            return ((v: any): O.a => {
+                xju.ts.assertEqual(v, O.a);
+                return O.a;
             })(v);
-            return v as O;
         }
         catch(e:any){
             es.push(e.message);
         };
         try{
-            ((v: any): O.b => {
-                if (v !== O.b) throw new Error(`the ${typeof v} ${v} is not O.b`);
-                return v as O.b;
+            return ((v: any): O.b => {
+                xju.ts.assertEqual(v, O.b);
+                return O.b;
             })(v);
-            return v as O;
         }
         catch(e:any){
             es.push(e.message);
         };
-        throw new Error(es.join(\' and \'));
-    }catch(e:any)
+        throw new Error(es.join(' and '));
+    } catch(e:any)
     {
-        throw new Error(`${v} is not a O because ${e}`);
-    }})(v);
+        throw new Error(`${xju.ts.format_(v)} is not a O because ${e}`);
+    }})(v));
 }
 function isInstanceOfO(v:any): v is O
 {
     return ((v:any): v is O=>{
         return false ||
-           (v === O.a) ||
-           (v === O.b);
+               ((v:any): v is O.a=>{
+                        try{
+                            xju.ts.assertEqual(v, O.a);
+                        }
+                        catch (_){
+                            return false;
+                        }
+                        return true;
+                    })(v) ||
+               ((v:any): v is O.b=>{
+                        try{
+                            xju.ts.assertEqual(v, O.b);
+                        }
+                        catch (_){
+                            return false;
+                        }
+                        return true;
+                    })(v);
     })(v);
 }''')
 

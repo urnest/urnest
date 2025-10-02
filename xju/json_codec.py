@@ -2357,6 +2357,90 @@ class ClassCodecImpl:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
     pass
 
+def ensure_xju_ts_defs(target_namespace: TypeScriptNamespace) -> None:
+    xju_ts_name=[TypeScriptUQN('xju'), TypeScriptUQN('ts')]
+    def add(name: TypeScriptUQN, defn: TypeScriptSourceCode) -> None:
+        xju_ts=target_namespace.get_namespace_of(xju_ts_name+[name])
+        xju_ts.defs[name] = defn
+        pass
+    
+    add(TypeScriptUQN("str"), TypeScriptSourceCode(
+        f"""function str(x:any):string {{ return `${{x}}`; }}"""))
+    add(TypeScriptUQN("isObject"), TypeScriptSourceCode(
+        f"""function isObject(x:any):x is object {{ return x !== null && typeof(x) === 'object'; }}"""))
+    add(TypeScriptUQN("assertEqual"), TypeScriptSourceCode(f"""\
+function assertEqual<T>(x:T, y:T){{
+    if (Array.isArray(x) && Array.isArray(y)){{
+        assertArraysEqual<any>(x,y);
+    }}
+    else if (isObject(x) && isObject(y)){{
+        assertObjectsEqual(x,y);
+    }}
+    else if (!(x===y)){{
+        throw new Error(`${{format_(x)}} != ${{format_(y)}}`);
+    }}
+}}"""))
+    add(TypeScriptUQN("format_"), TypeScriptSourceCode(f"""\
+function format_<T>(a:T): string {{
+    if (Array.isArray(a)) return formatArray(a);
+    if (isObject(a)) return formatObject(a);
+    return JSON.stringify(a);
+}}"""))
+    add(TypeScriptUQN("formatArray"), TypeScriptSourceCode(f"""\
+function formatArray<T>(a:Array<T>): string {{
+    if(a.length==0) return "[]";
+    if(a.length==1) return `[${{format_(a[0])}}]`;
+    var result=`${{a[0]}}`;
+    for(var i=1;i!=a.length;++i) result=result+`,${{format_(a[i])}}`;
+    return `[${{result}}]`;
+}}"""))
+    add(TypeScriptUQN("formatObject"), TypeScriptSourceCode(f"""\
+function formatObject<T>(a:T): string {{
+    var result="{{";
+    for(const k in a) result=result+` ${{k}}:${{format_(a[k])}};`;
+    return result+"}}";
+}}"""))
+    add(TypeScriptUQN("assertArraysEqual"), TypeScriptSourceCode(f"""\
+function assertArraysEqual<T>(x:Array<T>, y:Array<T>){{
+    try{{
+        try{{
+            assertEqual(x.length, y.length);
+        }}
+        catch(e:any){{
+            throw new Error(`arrays of different length because ${{e}}`);
+        }}
+        var i;
+        for(i=0; i!=x.length; ++i){{
+            try{{
+                assertEqual<T>(x[i],y[i]);
+            }}
+            catch(e:any){{
+                throw new Error(`array element ${{i}} ${{format_(x[i])}} != ${{format_(y[i])}}`);
+            }}
+        }}
+    }}
+    catch(e:any){{
+        throw new Error(`array ${{format_(x)}} != array ${{format_(y)}} because ${{e}}`);
+    }}
+}}"""))
+    add(TypeScriptUQN("assertObjectsEqual"), TypeScriptSourceCode(f"""\
+function assertObjectsEqual(x:object, y:object){{
+    try{{
+        var xKeys=new Array<keyof object>();
+        var yKeys=new Array<keyof object>();
+        for(const k in x){{if (x.hasOwnProperty(k)) xKeys.push(k as keyof object);}}
+        for(const k in y){{if (y.hasOwnProperty(k)) yKeys.push(k as keyof object);}}
+        assertArraysEqual(xKeys,yKeys);
+        for(var i=0; i!=xKeys.length; ++i){{
+            const k = xKeys[i];
+            assertEqual(x[k],y[k]);
+        }}
+    }}
+    catch(e){{
+        throw new Error(`object ${{format_(x)}} != object ${{format_(y)}} because ${{e}}`);
+    }}
+}}"""))
+    
 @dataclass
 class EnumValueCodecImpl:
     name:str
@@ -2384,7 +2468,7 @@ class EnumValueCodecImpl:
             raise in_function_context(EnumValueCodecImpl.decode,vars()) from None
         pass
     def get_json_schema(self, definitions:dict[str,dict]) -> dict:
-        fqn=f"self.get_type_fqn().{self.name}"
+        fqn=f"{self.get_type_fqn()}.{self.name}"
         self_ref=f'#/definitions/{fqn}'
         if not fqn in definitions:
             defn = self.value_codec.get_json_schema(definitions)
@@ -2405,25 +2489,65 @@ class EnumValueCodecImpl:
     def get_type_fqn(self):
         '''get the fully qualified name of {self.t}'''
         return get_type_fqn(self.t)
+    @property
+    def is_typescript_pod(self):
+        v=self.value_codec.encode(self.value.value)
+        return type(v) in (float, int, str)
     def typescript_type(self) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(f'{self.get_type_fqn()}.{self.value.name}')
+        return TypeScriptSourceCode(f'{self.get_type_fqn()}.{self.value.name}') if self.is_typescript_pod else self.typescript_value()
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(f'{self.get_type_fqn()}.{self.value.name}')
+        return TypeScriptSourceCode(f'{self.get_type_fqn()}.{self.value.name}') if self.is_typescript_pod else self.typescript_value()
     def typescript_value(self) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(json.dumps(self.value.value))
-    def ensure_typescript_defs(self,namespace)->None:
-        # EnumCodecImpl supplies defs
+        return TypeScriptSourceCode(json.dumps(self.value_codec.encode(self.value.value)))
+    def ensure_typescript_defs(self,namespace: TypeScriptNamespace)->None:
+        ensure_xju_ts_defs(namespace)
         pass
     def get_typescript_isa(
             self,
             expression:TypeScriptSourceCode,
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(f'({expression} === {self.typescript_type()})')
+        if self.is_typescript_pod:
+            tt=self.typescript_type()
+            return TypeScriptSourceCode(f"""\
+    ((v:any): v is {tt}=>{{
+        try{{
+            xju.ts.assertEqual(v, {tt});
+        }}
+        catch (_){{
+            return false;
+        }}
+        return true;
+    }})({expression})""")
+        else:
+            tt=self.typescript_value()
+            return TypeScriptSourceCode(f"""\
+    ((v:any): v is {tt}=>{{
+        try{{
+            xju.ts.assertEqual(v, {tt});
+        }}
+        catch (_){{
+            return false;
+        }}
+        return true;
+    }})({expression})""")
+            
     def get_typescript_isa_key(
             self,
             expression:TypeScriptSourceCode,
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(f'({expression} === `${{{self.typescript_type()}}}`)')
+        # can only be "pod"
+        tt=self.typescript_as_object_key_type()
+        return TypeScriptSourceCode(f"""\
+    ((v:any): v is {tt}=>{{
+        try{{
+            xju.ts.assertEqual(v, {tt});
+        }}
+        catch (_){{
+            return false;
+        }}
+        return true;
+    }})({expression})""")
+
     def get_typescript_asa(
             self,
             expression:TypeScriptSourceCode,
@@ -2431,8 +2555,8 @@ class EnumValueCodecImpl:
         tt=self.typescript_type()
         return TypeScriptSourceCode(
             f"((v: any): {tt} => {{\n"
-            f"    if (v !== {tt}) throw new Error(`the ${{typeof v}} ${{v}} is not {tt}`);\n"
-            f"    return v as {tt};\n"
+            f"    xju.ts.assertEqual(v, {tt});\n"
+            f"    return {tt};\n"
             f"}})({expression})")
     def get_typescript_asa_key(
             self,
@@ -2441,8 +2565,8 @@ class EnumValueCodecImpl:
         tt=self.typescript_as_object_key_type()
         return TypeScriptSourceCode(
             f"((v: any): {tt} => {{\n"
-            f"    if (v !== {tt}) throw new Error(`the ${{typeof v}} ${{v}} is not {tt}`);\n"
-            f"    return v as {tt};\n"
+            f"    xju.ts.assertEqual(v, {tt});\n"
+            f"    return {tt};\n"
             f"}})({expression})")
     pass
     
@@ -2497,31 +2621,57 @@ class EnumCodecImpl:
     def get_type_fqn(self):
         '''get the fully qualified name of {self.t}'''
         return get_type_fqn(self.t)
+
+    @property
+    def use_typescript_enum(self) -> bool:
+        return all([v.is_typescript_pod for v in self.value_codecs.values()])
     def typescript_type(self)->TypeScriptSourceCode:
         return TypeScriptSourceCode(self.get_type_fqn())
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(f"string /* {self.typescript_type().replace('/*','**').replace('*/','**')} */")
     def ensure_typescript_defs(self, namespace) -> None:
+        ensure_xju_ts_defs(namespace)
+        for c in self.value_codecs.values():
+            c.ensure_typescript_defs(namespace)
+            pass
         typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
         typescript_type_name=typescript_fqn[-1]
         if typescript_type_name not in target_namespace.defs:
             enum_value_codec:EnumValueCodecImpl
-            target_namespace.defs[typescript_type_name]=TypeScriptSourceCode(
-                f"enum {typescript_type_name} {{\n"+
-                ',\n'.join([f'    {name} = {enum_value_codec.typescript_value().value()}'
-                         for name, enum_value_codec in self.value_codecs.items()])+
-                f'\n}};\n')
-            target_namespace.defs[TypeScriptUQN(f"asInstanceOf{typescript_type_name}")]=TypeScriptSourceCode(
-                f"function asInstanceOf{typescript_type_name}(v: any): {typescript_type_name}\n"
-                f"{{\n"
-                f"    return {indent(4,self.get_typescript_asa(TypeScriptSourceCode('v'),namespace))};\n"
-                f"}}")
-            target_namespace.defs[TypeScriptUQN(f"isInstanceOf{typescript_type_name}")]=TypeScriptSourceCode(
-                f"function isInstanceOf{typescript_type_name}(v:any): v is {typescript_type_name}\n"
-                f"{{\n"
-                f"    return {indent(4,self.get_typescript_isa(TypeScriptSourceCode('v'),namespace))};\n"
-                f"}}")
+            if self.use_typescript_enum:
+                target_namespace.defs[typescript_type_name]=TypeScriptSourceCode(
+                    f"enum {typescript_type_name} {{\n"+
+                    ',\n'.join([f'    {name} = {enum_value_codec.typescript_value().value()}'
+                             for name, enum_value_codec in self.value_codecs.items()])+
+                    f'\n}};\n')
+                target_namespace.defs[TypeScriptUQN(f"asInstanceOf{typescript_type_name}")]=TypeScriptSourceCode(
+                    f"function asInstanceOf{typescript_type_name}(v: any): {typescript_type_name}\n"
+                    f"{{\n"
+                    f"    return {indent(4,self.get_typescript_asa(TypeScriptSourceCode('v'),namespace))};\n"
+                    f"}}")
+                target_namespace.defs[TypeScriptUQN(f"isInstanceOf{typescript_type_name}")]=TypeScriptSourceCode(
+                    f"function isInstanceOf{typescript_type_name}(v:any): v is {typescript_type_name}\n"
+                    f"{{\n"
+                    f"    return {indent(4,self.get_typescript_isa(TypeScriptSourceCode('v'),namespace))};\n"
+                    f"}}")
+            else:
+                target_namespace.defs[typescript_type_name]=TypeScriptSourceCode(
+                    f"type {typescript_type_name} ="+
+                    ' |'.join([f'\n    {enum_value_codec.typescript_value().value()}'
+                               for enum_value_codec in self.value_codecs.values()])+
+                    f';\n')
+                target_namespace.defs[TypeScriptUQN(f"asInstanceOf{typescript_type_name}")]=TypeScriptSourceCode(
+                    f"function asInstanceOf{typescript_type_name}(v: any): {typescript_type_name}\n"
+                    f"{{\n"
+                    f"    return {indent(4,self.get_typescript_asa(TypeScriptSourceCode('v'),namespace))};\n"
+                    f"}}")
+                target_namespace.defs[TypeScriptUQN(f"isInstanceOf{typescript_type_name}")]=TypeScriptSourceCode(
+                    f"function isInstanceOf{typescript_type_name}(v:any): v is {typescript_type_name}\n"
+                    f"{{\n"
+                    f"    return {indent(4,self.get_typescript_isa(TypeScriptSourceCode('v'),namespace))};\n"
+                    f"}}")
+            pass
         pass
     def get_typescript_isa(self,
                            expression:TypeScriptSourceCode,
@@ -2554,44 +2704,42 @@ class EnumCodecImpl:
         enum_value_codec:EnumValueCodecImpl
         tt=self.typescript_type()
         asas=[f"    try{{\n"+
-              f"        {indent(8,enum_value_codec.get_typescript_asa(TypeScriptSourceCode('v'),namespace))};\n"+
-              f"        return v as {tt};\n"+
+              f"        return {indent(8,enum_value_codec.get_typescript_asa(TypeScriptSourceCode('v'),namespace))};\n"+
               f"    }}\n"+
               f"    catch(e:any){{\n"+
               f"        es.push(e.message);\n"+
               f"    }};\n"
               for _t,enum_value_codec in self.value_codecs.items()]
         return TypeScriptSourceCode(
-            f"((v: any): {tt} => {{try{{\n" +
+            f"(((v: any): {tt} => {{try{{\n" +
             f"    var es = new Array<string>();\n"+
             "".join(asas)+
             f"    throw new Error(es.join(' and '));\n"+
-            f"}}catch(e:any)\n"+
+            f"}} catch(e:any)\n"+
             f"{{\n"+
-            f"    throw new Error(`${{v}} is not a {tt} because ${{e}}`);\n"+
-            f"}}}})({expression})")
+            f"    throw new Error(`${{xju.ts.format_(v)}} is not a {tt} because ${{e}}`);\n"+
+            f"}}}})({expression}))")
     def get_typescript_asa_key(self,
                                expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         enum_value_codec:EnumValueCodecImpl
         tt=self.typescript_as_object_key_type()
         asas=[f"    try{{\n"+
-              f"        {indent(8,enum_value_codec.get_typescript_asa_key(TypeScriptSourceCode('v'),namespace))};\n"+
-              f"        return v as {tt};\n"+
+              f"        return {indent(8,enum_value_codec.get_typescript_asa_key(TypeScriptSourceCode('v'),namespace))};\n"+
               f"    }}\n"+
               f"    catch(e:any){{\n"+
               f"        es.push(e.message);\n"+
               f"    }};\n"
               for _t,enum_value_codec in self.value_codecs.items()]
         return TypeScriptSourceCode(
-            f"((v: any): {tt} => {{try{{\n" +
+            f"(((v: any): {tt} => {{ try{{\n" +
             f"    var es = new Array<string>();\n"+
             "".join(asas)+
             f"    throw new Error(es.join(' and '));\n"+
-            f"}}catch(e:any)\n"+
+            f"}} catch(e:any)\n"+
             f"{{\n"+
-            f"    throw new Error(`${{v}} is not a {tt} key because ${{e}}`);\n"+
-            f"}}}})({expression})")
+            f"    throw new Error(`${{xju.ts.format_(v)}} is not a {tt} key because ${{e}}`);\n"+
+            f"}}}})({expression}))")
     pass
 
 @dataclass
