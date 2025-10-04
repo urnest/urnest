@@ -782,7 +782,7 @@ print(f'''
         assert_never_reached();
     }}
     catch(e){{
-        assert_x_contains_y(str(e), "Error: [object Object] is not a {{ [key: string /* string ** xju.time.Timestamp **|string ** bool ** */]: number }} because Error: element ann is invalid because Error: ann is not a string /* string ** xju.time.Timestamp **|string ** bool ** */ because Error: xju.time.Timesamp key ann is not a stringified number and ann is not 'true' or 'false'");
+        assert_x_contains_y(str(e), "Error: [object Object] is not a {{ [key: string /* string ** xju.time.Timestamp **|string ** bool ** */]: number }} because Error: element ann is invalid because Error: ann is not a string /* string ** xju.time.Timestamp **|string ** bool ** */ because Error: ann is not a xju.time.Timestamp because Error: ann is not a stringified number and ann is not 'true' or 'false'");
     }}
 
     assert_true({indent(8,codec(dict[Timestamp|bool,int]).get_typescript_isa(TypeScriptSourceCode('{"1": 8, "true": 9}'),namespace))});
@@ -1563,7 +1563,7 @@ print(f'''
         assert_never_reached();
     }}
     catch(e){{
-        assert_x_contains_y(str(e), "Error: 7,ann is not a xju.time.Timestamp i.e. a number, it is a object");
+        assert_x_contains_y(str(e), "Error: 7,ann is not a xju.time.Timestamp because Error: 7,ann is a object not a number");
     }}
     assert_true({codec(Timestamp).get_typescript_isa(TypeScriptSourceCode('8.8'),namespace)});
     assert_false({codec(Timestamp).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});

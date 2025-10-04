@@ -193,14 +193,50 @@ def codec(t: Type[T]) -> CodecProto[T]:
     return Codec[T](t)
 
 
+class CodecImplProto(Protocol):
+    def encode(self,x:Any)->JsonType:
+        pass
+    def decode(self,x:JsonType)->Any:
+        pass
+    def get_type_fqn(self) -> str:
+        """get (python) type fully qualified name, e.g. 'a.b.C'"""
+    def get_json_schema(self, definitions:dict[str,dict]) -> dict:
+        pass
+    def get_object_key_json_schema(self, definitions:dict[str,dict]) -> dict:
+        pass
+    def typescript_type(self) -> TypeScriptSourceCode:
+        pass
+    def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
+        pass
+    def ensure_typescript_defs(self, namespace) -> None:
+        pass
+    def get_typescript_isa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        pass
+    def get_typescript_isa_key(self,
+                               expression:TypeScriptSourceCode,
+                               namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        pass
+    def get_typescript_asa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        pass
+    def get_typescript_asa_key(self,
+                               expression:TypeScriptSourceCode,
+                               namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        pass
+    pass
+
 # implementation of CodecProto - use codec above with json_codec_mypy_plugin
 # rather than using this class directly
 class Codec(Generic[T]):
     t:Type[T]
+    codec:CodecImplProto
     def __init__(self, t: Type[T]):
         'initialse json decoder for type %(t)r'
         self.t=t
-        self.codec:CodecImplProto=_explodeSchema(self.t, {}, {})
+        self.codec=_explodeSchema(self.t, {}, {})
         pass
 
     def __repr__(self):
@@ -269,41 +305,6 @@ class Codec(Generic[T]):
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         return self.codec.get_typescript_asa_key(expression,namespace)
-    pass
-
-class CodecImplProto(Protocol):
-    def encode(self,x:Any)->JsonType:
-        pass
-    def decode(self,x:JsonType)->Any:
-        pass
-    def get_type_fqn(self) -> str:
-        """get (python) type fully qualified name, e.g. 'a.b.C'"""
-    def get_json_schema(self, definitions:dict[str,dict]) -> dict:
-        pass
-    def get_object_key_json_schema(self, definitions:dict[str,dict]) -> dict:
-        pass
-    def typescript_type(self) -> TypeScriptSourceCode:
-        pass
-    def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
-        pass
-    def ensure_typescript_defs(self, namespace) -> None:
-        pass
-    def get_typescript_isa(self,
-                           expression:TypeScriptSourceCode,
-                           namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        pass
-    def get_typescript_isa_key(self,
-                               expression:TypeScriptSourceCode,
-                               namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        pass
-    def get_typescript_asa(self,
-                           expression:TypeScriptSourceCode,
-                           namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        pass
-    def get_typescript_asa_key(self,
-                               expression:TypeScriptSourceCode,
-                               namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        pass
     pass
 
 Atom=TypeVar('Atom',int,str,bool,float)
@@ -1708,58 +1709,67 @@ class TimestampCodecImpl:
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         return TypeScriptSourceCode('string /* xju.time.Timestamp */')
     def ensure_typescript_defs(self, namespace) -> None:
-        typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
+        tt=self.typescript_type()
+        typescript_fqn=[TypeScriptUQN(_) for _ in tt.split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
         typescript_type_name=typescript_fqn[-1]
         if typescript_type_name not in target_namespace.defs:
             target_namespace.defs[typescript_type_name]=TypeScriptSourceCode(
                 f"type {typescript_type_name} = number;")
+            target_namespace.defs[TypeScriptUQN(f'isInstanceOf{typescript_type_name}')]=TypeScriptSourceCode(
+                f"function isInstanceOf{typescript_type_name}(v:any): v is {typescript_type_name}\n"
+                f"{{\n"
+                f"    return typeof v === 'number';\n"
+                f"}}")
+            target_namespace.defs[TypeScriptUQN(f'isInstanceOfKeyOf{typescript_type_name}')]=TypeScriptSourceCode(
+                f"function isInstanceOfKeyOf{typescript_type_name}(v:any): v is string\n"
+                f"{{\n"
+                f"    return typeof (v) == 'string' && !isNaN(parseFloat(v));\n"
+                f"}}")
             target_namespace.defs[TypeScriptUQN(f"asInstanceOf{typescript_type_name}")]=TypeScriptSourceCode(
                 f"function asInstanceOf{typescript_type_name}(v: any): {typescript_type_name}\n"
                 f"{{\n"
                 f"    try{{\n"
-                f"        if (typeof v !== 'number') throw new Error(`${{v}} is a ${{typeof v}}`);\n"
+                f"        if (typeof v !== 'number') throw new Error(`${{v}} is a ${{typeof v}} not a number`);\n"
                 f"        return v;\n"
                 f"    }}\n"
                 f"    catch(e:any){{\n"
-                f"        throw new Error(`${{v}} is not a {typescript_type_name} because ${{e}}`);\n"
+                f"        throw new Error(`${{v}} is not a {tt} because ${{e}}`);\n"
                 f"    }}\n"
                 f"}}")
-            target_namespace.defs[TypeScriptUQN(f'isInstanceOf{typescript_type_name}')]=TypeScriptSourceCode(
-                f"function isInstanceOf{typescript_type_name}(v:any): v is number\n"
+            target_namespace.defs[TypeScriptUQN(f'asInstanceOfKeyOf{typescript_type_name}')]=TypeScriptSourceCode(
+                f"function asInstanceOfKeyOf{typescript_type_name}(v:any): string\n"
                 f"{{\n"
-                f"    return typeof v === 'number';\n"
+                f"    try{{\n"
+                f"        if (typeof (v) == 'string' && !isNaN(parseFloat(v))) return v;\n"
+                f"        throw new Error(`${{v}} is not a stringified number`);\n"
+                f"    }}\n"
+                f"    catch(e:any){{\n"
+                f"        throw new Error(`${{v}} is not a {tt} because ${{e}}`);\n"
+                f"    }}\n"
+
                 f"}}")
         pass
     def get_typescript_isa(self,
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(
-            f"(typeof ({expression}) == 'number' /* {self.get_type_fqn()} */)")
+        self.ensure_typescript_defs(namespace)
+        return is_instance_of_expression(self.get_type_fqn(), expression)
     def get_typescript_isa_key(self,
                                expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(
-            f"(typeof ({expression}) == 'string' /* {self.get_type_fqn()} */ && !isNaN(parseFloat({expression})))")
+        self.ensure_typescript_defs(namespace)
+        return is_instance_of_key_of_expression(self.get_type_fqn(), expression)
     def get_typescript_asa(self,
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        tt=self.typescript_type()
-        return TypeScriptSourceCode(
-            f"((v: any): {tt} => {{\n"
-            f"    if (typeof v !== 'number' /* {self.get_type_fqn()} */) throw new Error(`${{v}} is not a {self.get_type_fqn()} i.e. a number, it is a ${{typeof v}}`);\n"
-            f"    return v as {tt};\n"
-            f"}})({expression})")
+        self.ensure_typescript_defs(namespace)
+        return as_instance_of_expression(self.get_type_fqn(), expression)
     def get_typescript_asa_key(self,
                                expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        tt=self.typescript_as_object_key_type()
-        return TypeScriptSourceCode(
-            f"((v: any): {tt} => {{\n"
-            f"    if (typeof v !== 'string' /* {self.get_type_fqn()} */) throw new Error(`key ${{v}} is not a {self.get_type_fqn()} i.e. a string, it is a ${{typeof v}}`);\n"
-            f"    if (isNaN(parseFloat(v))) throw new Error(`xju.time.Timesamp key ${{v}} is not a stringified number`);\n"
-            f"    return v as {tt};\n"
-            f"}})({expression})")
+        self.ensure_typescript_defs(namespace)
+        return as_instance_of_key_of_expression(self.get_type_fqn(), expression)
     pass
 
 class LiteralStrCodecImpl:
@@ -2328,8 +2338,7 @@ class ClassCodecImpl:
         if self.custom_codec is not None:
             return self.custom_codec.xju_json_codec_get_typescript_isa(expression,namespace)
         self.ensure_typescript_defs(namespace)
-        fqn=self.get_type_fqn().split('.')
-        return TypeScriptSourceCode('.'.join(fqn[0:-1]+[f"isInstanceOf{fqn[-1]}({expression})"]))
+        return is_instance_of_expression(self.get_type_fqn(), expression)
 
     def get_typescript_isa_key(self,
                                expression:TypeScriptSourceCode,
@@ -2345,9 +2354,7 @@ class ClassCodecImpl:
         if self.custom_codec is not None:
             return self.custom_codec.xju_json_codec_get_typescript_asa(expression,namespace)
         self.ensure_typescript_defs(namespace)
-        fqn=self.get_type_fqn().split('.')
-        fqn=self.get_type_fqn().split('.')
-        return TypeScriptSourceCode('.'.join(fqn[0:-1]+[f"asInstanceOf{fqn[-1]}({expression})"]))
+        return as_instance_of_expression(self.get_type_fqn(), expression)
     def get_typescript_asa_key(self,
                                expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
@@ -2974,3 +2981,29 @@ def get_type_fqn(t:type) -> str:
     if str(t.__module__) in ('__main__', 'builtins', 'typing'):
         return t.__name__.removeprefix('builtins.').removeprefix('typing.')
     return f"{t.__module__}.{t.__name__}"
+
+def is_instance_of_expression(type_fqn:str, expression: TypeScriptSourceCode) -> TypeScriptSourceCode:
+    """get a.b.c.isInstanceOfX({expression}) source code for {type_fqn} like a.b.c.X"""
+    parts=type_fqn.split('.')
+    f='.'.join(parts[0:-1]+[f"isInstanceOf{parts[-1]}"])
+    return TypeScriptSourceCode(f"{f}({expression})")
+
+def is_instance_of_key_of_expression(
+        type_fqn:str, expression: TypeScriptSourceCode) -> TypeScriptSourceCode:
+    """get a.b.c.isInstanceOfKeyOfX({expression}) source code for {type_fqn} like a.b.c.X"""
+    parts=type_fqn.split('.')
+    f='.'.join(parts[0:-1]+[f"isInstanceOfKeyOf{parts[-1]}"])
+    return TypeScriptSourceCode(f"{f}({expression})")
+
+def as_instance_of_expression(type_fqn:str, expression: TypeScriptSourceCode) -> TypeScriptSourceCode:
+    """get a.b.c.asInstanceOfX({expression}) source code for {type_fqn} like a.b.c.X"""
+    parts=type_fqn.split('.')
+    f='.'.join(parts[0:-1]+[f"asInstanceOf{parts[-1]}"])
+    return TypeScriptSourceCode(f"{f}({expression})")
+
+def as_instance_of_key_of_expression(
+        type_fqn:str, expression: TypeScriptSourceCode) -> TypeScriptSourceCode:
+    """get a.b.c.asInstanceOfKeyOfX({expression}) source code for {type_fqn} like a.b.c.X"""
+    parts=type_fqn.split('.')
+    f='.'.join(parts[0:-1]+[f"asInstanceOfKeyOf{parts[-1]}"])
+    return TypeScriptSourceCode(f"{f}({expression})")

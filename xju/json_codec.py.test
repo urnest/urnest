@@ -1542,9 +1542,6 @@ Assert(codec(SetSurnamesMsg).decode({'msg_type':'set_new_values','new_values':['
 typescript_namespace=TypeScriptNamespace({})
 
 timestamp_codec=codec(Timestamp)
-# ensure typescript_namespace has as-a and is-a functions for xju.time.Timestamp,
-# xju.time.asInstanceOfTimestamp(), xju.time.isInstanceOfTimestamp():
-timestamp_codec.ensure_typescript_defs(typescript_namespace)
 
 Assert(codec(IpV4Addr).get_typescript_isa(TypeScriptSourceCode('7'),typescript_namespace))==TypeScriptSourceCode("(typeof (7) == 'string')")
 Assert(codec(IpV4Addr).get_typescript_isa_key(TypeScriptSourceCode('7'),typescript_namespace))==TypeScriptSourceCode("(typeof (7) == 'string')")
@@ -1594,27 +1591,9 @@ else:
 Assert(typescript_namespace.get_formatted_defs())==TypeScriptSourceCode(
     '''\
 namespace xju {
-    export namespace time {
-        export type Timestamp = number;
-        export function asInstanceOfTimestamp(v: any): Timestamp
-        {
-            try{
-                if (typeof v !== 'number') throw new Error(`${v} is a ${typeof v}`);
-                return v;
-            }
-            catch(e:any){
-                throw new Error(`${v} is not a Timestamp because ${e}`);
-            }
-        }
-        export function isInstanceOfTimestamp(v:any): v is number
-        {
-            return typeof v === 'number';
-        }
-    }
-    
     export namespace ts {
         export function str(x:any):string { return `${x}`; }
-        export function isObject(x:any):x is object { return x !== null && typeof(x) === 'object'; }
+        export function isObject(x:any):x is object { return x !== null && typeof(x) === \'object\'; }
         export function assertEqual<T>(x:T, y:T){
             if (Array.isArray(x) && Array.isArray(y)){
                 assertArraysEqual<any>(x,y);
@@ -1711,7 +1690,7 @@ function asInstanceOfO(v: any): O
         catch(e:any){
             es.push(e.message);
         };
-        throw new Error(es.join(' and '));
+        throw new Error(es.join(\' and \'));
     } catch(e:any)
     {
         throw new Error(`${xju.ts.format_(v)} is not a O because ${e}`);
