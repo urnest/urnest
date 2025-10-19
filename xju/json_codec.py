@@ -380,12 +380,19 @@ class NoopCodecImpl(Generic[Atom]):
             return TypeScriptSourceCode('string /* float */')
 
     def ensure_typescript_defs(self, namespace) -> None:
-        pass
+        ensure_xju_ts_defs(namespace)
     def get_typescript_isa(self,
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(
-            f"(typeof ({expression}) == '{self.typescript_type()}')")
+        if issubclass(self.t,bool):
+            return TypeScriptSourceCode(
+                f"(typeof ({expression}) == '{self.typescript_type()}')")
+        if issubclass(self.t, int):
+            return TypeScriptSourceCode(
+                f"((v: any) => (typeof (v) == 'number' && v % 1 == 0))({expression})")
+        if issubclass(self.t,(float,str)):
+            return TypeScriptSourceCode(
+                f"(typeof ({expression}) == '{self.typescript_type()}')")
     def get_typescript_isa_key(self,
                                expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
@@ -394,7 +401,7 @@ class NoopCodecImpl(Generic[Atom]):
                 f"(({expression}) === 'true' || ({expression}) === 'false')")
         elif issubclass(self.t,int):
             return TypeScriptSourceCode(
-                f"(typeof ({expression}) == 'string' && !isNaN(parseInt({expression})))")
+                f"((v: any) => (typeof (v) == 'string' && !isNaN(parseFloat(v)) && parseFloat(v)%1 == 0))({expression})")
         elif issubclass(self.t,float):
             return TypeScriptSourceCode(
                 f"(typeof ({expression}) == 'string' && !isNaN(parseFloat({expression})))")
@@ -405,11 +412,25 @@ class NoopCodecImpl(Generic[Atom]):
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         tt=self.typescript_type()
-        return TypeScriptSourceCode(
-            f"((v: any): {tt} => {{\n"
-            f"    if (typeof v !== '{tt}') throw new Error(`${{v}} is not a {tt} it is a ${{typeof v}}`);\n"
-            f"    return v as {tt};\n"
-            f"}})({expression})")
+        if issubclass(self.t, bool):
+            return TypeScriptSourceCode(
+                f"((v: any): {tt} => {{\n"
+                f"    if (typeof v !== '{tt}') throw new Error(`${{xju.ts.format_(v)}} is not a {tt} it is a ${{typeof v}}`);\n"
+                f"    return v as {tt};\n"
+                f"}})({expression})")
+        if issubclass(self.t, int):
+            return TypeScriptSourceCode(
+                f"((v: any): {tt} => {{\n"
+                f"    if (typeof v !== 'number') throw new Error(`${{xju.ts.format_(v)}} is not a number it is a ${{typeof v}}`);\n"
+                f"    if (v%1 !== 0) throw new Error(`${{xju.ts.format_(v)}} is not an integer`);\n"
+                f"    return v as {tt};\n"
+                f"}})({expression})")
+        if issubclass(self.t, (float,str)):
+            return TypeScriptSourceCode(
+                f"((v: any): {tt} => {{\n"
+                f"    if (typeof v !== '{tt}') throw new Error(`${{xju.ts.format_(v)}} is not a {tt} it is a ${{typeof v}}`);\n"
+                f"    return v as {tt};\n"
+                f"}})({expression})")
     def get_typescript_asa_key(self,
                                expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
@@ -417,28 +438,30 @@ class NoopCodecImpl(Generic[Atom]):
         if issubclass(self.t,bool):
             return TypeScriptSourceCode(
                 f"((v: any): {tt} => {{\n"
-                f"    if (typeof v !== 'string' /* {self.typescript_type()} */) throw new Error(`${{v}} is not a {tt} it is a ${{typeof v}}`);\n"
-                f"    if (v !== 'true' && v !== 'false') throw new Error(`${{v}} is not 'true' or 'false'`);\n"
+                f"    if (typeof v !== 'string' /* {self.typescript_type()} */) throw new Error(`${{xju.ts.format_(v)}} is not a {tt} it is a ${{typeof v}}`);\n"
+                f"    if (v !== 'true' && v !== 'false') throw new Error(`${{xju.ts.format_(v)}} is not 'true' or 'false'`);\n"
                 f"    return v as {tt};\n"
                 f"}})({expression})")
         elif issubclass(self.t,int):
             return TypeScriptSourceCode(
                 f"((v: any): {tt} => {{\n"
-                f"    if (typeof v !== 'string' /* {self.typescript_type()} */) throw new Error(`${{v}} is not a {tt} it is a ${{typeof v}}`);\n"
-                f"    if (isNaN(parseInt(v))) throw new Error(`${{v}} is not a stringified integer`);\n"
+                f"    if (typeof v !== 'string' /* {self.typescript_type()} */) throw new Error(`${{xju.ts.format_(v)}} is not a {tt} it is a ${{typeof v}}`);\n"
+                f"    const vf=parseFloat(v);\n"
+                f"    if (isNaN(vf)) throw new Error(`${{xju.ts.format_(v)}} is not a stringified number`);\n"
+                f"    if (vf%1 !== 0) throw new Error(`${{xju.ts.format_(v)}} is not a stringified integer`);\n"
                 f"    return v as {tt};\n"
                 f"}})({expression})")
         elif issubclass(self.t,float):
             return TypeScriptSourceCode(
                 f"((v: any): {tt} => {{\n"
-                f"    if (typeof v !== 'string' /* {self.typescript_type()} */) throw new Error(`${{v}} is not a {tt} it is a ${{typeof v}}`);\n"
-                f"    if (isNaN(parseFloat(v))) throw new Error(`${{v}} is not a stringified number`);\n"
+                f"    if (typeof v !== 'string' /* {self.typescript_type()} */) throw new Error(`${{xju.ts.format_(v)}} is not a {tt} it is a ${{typeof v}}`);\n"
+                f"    if (isNaN(parseFloat(v))) throw new Error(`${{xju.ts.format_(v)}} is not a stringified number`);\n"
                 f"    return v as {tt};\n"
                 f"}})({expression})")
         elif issubclass(self.t,str):
             return TypeScriptSourceCode(
                 f"((v: any): {tt} => {{\n"
-                f"    if (typeof v !== 'string' /* {self.typescript_type()} */) throw new Error(`${{v}} is not a string it is a ${{typeof v}}`);\n"
+                f"    if (typeof v !== 'string' /* {self.typescript_type()} */) throw new Error(`${{xju.ts.format_(v)}} is not a string it is a ${{typeof v}}`);\n"
                 f"    return v as {tt};\n"
                 f"}})({expression})")
     pass
@@ -469,7 +492,7 @@ class NoneCodecImpl:
         # python's json.dumps turns None into "null"
         return TypeScriptSourceCode('string /* null */')
     def ensure_typescript_defs(self, namespace) -> None:
-        pass
+        ensure_xju_ts_defs(namespace)
     def get_typescript_isa(self,
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
@@ -485,7 +508,7 @@ class NoneCodecImpl:
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(
             f"((v: any): null => {{\n"
-            f"    if (v !== null) throw new Error(`${{v}} is not null it is a ${{typeof v}}`);\n"
+            f"    if (v !== null) throw new Error(`${{xju.ts.format_(v)}} is not null it is a ${{typeof v}}`);\n"
             f"    return v as null;\n"
             f"}})({expression})")
     def get_typescript_asa_key(self,
@@ -493,7 +516,7 @@ class NoneCodecImpl:
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(
             f"((v: any): null => {{\n"
-            f"    if (v !== 'null') throw new Error(`key ${{v}} is not 'null'`);\n"
+            f"    if (v !== 'null') throw new Error(`key ${{xju.ts.format_(v)}} is not null`);\n"
             f"    return v as null;\n"
             f"}})({expression})")
     pass
@@ -552,10 +575,20 @@ class ListCodecImpl:
         tt=self.typescript_type()
         return TypeScriptSourceCode(
             f"((v: any): {tt} => {{try{{\n"
-            f"    if (!Array.isArray(v)) throw new Error(`${{v}} is not an array it is a ${{typeof v}}`);\n"
-            f"    v.forEach((x)=>{indent(4,self.value_codec.get_typescript_asa(TypeScriptSourceCode('x'),namespace))});\n"
+            f"    if (!Array.isArray(v)) throw new Error(`${{xju.ts.format_(v)}} is not an array it is a ${{typeof v}}`);\n"
+            f"    v.forEach((x,i)=>{{\n"
+            f"        try{{\n"
+            f"            {indent(4,self.value_codec.get_typescript_asa(TypeScriptSourceCode('x'),namespace))};\n"
+            f"        }}\n"
+            f"        catch(e){{\n"
+            f"            throw new Error(`item at index ${{i}} is invalid because ${{e}}`);\n"
+            f"        }}\n"
+            f"    }});\n"
             f"    return v as {tt};\n"
-            f"}}catch(e:any){{throw new Error(`${{v}} is not a {tt} because ${{e}}`);}}}})({expression})")
+            f"}}\n"
+            f"catch(e:any){{\n"
+            f"    throw new Error(`${{xju.ts.format_(v)}} is not a {tt} because ${{e}}`);\n"
+            f"}}}})({expression})")
     def get_typescript_asa_key(self,
                                expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
@@ -587,7 +620,7 @@ class AnyListCodecImpl:
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
-        pass
+        ensure_xju_ts_defs(namespace)
     def get_typescript_isa(self,
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
@@ -604,7 +637,7 @@ class AnyListCodecImpl:
         tt=self.typescript_type()
         return TypeScriptSourceCode(
             f"((v: any): {tt} => {{\n"
-            f"    if (!Array.isArray(v)) throw new Error(`${{v}} is not an Array it is a ${{typeof v}}`);\n"
+            f"    if (!Array.isArray(v)) throw new Error(`${{xju.ts.format_(v)}} is not an Array it is a ${{typeof v}}`);\n"
             f"    return v as {tt};\n"
             f"}})({expression})")
     def get_typescript_asa_key(self,
@@ -650,6 +683,7 @@ class SetCodecImpl:
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
+        ensure_xju_ts_defs(namespace)
         self.value_codec.ensure_typescript_defs(namespace)
         pass
     def get_typescript_isa(self,
@@ -672,10 +706,17 @@ class SetCodecImpl:
         tt=self.typescript_type()
         return TypeScriptSourceCode(
             f"((v: any): {tt} => {{try{{\n"
-            f"    if (!Array.isArray(v)) throw new Error(`${{v}} is not an array it is a ${{typeof v}}`);\n"
-            f"    v.forEach((x)=>{indent(4,self.value_codec.get_typescript_asa(TypeScriptSourceCode('x'),namespace))});\n"
+            f"    if (!Array.isArray(v)) throw new Error(`${{xju.ts.format_(v)}} is not an array it is a ${{typeof v}}`);\n"
+            f"    v.forEach((x,i)=>{{\n"
+            f"        try{{\n"
+            f"            {indent(4,self.value_codec.get_typescript_asa(TypeScriptSourceCode('x'),namespace))};\n"
+            f"        }}\n"
+            f"        catch(e){{\n"
+            f"            throw new Error(`item at index ${{i}} is invalid because ${{e}}`);\n"
+            f"        }}\n"
+            f"    }});\n"
             f"    return v as {tt};\n"
-            f"}}catch(e:any){{throw new Error(`${{v}} is not a {tt} because ${{e}}`);}}}})({expression})")
+            f"}}catch(e:any){{throw new Error(`${{xju.ts.format_(v)}} is not a {tt} because ${{e}}`);}}}})({expression})")
     def get_typescript_asa_key(self,
                                expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
@@ -781,6 +822,7 @@ class FrozenSetCodecImpl:
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
+        ensure_xju_ts_defs(namespace)
         self.value_codec.ensure_typescript_defs(namespace)
         pass
     def get_typescript_isa(self,
@@ -803,10 +845,10 @@ class FrozenSetCodecImpl:
         tt=self.typescript_type()
         return TypeScriptSourceCode(
             f"((v: any): {tt} => {{try{{\n"
-            f"    if (!Array.isArray(v)) throw new Error(`${{v}} is not an array it is a ${{typeof v}}`);\n"
+            f"    if (!Array.isArray(v)) throw new Error(`${{xju.ts.format_(v)}} is not an array it is a ${{typeof v}}`);\n"
             f"    v.forEach((x)=>{indent(4,self.value_codec.get_typescript_asa(TypeScriptSourceCode('x'),namespace))});\n"
             f"    return v as {tt};\n"
-            f"}}catch(e:any){{throw new Error(`${{v}} is not a {tt} because ${{e}}`);}}}})({expression})")
+            f"}}catch(e:any){{throw new Error(`${{xju.ts.format_(v)}} is not a {tt} because ${{e}}`);}}}})({expression})")
     def get_typescript_asa_key(self,
                                expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
@@ -849,7 +891,7 @@ class AnyFrozenSetCodecImpl:
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
-        pass
+        ensure_xju_ts_defs(namespace)
     def get_typescript_isa(self,
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
@@ -866,7 +908,7 @@ class AnyFrozenSetCodecImpl:
         tt=self.typescript_type()
         return TypeScriptSourceCode(
             f"((v: any): {tt} => {{\n"
-            f"    if (!Array.isArray(v)) throw new Error(`${{v}} is not an {tt} it is a ${{typeof v}}`);\n"
+            f"    if (!Array.isArray(v)) throw new Error(`${{xju.ts.format_(v)}} is not an {tt} it is a ${{typeof v}}`);\n"
             f"    return v as {tt};\n"
             f"}})({expression})")
     def get_typescript_asa_key(self,
@@ -959,11 +1001,11 @@ class TupleCodec:
         self.ensure_typescript_defs(namespace)
         return TypeScriptSourceCode(
             f"((v: any): {tt} => {{try{{\n" +
-            f"    if (!Array.isArray(v)) throw new Error(`${{v}} is not an array it is a ${{typeof v}}`);\n" +
-            f"    if (v.length != {self.number_of_codecs}) throw new Error(`${{v}} does not have {self.number_of_codecs} elements (it has ${{v.length}} elements)`);\n" +
+            f"    if (!Array.isArray(v)) throw new Error(`${{xju.ts.format_(v)}} is not an array it is a ${{typeof v}}`);\n" +
+            f"    if (v.length != {self.number_of_codecs}) throw new Error(`${{xju.ts.format_(v)}} does not have {self.number_of_codecs} elements (it has ${{v.length}} elements)`);\n" +
             ''.join(asas)+
             f"    return v as {tt};\n"+
-            f"}}catch(e:any){{ throw new Error(`${{v}} is not a {tt} because ${{e}}`);}}}})({expression})")
+            f"}}catch(e:any){{ throw new Error(`${{xju.ts.format_(v)}} is not a {tt} because ${{e}}`);}}}})({expression})")
     def get_typescript_asa_key(self,
                                expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
@@ -1078,7 +1120,7 @@ class UnionCodecImpl:
             f"    throw new Error(es.join(' and '));\n"+
             f"}}catch(e:any)\n"+
             f"{{\n"+
-            f"    throw new Error(`${{v}} is not a {tt} because ${{e}}`);\n"+
+            f"    throw new Error(`${{xju.ts.format_(v)}} is not a {tt} because ${{e}}`);\n"+
             f"}}}})({expression})")
     def get_typescript_asa_key(self,
                                expression:TypeScriptSourceCode,
@@ -1099,7 +1141,7 @@ class UnionCodecImpl:
             f"    throw new Error(es.join(' and '));\n"+
             f"}}catch(e:any)\n"+
             f"{{\n"+
-            f"    throw new Error(`${{v}} is not a {tt} because ${{e}}`);\n"+
+            f"    throw new Error(`${{xju.ts.format_(v)}} is not a {tt} because ${{e}}`);\n"+
             f"}}}})({expression})")
     pass
 
@@ -1190,6 +1232,7 @@ class DictCodecImpl:
     def get_typescript_isa(self,
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        self.ensure_typescript_defs(namespace)
         return TypeScriptSourceCode(
             f"(((x:any):x is {self.typescript_type()}=>(\n"
             f"    x !== null &&\n"
@@ -1210,26 +1253,27 @@ class DictCodecImpl:
     def get_typescript_asa(self,
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        self.ensure_typescript_defs(namespace)
         tt=self.typescript_type()
         return TypeScriptSourceCode(
             f"((x: any): {tt} => {{try{{\n"
-            f"    if (x === null) throw new Error(`${{x}} is not an object it is null`);\n"
-            f"    if (typeof x !== 'object') throw new Error(`${{x}} is not an object it is a ${{typeof x}}`);\n"
-            f"    if (Array.isArray(x)) throw new Error(`${{x}} is not an object it is an array`);\n"
+            f"    if (x === null) throw new Error(`${{xju.ts.format_(x)}} is not an object it is null`);\n"
+            f"    if (typeof x !== 'object') throw new Error(`${{xju.ts.format_(x)}} is not an object it is a ${{typeof x}}`);\n"
+            f"    if (Array.isArray(x)) throw new Error(`${{xju.ts.format_(x)}} is not an object it is an array`);\n"
             f"    for(const k in x){{try{{\n"+
             f"        if (!x.hasOwnProperty(k)) continue;\n"+
             f"        const v=x[k];\n"
             f"        if (typeof k !== 'string') {{\n"+
             f"            const kt=typeof k;\n"+
-            f"            throw new Error(`key type is ${{kt}} not string`);\n"+
+            f"            throw new Error(`key type is ${{xju.ts.format_(kt)}} not string`);\n"+
             f"        }}\n"+
             f"        {indent(8,self.key_codec.get_typescript_asa_key(TypeScriptSourceCode('k'),namespace))};\n"
             f"        {indent(8,self.value_codec.get_typescript_asa(TypeScriptSourceCode('v'),namespace))};\n"
             f"    }}catch(e:any){{\n"
-            f"        throw new Error(`element ${{k}} is invalid because ${{e}}`);\n"
+            f"        throw new Error(`element ${{xju.ts.format_(k)}} is invalid because ${{e}}`);\n"
             f"    }}}};\n"
             f"    return x as {tt};\n"
-            f"}}catch(e:any){{throw new Error(`${{x}} is not a {tt} because ${{e}}`);}}}})({expression})")
+            f"}}catch(e:any){{throw new Error(`${{xju.ts.format_(x)}} is not a {tt} because ${{e}}`);}}}})({expression})")
     def get_typescript_asa_key(self,
                                expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
@@ -1303,19 +1347,19 @@ class AnyDictCodecImpl:
         tt=self.typescript_type()
         return TypeScriptSourceCode(
             f"((x: any): {tt} => {{try{{\n"
-            f"    if (x === null) throw new Error(`${{x}} is not an object it is null`);\n"
-            f"    if (typeof x !== 'object') throw new Error(`${{x}} is not an object it is a ${{typeof x}}`);\n"
-            f"    if (Array.isArray(x)) throw new Error(`${{x}} is not an object it is an array`);\n"
+            f"    if (x === null) throw new Error(`${{xju.ts.format_(x)}} is not an object it is null`);\n"
+            f"    if (typeof x !== 'object') throw new Error(`${{xju.ts.format_(x)}} is not an object it is a ${{typeof x}}`);\n"
+            f"    if (Array.isArray(x)) throw new Error(`${{xju.ts.format_(x)}} is not an object it is an array`);\n"
             f"    for(const k in x){{\ntry{{\n"+
             f"        if (!x.hasOwnProperty(k)) continue;\n"+
             f"        const v=x[k];\n"
             f"        {indent(8,self.key_codec.get_typescript_asa(TypeScriptSourceCode('k'),namespace))};\n"
             f"        {indent(8,self.value_codec.get_typescript_asa(TypeScriptSourceCode('v'),namespace))};\n"
             f"    }}catch(e:any){{\n"
-            f"        throw new Error(`element ${{k}} is invalid because ${{e}}`);\n"
+            f"        throw new Error(`element ${{xju.ts.format_(k)}} is invalid because ${{e}}`);\n"
             f"    }}}};\n"
             f"    return x as {tt};\n"
-            f"}}catch(e:any){{throw new Error(`${{x}} is not a {tt} because ${{e}}`);}}}})({expression})")
+            f"}}catch(e:any){{throw new Error(`${{xju.ts.format_(x)}} is not a {tt} because ${{e}}`);}}}})({expression})")
     def get_typescript_asa_key(self,
                                expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
@@ -1427,11 +1471,11 @@ class NewIntCodecImpl(Generic[NewInt]):
                 f"function asInstanceOf{typescript_type_name}(v: any): {typescript_type_name}\n"
                 f"{{\n"
                 f"    try{{\n"
-                f"        if (typeof v !== 'number') throw new Error(`${{v}} is a ${{typeof v}}`);\n"
+                f"        if (typeof v !== 'number') throw new Error(`${{xju.ts.format_(v)}} is a ${{typeof v}}`);\n"
                 f"        return v;\n"
                 f"    }}\n"
                 f"    catch(e:any){{\n"
-                f"        throw new Error(`${{v}} is not a {typescript_type_name} because ${{e}}`);\n"
+                f"        throw new Error(`${{xju.ts.format_(v)}} is not a {typescript_type_name} because ${{e}}`);\n"
                 f"    }}\n"
                 f"}}")
             target_namespace.defs[TypeScriptUQN(f'isInstanceOf{typescript_type_name}')]=TypeScriptSourceCode(
@@ -1456,7 +1500,7 @@ class NewIntCodecImpl(Generic[NewInt]):
         tt=self.typescript_type()
         return TypeScriptSourceCode(
             f"((v: any): {tt} => {{\n"
-            f"    if (typeof v !== 'number' /* {self.get_type_fqn()} */) throw new Error(`${{v}} is not a {self.get_type_fqn()} i.e. a number, it is a ${{typeof v}}`);\n"
+            f"    if (typeof v !== 'number' /* {self.get_type_fqn()} */) throw new Error(`${{xju.ts.format_(v)}} is not a {self.get_type_fqn()} i.e. a number, it is a ${{typeof v}}`);\n"
             f"    return v as {tt};\n"
             f"}})({expression})")
     def get_typescript_asa_key(self,
@@ -1465,8 +1509,8 @@ class NewIntCodecImpl(Generic[NewInt]):
         tt=self.typescript_as_object_key_type()
         return TypeScriptSourceCode(
             f"((v: any): {tt} => {{\n"
-            f"    if (typeof v !== 'string' /* {self.get_type_fqn()} */) throw new Error(`key ${{v}} is not a {self.get_type_fqn()} key type i.e. a string, it is a ${{typeof v}}`);\n"
-            f"    if (isNaN(parseInt(v))) throw new Error(`key ${{v}} is not a stringified integer`);\n"
+            f"    if (typeof v !== 'string' /* {self.get_type_fqn()} */) throw new Error(`key ${{xju.ts.format_(v)}} is not a {self.get_type_fqn()} key type i.e. a string, it is a ${{typeof v}}`);\n"
+            f"    if (isNaN(parseInt(v))) throw new Error(`key ${{xju.ts.format_(v)}} is not a stringified integer`);\n"
             f"    return v as {tt};\n"
             f"}})({expression})")
     pass
@@ -1521,11 +1565,11 @@ class NewFloatCodecImpl(Generic[NewFloat]):
                 f"function asInstanceOf{typescript_type_name}(v: any): {typescript_type_name}\n"
                 f"{{\n"
                 f"    try{{\n"
-                f"        if (typeof v !== 'number') throw new Error(`${{v}} is a ${{typeof v}}`);\n"
+                f"        if (typeof v !== 'number') throw new Error(`${{xju.ts.format_(v)}} is a ${{typeof v}}`);\n"
                 f"        return v;\n"
                 f"    }}\n"
                 f"    catch(e:any){{\n"
-                f"        throw new Error(`${{v}} is not a {typescript_type_name} because ${{e}}`);\n"
+                f"        throw new Error(`${{xju.ts.format_(v)}} is not a {typescript_type_name} because ${{e}}`);\n"
                 f"    }}\n"
                 f"}}")
             target_namespace.defs[TypeScriptUQN(f'isInstanceOf{typescript_type_name}')]=TypeScriptSourceCode(
@@ -1550,7 +1594,7 @@ class NewFloatCodecImpl(Generic[NewFloat]):
         tt=self.typescript_type()
         return TypeScriptSourceCode(
             f"((v: any): {tt} => {{\n"
-            f"    if (typeof v !== 'number' /* {self.get_type_fqn()} */) throw new Error(`${{v}} is not a {self.get_type_fqn()} i.e. a number, it is a ${{typeof v}}`);\n"
+            f"    if (typeof v !== 'number' /* {self.get_type_fqn()} */) throw new Error(`${{xju.ts.format_(v)}} is not a {self.get_type_fqn()} i.e. a number, it is a ${{typeof v}}`);\n"
             f"    return v as {tt};\n"
             f"}})({expression})")
     def get_typescript_asa_key(self,
@@ -1559,8 +1603,8 @@ class NewFloatCodecImpl(Generic[NewFloat]):
         tt=self.typescript_as_object_key_type()
         return TypeScriptSourceCode(
             f"((v: any): {tt} => {{\n"
-            f"    if (typeof v !== 'string' /* {self.get_type_fqn()} */) throw new Error(`key ${{v}} is not a {self.get_type_fqn()} i.e. a string, it is a ${{typeof v}}`);\n"
-            f"    if (isNaN(parseFloat(v))) throw new Error(`key ${{v}} is not a stringified number`);\n"
+            f"    if (typeof v !== 'string' /* {self.get_type_fqn()} */) throw new Error(`key ${{xju.ts.format_(v)}} is not a {self.get_type_fqn()} i.e. a string, it is a ${{typeof v}}`);\n"
+            f"    if (isNaN(parseFloat(v))) throw new Error(`key ${{xju.ts.format_(v)}} is not a stringified number`);\n"
             f"    return v as {tt};\n"
             f"}})({expression})")
     pass
@@ -1657,13 +1701,13 @@ class NewStrCodecImpl(Generic[NewStr]):
         if self.t.pattern is not None:
             return TypeScriptSourceCode(
                 f"((v: any): {tt} => {{\n"
-                f"    if (typeof v !== 'string' /* {self.get_type_fqn()} */) throw new Error(`${{v}} is not a {self.get_type_fqn()} i.e. a string, it is a ${{typeof v}}`);\n"
-                f"    if ((new RegExp({self.t.pattern.pattern!r})).exec({expression})===null) throw new Error(`${{v}} does not match pattern `+{self.t.pattern.pattern!r});\n"
+                f"    if (typeof v !== 'string' /* {self.get_type_fqn()} */) throw new Error(`${{xju.ts.format_(v)}} is not a {self.get_type_fqn()} i.e. a string, it is a ${{typeof v}}`);\n"
+                f"    if ((new RegExp({self.t.pattern.pattern!r})).exec({expression})===null) throw new Error(`${{xju.ts.format_(v)}} does not match pattern `+{self.t.pattern.pattern!r});\n"
                 f"    return v as {tt};\n"
                 f"}})({expression})")
         return TypeScriptSourceCode(
             f"((v: any): {tt} => {{\n"
-            f"    if (typeof v !== 'string' /* {self.get_type_fqn()} */) throw new Error(`${{v}} is not a {self.get_type_fqn()} i.e. a string, it is a ${{typeof v}}`);\n"
+            f"    if (typeof v !== 'string' /* {self.get_type_fqn()} */) throw new Error(`${{xju.ts.format_(v)}} is not a {self.get_type_fqn()} i.e. a string, it is a ${{typeof v}}`);\n"
             f"    return v as {tt};\n"
             f"}})({expression})")
     def get_typescript_asa_key(self,
@@ -1730,11 +1774,11 @@ class TimestampCodecImpl:
                 f"function asInstanceOf{typescript_type_name}(v: any): {typescript_type_name}\n"
                 f"{{\n"
                 f"    try{{\n"
-                f"        if (typeof v !== 'number') throw new Error(`${{v}} is a ${{typeof v}} not a number`);\n"
+                f"        if (typeof v !== 'number') throw new Error(`${{xju.ts.format_(v)}} is a ${{typeof v}} not a number`);\n"
                 f"        return v;\n"
                 f"    }}\n"
                 f"    catch(e:any){{\n"
-                f"        throw new Error(`${{v}} is not a {tt} because ${{e}}`);\n"
+                f"        throw new Error(`${{xju.ts.format_(v)}} is not a {tt} because ${{e}}`);\n"
                 f"    }}\n"
                 f"}}")
             target_namespace.defs[TypeScriptUQN(f'asInstanceOfKeyOf{typescript_type_name}')]=TypeScriptSourceCode(
@@ -1742,10 +1786,10 @@ class TimestampCodecImpl:
                 f"{{\n"
                 f"    try{{\n"
                 f"        if (typeof (v) == 'string' && !isNaN(parseFloat(v))) return v;\n"
-                f"        throw new Error(`${{v}} is not a stringified number`);\n"
+                f"        throw new Error(`${{xju.ts.format_(v)}} is not a stringified number`);\n"
                 f"    }}\n"
                 f"    catch(e:any){{\n"
-                f"        throw new Error(`${{v}} is not a {tt} because ${{e}}`);\n"
+                f"        throw new Error(`${{xju.ts.format_(v)}} is not a {tt} because ${{e}}`);\n"
                 f"    }}\n"
 
                 f"}}")
@@ -1810,7 +1854,7 @@ class LiteralStrCodecImpl:
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(f"{self.value}")
     def ensure_typescript_defs(self, namespace) -> None:
-        pass
+        ensure_xju_ts_defs(namespace)
     def get_typescript_isa(self,
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
@@ -1827,7 +1871,8 @@ class LiteralStrCodecImpl:
         tt=self.typescript_type()
         return TypeScriptSourceCode(
             f"((v: any): {tt} => {{\n"
-            f"    if (v !== {tt}) throw new Error(`(${{typeof v}}) ${{v}} is not the string {self.value}`);\n"
+            f"    const value={json.dumps(self.value)};\n"
+            f"    if (v !== {tt}) throw new Error(`the ${{typeof v}} ${{xju.ts.format_(v)}} is not the string ${{xju.ts.format_(value)}}`);\n"
             f"    return v as {tt};\n"
             f"}})({expression})")
     def get_typescript_asa_key(self,
@@ -1874,7 +1919,7 @@ class LiteralIntCodecImpl:
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(f"'{self.value}'")
     def ensure_typescript_defs(self, namespace) -> None:
-        pass
+        ensure_xju_ts_defs(namespace)
     def get_typescript_isa(self,
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
@@ -1893,7 +1938,7 @@ class LiteralIntCodecImpl:
         tt=self.typescript_type()
         return TypeScriptSourceCode(
             f"((v: any): {tt} => {{\n"
-            f"    if (v !== {tt}) throw new Error(`(${{typeof v}}) ${{v}} is not the number {self.value}`);\n"
+            f"    if (v !== {tt}) throw new Error(`the ${{typeof v}} ${{xju.ts.format_(v)}} is not the number {self.value}`);\n"
             f"    return v as {tt};\n"
             f"}})({expression})")
     def get_typescript_asa_key(self,
@@ -1902,7 +1947,7 @@ class LiteralIntCodecImpl:
         tt=self.typescript_as_object_key_type()
         return TypeScriptSourceCode(
             f"((v: any): {tt} => {{\n"
-            f"    if (parseInt(v) !== parseInt({tt})) throw new Error(`(${{typeof v}}) ${{v}} is not the stringified number {self.value}`);\n"
+            f"    if (parseInt(v) !== parseInt({tt})) throw new Error(`(${{typeof v}}) ${{xju.ts.format_(v)}} is not the stringified number {self.value}`);\n"
             f"    return v as {tt};\n"
             f"}})({expression})")
     pass
@@ -1945,7 +1990,7 @@ class LiteralBoolCodecImpl:
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         return TypeScriptSourceCode("'true'") if self.value else TypeScriptSourceCode("'false'")
     def ensure_typescript_defs(self, namespace) -> None:
-        pass
+        ensure_xju_ts_defs(namespace)
     def get_typescript_isa(self,
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
@@ -1964,7 +2009,7 @@ class LiteralBoolCodecImpl:
         tt=self.typescript_type()
         return TypeScriptSourceCode(
             f"((v: any): {tt} => {{\n"
-            f"    if (v !== {tt}) throw new Error(`(${{typeof v}}) ${{v}} is not {self.typescript_type()}`);\n"
+            f"    if (v !== {tt}) throw new Error(`the ${{typeof v}} ${{xju.ts.format_(v)}} is not {self.typescript_type()}`);\n"
             f"    return v as {tt};\n"
             f"}})({expression})")
     def get_typescript_asa_key(self,
@@ -1974,7 +2019,7 @@ class LiteralBoolCodecImpl:
         typescript_value=tt
         return TypeScriptSourceCode(
             f"((v: any): {tt} => {{\n"
-            f"    if (v !== `${{{typescript_value}}}`) throw new Error(`(${{typeof v}}) ${{v}} is not {typescript_value}`);\n"
+            f"    if (v !== `${{{typescript_value}}}`) throw new Error(`(${{typeof v}}) ${{xju.ts.format_(v)}} is not {typescript_value}`);\n"
             f"    return v as {typescript_value};\n"
             f"}})({expression})")
     pass
@@ -2026,7 +2071,12 @@ class BytesCodecImpl:
     def get_typescript_asa(self,
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        return self.value_codec.get_typescript_asa(expression,namespace)
+        return TypeScriptSourceCode(f"""\
+(((v) => v.forEach( (x,i) => {{
+    if (x < 0 || x > 255) {{
+        throw new Error(`${{xju.ts.format_(x)}} at index ${{i}} is not in range 0..255`);
+    }}
+}}))({self.value_codec.get_typescript_asa(expression,namespace)}))""")
     def get_typescript_asa_key(self,
                                expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
@@ -2301,9 +2351,9 @@ class ClassCodecImpl:
                 f"function asInstanceOf{typescript_type_name}(v: any): {tt}\n"
                 f"{{\n"
                 f"    try{{\n"
-                f"        if (Array.isArray(v)) throw new Error(`${{v}} is an array`);\n"
-                f"        if (v == null) throw new Error(`${{v}} is not an object it is null`);\n"
-                f"        if (typeof v !== 'object') throw new Error(`${{v}} is not an object it is a ${{typeof v}}`);\n"
+                f"        if (Array.isArray(v)) throw new Error(`${{xju.ts.format_(v)}} is an array`);\n"
+                f"        if (v == null) throw new Error(`${{xju.ts.format_(v)}} is not an object it is null`);\n"
+                f"        if (typeof v !== 'object') throw new Error(`${{xju.ts.format_(v)}} is not an object it is a ${{typeof v}}`);\n"
                 f"        const attr_asa=function(name:string, asa:any):any{{\n"
                 f"            try{{\n"
                 f"                asa(v[name]);\n"
@@ -2317,7 +2367,7 @@ class ClassCodecImpl:
                 f"        return v as {tt};\n"
                 f"    }}\n"
                 f"    catch(e:any){{\n"
-                f"        throw new Error(`${{v}} is not a {tt} because ${{e}}`);\n"
+                f"        throw new Error(`${{xju.ts.format_(v)}} is not a {tt} because ${{e}}`);\n"
                 f"    }}\n"
                 f"}}")
             target_namespace.defs[TypeScriptUQN(f"isInstanceOf{typescript_type_name}")]=TypeScriptSourceCode(
@@ -2375,78 +2425,84 @@ def ensure_xju_ts_defs(target_namespace: TypeScriptNamespace) -> None:
         f"""function str(x:any):string {{ return `${{x}}`; }}"""))
     add(TypeScriptUQN("isObject"), TypeScriptSourceCode(
         f"""function isObject(x:any):x is object {{ return x !== null && typeof(x) === 'object'; }}"""))
-    add(TypeScriptUQN("assertEqual"), TypeScriptSourceCode(f"""\
-function assertEqual<T>(x:T, y:T){{
-    if (Array.isArray(x) && Array.isArray(y)){{
+    add(TypeScriptUQN("assertEqual"), TypeScriptSourceCode("""\
+function assertEqual<T>(x:T, y:T){
+    if (Array.isArray(x) && Array.isArray(y)){
         assertArraysEqual<any>(x,y);
-    }}
-    else if (isObject(x) && isObject(y)){{
+    }
+    else if (isObject(x) && isObject(y)){
         assertObjectsEqual(x,y);
-    }}
-    else if (!(x===y)){{
-        throw new Error(`${{format_(x)}} != ${{format_(y)}}`);
-    }}
-}}"""))
-    add(TypeScriptUQN("format_"), TypeScriptSourceCode(f"""\
-function format_<T>(a:T): string {{
+    }
+    else if (!(x===y)){
+        throw new Error(`${format_(x)} != ${format_(y)}`);
+    }
+}"""))
+    add(TypeScriptUQN("format_"), TypeScriptSourceCode("""\
+function format_<T>(a:T): string {
     if (Array.isArray(a)) return formatArray(a);
     if (isObject(a)) return formatObject(a);
     return JSON.stringify(a);
-}}"""))
-    add(TypeScriptUQN("formatArray"), TypeScriptSourceCode(f"""\
-function formatArray<T>(a:Array<T>): string {{
+}"""))
+    add(TypeScriptUQN("formatArray"), TypeScriptSourceCode("""\
+function formatArray<T>(a:Array<T>): string {
     if(a.length==0) return "[]";
-    if(a.length==1) return `[${{format_(a[0])}}]`;
-    var result=`${{a[0]}}`;
-    for(var i=1;i!=a.length;++i) result=result+`,${{format_(a[i])}}`;
-    return `[${{result}}]`;
-}}"""))
-    add(TypeScriptUQN("formatObject"), TypeScriptSourceCode(f"""\
-function formatObject<T>(a:T): string {{
-    var result="{{";
-    for(const k in a) result=result+` ${{k}}:${{format_(a[k])}};`;
-    return result+"}}";
-}}"""))
-    add(TypeScriptUQN("assertArraysEqual"), TypeScriptSourceCode(f"""\
-function assertArraysEqual<T>(x:Array<T>, y:Array<T>){{
-    try{{
-        try{{
+    if(a.length==1) return `[${format_(a[0])}]`;
+    var result=`${format_(a[0])}`;
+    for(var i=1;i!=a.length;++i) result=result+`,${format_(a[i])}`;
+    return `[${result}]`;
+}"""))
+    add(TypeScriptUQN("formatObject"), TypeScriptSourceCode("""\
+function formatObject(a:Object): string {
+    var result="{";
+    for(const k of Object.keys(a).slice(0,1)) result=result+` ${k}:${format_(a[k as keyof Object])}`;
+    for(const k of Object.keys(a).slice(1)) result=result+`, ${k}:${format_(a[k as keyof Object])}`;
+    return result+" }";
+}"""))
+    add(TypeScriptUQN("assertArraysEqual"), TypeScriptSourceCode("""\
+function assertArraysEqual<T>(x:Array<T>, y:Array<T>){
+    try{
+        try{
             assertEqual(x.length, y.length);
-        }}
-        catch(e:any){{
-            throw new Error(`arrays of different length because ${{e}}`);
-        }}
+        }
+        catch(e:any){
+            throw new Error(`arrays of different length because ${e}`);
+        }
         var i;
-        for(i=0; i!=x.length; ++i){{
-            try{{
+        for(i=0; i!=x.length; ++i){
+            try{
                 assertEqual<T>(x[i],y[i]);
-            }}
-            catch(e:any){{
-                throw new Error(`array element ${{i}} ${{format_(x[i])}} != ${{format_(y[i])}}`);
-            }}
-        }}
-    }}
-    catch(e:any){{
-        throw new Error(`array ${{format_(x)}} != array ${{format_(y)}} because ${{e}}`);
-    }}
-}}"""))
-    add(TypeScriptUQN("assertObjectsEqual"), TypeScriptSourceCode(f"""\
-function assertObjectsEqual(x:object, y:object){{
-    try{{
+            }
+            catch(e:any){
+                throw new Error(`array element ${i} ${format_(x[i])} != ${format_(y[i])}`);
+            }
+        }
+    }
+    catch(e:any){
+        throw new Error(`array ${format_(x)} != array ${format_(y)} because ${e}`);
+    }
+}"""))
+    add(TypeScriptUQN("assertObjectsEqual"), TypeScriptSourceCode("""\
+function assertObjectsEqual(x:object, y:object){
+    try{
         var xKeys=new Array<keyof object>();
         var yKeys=new Array<keyof object>();
-        for(const k in x){{if (x.hasOwnProperty(k)) xKeys.push(k as keyof object);}}
-        for(const k in y){{if (y.hasOwnProperty(k)) yKeys.push(k as keyof object);}}
+        for(const k in x){if (x.hasOwnProperty(k)) xKeys.push(k as keyof object);}
+        for(const k in y){if (y.hasOwnProperty(k)) yKeys.push(k as keyof object);}
         assertArraysEqual(xKeys,yKeys);
-        for(var i=0; i!=xKeys.length; ++i){{
+        for(var i=0; i!=xKeys.length; ++i){
             const k = xKeys[i];
-            assertEqual(x[k],y[k]);
-        }}
-    }}
-    catch(e){{
-        throw new Error(`object ${{format_(x)}} != object ${{format_(y)}} because ${{e}}`);
-    }}
-}}"""))
+            try{
+                assertEqual(x[k],y[k]);
+            }
+            catch(e){
+                throw new Error(`property ${k} is not equal because ${e}`);
+            }
+        }
+    }
+    catch(e){
+        throw new Error(`object ${format_(x)} != object ${format_(y)} because ${e}`);
+    }
+}"""))
     
 @dataclass
 class EnumValueCodecImpl:

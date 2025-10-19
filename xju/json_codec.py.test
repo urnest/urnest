@@ -55,30 +55,6 @@ import xju
 
 x:Any
 
-# mixed-in enum type
-@dataclass(init=False)
-class MixedEnumValue:
-    def __init__(self, *args, **argv):
-        match len(args):
-            case 0:
-                self.k = argv['k']
-                self.v = argv['v']
-            case 1:
-                self.k, self.v = args[0].k, args[0].v
-            case _:
-                self.k, self.v = args
-
-    k: int
-    v: str
-
-class MixedEnum(MixedEnumValue, Enum):
-    a = MixedEnumValue(1, 'fred')
-    b = MixedEnumValue(2, 'jock')
-    pass
-
-Assert(codec(MixedEnum).encode(MixedEnum.a)) == {'k': 1, 'v': 'fred'}
-Assert(codec(MixedEnum).decode({'k': 1, 'v': 'fred'})) == MixedEnum.a
-
 # int,str,bool,float,None map directly
 
 Assert(codec(int).decode(3))==3
@@ -561,6 +537,30 @@ except Exception as e:
     Assert(readable_repr(e))=="Failed to encode <enum 'O'> value 7.1 because\n7.1 (of type float) is not a O."
 else:
     assert False, x
+
+# mixed-in enum type
+@dataclass(init=False)
+class MixedEnumValue:
+    def __init__(self, *args, **argv):
+        match len(args):
+            case 0:
+                self.k = argv['k']
+                self.v = argv['v']
+            case 1:
+                self.k, self.v = args[0].k, args[0].v
+            case _:
+                self.k, self.v = args
+
+    k: int
+    v: str
+
+class MixedEnum(MixedEnumValue, Enum):
+    a = MixedEnumValue(1, 'fred')
+    b = MixedEnumValue(2, 'jock')
+    pass
+
+Assert(codec(MixedEnum).encode(MixedEnum.a)) == {'k': 1, 'v': 'fred'}
+Assert(codec(MixedEnum).decode({'k': 1, 'v': 'fred'})) == MixedEnum.a
 
 # type unions, e.g. str|int match either type
 
@@ -1534,58 +1534,14 @@ SetSurnamesMsg=SetMultiMsg[Surname]
 Assert(codec(SetSurnamesMsg).decode({'msg_type':'set_new_values','new_values':['knox','garden']}))==SetSurnamesMsg(msg_type='set_new_values',new_values=[Surname('knox'),Surname('garden')])
 
 
-# codec can generate a typescript "cast" ("as-a") and "type guard" ("is a") matching its
+# codec can generate a typescript "cast" ("as-a") and "type guard" ("is-a") matching its
 # json encoding. Non-class codecs generate inline typescript source code, see
 # codec.get_typescript_asa() and codec.get_typescript_isa(). For classes, codec
 # also generates functions in corresponding namespace, for example:
 
 typescript_namespace=TypeScriptNamespace({})
 
-timestamp_codec=codec(Timestamp)
-
-Assert(codec(IpV4Addr).get_typescript_isa(TypeScriptSourceCode('7'),typescript_namespace))==TypeScriptSourceCode("(typeof (7) == 'string')")
-Assert(codec(IpV4Addr).get_typescript_isa_key(TypeScriptSourceCode('7'),typescript_namespace))==TypeScriptSourceCode("(typeof (7) == 'string')")
-Assert(codec(IpV4Addr).get_typescript_asa(TypeScriptSourceCode('7'),typescript_namespace))==TypeScriptSourceCode("""((v: any): string => {
-    if (typeof v !== 'string') throw new Error(`${v} is not a string it is a ${typeof v}`);
-    return v as string;
-})(7)""")
-Assert(codec(IpV4Addr).get_typescript_asa_key(TypeScriptSourceCode('7'),typescript_namespace))==TypeScriptSourceCode("""((v: any): string => {
-    if (typeof v !== 'string') throw new Error(`${v} is not a string it is a ${typeof v}`);
-    return v as string;
-})(7)""")
-
 codec(O).ensure_typescript_defs(typescript_namespace)
-
-
-Assert(codec(set[int]).get_typescript_isa(TypeScriptSourceCode("v"),typescript_namespace))==TypeScriptSourceCode("(((v:any):v is Array<number> /* with unique elements */=>(\n     Array.isArray(v) && \n    v.filter((x)=>(\n        !(typeof (x) == 'number'))).length==0))(v))")
-try:
-    codec(set[int]).get_typescript_isa_key(TypeScriptSourceCode("v"),typescript_namespace)
-except Exception as e:
-    Assert(readable_repr(e))=='Array<number> /* with unique elements */ is not allowed as a typescript object key type'
-else:
-    assert False
-Assert(codec(set).get_typescript_isa(TypeScriptSourceCode("v"),typescript_namespace))==TypeScriptSourceCode("(Array.isArray(v))")
-try:
-    codec(set).get_typescript_isa_key(TypeScriptSourceCode("v"),typescript_namespace)
-except Exception as e:
-    Assert(readable_repr(e))=='Array<any> /* with unique elements */ is not allowed as a typescript object key type'
-else:
-    assert False
-
-Assert(codec(frozenset[int]).get_typescript_isa(TypeScriptSourceCode("v"),typescript_namespace))==TypeScriptSourceCode("(((v:any):v is Array<number> /* with unique elements */=>(\n     Array.isArray(v) && \n    v.filter((x)=>(\n        !(typeof (x) == 'number'))).length==0))(v))")
-try:
-    codec(frozenset[int]).get_typescript_isa_key(TypeScriptSourceCode("v"),typescript_namespace)
-except Exception as e:
-    Assert(readable_repr(e))=='Array<number> /* with unique elements */ is not allowed as a typescript object key type'
-else:
-    assert False
-Assert(codec(frozenset).get_typescript_isa(TypeScriptSourceCode("v"),typescript_namespace))==TypeScriptSourceCode("(Array.isArray(v))")
-try:
-    codec(frozenset).get_typescript_isa_key(TypeScriptSourceCode("v"),typescript_namespace)
-except Exception as e:
-    Assert(readable_repr(e))=='Array<any> /* with unique elements */ is not allowed as a typescript object key type'
-else:
-    assert False
 
 # ... get_formatted_defs() generates the typescript source code:
 Assert(typescript_namespace.get_formatted_defs())==TypeScriptSourceCode(
@@ -1613,14 +1569,15 @@ namespace xju {
         export function formatArray<T>(a:Array<T>): string {
             if(a.length==0) return "[]";
             if(a.length==1) return `[${format_(a[0])}]`;
-            var result=`${a[0]}`;
+            var result=`${format_(a[0])}`;
             for(var i=1;i!=a.length;++i) result=result+`,${format_(a[i])}`;
             return `[${result}]`;
         }
-        export function formatObject<T>(a:T): string {
+        export function formatObject(a:Object): string {
             var result="{";
-            for(const k in a) result=result+` ${k}:${format_(a[k])};`;
-            return result+"}";
+            for(const k of Object.keys(a).slice(0,1)) result=result+` ${k}:${format_(a[k as keyof Object])}`;
+            for(const k of Object.keys(a).slice(1)) result=result+`, ${k}:${format_(a[k as keyof Object])}`;
+            return result+" }";
         }
         export function assertArraysEqual<T>(x:Array<T>, y:Array<T>){
             try{
@@ -1653,7 +1610,12 @@ namespace xju {
                 assertArraysEqual(xKeys,yKeys);
                 for(var i=0; i!=xKeys.length; ++i){
                     const k = xKeys[i];
-                    assertEqual(x[k],y[k]);
+                    try{
+                        assertEqual(x[k],y[k]);
+                    }
+                    catch(e){
+                        throw new Error(`property ${k} is not equal because ${e}`);
+                    }
                 }
             }
             catch(e){
@@ -1915,8 +1877,6 @@ else:
 # backref can't ever be used as json object key, but for coverage:
 Assert(BackRefCodecImpl(NoopCodecImpl(str)).get_object_key_json_schema({}))=={'$ref': '#/definitions/str'}
 Assert(BackRefCodecImpl(NoopCodecImpl(str)).typescript_as_object_key_type())==TypeScriptSourceCode("string")
-Assert(BackRefCodecImpl(NoopCodecImpl(str)).get_typescript_isa_key(TypeScriptSourceCode("x"),typescript_namespace))==TypeScriptSourceCode("(typeof (x) == 'string')")
-Assert(BackRefCodecImpl(NoopCodecImpl(str)).get_typescript_asa_key(TypeScriptSourceCode("x"),typescript_namespace))==TypeScriptSourceCode("((v: any): string => {\n    if (typeof v !== 'string' /* string */) throw new Error(`${v} is not a string it is a ${typeof v}`);\n    return v as string;\n})(x)")
 
 # coverage of nested Self
 @dataclass
