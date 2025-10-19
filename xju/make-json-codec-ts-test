@@ -308,7 +308,9 @@ class EncodableData:
     a_float: float
     a_str: str
     a_new_int: Votes
+    an_xju_int: ByteCount
     a_new_float: Milligrams
+    an_xju_float: Metres
     a_new_str: Colour
     a_null: None
     a_boolean: bool
@@ -480,7 +482,9 @@ encoded_encodableData=json.dumps(encodableData_codec.encode(EncodableData(
     a_float = 9.2,
     a_str = 'fred',
     a_new_int = Votes(22),
+    an_xju_int = ByteCount(88),
     a_new_float = Milligrams(2.2),
+    an_xju_float = Metres(18.2),
     a_new_str = Colour('red'),
     a_null = None,
     a_boolean = True,
@@ -517,7 +521,9 @@ print('''
         a_float: 9.2,
         a_str: 'fred',
         a_new_int: 22,
+        an_xju_int: 88,
         a_new_float: 2.2,
+        an_xju_float: 18.2,
         a_new_str: 'red',
         a_null: null,
         a_boolean: true,
@@ -561,7 +567,7 @@ f'''
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'Error: { an_int:7.6, a_float:9.2, a_str:"fred", a_new_int:22, a_new_float:2.2, a_new_str:"red", a_null:null, a_boolean:true, a_union:"walker", a_list:[1,2,3], any_list:[1,null,"a"], a_set:[4,5,6], any_set:[null,2], a_frozen_set:[7], any_frozen_set:[2,4.6], some_bytes:[10,11,12], a_tuple:[8,"jock"], a_literal_str:"mai", a_literal_int:7, a_literal_bool:true, a_class:{ first_name:"fran", middle_names:["jan"], last_name:"lan", class:"Upper" }, a_dont_encode:{ y:"yyy" }, fred_7_false:false, a_recurse_self:{ defs:{ } }, a_timestamp:45000, an_enum:"fred", a_mixed_in_enum:{ k:2, v:"jock" }, a_recursive:{ a:[{ o:["1","2",[]] },"3",[{ a:["4","6",[]] }]] }, an_enum_value:"fred", a_custom_encoded:2975337473, another_custom_encoded:"177.88.12.0/22" }');
+            assert_x_contains_y(str(e), 'Error: { an_int:7.6, a_float:9.2, a_str:"fred", a_new_int:22, an_xju_int:88, a_new_float:2.2, an_xju_float:18.2, a_new_str:"red", a_null:null, a_boolean:true, a_union:"walker", a_list:[1,2,3], any_list:[1,null,"a"], a_set:[4,5,6], any_set:[null,2], a_frozen_set:[7], any_frozen_set:[2,4.6], some_bytes:[10,11,12], a_tuple:[8,"jock"], a_literal_str:"mai", a_literal_int:7, a_literal_bool:true, a_class:{ first_name:"fran", middle_names:["jan"], last_name:"lan", class:"Upper" }, a_dont_encode:{ y:"yyy" }, fred_7_false:false, a_recurse_self:{ defs:{ } }, a_timestamp:45000, an_enum:"fred", a_mixed_in_enum:{ k:2, v:"jock" }, a_recursive:{ a:[{ o:["1","2",[]] },"3",[{ a:["4","6",[]] }]] }, an_enum_value:"fred", a_custom_encoded:2975337473, another_custom_encoded:"177.88.12.0/22" }');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -615,6 +621,21 @@ f'''
     try {
         asInstanceOfEncodableData({
             ...good(),
+            an_xju_int: []
+        });
+        assert_never_reached();
+    }
+    catch(e){
+        try{
+            assert_x_contains_y(str(e), 'attribute an_xju_int is invalid because Error: [] is not a xju.misc.ByteCount i.e. a number, it is a object');
+        }
+        catch(ee){
+            errors.push(`${ee}`);
+        }
+    }
+    try {
+        asInstanceOfEncodableData({
+            ...good(),
             a_new_float: []
         });
         assert_never_reached();
@@ -622,6 +643,21 @@ f'''
     catch(e){
         try{
             assert_x_contains_y(str(e), 'is not a EncodableData because Error: attribute a_new_float is invalid because Error: [] is not a number it is a object');
+        }
+        catch(ee){
+            errors.push(`${ee}`);
+        }
+    }
+    try {
+        asInstanceOfEncodableData({
+            ...good(),
+            an_xju_float: []
+        });
+        assert_never_reached();
+    }
+    catch(e){
+        try{
+            assert_x_contains_y(str(e), 'attribute an_xju_float is invalid because Error: [] is not a Metres i.e. a number, it is a object');
         }
         catch(ee){
             errors.push(`${ee}`);

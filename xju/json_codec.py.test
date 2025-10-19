@@ -1877,6 +1877,9 @@ else:
 # backref can't ever be used as json object key, but for coverage:
 Assert(BackRefCodecImpl(NoopCodecImpl(str)).get_object_key_json_schema({}))=={'$ref': '#/definitions/str'}
 Assert(BackRefCodecImpl(NoopCodecImpl(str)).typescript_as_object_key_type())==TypeScriptSourceCode("string")
+Assert(BackRefCodecImpl(NoopCodecImpl(str)).typescript_as_object_key_type())==TypeScriptSourceCode("string")
+Assert(BackRefCodecImpl(NoopCodecImpl(str)).get_typescript_asa_key(TypeScriptSourceCode("null"),typescript_namespace))==TypeScriptSourceCode("((v: any): string => {\n    if (typeof v !== 'string' /* string */) throw new Error(`${xju.ts.format_(v)} is not a string it is a ${typeof v}`);\n    return v as string;\n})(null)")
+Assert(BackRefCodecImpl(NoopCodecImpl(str)).get_typescript_isa_key(TypeScriptSourceCode("null"),typescript_namespace))==TypeScriptSourceCode("(typeof (null) == 'string')")
 
 # coverage of nested Self
 @dataclass

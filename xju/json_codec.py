@@ -1461,7 +1461,7 @@ class NewIntCodecImpl(Generic[NewInt]):
         x=self.get_type_fqn().replace('/*','**').replace('*/','**')
         return TypeScriptSourceCode(f"string /* {x} */")
     def ensure_typescript_defs(self, namespace) -> None:
-        typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
+        typescript_fqn=[TypeScriptUQN(_) for _ in self.typescript_type().split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
         typescript_type_name=typescript_fqn[-1]
         if typescript_type_name not in target_namespace.defs:
@@ -1555,7 +1555,7 @@ class NewFloatCodecImpl(Generic[NewFloat]):
         x=f"string /* {self.get_type_fqn().replace('/*','**').replace('*/','**')} */"
         return TypeScriptSourceCode(x)
     def ensure_typescript_defs(self, namespace) -> None:
-        typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
+        typescript_fqn=[TypeScriptUQN(_) for _ in self.typescript_type().split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
         typescript_type_name=typescript_fqn[-1]
         if typescript_type_name not in target_namespace.defs:
@@ -2967,8 +2967,6 @@ def _explodeSchemaRec(
             return EnumCodecImpl(
                 t,{name: EnumValueCodecImpl(name,vv.__class__,vv,_explodeSchema(type(vv.value),type_var_map,codec_backrefs))
                    for name,vv in t.__members__.items()})
-        if isinstance(t,Enum):
-            return EnumValueCodecImpl(t.name,t.__class__,t,_explodeSchema(type(t.value),type_var_map,codec_backrefs))
         assert isinstance(t,type), (type(t), t)
         if issubclass(t,xju.newtype.Int):
             return NewIntCodecImpl(t)
