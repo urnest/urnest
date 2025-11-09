@@ -370,7 +370,7 @@ class EncodableKeyTypes:
     duration_key: dict[Duration,int]
     timestamp_key: dict[Timestamp,int]
     non_str_literal_key: dict[Literal[10]|Literal[True],int]
-    str_literal_key: dict[Literal["j ock"]|Literal[O.a]|Surname,int]
+    str_literal_key: dict[Literal["a\n\"nail\"'s tip"]|Literal[O.a]|Surname,int]
     enum_key: dict[O,int]
     custom_key: dict[IpV4Addr,int]
     alt_custom_key: dict[IpV4AddrWithPrefix,int]
@@ -1033,7 +1033,7 @@ encoded_key_types=json.dumps(encodable_key_types_codec.encode(EncodableKeyTypes(
     duration_key={Duration(77.2): 1},
     timestamp_key={Timestamp(88.1): 1},
     non_str_literal_key={10: 1, True: 2},
-    str_literal_key={"j ock": 3, O.a: 4, Surname("rooster"): 5},
+    str_literal_key={"a\n\"nail\"'s tip": 3, O.a: 4, Surname("rooster"): 5},
     enum_key={O.a: 1, O.b: 2},
     custom_key={IpV4Addr("192.8.8.1"): 1},
     alt_custom_key={IpV4AddrWithPrefix("192.8.8.1/24"): 1},
@@ -1054,7 +1054,7 @@ print('''
         duration_key:{ 77.2:1 },
         timestamp_key:{ 88.1:1 },
         non_str_literal_key:{ 10:1, true:2 },
-        str_literal_key:{ "j ock":3, fred:4, rooster:5 },
+        str_literal_key:{ "a\\n\\"nail\\"'s tip":3, fred:4, rooster:5 },
         enum_key:{ fred:1, jock:2 },
         custom_key:{ 3221751809:1 },
         alt_custom_key:{ "192.8.8.1/24":1 },
@@ -1095,7 +1095,7 @@ f'''
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'Error: { str_key:{ fred:3 }, int_key:null, more_keys:{ 9:2, null:1, 5.5:3, true:4 }, duration_key:{ 77.2:1 }, timestamp_key:{ 88.1:1 }, non_str_literal_key:{ 10:1, true:2 }, str_literal_key:{ j ock:3, fred:4, rooster:5 }, enum_key:{ fred:1, jock:2 }, custom_key:{ 3221751809:1 }, alt_custom_key:{ 192.8.8.1/24:1 }, newstr_key:{ red:1, green:2 }, newfloat_key:{ 22:1 }, newint_key:{ 7:1 }, newbool_key:{ false:1 }, any_key:{ 8:1, fred:2, null:3, 7.6:4, true:5 } } is not a EncodableKeyTypes because Error: attribute int_key is invalid because Error: null is not a { [key: string /* int */]: number } because Error: null is not an object it is null');
+            assert_x_contains_y(str(e), 'Error: { str_key:{ fred:3 }, int_key:null, more_keys:{ 9:2, null:1, 5.5:3, true:4 }, duration_key:{ 77.2:1 }, timestamp_key:{ 88.1:1 }, non_str_literal_key:{ 10:1, true:2 }, str_literal_key:{ a\\n"nail"\\'s tip:3, fred:4, rooster:5 }, enum_key:{ fred:1, jock:2 }, custom_key:{ 3221751809:1 }, alt_custom_key:{ 192.8.8.1/24:1 }, newstr_key:{ red:1, green:2 }, newfloat_key:{ 22:1 }, newint_key:{ 7:1 }, newbool_key:{ false:1 }, any_key:{ 8:1, fred:2, null:3, 7.6:4, true:5 } } is not a EncodableKeyTypes because Error: attribute int_key is invalid because Error: null is not a { [key: string /* int */]: number } because Error: null is not an object it is null');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -1170,7 +1170,7 @@ f'''
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute str_literal_key is invalid because Error: null is not a { [key: string /* \"j ock\"|O.a|string ** Surname ** */]: number } because Error: null is not an object it is null');
+            assert_x_contains_y(str(e), 'attribute str_literal_key is invalid because Error: null is not a { [key: string /* \\"a\\n\\"nail\\"\\'s tip\\"|O.a|string ** Surname ** */]: number } because Error: null is not an object it is null');
         }
         catch(ee){
             errors.push(`${ee}`);
