@@ -98,19 +98,26 @@ class IpV4Addr(IPv4Address):
     def xju_json_codec_get_typescript_type() -> TypeScriptSourceCode:
         return TypeScriptSourceCode('number /* IpV4Addr */')
     @staticmethod
-    def xju_json_codec_get_typescript_isa(
+    def xju_json_codec_5_get_typescript_isa(
             expression:TypeScriptSourceCode,
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that turns {expression} into a bool indicating whether the expression is a T'''
-        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
-        return IpV4Addr.__xju_json_codec.get_typescript_isa(expression,namespace)
+        '''return typescript source code that turns {expression} into a
+            false - indicating expression is not a T
+            xju.ts.ApplyDefaults - expression is a T
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        return (TypeScriptSourceCode(f"// is a IpV4Addr?\n") +
+                # note codec(int).get_typescript_isa here will apply
+                # defaults, which is not "correct", but we know it
+                # will never actually have any defaults to apply
+                IpV4Addr.__xju_json_codec.get_typescript_isa(expression,namespace)+
+                TypeScriptSourceCode(" && {applyDefaults: ():true=>true}"))
     @staticmethod
-    def xju_json_codec_get_typescript_asa(
+    def xju_json_codec_5_get_typescript_asa(
             expression:TypeScriptSourceCode,
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that safely casts {expression} to a T, throwing an Error if {expression} is not valid as a T'''
+        '''return typescript source code that verifies {expression} with defaults applied would be a T and returns xju.ts.ApplyDefaults that would apply defaults, throwing an Error if {expression} is not valid as a T'''
         '''- may add any supporting definitions to namespace, e.g. type for T itself'''
-        return IpV4Addr.__xju_json_codec.get_typescript_asa(expression,namespace)
+        return IpV4Addr.__xju_json_codec.get_typescript_asa(expression,namespace) + TypeScriptSourceCode(" && {applyDefaults: ():true=>true }")
 
     # xju.json_codec.CustomNonStringKeyClassCodec:
     @staticmethod
@@ -174,19 +181,25 @@ class IpV4AddrWithPrefix(IPv4Interface):
     def xju_json_codec_get_typescript_type() -> TypeScriptSourceCode:
         return TypeScriptSourceCode('string /* IpV4AddrWithPrefix */')
     @staticmethod
-    def xju_json_codec_get_typescript_isa(
+    def xju_json_codec_5_get_typescript_isa(
             expression:TypeScriptSourceCode,
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that turns {expression} into a bool indicating whether the expression is a T'''
-        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
-        return IpV4AddrWithPrefix.__codec.get_typescript_isa(expression,namespace)
+        '''return typescript source code that turns {expression} into a
+            false - indicating expression is not a T
+            xju.ts.ApplyDefaults - expression is a T
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        return (TypeScriptSourceCode(f"// is a IpV4AddrWithPrefix?\n")+
+                IpV4AddrWithPrefix.__codec.get_typescript_isa(expression,namespace)+
+                TypeScriptSourceCode(" && {applyDefaults: ():true=>true}"))
     @staticmethod
-    def xju_json_codec_get_typescript_asa(
+    def xju_json_codec_5_get_typescript_asa(
             expression:TypeScriptSourceCode,
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that safely casts {expression} to a T, throwing an Error if {expression} is not valid as a T-as-object-key'''
+        '''return typescript source code that verifies {expression} with defaults applied would be a T and returns xju.ts.ApplyDefaults that would apply defaults, throwing an Error if {expression} is not valid as a T'''
         '''- may add any supporting definitions to namespace, e.g. type for T itself'''
-        return IpV4AddrWithPrefix.__codec.get_typescript_asa(expression,namespace)
+        # __codec.get_typescript_asa strictly applies defaults but
+        # we know in this case that does nothing so we can use it here
+        return IpV4AddrWithPrefix.__codec.get_typescript_asa(expression,namespace) + TypeScriptSourceCode(" && {applyDefaults: ():true=>true }")
 
     # xju.json_codec.CustomStringKeyClassCodec:
     @staticmethod
@@ -582,7 +595,7 @@ f'''
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'because Error: attribute a_float is invalid because Error: null is not a number it is a object');
+            assert_x_contains_y(str(e), 'attribute a_float is invalid because Error: null is not a number it is a object');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -942,7 +955,7 @@ f'''
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'null is not a xju.time.Timestamp because Error: null is a object not a number');
+            assert_x_contains_y(str(e), 'null is not a xju.time.Timestamp i.e. a number, it is a object');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -1157,7 +1170,7 @@ f'''
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute str_literal_key is invalid because Error: null is not a { [key: string /* j ock|O.a|string ** Surname ** */]: number } because Error: null is not an object it is null');
+            assert_x_contains_y(str(e), 'attribute str_literal_key is invalid because Error: null is not a { [key: string /* \"j ock\"|O.a|string ** Surname ** */]: number } because Error: null is not an object it is null');
         }
         catch(ee){
             errors.push(`${ee}`);
