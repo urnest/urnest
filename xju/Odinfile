@@ -420,7 +420,7 @@ print(open(sys.argv[1]).read().replace('# generated Int methods here...',int_met
     '# generated Float methods here...',float_methods).replace(
     '# generated Bool methods here...',bool_methods))
 
-%json_codec_typescript_test==()+cmd=(%json_codec_typescript_test.sh) (%json_codec_typescript_test_ts.dir) (%json_codec_typescript_test_ts.dir/json_codec_typescript_test.ts):exec.output
+%json_codec_typescript_test==()+cmd=(%json_codec_typescript_test.sh) (%json_codec_typescript_test_ts.dir) (test-json-codec-typescript.ts)+need=(%json_codec_typescript_test_ts.dir/json_codec_typescript_test.ts):exec.output
 
 %json_codec_typescript_test_ts.dir==(make-json-codec-ts-test+(%py-opts):py3.exec.output)+cmd=cat '>json_codec_typescript_test.ts':output
 
@@ -429,8 +429,11 @@ print(open(sys.argv[1]).read().replace('# generated Int methods here...',int_met
 %json_codec_typescript_test.sh==!<<
 #!/bin/sh
 set -ex
-/home/xju/node_modules/typescript/bin/tsc --lib es2015 --strict "$1/json_codec_typescript_test.ts" --outFile json_codec_typescript_test.js
-node json_codec_typescript_test.js
+cp $1/json_codec_typescript_test.ts .
+cp $2 .
+/home/xju/node_modules/typescript/bin/tsc --traceResolution --sourceMap --moduleResolution node --module nodenext --lib es2015 --strict "json_codec_typescript_test.ts" --outDir .
+/home/xju/node_modules/typescript/bin/tsc --traceResolution --sourceMap --moduleResolution node --module nodenext --lib es2015 --strict $(basename "$2") --outDir .
+node test-json-codec-typescript.js
 
 # convenience:
 %json_codec_typescript_test.js==()+cmd=(%json_codec_typescript_test.sh) (%json_codec_typescript_test_ts.dir) (%json_codec_typescript_test_ts.dir/json_codec_typescript_test.ts):exec/files.tar+member='json_codec_typescript_test.js':extract_file
