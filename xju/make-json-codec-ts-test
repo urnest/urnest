@@ -32,15 +32,10 @@ class Surname(Str[SurnameTag]):
     pattern=re.compile(r'^\S*$')  # disallow whitespace
     pass
 
-surname_codec=codec(Surname)
-surname_codec.ensure_typescript_defs(namespace)
-
 class O(Enum):
     a='fred'
     b='jock'
     pass
-o_codec=codec(O)
-o_codec.ensure_typescript_defs(namespace)
 
 @dataclass
 class FullName:
@@ -52,29 +47,20 @@ class FullName:
 
 encode_attr_as(FullName, PythonAttrName("_class"), JsonAttrName("class"))
 
-codec(FullName).ensure_typescript_defs(namespace)
-
 @dataclass
 class Prefs:
     colours: set[str]
     blinds: frozenset[str]
     pass
 
-codec(Prefs).ensure_typescript_defs(namespace)
-
 class MetresTag: pass
 
 class Metres(Float[MetresTag]):
     pass
     
-metres_codec=codec(Metres)
-metres_codec.ensure_typescript_defs(namespace)
-
 class NonStringKey:
     values: dict[TypeScriptUQN, int]
     pass
-
-codec(NonStringKey).ensure_typescript_defs(namespace)
 
 # ... custom class encoding by implementing CustomClassCodec protocol, for example
 # to support encoding of external types with control over their json representation
@@ -235,24 +221,18 @@ Assert(IpV4AddrWithPrefix).isSubclassOf(CustomStringKeyClassCodec)
 
 
 Colour = NewType('Colour',str)
-codec(Colour).ensure_typescript_defs(namespace)
 
 Milligrams = NewType('Milligrams',float)
-codec(Milligrams).ensure_typescript_defs(namespace)
 
 Votes = NewType('Votes',int)
-codec(Votes).ensure_typescript_defs(namespace)
 
 Enabled = NewType('Enabled',bool)
-codec(Enabled).ensure_typescript_defs(namespace)
     
 @dataclass
 class Selfish:
     value: int
     next: dict[int, Self]
     pass
-
-codec(Selfish).ensure_typescript_defs(namespace)
 
 @dataclass
 class Liasee:
@@ -277,7 +257,6 @@ class DontEncode:
     pass
 
 dont_encode_attr(DontEncode, PythonAttrName("cl"))
-codec(DontEncode).ensure_typescript_defs(namespace)
 
 # recursive types
 from typing import Union
@@ -294,8 +273,6 @@ class Or:
 B = Union[str, And, Or]
 
 codec(B).add_typescript_alias(namespace, [TypeScriptUQN('B')])
-codec(And).ensure_typescript_defs(namespace)
-codec(Or).ensure_typescript_defs(namespace)
 
 @dataclass(init=False)
 class MixedEnumValue:
@@ -327,6 +304,7 @@ class EncodableData:
     a_new_float: Milligrams
     an_xju_float: Metres
     a_new_str: Colour
+    an_xju_str: TypeScriptUQN
     a_null: None
     a_boolean: bool
     a_union: FullName | Surname | None
@@ -377,7 +355,9 @@ class EncodableKeyTypes:
     custom_key: dict[IpV4Addr,int]
     alt_custom_key: dict[IpV4AddrWithPrefix,int]
     newstr_key: dict[Colour,int]
+    xjustr_key: dict[TypeScriptUQN,int]
     newfloat_key: dict[Milligrams,int]
+    xjufloat_key: dict[Metres,int]
     newint_key: dict[Votes,int]
     newbool_key: dict[Enabled,int]
     any_key: dict

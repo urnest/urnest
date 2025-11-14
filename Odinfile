@@ -282,3 +282,37 @@ zip -r ../xju-$rev-py3-none-any.whl xju xju-$rev.dist-info
 tar czf xju-$rev.tar.gz xju-$rev
 XXXX
 
+
+%test-xju.ts==()+cmd=(%test-xju.ts.sh) (%test-xju.tsc.tar) (%test-xju.tsc.tar+member='xju.js':extract_file):exec.files
+
+%test-xju.tsc.tar==()+cmd=(%test-xju.tsc.sh) (xju.ts) (test-xju.ts):exec.files
+
+%test-xju.tsc.sh==!<<
+#!/bin/bash
+# compile xju.ts ($1) and test-xju.ts ($2)
+set -ex
+base_url=$(dirname $1)
+tsc() {
+  name=$(basename $1); (
+    set -o pipefail
+    /home/xju/node_modules/typescript/bin/tsc --traceResolution --baseUrl $base_url --sourceMap --moduleResolution node --module nodenext --lib es2015 --strict --outDir . $1 2>&1 | sed -e "s=.*$name[(]\\([^,]*\\),\\([^)]*\\)[)]*\\(.*\\)=$1:\\1:\\2:ERROR: \\3=g"
+  ) >&2
+}
+tsc $1
+tsc $2
+
+%test-xju.ts.sh==!<<
+#!/bin/bash
+# run test-xju.ts from compiled files tar %test-xju.tsc.tar ($1)
+# verify 100% coverage of xju.ts ($2)
+set -ex
+tar xf $1
+out=$(NODE_PATH=. NODE_V8_COVERAGE=. node --test --experimental-test-coverage test-xju.js) || (
+  echo "$out" >&2
+  exit 1
+)
+echo "$out" | grep "# xju.js |" | (
+  read a b c d e f g h i lines_not_covered
+  python3 -c "print('\n'.join([f'error:$2:{_}: not covered' for _ in '$lines_not_covered'.split(',')]))"
+  test -z "$lines_not_covered"
+)

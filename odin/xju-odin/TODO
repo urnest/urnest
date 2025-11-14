@@ -13,6 +13,39 @@
   uncontrolled areas
 
 - use inotify
+  * avoid instantiating filhdrs on change notification, we end up traversing entire
+    file system:
+      Local_Test >> Noify_Change
+      OdinExpr_FilHdr >> OdinExpr_Closest_Existing_Src_FilHdr  ... but do we have to touch it
+      if it is not the leaf?
+      Nod_PrmFHdr >> Nod_Closest_Existing_Src_PrmFHdr
+        /tmp/x/a:
+if-candrv.c
+612           case DRVFIL: {
+
+633           case ABSFIL: {
+if-candrv.c
+565              case ELMOPR: {
+
+
+      Do_Keys >> Do_Keys_To_Closest_Existing:
+          while(K=NextKey(K) && NextFilHdr=Do_Existing_Key(FilHdr, K)) {
+              FilHdr=NextFileHdr;
+          }
+          return FilHdr;
+      
+      Do_Key >> Do_Existing_Key?
+         ... what paths are possible there? cases:
+            - symlink? /tmp/x/a-link
+255           return Get_KeyDrv(FilHdr, FKind=FK_SrcReg, Key); }/*if*/; Key "x"
+255           return Get_KeyDrv(FilHdr, FKind=FK_SrcReg, Key); }/*if*/; Key "a-link"
+            - non-existing symlink?
+            
+            - existing
+255           return Get_KeyDrv(FilHdr, FK_SrcReg, Key); }/*if*/;
+            - non-existing
+                -> Extend_FilHdr
+                
   - custom parse path to handle e.g. embedded ';' instead of ignoring such files
      
 - get dg.exe to escape "s in help strings then remove \\s from 

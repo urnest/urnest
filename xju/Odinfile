@@ -420,20 +420,36 @@ print(open(sys.argv[1]).read().replace('# generated Int methods here...',int_met
     '# generated Float methods here...',float_methods).replace(
     '# generated Bool methods here...',bool_methods))
 
-%json_codec_typescript_test==()+cmd=(%json_codec_typescript_test.sh) (%json_codec_typescript_test_ts.dir) (test-json-codec-typescript.ts)+need=(%json_codec_typescript_test_ts.dir/json_codec_typescript_test.ts):exec.output
+%json_codec_typescript_test==()+cmd=(%json_codec_typescript_test.sh) (%json_codec_typescript_tsc/test-json-codec-typescript.js) (%json_codec_typescript_tsc/json_codec_typescript_test.js):exec.output
+
+%json_codec_typescript_tsc==()+cmd=(%json_codec_typescript_tsc.sh) (%json_codec_typescript_test_ts.dir) (test-json-codec-typescript.ts)+need=(%json_codec_typescript_test_ts.dir/json_codec_typescript_test.ts):output
 
 %json_codec_typescript_test_ts.dir==(make-json-codec-ts-test+(%py-opts):py3.exec.output)+cmd=cat '>json_codec_typescript_test.ts':output
 
 %json_codec_typescript_test.ts==%json_codec_typescript_test_ts.dir/json_codec_typescript_test.ts
 
-%json_codec_typescript_test.sh==!<<
+%json_codec_typescript_tsc.sh==!<<
 #!/bin/sh
 set -ex
 cp $1/json_codec_typescript_test.ts .
 cp $2 .
-/home/xju/node_modules/typescript/bin/tsc --traceResolution --sourceMap --moduleResolution node --module nodenext --lib es2015 --strict "json_codec_typescript_test.ts" --outDir .
-/home/xju/node_modules/typescript/bin/tsc --traceResolution --sourceMap --moduleResolution node --module nodenext --lib es2015 --strict $(basename "$2") --outDir .
-node test-json-codec-typescript.js
+/home/xju/node_modules/typescript/bin/tsc --traceResolution --sourceMap --moduleResolution node --module nodenext --lib es2015 --strict "json_codec_typescript_test.ts" --outDir . >&2
+/home/xju/node_modules/typescript/bin/tsc --traceResolution --sourceMap --moduleResolution node --module nodenext --lib es2015 --strict $(basename "$2") --outDir . >&2
+
+%json_codec_typescript_test.sh==!<<
+#!/bin/sh
+set -e
+cp $1 test-json-codec-typescript.js
+cp $2 json_codec_typescript_test.js
+out=$(NODE_PATH=$(dirname $1) NODE_V8_COVERAGE=. node --test --experimental-test-coverage test-json-codec-typescript.js) || (
+  echo "$out" >&2
+  exit 1
+)
+echo "$out" | grep json_codec_typescript_test.js | (
+  read a b c d e f g h i lines_not_covered
+  python3 -c "print('\n'.join([f'error:$2:{_}: not covered' for _ in '$lines_not_covered'.split(',')]))"
+  test -z "$lines_not_covered"
+)
 
 # convenience:
 %json_codec_typescript_test.js==()+cmd=(%json_codec_typescript_test.sh) (%json_codec_typescript_test_ts.dir) (%json_codec_typescript_test_ts.dir/json_codec_typescript_test.ts):exec/files.tar+member='json_codec_typescript_test.js':extract_file
@@ -461,3 +477,40 @@ rfc2616.py.test+mypy_plugin_mod='xju.json_codec_mypy_plugin'+mypy_plugin_mod='xj
 xn.py.test+mypy_plugin_mod='xju.json_codec_mypy_plugin'+mypy_plugin_mod='xju.cmc_mypy_plugin':py3.exec.cov
 newtype.py.test+mypy_plugin_mod='xju.json_codec_mypy_plugin'+mypy_plugin_mod='xju.cmc_mypy_plugin':py3.exec.cov
 time.py.test+mypy_plugin_mod='xju.json_codec_mypy_plugin'+mypy_plugin_mod='xju.cmc_mypy_plugin':py3.exec.cov
+
+
+%test-xn.ts==()+cmd=(%test-xn.ts.sh) (%test-xn.tsc.tar) (..%test-xju.tsc.tar) (%test-xn.tsc.tar+member='xn.js':extract_file):exec.files
+
+%test-xn.tsc.tar==()+cmd=(%test-xju-xn.tsc.sh) (xn.ts) (test-xn.ts):exec.files
+
+%test-xju-xn.tsc.sh==!<<
+#!/bin/bash
+# compile xn.ts ($1) and test-xn.ts ($2) into test-xn.js
+set -ex
+mkdir xn
+base_url=$(cd $(dirname $1)/.. && pwd)
+tsc() {
+  name=$(basename $1); (
+    set -o pipefail
+    /home/xju/node_modules/typescript/bin/tsc --traceResolution --baseUrl $base_url --sourceMap --moduleResolution node --module nodenext --lib es2015 --strict --outDir . $1 2>&1 | sed -e "s=.*$name[(]\\([^,]*\\),\\([^)]*\\)[)]*\\(.*\\)=$1:\\1:\\2:ERROR: \\3=g"
+  ) >&2
+}
+tsc $1
+tsc $2
+
+%test-xn.ts.sh==!<<
+#!/bin/bash
+# run test-xn.ts from compiled files tar %test-xju.tsc.tar ($1) and %test-xn.tsc.tar ($2)
+# verify 100% coverage of xn.ts ($3)
+set -ex
+tar xf $1
+tar xf $2
+out=$(NODE_PATH=. NODE_V8_COVERAGE=. node --test --experimental-test-coverage test-xju.js) || (
+  echo "$out" >&2
+  exit 1
+)
+echo "$out" | grep "# xju.js |" | (
+  read a b c d e f g h i lines_not_covered
+  python3 -c "print('\n'.join([f'error:$3:{_}: not covered' for _ in '$lines_not_covered'.split(',')]))"
+  test -z "$lines_not_covered"
+)

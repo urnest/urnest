@@ -1040,21 +1040,9 @@ class TupleCodec:
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         self.ensure_typescript_defs(namespace)
         return TypeScriptSourceCode(
-            f"// is a {self.typescript_type()}?\n"
-            "((x:any):false|xju.ts.ApplyDefaults=>{\n"
-            "    if (!Array.isArray(x)) return false;\n"
-            f"    if (x.length != {self.number_of_codecs}) return false;\n"
-            "    const r=[\n"
-            f"       {',\n        '.join([str(indent(8,self.value_codecs[i].get_typescript_isa(f'x[{i}]',namespace))) for i in range(0, self.number_of_codecs)])}\n"
-            "    ];\n"
-            "    if (r.filter((w) => w === false).length) return false;\n"
-            "    return {\n"
-            "        applyDefaults: ():true => {\n"
-            "            r.forEach((w) => w !== false && w.applyDefaults());\n"
-            "            return true;\n"
-            "        }\n"
-            "    };\n"
-            "})" f"({expression})")
+            f"(((v:any)=>xju.ts._isInstanceOfTuple({json.dumps(self.typescript_type().val)}, v, [\n"
+            f"       (v:any)=>{',\n    '.join([str(indent(4,self.value_codecs[i].get_typescript_isa('v',namespace))) for i in range(0, self.number_of_codecs)])}"
+            "])))({expression})")
     def get_typescript_isa_key(self,
                                expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
@@ -1068,15 +1056,9 @@ class TupleCodec:
         tt=self.typescript_type()
         self.ensure_typescript_defs(namespace)
         return TypeScriptSourceCode(
-            f"((v: any): xju.ts.ApplyDefaults => {{try{{\n" +
-            f"    if (!Array.isArray(v)) throw new Error(`${{xju.ts.format_(v)}} is not an array it is a ${{typeof v}}`);\n"
-            f"    if (v.length != {self.number_of_codecs}) {{\n"
-            f"        throw new Error(`${{xju.ts.format_(v)}} does not have {self.number_of_codecs} elements (it has ${{v.length}} elements)`);\n"
-            f"   }}\n"
-            f"    const defaulters:Array<xju.ts.ApplyDefaults>=[];\n"
-            f"{''.join(asas)}"
-            "    return {applyDefaults: ():true => true};\n"
-            f"}}catch(e:any){{ throw new Error(`${{xju.ts.format_(v)}} is not a {tt} because ${{e}}`);}}}})({expression})")
+            f"(((v:any)=>xju.ts._asInstanceOfTuple({json.dumps(self.typescript_type().val)}, v, [\n"
+            f"       (v:any)=>{',\n    '.join([str(indent(4,self.value_codecs[i].get_typescript_asa('v',namespace))) for i in range(0, self.number_of_codecs)])}"
+            "])))({expression})")
     def get_typescript_asa_key(self,
                                expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
@@ -1153,15 +1135,16 @@ class UnionCodecImpl:
     def get_typescript_isa(self,
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        isas=[' ||\n       '+str(indent(12,value_codec.get_typescript_isa(TypeScriptSourceCode(f"v"),
-                                                                          namespace)))
+        tt=self.typescript_type()
+        isas=[f"        (v: any): false|xju.ts.ApplyDefaults => (\n"+
+              f"            {indent(12,value_codec.get_typescript_isa(TypeScriptSourceCode('v'),namespace))})"
               for _t,value_codec in self.value_codecs.items()]
         return TypeScriptSourceCode(
-            f"// is a {self.typescript_type()}?\n"
-            f"((v:any): false|xju.ts.ApplyDefaults=>{{\n"
-            f"    return false" +
-            f"".join(isas) + ";\n"+
-            f"}})({expression})")
+            f"(((v: any): false|xju.ts.ApplyDefaults => {{\n" +
+            f"    return xju.ts._isInstanceOfUnion({json.dumps(tt.val)}, v, [\n" +
+            ",\n".join(isas)+
+            f"]);\n"
+            f"}}))({expression})")
     def get_typescript_isa_key(self,
                                expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
@@ -1177,22 +1160,15 @@ class UnionCodecImpl:
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         tt=self.typescript_type()
-        asas=[f"    try{{\n"+
-              f"        return {indent(8,value_codec.get_typescript_asa(TypeScriptSourceCode('v'),namespace))};\n"+
-              f"    }}\n"+
-              f"    catch(e:any){{\n"+
-              f"        es.push(e.message);\n"+
-              f"    }};\n"
+        asas=[f"        (v: any): xju.ts.ApplyDefaults => (\n"+
+              f"            {indent(12,value_codec.get_typescript_asa(TypeScriptSourceCode('v'),namespace))})"
               for _t,value_codec in self.value_codecs.items()]
         return TypeScriptSourceCode(
-            f"((v: any): xju.ts.ApplyDefaults => {{try{{\n" +
-            f"    var es = new Array<string>();\n"+
-            "".join(asas)+
-            f"    throw new Error(es.join(' and '));\n"+
-            f"}}catch(e:any)\n"+
-            f"{{\n"+
-            f"    throw new Error(`${{xju.ts.format_(v)}} is not a {tt} because ${{e}}`);\n"+
-            f"}}}})({expression})")
+            f"(((v: any): xju.ts.ApplyDefaults => {{\n" +
+            f"    return xju.ts._asInstanceOfUnion({json.dumps(tt.val)}, v, [\n" +
+            ",\n".join(asas)+
+            f"]);\n"
+            f"}}))({expression})")
     def get_typescript_asa_key(self,
                                expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
@@ -1344,10 +1320,6 @@ class DictCodecImpl:
             f"    const defaulters:Array<xju.ts.ApplyDefaults>=[];\n"
             f"    for(const k in x){{try{{\n"+
             f"        if (!x.hasOwnProperty(k)) continue;\n"+
-            f"        if (typeof k !== 'string') {{\n"+
-            f"            const kt=typeof k;\n"+
-            f"            throw new Error(`key type is ${{xju.ts.format_(kt)}} not string`);\n"+
-            f"        }}\n"+
             f"        const v=x[k];\n"
             f"        {indent(8,self.key_codec.get_typescript_asa_key(TypeScriptSourceCode('k'),namespace))};\n"
             f"        defaulters.push({indent(8,self.value_codec.get_typescript_asa(TypeScriptSourceCode('v'),namespace))});\n"
@@ -2635,12 +2607,18 @@ def ensure_xju_ts_defs(target_namespace: TypeScriptNamespace) -> None:
     xju_ts_name=[TypeScriptUQN('xju'), TypeScriptUQN('ts')]
     def add(name: TypeScriptUQN, defn: TypeScriptSourceCode) -> None:
         xju_ts=target_namespace.get_namespace_of(xju_ts_name+[name])
-        xju_ts.defs[name] = defn
+        if name not in xju_ts.defs:
+            xju_ts.defs[name] = defn
+            pass
         pass
-
     add(TypeScriptUQN("ApplyDefaults"), TypeScriptSourceCode('''\
 interface ApplyDefaults {
     applyDefaults(): true;
+}'''))
+    add(TypeScriptUQN("AsInstance"), TypeScriptSourceCode('''\
+interface AsInstance {
+    typeName: string;
+    f: (x:any) => ApplyDefaults;
 }'''))
     add(TypeScriptUQN("str"), TypeScriptSourceCode(
         f"""function str(x:any):string {{ return `${{x}}`; }}"""))
@@ -2723,6 +2701,176 @@ function assertObjectsEqual(x:object, y:object){
     catch(e){
         throw new Error(`object ${format_(x)} != object ${format_(y)} because ${e}`);
     }
+}"""))
+    add(TypeScriptUQN("applyNoDefaults"), TypeScriptSourceCode("""\
+const applyNoDefaults: ApplyDefaults = {
+    applyDefaults: () => true;
+};"""))
+    add(TypeScriptUQN("asInstanceInContext"), TypeScriptSourceCode("""\
+function asInstanceInContext(asInstanceOf: AsInstance) => AsInstance {
+    return (x: any): ApplyDefaults {
+        try {
+            asInstanceOf.f(x);
+        }
+        catch(e) {
+            throw new Error(`${format_(x)` is not a ${asInstanceOf.typeName} because ${e}`);
+        }
+    }"""))
+    add(TypeScriptUQN("asInstanceOfString"), TypeScriptSourceCode("""\
+function asInstanceOfString(typeName: string) => AsInstance {
+    return asInstanceInContext({
+        typeName: typeName,
+        f: (x: any): ApplyDefaults {
+            if (typeof x !== 'string') {
+                throw new Error(`${format_(x)} is a ${typeof x} not a string`);
+            }
+            return applyNoDefaults;
+        }
+    });
+}"""))
+    add(TypeScriptUQN("asInstanceOfStringPattern"), TypeScriptSourceCode("""\
+function asInstanceOfString(typeName: string, pattern: RegExp) => AsInstance {
+    return asInstanceInContext({
+        typeName,
+        f: (x: any): ApplyDefaults {
+            if (pattern.exec(asInstanceOfString(x))===null) throw new Error(`${{xju.ts.format_(x)}} is not a string with pattern ${pattern}`);
+            return applyNoDefaults;
+        }
+    });
+}"""))
+    add(TypeScriptUQN("asInstanceOfFloat"), TypeScriptSourceCode("""\
+function asInstanceOfFloat(typeName: string) => AsInstance {
+    return asInstanceInContext({
+        typeName,
+        f: (x: any): ApplyDefaults {
+            if (typeof x !== 'number') {
+                throw new Error(`${format_(x)} is a ${typeof x} not a number`);
+            }
+            return applyNoDefaults;
+        }
+    });
+}"""))
+    add(TypeScriptUQN("asInstanceOfInt"), TypeScriptSourceCode("""\
+function asInstanceOfInt(typeName: string) => AsInstance {
+    return asInstanceInContext({
+        typeName,
+        f: (x: any): ApplyDefaults {
+            if (typeof x !== 'number') {
+                throw new Error(`${format_(x)} is a ${typeof x} not a number`);
+            }
+            if (x % 1 !== 0) {
+                throw new Error(`${format_(x)} is not a whole number`);
+            }
+            return applyNoDefaults;
+        }
+    });
+}"""))
+    add(TypeScriptUQN("asInstanceOfBool"), TypeScriptSourceCode("""\
+function asInstanceOfBool(typeName: string) => AsInstance {
+    return asInstanceInContext({
+        typeName,
+        f: (x: any): ApplyDefaults {
+            if (typeof x !== 'boolean') {
+                throw new Error(`${format_(x)} is a ${typeof x} not a boolean`);
+            }
+            return applyNoDefaults;
+        }
+    });
+}"""))
+    add(TypeScriptUQN("asInstanceOfNull"), TypeScriptSourceCode("""\
+function asInstanceOfNull() => AsInstance {
+    return asInstanceInContext({
+        typeName: "null",
+        f: (x: any): ApplyDefaults {
+            if (typeof x !== null) {
+                throw new Error(`${format_(x)} is not null`);
+            }
+            return applyNoDefaults;
+        }
+    });
+}"""))
+    add(TypeScriptUQN("asInstanceOfAny"), TypeScriptSourceCode("""\
+function asInstanceOfAny() => AsInstance {
+    return asInstanceInContext({
+        typeName: "any",
+        f: (x: any): ApplyDefaults {
+            return applyNoDefaults;
+        }
+    });
+}"""))
+    add(TypeScriptUQN("asInstanceOfList"), TypeScriptSourceCode("""\
+function asInstanceOfList(itemType: AsInstance) => AsInstance {
+    return asInstanceInContext({
+        typeName: `Array<${itemType.typeName}>`,
+        f: (x: any): ApplyDefaults {
+            REVISIT;
+        }
+    });
+}"""))
+    add(TypeScriptUQN("asInstanceOfUnion"), TypeScriptSourceCode("""\
+function asInstanceOfUnion(t: string, x:any, alternatives: Array<(v:any)=>xju.ts.ApplyDefaults>): xju.ts.ApplyDefaults {
+    try{
+        var es = new Array<string>();
+
+        for(const a of alternatives) {
+            try {
+                return a(x);
+            }
+            catch(e:any) {
+                es.push(e.message);
+            }
+        }
+        throw new Error(es.join(' and '));
+    }
+    catch(e){
+        throw new Error(`object ${format_(x)} is not a ${t} because ${e}`);
+    }
+}"""))
+    add(TypeScriptUQN("_isInstanceOfUnion"), TypeScriptSourceCode("""\
+function _isInstanceOfUnion(_t: string, x:any, alternatives: Array<(v:any)=>false|xju.ts.ApplyDefaults>): false|xju.ts.ApplyDefaults {
+    for(const a of alternatives) {
+        const r=a(x);
+        if (r !== false) return r;
+    }
+    return false;
+}"""))
+    add(TypeScriptUQN("_asInstanceOfTuple"), TypeScriptSourceCode("""\
+function _asInstanceOfTuple(t: string, x:any, items: Array<(v:any)=>xju.ts.ApplyDefaults>): xju.ts.ApplyDefaults {
+    try{
+        if (!Array.isArray(x)) {
+            throw new Error(`expected an array not a ${typeof x}`);
+        }
+        if (x.length != items.length) {
+            throw new Error(`expected ${items.length} elements not ${x.length}`);
+        }
+        var es = new Array<string>();
+        var defaulters: Array<xju.ts.ApplyDefaults> = [];
+        x.forEach((v: any, i) => {
+            try {
+                defaulters.push(items[i](x));
+            }
+            catch(e:any) {
+                es.push(`element ${i} is invalid because ${e.message}`);
+            }
+        });
+        if (es.length) {
+            throw new Error(es.join(' and '));
+        }
+        return { applyDefaults: ()=>{ defaulters.forEach( (d) => d.applyDefaults() ); return true; } };
+    }
+    catch(e){
+        throw new Error(`object ${format_(x)} is not a ${t} because ${e}`);
+    }
+}"""))
+    add(TypeScriptUQN("_isInstanceOfTuple"), TypeScriptSourceCode("""\
+function _isInstanceOfTuple(_t: string, x:any, items: Array<(v:any)=>false|xju.ts.ApplyDefaults>): false|xju.ts.ApplyDefaults {
+    let defaulters:Array<xju.ts.ApplyDefaults>=[];
+    for(const a of items) {
+        const r=a(x);
+        if (r === false) return r;
+        defaulters.push(r);
+    }
+    return { applyDefaults: ()=>{ defaulters.forEach( (d) => d.applyDefaults() ); return true; } };
 }"""))
     
 @dataclass
@@ -3290,3 +3438,4 @@ def as_instance_of_key_of_expression(
     parts=type_fqn.split('.')
     f='.'.join(parts[0:-1]+[f"asInstanceOfKeyOf{parts[-1]}"])
     return TypeScriptSourceCode(f"{f}({expression})")
+
