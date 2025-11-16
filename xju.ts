@@ -12,7 +12,7 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
-export namespace xju {
+namespace xju {
   export function str(x:any):string { return `${x}`; }
   export function isObject(x:any):x is object { return x !== null && typeof(x) === 'object'; }
   export function assertEqual<T>(x:T, y:T){
@@ -28,7 +28,7 @@ export namespace xju {
   }
   export function assertNotEqual<T>(x:T, y:T){
     try{
-      xju.assertEqual(x,y);
+      assertEqual(x,y);
     }
     catch(e){
       return;

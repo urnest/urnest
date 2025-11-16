@@ -12,9 +12,8 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
-export {};
 
-import { xju } from "xju.js";
-import { xju } from "xju/xn.js";
+/// <reference path="../xju.ts"/>
+/// <reference path="../xju/xn.ts"/>
 
-xju.assertEqual(xju.xn.inContext("open file 'fred.txt'", new Error("permission denied")), 'XXX');
+xju.assertEqual(`${xju.xn.inContext("open file 'fred.txt'", new Error("permission denied"))}`, 'Error: failed to open file \'fred.txt\' because permission denied');

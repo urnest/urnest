@@ -1,0 +1,122 @@
+#!/bin/env python3
+import base64
+import json
+import sys
+from pathlib import Path
+from typing import NewType
+from dataclasses import dataclass
+
+source_map, js_cov = sys.argv[1:]
+
+uncovered_lines=json.loads(Path(js_cov).read_text())
+
+LineNumber = NewType('LineNumber', int)
+
+@dataclass(kw_only=True)
+class Mapped:
+    path: Path
+    line: LineNumber
+    pass
+
+# note no need to track columns
+@dataclass(kw_only=True)
+class SourceCol:
+    rel_source_index: int
+    rel_line: int
+    pass
+
+b64_vocab=[-1 for _ in range(0,255)]
+for i, c in enumerate(range(ord('A'),ord('Z')+1)):
+    b64_vocab[c]=i
+    pass
+for i, c in enumerate(range(ord('a'),ord('z')+1)):
+    b64_vocab[c]=26+i
+    pass
+for i, c in enumerate(range(ord('0'),ord('9')+1)):
+    b64_vocab[c]=52+i
+    pass
+b64_vocab[ord('+')]=62
+b64_vocab[ord('/')]=62
+
+def parse_val(s: str) -> tuple[int, str]:
+    rem = s[:]
+    # hmm, not real base64 string... must use vocab on each char
+    v = b64_vocab[ord(rem[0])]
+    rem = rem[1:]
+    neg = v & 1
+    cont = v >> 5
+    value = (v >> 1) & 0b1111
+    bits = 4
+    while cont:
+        assert rem, f'{s[-1]} = {v:x} has continue bit but no more chars?'
+        v = b64_vocab[ord(rem[0])]
+        rem = rem[1:]
+        value = value | ((v & 0b11111) << bits)
+        bits+=5
+        cont = v >> 5
+        pass
+    return -value if neg else value, rem
+
+def parse_vql(s: str) -> SourceCol | None:
+    '''decode {s} like 'UAAuB' to represented SourceCol (or None)'''
+    rem=s
+    col, rem = parse_val(rem)
+    if rem:
+        rel_source_index, rem = parse_val(rem)
+        rel_line, rem = parse_val(rem)
+        return SourceCol(rel_source_index=rel_source_index, rel_line=rel_line)
+    return None
+
+# scenarios:
+# concat files:
+#   each "line" would have 1 SourceCol and maybe some Nones
+# combine multiple lines into single lines:
+#   each "line" would have multiple [SourceCol + maybe some Nones]
+#      for coverage we must assume that all SourceCol have same source?
+#      we might have gaps where not each mapped source line is mentioned explicitly
+#      so have to the "until the next SourceCol"
+# split single line into multiple:
+#   each "line" would ahve single SourceCol but subsequent SourceCol
+#   would have same source + line
+# aside: can't imagine what the nones are used for
+
+SourceMap = dict[LineNumber, list[Mapped]]
+def read_source_map(path: Path) -> tuple[list[Path],SourceMap]:
+    data=json.loads(path.read_text())
+    source_root=Path(data['sourceRoot'])
+    source_list=list(data["sources"])
+    lines=[ [parse_vql(s) for s in line.split(',') if s] for line in list(data['mappings'].split(';')) ]
+    
+    current_source=0
+    current_line=LineNumber(0)
+    result:SourceMap=SourceMap()
+    for (i, line) in enumerate(lines):
+        for seg, vql in enumerate(line):
+            match vql:
+                case SourceCol():
+                    current_source += vql.rel_source_index
+                    current_line = LineNumber(current_line + vql.rel_line)
+                    result.setdefault(LineNumber(i+1), []).append(
+                        Mapped(path=source_root/source_list[current_source],line=current_line))
+                case None:
+                    pass
+            pass
+        pass
+    return ([source_root/source for source in source_list], result)
+
+def map_uncovered_lines(uncovered_lines: list[int],
+                        source_list: list[Path],
+                        source_map: SourceMap) -> dict[Path, set[LineNumber]]:  # file: uncovered lines
+    result = { source: set[LineNumber]() for source in source_list }
+    for line in uncovered_lines:
+        for mapped in source_map[LineNumber(line)]:
+            assert mapped.path in result, (mapped.path, list(result.keys()))
+            result[mapped.path].add(mapped.line)
+            pass
+        pass
+    return result
+
+Path('ts.cov').write_text(json.dumps({
+    str(path): [line for line in lines]
+    for path, lines in map_uncovered_lines(uncovered_lines, *read_source_map(Path(source_map))).items()
+}))

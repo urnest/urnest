@@ -1,0 +1,65 @@
+#
+# Package for typescript compilation.
+#
+
+# types
+
+*.ts => :ts;
+
+:ts 'typescript'? => :FILE;
+:list.ts ':ts files in list' => <:LIST>;
+
+:ts-deps.view_desc 'view description of ts reference paths' => :FILE;
+:ts-deps 'list of direct reference paths'? => :LIST;
+:ts-deps-all 'list of transitive reference paths'? => :LIST;
+
+:ts.cov 'ts coverage data file'? => :FILE;
+:agg.ts.cov 'aggregated ts covrerage data' => :ts.cov;
+
+:ts.cov.list 'list of ts coverage reports' => <:LIST>;
+
+:ts.cov.checked 'errors (warnings if +ts_cov_check_warn) if ts code not fully covered'? => :VOID;
+:file.ts.cov.checked 'errors (warnings if +ts_cov_check_warn) if .ts not fully covered'? => :ts.cov.checked;
+:list.ts.cov.checked 'errors (warnings if +ts_cov_check_warn) if all ts not fully covered'? => :LIST;
+
+# params
+
++ts_root_dir 'override $ODIN_TSC_ROOT_DIR'? => :ls;
++ts_flags 'flags for typescript compiler'? => :cat;
++ts_cov_check_warn 'warn only on :ts.cov.checked where coverage is 100% (default is error)' => :first;
++ts_cov 'coverage data for :ts.cov.checked' => :ts.cov;
+
+# cache environment variables
+
+$ODIN_TSC_PATH 'path to set when running the typescript compiler ($ODIN_TSC)' = '/usr/bin:/bin';
+$ODIN_TSC_FLAGS 'space-separated flags to pass to the typescript compiler' = '--strict';
+$ODIN_TSC 'name of typescript compiler' = 'tsc';
+$ODIN_TSC_ROOT_DIR 'source root directory (becomes tsc --sourceRoot); source map will locate files relative to this directory' = '';
+
+# derivations
+
+EXEC (tsc.sh) (:ts)
+  (+ts_root_dir) (+ts_flags)
+  NEEDS (:ts-deps-all)
+  => (:js) (:js.map);
+
+COLLECT (:ts-deps :map=:ts-deps-all) (:ts-deps)
+   => (:ts-deps-all);
+
+COLLECT (:ts-deps.view_desc :view)
+   => (:ts-deps);
+
+EXEC (ts-dep.sh) (:ts)
+   => (:ts-deps.view_desc);
+
+EXEC (ts-cov) (:ts:js.map) (:ts:node.js.cov)
+   => (:ts.cov);
+
+EXEC (cov-merge) (:ts.cov.list:ls) NEEDS (:ts.cov.list) => (:agg.ts.cov);
+
+COLLECT (:LIST:extract=:ts.cov) => (:ts.cov.list);
+COLLECT (:LIST:extract=:ts) => (:list.ts);
+COLLECT (:list.ts:map=:file.ts.cov.checked) => (:list.ts.cov.checked);
+
+EXEC (ts-cov-check) (:ts) (+ts_cov_check_warn)  (+ts_cov)
+  => (:file.ts.cov.checked);

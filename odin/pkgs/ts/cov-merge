@@ -1,0 +1,23 @@
+#!/bin/env python3
+import json
+import os
+import sys
+from pathlib import Path
+
+cov_files=Path(sys.argv[1]).read_text().strip().split()
+if os.environ['ODINVERBOSE']:
+    print(f'merge ts cov files {" ".join(cov_files)}')
+    pass
+result:dict[Path,set[int]]={}
+covs=[ (Path(p), set(uncovered_lines))
+       for cov_file in cov_files
+       for p, uncovered_lines in json.loads(Path(cov_file).read_text()).items()
+       ]
+for path, set_of_uncovered_lines in covs:
+    result[path]=result.get(path, set()).symmetric_difference(set_of_uncovered_lines)
+    pass
+
+Path('agg.ts.cov').write_text(json.dumps({
+    str(path): [line for line in sorted(lines)]
+    for path, lines in result.items()
+}))

@@ -12,11 +12,11 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
-export namespace xju {
+namespace xju {
   export namespace xn {
     export function inContext(goal: string, e: Error) {
       const s = `${e}`.slice('Error: '.length);
-      throw new Error(`failed to ${goal} because ${s}`);
+      return new Error(`failed to ${goal} because ${s}`);
     }
   }
 }

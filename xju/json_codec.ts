@@ -12,7 +12,11 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
-export namespace xju {
+
+/// <reference path="../xju/xn.ts"/>
+/// <reference path="../xju.ts"/>
+
+namespace xju {
   export namespace json_codec {
     export interface ApplyDefaults {
       applyDefaults(): true;
@@ -22,22 +26,25 @@ export namespace xju {
       f: (x:any) => ApplyDefaults;
     }
     export const applyNoDefaults: ApplyDefaults = {
-      applyDefaults: () => true;
+      applyDefaults: () => true
     };
-    export function asInstanceInContext(asInstance: AsInstance) => AsInstance {
-      return (x: any): ApplyDefaults {
-        try {
-          asInstance.f(x);
-        }
-        catch(e) {
-          throw xju.xn.inContext(`verify ${format_(x)} is a ${asInstance.typeName}`);
+    export function asInstanceInContext(asInstance: AsInstance): AsInstance {
+      return {
+        typeName: asInstance.typeName,
+        f: (x: any): ApplyDefaults => {
+          try {
+            return asInstance.f(x);
+          }
+          catch(e) {
+            throw xju.xn.inContext(`verify ${format_(x)} is a ${asInstance.typeName}`, e as Error);
+          }
         }
       }
     }
-    export function asInstanceOfString(typeName: string) => AsInstance {
+    export function asInstanceOfString(typeName: string): AsInstance {
       return asInstanceInContext({
         typeName: typeName,
-        f: (x: any): ApplyDefaults {
+        f: (x: any): ApplyDefaults => {
           if (typeof x !== 'string') {
             throw new Error(`${format_(x)} is a ${typeof x} not a string`);
           }
@@ -45,19 +52,20 @@ export namespace xju {
         }
       });
     }
-    export function asInstanceOfString(typeName: string, pattern: RegExp) => AsInstance {
+    export function asInstanceOfStringPattern(typeName: string, pattern: RegExp): AsInstance {
       return asInstanceInContext({
         typeName,
-        f: (x: any): ApplyDefaults {
-          if (pattern.exec(asInstanceOfString(x))===null) throw new Error(`${{xju.ts.format_(x)}} is not a string with pattern ${pattern}`);
+        f: (x: any): ApplyDefaults => {
+          asInstanceOfString(x);
+          if (pattern.exec(x)===null) throw new Error(`${xju.format_(x)} is not a string with pattern ${pattern}`);
           return applyNoDefaults;
         }
       });
     }
-    export function asInstanceOfFloat(typeName: string) => AsInstance {
+    export function asInstanceOfFloat(typeName: string): AsInstance {
       return asInstanceInContext({
         typeName,
-        f: (x: any): ApplyDefaults {
+        f: (x: any): ApplyDefaults => {
           if (typeof x !== 'number') {
             throw new Error(`${format_(x)} is a ${typeof x} not a number`);
           }
@@ -65,10 +73,10 @@ export namespace xju {
         }
       });
     }
-    export function asInstanceOfInt(typeName: string) => AsInstance {
+    export function asInstanceOfInt(typeName: string): AsInstance {
       return asInstanceInContext({
         typeName,
-        f: (x: any): ApplyDefaults {
+        f: (x: any): ApplyDefaults => {
           if (typeof x !== 'number') {
             throw new Error(`${format_(x)} is a ${typeof x} not a number`);
           }
@@ -79,10 +87,10 @@ export namespace xju {
         }
       });
     }
-    export function asInstanceOfBool(typeName: string) => AsInstance {
+    export function asInstanceOfBool(typeName: string): AsInstance {
       return asInstanceInContext({
         typeName,
-        f: (x: any): ApplyDefaults {
+        f: (x: any): ApplyDefaults => {
           if (typeof x !== 'boolean') {
             throw new Error(`${format_(x)} is a ${typeof x} not a boolean`);
           }
@@ -90,31 +98,31 @@ export namespace xju {
         }
       });
     }
-    export function asInstanceOfNull() => AsInstance {
+    export function asInstanceOfNull(): AsInstance {
       return asInstanceInContext({
         typeName: "null",
-        f: (x: any): ApplyDefaults {
-          if (typeof x !== null) {
+        f: (x: any): ApplyDefaults => {
+          if (x !== null) {
             throw new Error(`${format_(x)} is not null`);
           }
           return applyNoDefaults;
         }
       });
     }
-    export function asInstanceOfAny() => AsInstance {
+    export function asInstanceOfAny(): AsInstance {
       return asInstanceInContext({
         typeName: "any",
-        f: (x: any): ApplyDefaults {
+        f: (x: any): ApplyDefaults => {
           return applyNoDefaults;
         }
       });
     }
-    export function asInstanceOfList(itemType: AsInstance) => AsInstance {
+    export function asInstanceOfList(itemType: AsInstance): AsInstance {
       return asInstanceInContext({
         typeName: `Array<${itemType.typeName}>`,
-        f: (x: any): ApplyDefaults {
+        f: (x: any): ApplyDefaults => {
           if (!Array.isArray(x)) {
-            throw new Error(`${format_(x) is not an array it is a ${typeof x}`);
+            throw new Error(`${xju.format_(x)} is not an array it is a ${typeof x}`);
           }
           const defaulters: Array<ApplyDefaults> = [];
           x.forEach( (item, i) => {
@@ -134,12 +142,12 @@ export namespace xju {
         }
       });
     }
-    export function asInstanceOfAnyList() => AsInstance {
+    export function asInstanceOfAnyList(): AsInstance {
       return asInstanceInContext({
-        typeName: `Array<${itemType.typeName}>`,
-        f: (x: any): ApplyDefaults {
+        typeName: `Array`,
+        f: (x: any): ApplyDefaults => {
           if (!Array.isArray(x)) {
-            throw new Error(`${format_(x) is not an array it is a ${typeof x}`);
+            throw new Error(`${xju.format_(x)} is not an array it is a ${typeof x}`);
           }
           return applyNoDefaults;
         }
@@ -147,10 +155,10 @@ export namespace xju {
     }
     export function asInstanceOfUnion(alternatives: Array<AsInstance>): AsInstance {
       return asInstanceInContext({
-        typeName: '|'.join(alternatives.map( a=>a.typeName )),
-        f: (x: any): ApplyDefaults {
+        typeName: alternatives.map( a=>a.typeName ).join('|'),
+        f: (x: any): ApplyDefaults => {
           const es: Array<[string,any]> = [];
-          for (alt of alternatives) {
+          for (const alt of alternatives) {
             try {
               return alt.f(x);
             }
@@ -158,14 +166,14 @@ export namespace xju {
               es.push(e);
             }
           }
-          throw new Error(' and '.join(es.map(typeName,error) => `not a ${typeName} because ${e}`));
+          throw new Error(es.map( (error) => `${error}`).join(' and '));
         }
       });
     }
     export function asInstanceOfTuple(items: Array<AsInstance>): AsInstance {
       return asInstanceInContext({
-        typeName: `[${','.join(items.map(item=>item.typeName))}]`,
-        f: (x: any): ApplyDefaults {
+        typeName: `[${items.map(item=>item.typeName).join(',')}]`,
+        f: (x: any): ApplyDefaults => {
           if (!Array.isArray(x)) {
             throw new Error(`not an array it is a ${typeof x}`);
           }
@@ -190,15 +198,16 @@ export namespace xju {
         }
       });
     }
-    export function asInstanceOfTuple(
+    export function asInstanceOfClass(
+      className: string,
       items: Array<{
         propertyName: string;
         asInstance: AsInstance;
         defaultValue?: any;
       }>): AsInstance {
       return asInstanceInContext({
-        typeName: `{${';'.join(items.map( {propertyName, asInstance}=> ` ${propertyName}: {item.typeName}`))} }`,
-        f: (x: any): ApplyDefaults {
+        typeName: `${className}`,
+        f: (x: any): ApplyDefaults => {
           if (!xju.isObject(x)) {
             throw new Error(`not an object it is a ${typeof x}`);
           }
@@ -206,14 +215,17 @@ export namespace xju {
             throw new Error('not an object it is an array');
           }
           const defaulters: Array<ApplyDefaults> = [];
-          x.forEach( {propertyName, asInstance, defaultValue} ) => {
+          items.forEach( ({propertyName, asInstance, defaultValue}) => {
             try {
               if (x.hasOwnProperty(propertyName)) {
-                asInstance.f(x[propertyName]);
+                asInstance.f(x[propertyName as keyof typeof x]);
               }
               else if (defaultValue !== undefined) {
                 defaulters.push({
-                  applyDefaults: () => { x[propertyName] = defaultValue; return true }
+                  applyDefaults: () => {
+                    (x as any)[propertyName as keyof object] = defaultValue;
+                    return true;
+                  }
                 });
               }
               else {
@@ -221,7 +233,7 @@ export namespace xju {
               }
             }
             catch(e:any) {
-              throw xju.xn.inContext(`validate item ${i}`, e);
+              throw xju.xn.inContext(`validate property ${propertyName}`, e);
             }
           });
           return {

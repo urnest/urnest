@@ -1,0 +1,26 @@
+#!/bin/env python3
+import json
+import os
+import sys
+from pathlib import Path
+
+ts_file=sys.argv[1]
+ts=enumerate(Path(ts_file).read_text().splitlines())
+warn_only=bool(sys.argv[2])
+cov=json.loads(Path(sys.argv[3]).read_text())
+
+if os.environ['ODINVERBOSE']:
+    print(f'check all lines of {ts_file} covered')
+    pass
+
+match cov.get(ts_file):
+    case None:
+        Path('ERRORS').write_text(''.join([f"{ts_file}:{i+1}: error: not covered\n" for i, _ in ts]))
+    case uncovered if len(uncovered):
+        Path('ERRORS').write_text(''.join([f"{ts_file}:{i}: error: not covered\n" for i in uncovered]))
+    case _:
+        Path('file.ts.cov.checked').touch()
+if warn_only:
+    Path('ERRORS').rename('WARNINGS')
+    pass
+

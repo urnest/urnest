@@ -1,0 +1,19 @@
+#
+# Package for javascript stuff.
+#
+
+# Types
+
+*.js => :js;
+
+:js 'javascript'? => :FILE;
+:js.map 'javascript source map'? => :FILE;
+
+:node.js.cov 'coverage from node.js --test --experimental-test-coverage run of javascript file'? => :FILE;
+
++js_flags 'flags to pass to node.js'? => :cat;
+
+$ODIN_NODE_JS 'name of node.js executable' = 'node';
+$ODIN_NODE_JS_PATH 'path to set when running node.js ($ODIN_NODE_JS)' = '/usr/bin:/bin';
+
+EXEC (node.js.cov.sh) (:js) (+js_flags) => (:node.js.cov);

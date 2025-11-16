@@ -1,9 +1,6 @@
-export {};
+/// <reference path="xju.ts" />
 
-import {
-  xju
-} from "xju.js";
-
+xju.assertEqual(xju.str(8), "8");
 xju.assertXcontainsY('fred', 're');
 xju.assertEqual(1,1);
 try {
