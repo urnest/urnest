@@ -162,24 +162,17 @@ class CodecImplProto(Protocol):
         pass
     def ensure_typescript_defs(self, namespace) -> None:
         pass
-    def get_typescript_isa(self,
-                           expression:TypeScriptSourceCode,
-                           namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''returns an expression that evaluates to false|xju.ts.ApplyDefaults'''
+    def get_typescript_isa(self, namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''returns an expression that evaluates to a xju.json_codec.IsInstance'''
         pass
-    def get_typescript_isa_key(self,
-                               expression:TypeScriptSourceCode,
-                               namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''returns an expression that evaluates to false|true'''
+    def get_typescript_isa_key(self, namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''returns an expression that evaluates to a xju.json_codec.IsKey'''
         pass
-    def get_typescript_asa(self,
-                           namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''returns an expression that evaluates to a xju.ts.AsInstance'''
+    def get_typescript_asa(self, namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''returns an expression that evaluates to a xju.json_codec.AsInstance'''
         pass
-    def get_typescript_asa_key(self,
-                               expression:TypeScriptSourceCode,
-                               namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''returns an expression that evaluates to void or raises an Error'''
+    def get_typescript_asa_key(self, namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''returns an expression that evaluates to a xju.json_codec.AsKey'''
         pass
     pass
 
@@ -240,13 +233,13 @@ class Codec(Generic[T]):
                 f'type {fqn[-1]} = {tt};')
             target_namespace.defs[TypeScriptUQN(f"asInstanceOf{fqn[-1]}")] = TypeScriptSourceCode(
                 f"function asInstanceOf{fqn[-1]}(v:any):{fqn[-1]} {{\n"
-                f"    const r={indent(8, self.codec.get_typescript_asa(TypeScriptSourceCode('v'),namespace))};\n"
+                f"    const r:xju.json_codec.AsInstance={indent(8, self.codec.get_typescript_asa(,namespace))}(v);\n"
                 f"    r.applyDefaults();\n"
                 f"    return v as {fqn[-1]};"
                 f"}}")
             target_namespace.defs[TypeScriptUQN(f"isInstanceOf{fqn[-1]}")] = TypeScriptSourceCode(
                 f"function isInstanceOf{fqn[-1]}(v:any):v is {fqn[-1]} " "{\n"
-                f"    const r:false|xju.ts.ApplyDefaults={indent(4,self.codec.get_typescript_isa(TypeScriptSourceCode('v'),namespace))};\n"
+                f"    const r:xju.json_codec.IsInstance={indent(,self.codec.get_typescript_isa(namespace))}(v);\n"
                 "    return r&&r.applyDefaults();\n"
                 "}")
         except:
@@ -327,79 +320,48 @@ class NoopCodecImpl(Generic[Atom]):
             return TypeScriptSourceCode('string /* float */')
 
     def ensure_typescript_defs(self, namespace) -> None:
-        ensure_xju_ts_defs(namespace)
+        pass
     def get_typescript_isa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         if issubclass(self.t,bool):
-            return TypeScriptSourceCode(
-                f"typeof ({expression}) == '{self.typescript_type()}'"
-                " && {applyDefaults: ():true => true}")
+            return TypeScriptSourceCode("xju.json_codec.isInstanceOfBool")
         if issubclass(self.t, int):
-            return TypeScriptSourceCode(
-                f"((v: any) => (typeof (v) == 'number' && v % 1 == 0))({expression})"
-                " && {applyDefaults: ():true => true}")
-        if issubclass(self.t,(float,str)):
-            return TypeScriptSourceCode(
-                f"typeof ({expression}) == '{self.typescript_type()}'"
-                " && {applyDefaults: ():true => true}")
+            return TypeScriptSourceCode("xju.json_codec.isInstanceOfInt")
+        if issubclass(self.t,float):
+            return TypeScriptSourceCode("xju.json_codec.isInstanceOfFloat")
+        if issubclass(self.t,str):
+            return TypeScriptSourceCode("xju.json_codec.isInstanceOfString")
     def get_typescript_isa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         if issubclass(self.t,bool):
-            return TypeScriptSourceCode(
-                f"(({expression}) === 'true' || ({expression}) === 'false')")
-        elif issubclass(self.t,int):
-            return TypeScriptSourceCode(
-                f"((v: any) => (typeof (v) == 'string' && !isNaN(parseFloat(v)) && parseFloat(v)%1 == 0))({expression})")
-        elif issubclass(self.t,float):
-            return TypeScriptSourceCode(
-                f"(typeof ({expression}) == 'string' && !isNaN(parseFloat({expression}))) ")
-        elif issubclass(self.t,str):
-            return TypeScriptSourceCode(
-                f"(typeof ({expression}) == 'string') ")
+            return TypeScriptSourceCode("xju.json_codec.isKeyOfBool")
+        if issubclass(self.t,int):
+            return TypeScriptSourceCode("xju.json_codec.isKeyOfInt")
+        if issubclass(self.t,float):
+            return TypeScriptSourceCode("xju.json_codec.isKeyOfFloat")
+        if issubclass(self.t,str):
+            return TypeScriptSourceCode("xju.json_codec.isKeyOfString")
     def get_typescript_asa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         if issubclass(self.t, bool):
-            return TypeScriptSourceCode(f"xju.ts.asInstanceOfBool('bool')")
+            return TypeScriptSourceCode(f"xju.json_codec.asInstanceOfBool('bool')")
         if issubclass(self.t, int):
-            return TypeScriptSourceCode(f"xju.ts.asInstanceOfInt('int')")
-        if issubclass(self.t, (float,str)):
-            return TypeScriptSourceCode(f"xju.ts.asInstanceOfFloat('float')")
+            return TypeScriptSourceCode(f"xju.json_codec.asInstanceOfInt('int')")
+        if issubclass(self.t, float):
+            return TypeScriptSourceCode(f"xju.json_codec.asInstanceOfFloat('float')")
+        if issubclass(self.t, str):
+            return TypeScriptSourceCode("xju.json_codec.asInstanceOfString('string')")
     def get_typescript_asa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         tt=self.typescript_as_object_key_type()
         if issubclass(self.t,bool):
-            return TypeScriptSourceCode(
-                f"((v: any): {tt} => {{\n"
-                f"    if (typeof v !== 'string' /* {self.typescript_type()} */) throw new Error(`${{xju.ts.format_(v)}} is not a {tt} it is a ${{typeof v}}`);\n"
-                f"    if (v !== 'true' && v !== 'false') throw new Error(`${{xju.ts.format_(v)}} is not 'true' or 'false'`);\n"
-                f"    return v as {tt};\n"
-                f"}})({expression})")
-        elif issubclass(self.t,int):
-            return TypeScriptSourceCode(
-                f"((v: any): {tt} => {{\n"
-                f"    if (typeof v !== 'string' /* {self.typescript_type()} */) throw new Error(`${{xju.ts.format_(v)}} is not a {tt} it is a ${{typeof v}}`);\n"
-                f"    const vf=parseFloat(v);\n"
-                f"    if (isNaN(vf)) throw new Error(`${{xju.ts.format_(v)}} is not a stringified number`);\n"
-                f"    if (vf%1 !== 0) throw new Error(`${{xju.ts.format_(v)}} is not a stringified integer`);\n"
-                f"    return v as {tt};\n"
-                f"}})({expression})")
-        elif issubclass(self.t,float):
-            return TypeScriptSourceCode(
-                f"((v: any): {tt} => {{\n"
-                f"    if (typeof v !== 'string' /* {self.typescript_type()} */) throw new Error(`${{xju.ts.format_(v)}} is not a {tt} it is a ${{typeof v}}`);\n"
-                f"    if (isNaN(parseFloat(v))) throw new Error(`${{xju.ts.format_(v)}} is not a stringified number`);\n"
-                f"    return v as {tt};\n"
-                f"}})({expression})")
-        elif issubclass(self.t,str):
-            return TypeScriptSourceCode(
-                f"((v: any): {tt} => {{\n"
-                f"    if (typeof v !== 'string' /* {self.typescript_type()} */) throw new Error(`${{xju.ts.format_(v)}} is not a string it is a ${{typeof v}}`);\n"
-                f"    return v as {tt};\n"
-                f"}})({expression})")
+            return TypeScriptSourceCode("xju.json_codec.asKeyOfBool('bool')")
+        if issubclass(self.t,int):
+            return TypeScriptSourceCode("xju.json_codec.asKeyOfInt('int')")
+        if issubclass(self.t,float):
+            return TypeScriptSourceCode("xju.json_codec.asKeyOfFloat('float')")
+        if issubclass(self.t,str):
+            return TypeScriptSourceCode("xju.json_codec.asKeyOfString('string')")
     pass
 
 class NoneCodecImpl:
@@ -428,33 +390,19 @@ class NoneCodecImpl:
         # python's json.dumps turns None into "null"
         return TypeScriptSourceCode('string /* null */')
     def ensure_typescript_defs(self, namespace) -> None:
-        ensure_xju_ts_defs(namespace)
+        pass
     def get_typescript_isa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(
-            f"({expression}) === {self.typescript_type()}" " && {applyDefaults: ():true => true}")
+        return TypeScriptSourceCode("xju.json_codec.isInstanceOfNull")
     def get_typescript_isa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(
-            f"({expression}) === 'null'")
+        return TypeScriptSourceCode("xju.json_codec.isKeyOfNull")
     def get_typescript_asa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(
-            f"((v: any): xju.ts.ApplyDefaults => {{\n"
-            f"    if (v !== null) throw new Error(`${{xju.ts.format_(v)}} is not null it is a ${{typeof v}}`);\n"
-            "    return {applyDefaults: ():true => true};\n"
-            f"}})({expression})")
+        return TypeScriptSourceCode("xju.json_codec.asInstanceOfNull")
     def get_typescript_asa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(
-            f"((v: any): null => {{\n"
-            f"    if (v !== 'null') throw new Error(`key ${{xju.ts.format_(v)}} is not null`);\n"
-            f"    return v as null;\n"
-            f"}})({expression})")
+        return TypeScriptSourceCode("xju.json_codec.asKeyOfNull")
     pass
 
 class ListCodecImpl:
@@ -493,54 +441,18 @@ class ListCodecImpl:
         self.value_codec.ensure_typescript_defs(namespace)
         pass
     def get_typescript_isa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(
-            f"// is a {self.typescript_type()}?\n"
-            "(((x:any):false|xju.ts.ApplyDefaults=>{\n"
-            "    if (!Array.isArray(x)) return false;\n"
-            f"    const r=x.map( (v) => ({indent(4,self.value_codec.get_typescript_isa(TypeScriptSourceCode('v'),namespace))}) );\n"
-            "    if (r.filter((w) => w === false).length) return false;\n"
-            "    return {\n"
-            "        applyDefaults: ():true => {\n"
-            "            r.forEach((w) => w !== false && w.applyDefaults());\n"
-            "            return true;\n"
-            "        }\n"
-            "    };\n"
-            "})" f"({expression}))")
+            f"xju.json_codec.isListOf({self.value_codec.get_typescript_isa(namespace)})"
     def get_typescript_isa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
         
     def get_typescript_asa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        tt=self.typescript_type()
         return TypeScriptSourceCode(
-            f"((v: any): xju.ts.ApplyDefaults => {{try{{\n"
-            f"    if (!Array.isArray(v)) throw new Error(`${{xju.ts.format_(v)}} is not an array it is a ${{typeof v}}`);\n"
-            f"    const defaulters:Array<xju.ts.ApplyDefaults>=[];\n"
-            f"    v.forEach((x,i)=>{{\n"
-            f"        try{{\n"
-            f"            defaulters.push({indent(4,self.value_codec.get_typescript_asa(TypeScriptSourceCode('x'),namespace))});\n"
-            f"        }}\n"
-            f"        catch(e){{\n"
-            f"            throw new Error(`item at index ${{i}} is invalid because ${{e}}`);\n"
-            f"        }}\n"
-            f"    }});\n"
-            "    return {\n"
-            "        applyDefaults: ():true => {\n"
-            "            defaulters.forEach((d)=>d.applyDefaults());\n"
-            "            return true;\n"
-            "        }\n"
-            "    };\n"
-            f"}}\n"
-            f"catch(e:any){{\n"
-            f"    throw new Error(`${{xju.ts.format_(v)}} is not a {tt} because ${{e}}`);\n"
-            f"}}}})({expression})")
+            f"xju.json_codec.asListOf({self.value_codec.get_typescript_asa(namespace)})"
     def get_typescript_asa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
     pass
@@ -570,28 +482,18 @@ class AnyListCodecImpl:
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
-        ensure_xju_ts_defs(namespace)
+        pass
     def get_typescript_isa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(
-            f"Array.isArray({expression})" " && {applyDefaults: ():true => true}")
+        return TypeScriptSourceCode("xju.json_codec.isInstanceOfAnyList")
     def get_typescript_isa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
         
     def get_typescript_asa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        tt=self.typescript_type()
-        return TypeScriptSourceCode(
-            f"((v: any): xju.ts.ApplyDefaults => {{\n"
-            f"    if (!Array.isArray(v)) throw new Error(`${{xju.ts.format_(v)}} is not an Array it is a ${{typeof v}}`);\n"
-            "    return {applyDefaults: ():true => true};\n"
-            f"}})({expression})")
+        return TypeScriptSourceCode("xju.json_codec.asInstanceOfAnyList")
     def get_typescript_asa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
     pass
@@ -633,55 +535,21 @@ class SetCodecImpl:
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
-        ensure_xju_ts_defs(namespace)
         self.value_codec.ensure_typescript_defs(namespace)
         pass
     def get_typescript_isa(self,
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(
-            f"// is a {self.typescript_type()}?\n"
-            "(((x:any):false|xju.ts.ApplyDefaults=>{\n"
-            "    if (!Array.isArray(x)) return false;\n"
-            f"    const r=x.map( (v) => ({self.value_codec.get_typescript_isa(TypeScriptSourceCode('v'),namespace)}) );\n"
-            "    if (r.filter((w) => w === false).length) return false;\n"
-            "    return {\n"
-            "        applyDefaults: ():true => {\n"
-            "            r.forEach((w) => w !== false && w.applyDefaults());\n"
-            "            return true;\n"
-            "        }\n"
-            "    };\n"
-            "})" f"({expression}))")
+        return TypeScriptSourceCode(f"xju.json_codec.isInstanceOfListOf({self.value_codec.get_typescript_isa(namespace)})")
     def get_typescript_isa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
         
     def get_typescript_asa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         tt=self.typescript_type()
-        return TypeScriptSourceCode(
-            f"((v: any): xju.ts.ApplyDefaults => {{try{{\n"
-            f"    if (!Array.isArray(v)) throw new Error(`${{xju.ts.format_(v)}} is not an array it is a ${{typeof v}}`);\n"
-            f"    const defaulters:Array<xju.ts.ApplyDefaults>=[];\n"
-            f"    v.forEach((x,i)=>{{\n"
-            f"        try{{\n"
-            f"            defaulters.push({indent(4,self.value_codec.get_typescript_asa(TypeScriptSourceCode('x'),namespace))});\n"
-            f"        }}\n"
-            f"        catch(e){{\n"
-            f"            throw new Error(`item at index ${{i}} is invalid because ${{e}}`);\n"
-            f"        }}\n"
-            f"    }});\n"
-            "    return {\n"
-            "        applyDefaults: ():true => {\n"
-            "            defaulters.forEach((d)=>d.applyDefaults());\n"
-            "            return true;\n"
-            "        }\n"
-            "    };\n"
-            f"}}catch(e:any){{throw new Error(`${{xju.ts.format_(v)}} is not a {tt} because ${{e}}`);}}}})({expression})")
+        return TypeScriptSourceCode(f"xju.json_codec.asInstnaceOfListOf({self.value_codec.get_typescript_asa(namespace)})")
     def get_typescript_asa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
     pass
@@ -724,26 +592,16 @@ class AnySetCodecImpl:
     def ensure_typescript_defs(self, namespace) -> None:
         pass
     def get_typescript_isa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(
-            f"Array.isArray({expression})" " && {applyDefaults: ():true => true}")
+        return TypeScriptSourceCode("xju.json_codec.isInstanceOfAnyList")
     def get_typescript_isa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
         
     def get_typescript_asa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        tt=self.typescript_type()
-        return TypeScriptSourceCode(
-            f"((v: any): xju.ts.ApplyDefaults => {{\n"
-            f"    if (!Array.isArray(v)) throw new Error(`${{v}} is not an {tt} it is a ${{typeof v}}`);\n"
-            f"    return {{ applyDefaults: ()=>true }};\n"
-            f"}})({expression})")
+        return TypeScriptSourceCode("xju.json_codec.asInstanceOfAnyList")
     def get_typescript_asa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
     pass
@@ -785,47 +643,19 @@ class FrozenSetCodecImpl:
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
-        ensure_xju_ts_defs(namespace)
         self.value_codec.ensure_typescript_defs(namespace)
         pass
     def get_typescript_isa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(
-            "(((x:any):false|xju.ts.ApplyDefaults=>{\n"
-            "    if (!Array.isArray(x)) return false;\n"
-            f"    const r=x.map( (v) => ({self.value_codec.get_typescript_isa(TypeScriptSourceCode('v'),namespace)}) );\n"
-            "    if (r.filter((w) => w === false).length) return false;\n"
-            "    return {\n"
-            "        applyDefaults: ():true => {\n"
-            "            r.forEach((w) => w !== false && w.applyDefaults());\n"
-            "            return true;\n"
-            "        }\n"
-            "    };\n"
-            "})" f"({expression}))")
+        return TypeScriptSourceCode(f"xju.json_codec.isInstanceOfListOf({self.value_codec.get_typescript_isa(namespace)})")
     def get_typescript_isa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
         
     def get_typescript_asa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        tt=self.typescript_type()
-        return TypeScriptSourceCode(
-            f"((v: any): xju.ts.ApplyDefaults => {{try{{\n"
-            f"    if (!Array.isArray(v)) throw new Error(`${{xju.ts.format_(v)}} is not an array it is a ${{typeof v}}`);\n"
-            "     const defaulters:Array<xju.ts.ApplyDefaults>=[];\n"
-            f"    v.forEach((x)=>defaulters.push({indent(4,self.value_codec.get_typescript_asa(TypeScriptSourceCode('x'),namespace))}));\n"
-            "    return {\n"
-            "        applyDefaults: ():true => {\n"
-            "            defaulters.forEach((d)=>d.applyDefaults());\n"
-            "            return true;\n"
-            "        }\n"
-            "    };\n"
-            f"}}catch(e:any){{throw new Error(`${{xju.ts.format_(v)}} is not a {tt} because ${{e}}`);}}}})({expression})")
+        return TypeScriptSourceCode(f"xju.json_codec.asInstnaceOfListOf({self.value_codec.get_typescript_asa(namespace)})")
     def get_typescript_asa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
     pass
@@ -866,28 +696,18 @@ class AnyFrozenSetCodecImpl:
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
-        ensure_xju_ts_defs(namespace)
+        pass
     def get_typescript_isa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(
-            f"Array.isArray({expression})" " && {applyDefaults: ():true => true}")
+        return TypeScriptSourceCode("xju.json_codec.isInstanceOfAnyList")
     def get_typescript_isa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
         
     def get_typescript_asa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        tt=self.typescript_type()
-        return TypeScriptSourceCode(
-            f"((v: any): xju.ts.ApplyDefaults => {{\n"
-            f"    if (!Array.isArray(v)) throw new Error(`${{xju.ts.format_(v)}} is not an {tt} it is a ${{typeof v}}`);\n"
-            "    return {applyDefaults: ():true => true};\n"
-            f"}})({expression})")
+        return TypeScriptSourceCode("xju.json_codec.asInstanceOfAnyList")
     def get_typescript_asa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
     pass
@@ -949,31 +769,25 @@ class TupleCodec:
         for c in self.value_codecs: c.ensure_typescript_defs(namespace)
         pass
     def get_typescript_isa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         self.ensure_typescript_defs(namespace)
         return TypeScriptSourceCode(
-            f"(((v:any)=>xju.ts._isInstanceOfTuple({json.dumps(self.typescript_type().val)}, v, [\n"
-            f"       (v:any)=>{',\n    '.join([str(indent(4,self.value_codecs[i].get_typescript_isa('v',namespace))) for i in range(0, self.number_of_codecs)])}"
-            "])))({expression})")
+            "xju.json_codec.isInstanceOfTuple([\n"+
+            "\n,    ".join([indent(4,c.get_typescript_isa(namespace)) for c in self.value_codecs])+
+            "\n])")
     def get_typescript_isa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
         
     def get_typescript_asa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        asas=['    defaulters.push('+str(indent(4,self.value_codecs[i].get_typescript_asa(f"v[{i}]",namespace)))+');\n'
-              for i in range(0, self.number_of_codecs)]
-        tt=self.typescript_type()
+        
         self.ensure_typescript_defs(namespace)
         return TypeScriptSourceCode(
-            f"(((v:any)=>xju.ts._asInstanceOfTuple({json.dumps(self.typescript_type().val)}, v, [\n"
-            f"       (v:any)=>{',\n    '.join([str(indent(4,self.value_codecs[i].get_typescript_asa('v',namespace))) for i in range(0, self.number_of_codecs)])}"
-            "])))({expression})")
+            "xju.json_codec.asInstanceOfTuple([\n"+
+            "\n,    ".join([indent(4,c.get_typescript_asa(namespace)) for c in self.value_codecs])+
+            "\n])")
     def get_typescript_asa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
     pass
@@ -1037,8 +851,8 @@ class UnionCodecImpl:
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         '''get typescript type of dictionary key that is any of {self.allowed_types}'''
         try:
-            item_types=[str(c.typescript_as_object_key_type()) for _t,c in self.value_codecs.items()]
-            return TypeScriptSourceCode(f"string /* {'|'.join(item_types).replace('/*','**').replace('*/','**')} */")
+            return TypeScriptSourceCode(
+                '|'.join([str(c.typescript_as_object_key_type()) for _t,c in self.value_codecs.items()]))
         except Exception:
             raise in_function_context(UnionCodecImpl.typescript_as_object_key_type,vars()) from None
     def ensure_typescript_defs(self, namespace) -> None:
@@ -1046,63 +860,37 @@ class UnionCodecImpl:
             c.ensure_typescript_defs(namespace)
         pass
     def get_typescript_isa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        tt=self.typescript_type()
-        isas=[f"        (v: any): false|xju.ts.ApplyDefaults => (\n"+
-              f"            {indent(12,value_codec.get_typescript_isa(TypeScriptSourceCode('v'),namespace))})"
-              for _t,value_codec in self.value_codecs.items()]
+        self.ensure_typescript_defs(namespace)
         return TypeScriptSourceCode(
-            f"(((v: any): false|xju.ts.ApplyDefaults => {{\n" +
-            f"    return xju.ts._isInstanceOfUnion({json.dumps(tt.val)}, v, [\n" +
-            ",\n".join(isas)+
-            f"]);\n"
-            f"}}))({expression})")
+            f"xju.json_codec.isInstanceOfUnion([\n"+
+            "\n,    ".join([indent(4,c.get_typescript_asa_key(namespace))
+                            for c in self.value_codecs])+
+            "\n])")
     def get_typescript_isa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        isas=[' ||\n       '+str(indent(12,value_codec.get_typescript_isa_key(TypeScriptSourceCode(f"v"),
-                                                                              namespace)))
-              for _t,value_codec in self.value_codecs.items()]
+        self.ensure_typescript_defs(namespace)
         return TypeScriptSourceCode(
-            f"((v:any): v is {self.typescript_as_object_key_type()}=>{{\n"
-            f"    return false" +
-            f"".join(isas) + ";\n"+
-            f"}})({expression})")
+            f"xju.json_codec.isKeyOfUnion([\n"+
+            "\n,    ".join([indent(4,c.get_typescript_asa_key(namespace))
+                            for c in self.value_codecs])+
+            "\n])")
     def get_typescript_asa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        tt=self.typescript_type()
-        asas=[f"        (v: any): xju.ts.ApplyDefaults => (\n"+
-              f"            {indent(12,value_codec.get_typescript_asa(TypeScriptSourceCode('v'),namespace))})"
-              for _t,value_codec in self.value_codecs.items()]
+        self.ensure_typescript_defs(namespace)
         return TypeScriptSourceCode(
-            f"(((v: any): xju.ts.ApplyDefaults => {{\n" +
-            f"    return xju.ts._asInstanceOfUnion({json.dumps(tt.val)}, v, [\n" +
-            ",\n".join(asas)+
-            f"]);\n"
-            f"}}))({expression})")
+            f"xju.json_codec.asInstanceOfUnion([\n"+
+            "\n,    ".join([indent(4,c.get_typescript_asa_key(namespace))
+                            for c in self.value_codecs])+
+            "\n])")
     def get_typescript_asa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        tt=self.typescript_as_object_key_type()
-        asas=[f"    try{{\n"+
-              f"        {indent(8,value_codec.get_typescript_asa_key(TypeScriptSourceCode('v'),namespace))};\n"+
-              f"        return v as {tt};\n"+
-              f"    }}\n"+
-              f"    catch(e:any){{\n"+
-              f"        es.push(e.message);\n"+
-              f"    }};\n"
-              for _t,value_codec in self.value_codecs.items()]
+        self.ensure_typescript_defs(namespace)
         return TypeScriptSourceCode(
-            f"((v: any): {tt} => {{try{{\n" +
-            f"    var es = new Array<string>();\n"+
-            "".join(asas)+
-            f"    throw new Error(es.join(' and '));\n"+
-            f"}}catch(e:any)\n"+
-            f"{{\n"+
-            f"    throw new Error(`${{xju.ts.format_(v)}} is not a {tt} because ${{e}}`);\n"+
-            f"}}}})({expression})")
+            f"xju.json_codec.asKeyOfUnion([\n"+
+            "\n,    ".join([indent(4,c.get_typescript_asa_key(namespace))
+                            for c in self.value_codecs])+
+            "\n])")
     pass
 
 class DictCodecImpl:
@@ -1190,64 +978,26 @@ class DictCodecImpl:
         self.value_codec.ensure_typescript_defs(namespace)
         pass
     def get_typescript_isa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         self.ensure_typescript_defs(namespace)
         return TypeScriptSourceCode(
-            f"// is a {self.typescript_type()}?\n"
-            "((x:any):false|xju.ts.ApplyDefaults=>{\n"
-            "    if (x == null ||\n"
-            "        typeof (x) !== 'object' ||\n"
-            "        Array.isArray(x)\n"
-            "    ) return false;\n"
-            "    const defaulters:Array<xju.ts.ApplyDefaults>=[];\n"
-            "    for(const k of Object.keys(x).filter( (k) => x.hasOwnProperty(k) )) {\n"
-            f"        if (({indent(12,self.key_codec.get_typescript_isa_key(TypeScriptSourceCode('k'),namespace))}))" "{\n"
-            f"            const r:false|xju.ts.ApplyDefaults={indent(16,self.value_codec.get_typescript_isa(TypeScriptSourceCode('x[k]'),namespace))};\n"
-            "            if (r===false) return false;\n"
-            "            defaulters.push(r);\n"
-            "        }\n"
-            "    }\n"
-            "    return {\n"
-            "        applyDefaults: ():true => {\n"
-            "            for (const d of defaulters) d.applyDefaults();\n"
-            "            return true;\n"
-            "        }\n"
-            "    };\n"
-            "})" f"({expression})")
+            f"xju.json_codec.isInstanceOfDictOf(\n"
+            f"    {indent(4,self.key_codec.get_typescript_isa_key(namespace)},\n"
+            f"    {indent(4,self.value_codec.get_typescript_asa(namespace)}\n"
+            f")"
     def get_typescript_isa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
         
     def get_typescript_asa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         self.ensure_typescript_defs(namespace)
-        tt=self.typescript_type()
         return TypeScriptSourceCode(
-            f"((x: any): xju.ts.ApplyDefaults => {{try{{\n"
-            f"    if (x === null) throw new Error(`${{xju.ts.format_(x)}} is not an object it is null`);\n"
-            f"    if (typeof x !== 'object') throw new Error(`${{xju.ts.format_(x)}} is not an object it is a ${{typeof x}}`);\n"
-            f"    if (Array.isArray(x)) throw new Error(`${{xju.ts.format_(x)}} is not an object it is an array`);\n"
-            f"    const defaulters:Array<xju.ts.ApplyDefaults>=[];\n"
-            f"    for(const k in x){{try{{\n"+
-            f"        if (!x.hasOwnProperty(k)) continue;\n"+
-            f"        const v=x[k];\n"
-            f"        {indent(8,self.key_codec.get_typescript_asa_key(TypeScriptSourceCode('k'),namespace))};\n"
-            f"        defaulters.push({indent(8,self.value_codec.get_typescript_asa(TypeScriptSourceCode('v'),namespace))});\n"
-            f"    }}catch(e:any){{\n"
-            f"        throw new Error(`element ${{xju.ts.format_(k)}} is invalid because ${{e}}`);\n"
-            f"    }}}};\n"
-            "    return {\n"
-            "        applyDefaults: ():true => {\n"
-            "            defaulters.forEach((d)=>d.applyDefaults());\n"
-            "            return true;\n"
-            "        }\n"
-            "    };\n"
-            f"}}catch(e:any){{throw new Error(`${{xju.ts.format_(x)}} is not a {tt} because ${{e}}`);}}}})({expression})")
+            f"xju.json_codec.asInstanceOfDictOf(\n"
+            f"    {indent(4,self.key_codec.get_typescript_isa_key(namespace)},\n"
+            f"    {indent(4,self.value_codec.get_typescript_asa(namespace)}\n"
+            f")"
     def get_typescript_asa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
     pass
@@ -1295,41 +1045,16 @@ class AnyDictCodecImpl:
     def ensure_typescript_defs(self, namespace) -> None:
         pass
     def get_typescript_isa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        return DictCodecImpl(self.key_codec, self.value_codec).get_typescript_isa(expression, namespace)
+        return TypeScriptSourceCode("xju.json_codec.isInstanceOfAnyDict")
     def get_typescript_isa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
         
     def get_typescript_asa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        tt=self.typescript_type()
-        return TypeScriptSourceCode(
-            f"((x: any): xju.ts.ApplyDefaults => {{try{{\n"
-            f"    if (x === null) throw new Error(`${{xju.ts.format_(x)}} is not an object it is null`);\n"
-            f"    if (typeof x !== 'object') throw new Error(`${{xju.ts.format_(x)}} is not an object it is a ${{typeof x}}`);\n"
-            f"    if (Array.isArray(x)) throw new Error(`${{xju.ts.format_(x)}} is not an object it is an array`);\n"
-            f"    const defaulters:Array<xju.ts.ApplyDefaults>=[];\n"
-            f"    for(const k in x){{\ntry{{\n"+
-            f"        if (!x.hasOwnProperty(k)) continue;\n"+
-            f"        const v=x[k];\n"
-            f"        {indent(8,self.key_codec.get_typescript_asa_key(TypeScriptSourceCode('k'),namespace))};\n"
-            f"        defaulters.push({indent(8,self.value_codec.get_typescript_asa(TypeScriptSourceCode('v'),namespace))});\n"
-            f"    }}catch(e:any){{\n"
-            f"        throw new Error(`element ${{xju.ts.format_(k)}} is invalid because ${{e}}`);\n"
-            f"    }}}};\n"
-            "    return {\n"
-            "        applyDefaults: ():true => {\n"
-            "            defaulters.forEach((d)=>d.applyDefaults());\n"
-            "            return true;\n"
-            "        }\n"
-            "    };\n"
-            f"}}catch(e:any){{throw new Error(`${{xju.ts.format_(x)}} is not a {tt} because ${{e}}`);}}}})({expression})")
+        return TypeScriptSourceCode("xju.json_codec.asInstanceOfAnyDict")
     def get_typescript_asa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
     pass
@@ -1371,19 +1096,15 @@ class AnyJsonCodecImpl:
     def get_typescript_isa(self,
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode("{applyDefaults: ():true => true} as false|xju.ts.ApplyDefaults")
+        return TypeScriptSourceCode("xju.json_codec.isInstanceOfAny")
     def get_typescript_isa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
         
     def get_typescript_asa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(
-            "{applyDefaults: ():true=>true}")
+        return TypeScriptSourceCode("xju.json_codec.asInstanceOfAny")
     def get_typescript_asa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
     pass
@@ -1434,67 +1155,32 @@ class NewIntCodecImpl(Generic[NewInt]):
         if tt not in target_namespace.defs:
             target_namespace.defs[tt]=TypeScriptSourceCode(
                 f"type {tt} = number;")
-            target_namespace.defs[TypeScriptUQN(f"asInstanceOf{tt}")]=TypeScriptSourceCode(
-                f"function asInstanceOf{tt}(v: any): {tt}\n"
-                f"{{\n"
-                f"    const r=_asInstanceOf{tt}(v);\n"
-                f"    r.applyDefaults();\n"
-                f"    return v as {tt};\n"
-                f"}}")
             target_namespace.defs[TypeScriptUQN(f'isInstanceOf{tt}')]=TypeScriptSourceCode(
                 f"function isInstanceOf{tt}(v:any): v is {tt}\n"
                 f"{{\n"
-                f"    const r:false|xju.ts.ApplyDefaults=_isInstanceOf{tt}(v);\n"
+                f"    const r=xju.json_codec.isInstanceOfInt(v);\n"
                 f"    return r&&r.applyDefaults();\n"
                 f"}}")
-            target_namespace.defs[TypeScriptUQN(f"_asInstanceOf{tt}")]=TypeScriptSourceCode(
-                f"function _asInstanceOf{tt}(v: any): xju.ts.ApplyDefaults\n"
+            target_namespace.defs[TypeScriptUQN(f"asInstanceOf{tt}")]=TypeScriptSourceCode(
+                f"const asInstanceOf{tt} = (asInt: AsInstance) => ((v: any): {tt}\n"
                 f"{{\n"
-                f"    if (typeof v !== 'number') throw new Error(`${{xju.ts.format_(v)}} is not a {self.get_type_fqn()} i.e. a number, it is a ${{typeof v}}`);\n"
-                f"    if (v % 1 !== 0) throw new Error(`${{xju.ts.format_(v)}} is not a {self.get_type_fqn()} i.e. a whole number because it is not itegral`);\n"
-                "    return {applyDefaults: ():true => true};\n"
-                f"}}")
-            target_namespace.defs[TypeScriptUQN(f'_isInstanceOf{tt}')]=TypeScriptSourceCode(
-                f"function _isInstanceOf{tt}(v:any): false|xju.ts.ApplyDefaults"
-                f"{{\n"
-                f"    return typeof (v) == 'number' && v % 1 === 0 &&\n"
-                "        {applyDefaults: ():true => true};"
-                f"}}")
-            kt=self.typescript_as_object_key_type()
-            target_namespace.defs[TypeScriptUQN(f"asInstanceOfKeyOf{tt}")]=TypeScriptSourceCode(
-                f"function asInstanceOfKeyOf{tt}(v: any): {kt}\n"
-                f"{{\n"
-                f"    if (typeof v !== 'string') throw new Error(`${{xju.ts.format_(v)}} is not a key-of {self.get_type_fqn()} i.e. an integral numeric string, it is a ${{typeof v}}`);\n"
-                f"    if (isNaN(parseFloat(v))) throw new Error(`${{xju.ts.format_(v)}} is not a key-of {self.get_type_fqn()} i.e. an integral numeric string because it is not numeric`);\n"
-                f"    if (parseFloat(v) % 1 !== 0) throw new Error(`${{xju.ts.format_(v)}} is not a key-of {self.get_type_fqn()} i.e. a integral numeric string because it is not a whole number`);\n"
-                f"    return v as {kt};\n"
-                f"}}")
-            target_namespace.defs[TypeScriptUQN(f'isInstanceOfKeyOf{kt}')]=TypeScriptSourceCode(
-                f"function isInstanceOfKeyOf{tt}(v:any): v is {kt}\n"
-                f"{{\n"
-                f"    return typeof v === 'string' && !isNaN(parseFloat(v)) && parseFloat(v) % 1 === 0;\n"
-                f"}}")
+                f"    const r=asInt(v);\n"
+                f"    r.applyDefaults();\n"
+                f"    return v as {tt};\n"
+                f"}})(xju.json_codec.asInstanceOfInt('{tt}'));")
         pass
     def get_typescript_isa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        self.ensure_typescript_defs(namespace)
-        return is_instance_of_expression(self.get_type_fqn(), expression)
+        return TypeScriptSourceCode("xju.json_codec.isInstanceOfInt")
     def get_typescript_isa_key(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        self.ensure_typescript_defs(namespace)
-        return is_instance_of_key_of_expression(self.get_type_fqn(),expression)
+        return TypeScriptSourceCode("xju.json_codec.isKeyOfInt")
     def get_typescript_asa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        self.ensure_typescript_defs(namespace)
-        return as_instance_of_expression(self.get_type_fqn(), expression)
+        return TypeScriptSourceCode(f"xju.json_codec.asInstanceOfInt({self.typescript_type()})")
     def get_typescript_asa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        self.ensure_typescript_defs(namespace)
-        return as_instance_of_key_of_expression(self.get_type_fqn(), expression)
+        return TypeScriptSourceCode(f"xju.json_codec.asKeyOfInt({self.typescript_type()})")
     pass
 
 class NewFloatCodecImpl(Generic[NewFloat]):
@@ -1543,65 +1229,40 @@ class NewFloatCodecImpl(Generic[NewFloat]):
         if tt not in target_namespace.defs:
             target_namespace.defs[tt]=TypeScriptSourceCode(
                 f"type {tt} = number;")
-            target_namespace.defs[TypeScriptUQN(f"asInstanceOf{tt}")]=TypeScriptSourceCode(
-                f"function asInstanceOf{tt}(v: any): {tt}\n"
+            target_namespace.defs[TypeScriptUQN(f'isInstanceOf{tt}')]=TypeScriptSourceCode(
+                f"function isInstanceOf{tt}(v:any): v is {tt}\n"
                 f"{{\n"
+                f"    const r=xju.json_codec.isInstanceOfFloat(v);\n"
+                f"    return r&&r.applyDefaults();\n"
+                f"}}")
+            target_namespace.defs[TypeScriptUQN(f"asInstanceOf{tt}")]=TypeScriptSourceCode(
+                f"function asInstanceOf{tt}(v: any): {tt} {{\n"
                 f"    const r=_asInstanceOf{tt}(v);\n"
                 f"    r.applyDefaults();\n"
                 f"    return v as {tt};\n"
                 f"}}")
-            target_namespace.defs[TypeScriptUQN(f'isInstanceOf{tt}')]=TypeScriptSourceCode(
-                f"function isInstanceOf{tt}(v:any): v is {tt}\n"
-                f"{{\n"
-                f"    const r:false|xju.ts.ApplyDefaults=_isInstanceOf{tt}(v);\n"
-                f"    return r&&r.applyDefaults();\n"
-                f"}}")
             target_namespace.defs[TypeScriptUQN(f"_asInstanceOf{tt}")]=TypeScriptSourceCode(
-                f"function _asInstanceOf{tt}(v: any): xju.ts.ApplyDefaults\n"
-                f"{{\n"
-                f"    if (typeof v !== 'number') throw new Error(`${{xju.ts.format_(v)}} is not a {self.get_type_fqn()} i.e. a number, it is a ${{typeof v}}`);\n"
-                "    return {applyDefaults: ():true => true};\n"
-                f"}}")
-            target_namespace.defs[TypeScriptUQN(f'_isInstanceOf{tt}')]=TypeScriptSourceCode(
-                f"function _isInstanceOf{tt}(v:any): false|xju.ts.ApplyDefaults"
-                f"{{\n"
-                f"    return typeof (v) == 'number' &&\n"
-                "        {applyDefaults: ():true => true};"
-                f"}}")
-            kt=self.typescript_as_object_key_type()
-            target_namespace.defs[TypeScriptUQN(f"asInstanceOfKeyOf{tt}")]=TypeScriptSourceCode(
-                f"function asInstanceOfKeyOf{tt}(v: any): {kt}\n"
-                f"{{\n"
-                f"    if (typeof v !== 'string') throw new Error(`${{xju.ts.format_(v)}} is not a key-of {self.get_type_fqn()} i.e. a numeric string, it is a ${{typeof v}}`);\n"
-                f"    if (isNaN(parseFloat(v))) throw new Error(`${{xju.ts.format_(v)}} is not a key-of {self.get_type_fqn()} i.e. a numeric string`);\n"
-                f"    return v as {kt};\n"
-                f"}}")
-            target_namespace.defs[TypeScriptUQN(f'isInstanceOfKeyOf{kt}')]=TypeScriptSourceCode(
-                f"function isInstanceOfKeyOf{tt}(v:any): v is {kt}\n"
-                f"{{\n"
-                f"    return typeof v === 'string' && !isNaN(parseFloat(v));\n"
-                f"}}")
+                f"const _asInstanceOf{tt} = xju.json_codec.asInstanceOfFloat('{tt}');")
+            target_namespace.defs[TypeScriptUQN(f"_asKeyOf{tt}")]=TypeScriptSourceCode(
+                f"const _asKeyOf{tt} = xju.json_codec.asKeyOfFloat('{tt}');")
+            pass
         pass
     def get_typescript_isa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         self.ensure_typescript_defs(namespace)
-        return is_instance_of_expression(self.get_type_fqn(), expression)
+        return TypeScriptSourceCode("xju.json_codec.isFloat")
     def get_typescript_isa_key(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         self.ensure_typescript_defs(namespace)
-        return is_instance_of_key_of_expression(self.get_type_fqn(),expression)
+        return TypeScriptSourceCode("xju.json_codec.isKeyOfFloat")
     def get_typescript_asa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         self.ensure_typescript_defs(namespace)
-        return as_instance_of_expression(self.get_type_fqn(), expression)
+        return is_instance_of_expression(self.get_type_fqn())
     def get_typescript_asa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         self.ensure_typescript_defs(namespace)
-        return as_instance_of_key_of_expression(self.get_type_fqn(), expression)
+        return as_key_of_expression(self.get_type_fqn())
     pass
 
 class NewStrCodecImpl(Generic[NewStr]):
@@ -1655,99 +1316,60 @@ class NewStrCodecImpl(Generic[NewStr]):
         x=f"string /* {self.get_type_fqn().replace('/*','**').replace('*/','**')} */"
         return TypeScriptSourceCode(x)
     def ensure_typescript_defs(self, namespace) -> None:
-        typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
+        typescript_fqn=[TypeScriptUQN(_) for _ in self.typescript_type().split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
         tt=typescript_fqn[-1]
         if tt not in target_namespace.defs:
             target_namespace.defs[tt]=TypeScriptSourceCode(
                 f"type {tt} = string;")
-            target_namespace.defs[TypeScriptUQN(f"asInstanceOf{tt}")]=TypeScriptSourceCode(
-                f"function asInstanceOf{tt}(v: any): {tt}\n"
+            target_namespace.defs[TypeScriptUQN(f'isInstanceOf{tt}')]=TypeScriptSourceCode(
+                f"function isInstanceOf{tt}(v:any): v is {tt}\n"
                 f"{{\n"
+                f"    const r=xju.json_codec.isInstanceOfString(v);\n"
+                f"    return r&&r.applyDefaults();\n"
+                f"}}")
+            target_namespace.defs[TypeScriptUQN(f"asInstanceOf{tt}")]=TypeScriptSourceCode(
+                f"function asInstanceOf{tt}(v: any): {tt} {{\n"
                 f"    const r=_asInstanceOf{tt}(v);\n"
                 f"    r.applyDefaults();\n"
                 f"    return v as {tt};\n"
                 f"}}")
-            target_namespace.defs[TypeScriptUQN(f'isInstanceOf{tt}')]=TypeScriptSourceCode(
-                f"function isInstanceOf{tt}(v:any): v is string\n"
-                f"{{\n"
-                f"    const r:false|xju.ts.ApplyDefaults=_isInstanceOf{tt}(v);\n"
-                f"    return r&&r.applyDefaults();\n"
-                f"}}")
-            if self.t.pattern is not None:
+            if self.t.pattern:
                 target_namespace.defs[TypeScriptUQN(f"_asInstanceOf{tt}")]=TypeScriptSourceCode(
-                    f"function _asInstanceOf{tt}(v: any): xju.ts.ApplyDefaults\n"
-                    f"{{\n"
-                    f"    if (typeof v !== 'string') throw new Error(`${{xju.ts.format_(v)}} is not a {self.get_type_fqn()} i.e. a string, it is a ${{typeof v}}`);\n"
-                    f"    if ((new RegExp({self.t.pattern.pattern!r})).exec(v)===null) throw new Error(`${{xju.ts.format_(v)}} does not match pattern `+{self.t.pattern.pattern!r});\n"
-                    "    return {applyDefaults: ():true => true};\n"
-                    f"}}")
-                target_namespace.defs[TypeScriptUQN(f'_isInstanceOf{tt}')]=TypeScriptSourceCode(
-                    f"function _isInstanceOf{tt}(v:any): false|xju.ts.ApplyDefaults {{\n"
-                    f"    return typeof (v) == 'string' &&\n"
-                    f"        (new RegExp({self.t.pattern.pattern!r})).exec(v)!==null &&\n"
-                    "        {applyDefaults: ():true => true};\n"
-                    f"}}")
-                target_namespace.defs[TypeScriptUQN(f'asInstanceOfKeyOf{tt}')]=TypeScriptSourceCode(
-                    f"function asInstanceOfKeyOf{tt}(v:any): string\n"
-                    f"{{\n"
-                    f"    if (typeof v !== 'string') throw new Error(`${{xju.ts.format_(v)}} is not a key of {self.get_type_fqn()} i.e. a string, it is a ${{typeof v}}`);\n"
-                    f"    if ((new RegExp({self.t.pattern.pattern!r})).exec(v)===null) throw new Error(`${{xju.ts.format_(v)}} is not a key of {self.get_type_fqn()} because it does not match pattern `+{self.t.pattern.pattern!r});\n"
-                    "    return v;\n"
-                    f"}}")
-                target_namespace.defs[TypeScriptUQN(f'isInstanceOfKeyOf{tt}')]=TypeScriptSourceCode(
-                    f"function isInstanceOfKeyOf{tt}(v:any): v is string\n"
-                    f"{{\n"
-                    f"    return typeof (v) == 'string' &&\n"
-                    f"        (new RegExp({self.t.pattern.pattern!r})).exec(v)!==null;\n"
-                    f"}}")
+                    f"const _isInstanceOf{tt} = xju.json_codec.isInstanceOfStringPattern(new RegExp({self.t.pattern}));")
+                target_namespace.defs[TypeScriptUQN(f"_asKeyOf{tt}")]=TypeScriptSourceCode(
+                    f"const _isKeyOf{tt} = xju.json_codec.isKeyOfStringPattern(new RegExp({self.t.pattern}));")
+                target_namespace.defs[TypeScriptUQN(f"_asInstanceOf{tt}")]=TypeScriptSourceCode(
+                    f"const _asInstanceOf{tt} = xju.json_codec.asInstanceOfStringPattern('{tt}', new RegExp({self.t.pattern}));")
+                target_namespace.defs[TypeScriptUQN(f"_asKeyOf{tt}")]=TypeScriptSourceCode(
+                    f"const _asKeyOf{tt} = xju.json_codec.asKeyOfStringPattern('{tt}', new RegExp({self.t.pattern}));")
             else:
                 target_namespace.defs[TypeScriptUQN(f"_asInstanceOf{tt}")]=TypeScriptSourceCode(
-                    f"function _asInstanceOf{tt}(v: any): xju.ts.ApplyDefaults\n"
-                    f"{{\n"
-                    f"    if (typeof v !== 'string') throw new Error(`${{xju.ts.format_(v)}} is not a {self.get_type_fqn()} i.e. a string, it is a ${{typeof v}}`);\n"
-                    "    return {applyDefaults: ():true => true};\n"
-                    f"}}")
-                target_namespace.defs[TypeScriptUQN(f'_isInstanceOf{tt}')]=TypeScriptSourceCode(
-                    f"function _isInstanceOf{tt}(v:any): false|xju.ts.ApplyDefaults"
-                    f"{{\n"
-                    f"    return typeof (v) == 'string' &&\n"
-                    "        {applyDefaults: ():true => true};"
-                    f"}}")
-                target_namespace.defs[TypeScriptUQN(f'asInstanceOfKeyOf{tt}')]=TypeScriptSourceCode(
-                    f"function asInstanceOfKeyOf{tt}(v:any): string\n"
-                    f"{{\n"
-                    f"    if (typeof v !== 'string') throw new Error(`${{xju.ts.format_(v)}} is not a key of {self.get_type_fqn()} i.e. a string, it is a ${{typeof v}}`);\n"
-                    f"    return v;\n"
-                    f"}}")
-                target_namespace.defs[TypeScriptUQN(f'isInstanceOfKeyOf{tt}')]=TypeScriptSourceCode(
-                    f"function isInstanceOfKeyOf{tt}(v:any): v is string\n"
-                    f"{{\n"
-                    f"    return typeof (v) == 'string';\n"
-                    f"}}")
-                pass
+                    f"const _asInstanceOf{tt} = xju.json_codec.asInstanceOfString('{tt}');")
+                target_namespace.defs[TypeScriptUQN(f"_asKeyOf{tt}")]=TypeScriptSourceCode(
+                    f"const _asKeyOf{tt} = xju.json_codec.asKeyOfString('{tt}');")
             pass
         pass
     def get_typescript_isa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        self.ensure_typescript_defs(namespace)
-        return is_instance_of_expression(self.get_type_fqn(), expression)
+        if self.t.pattern:
+            self.ensure_typescript_defs(namespace)
+            return is_instance_of_expression(self.get_type_fqn())
+        return TypeScriptSourceCode("xju.json_codec.isFloat")
     def get_typescript_isa_key(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        self.ensure_typescript_defs(namespace)
-        return is_instance_of_key_of_expression(self.get_type_fqn(),expression)
+        if self.t.pattern:
+            self.ensure_typescript_defs(namespace)
+            return is_key_of_expression(self.get_type_fqn())
+        return TypeScriptSourceCode("xju.json_codec.isKeyOfFloat")
     def get_typescript_asa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         self.ensure_typescript_defs(namespace)
-        return as_instance_of_expression(self.get_type_fqn(), expression)
+        return as_instance_of_expression(self.get_type_fqn())
     def get_typescript_asa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         self.ensure_typescript_defs(namespace)
-        return as_instance_of_key_of_expression(self.get_type_fqn(), expression)
+        return as_key_of_expression(self.get_type_fqn())
     pass
 
 class TimestampCodecImpl:
@@ -1793,65 +1415,40 @@ class TimestampCodecImpl:
         if tt not in target_namespace.defs:
             target_namespace.defs[tt]=TypeScriptSourceCode(
                 f"type {tt} = number;")
-            target_namespace.defs[TypeScriptUQN(f"asInstanceOf{tt}")]=TypeScriptSourceCode(
-                f"function asInstanceOf{tt}(v: any): {tt}\n"
+            target_namespace.defs[TypeScriptUQN(f'isInstanceOf{tt}')]=TypeScriptSourceCode(
+                f"function isInstanceOf{tt}(v:any): v is {tt}\n"
                 f"{{\n"
+                f"    const r=xju.json_codec.isInstanceOfFloat(v);\n"
+                f"    return r&&r.applyDefaults();\n"
+                f"}}")
+            target_namespace.defs[TypeScriptUQN(f"asInstanceOf{tt}")]=TypeScriptSourceCode(
+                f"function asInstanceOf{tt}(v: any): {tt} {{\n"
                 f"    const r=_asInstanceOf{tt}(v);\n"
                 f"    r.applyDefaults();\n"
                 f"    return v as {tt};\n"
                 f"}}")
-            target_namespace.defs[TypeScriptUQN(f'isInstanceOf{tt}')]=TypeScriptSourceCode(
-                f"function isInstanceOf{tt}(v:any): v is {tt}\n"
-                f"{{\n"
-                f"    const r:false|xju.ts.ApplyDefaults=_isInstanceOf{tt}(v);\n"
-                f"    return r&&r.applyDefaults();\n"
-                f"}}")
             target_namespace.defs[TypeScriptUQN(f"_asInstanceOf{tt}")]=TypeScriptSourceCode(
-                f"function _asInstanceOf{tt}(v: any): xju.ts.ApplyDefaults\n"
-                f"{{\n"
-                f"    if (typeof v !== 'number') throw new Error(`${{xju.ts.format_(v)}} is not a {self.get_type_fqn()} i.e. a number, it is a ${{typeof v}}`);\n"
-                "    return {applyDefaults: ():true => true};\n"
-                f"}}")
-            target_namespace.defs[TypeScriptUQN(f'_isInstanceOf{tt}')]=TypeScriptSourceCode(
-                f"function _isInstanceOf{tt}(v:any): false|xju.ts.ApplyDefaults"
-                f"{{\n"
-                f"    return typeof (v) == 'number' &&\n"
-                "        {applyDefaults: ():true => true};"
-                f"}}")
-            kt=self.typescript_as_object_key_type()
-            target_namespace.defs[TypeScriptUQN(f"asInstanceOfKeyOf{tt}")]=TypeScriptSourceCode(
-                f"function asInstanceOfKeyOf{tt}(v: any): {kt}\n"
-                f"{{\n"
-                f"    if (typeof v !== 'string') throw new Error(`${{xju.ts.format_(v)}} is not a key-of {self.get_type_fqn()} i.e. a numeric string, it is a ${{typeof v}}`);\n"
-                f"    if (isNaN(parseFloat(v))) throw new Error(`${{xju.ts.format_(v)}} is not a key-of {self.get_type_fqn()} i.e. a numeric string`);\n"
-                f"    return v as {kt};\n"
-                f"}}")
-            target_namespace.defs[TypeScriptUQN(f'isInstanceOfKeyOf{kt}')]=TypeScriptSourceCode(
-                f"function isInstanceOfKeyOf{tt}(v:any): v is {kt}\n"
-                f"{{\n"
-                f"    return typeof v === 'string' && !isNaN(parseFloat(v));\n"
-                f"}}")
+                f"const _asInstanceOf{tt} = xju.json_codec.asInstanceOfFloat('{tt}');")
+            target_namespace.defs[TypeScriptUQN(f"_asKeyOf{tt}")]=TypeScriptSourceCode(
+                f"const _asKeyOf{tt} = xju.json_codec.asKeyOfFloat('{tt}');")
+            pass
         pass
     def get_typescript_isa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         self.ensure_typescript_defs(namespace)
-        return is_instance_of_expression(self.get_type_fqn(), expression)
+        return TypeScriptSourceCode("xju.json_codec.isFloat")
     def get_typescript_isa_key(self,
-                               expression:TypeScriptSourceCode,
-                               namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        self.ensure_typescript_defs(namespace)
-        return is_instance_of_key_of_expression(self.get_type_fqn(), expression)
-    def get_typescript_asa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         self.ensure_typescript_defs(namespace)
-        return as_instance_of_expression(self.get_type_fqn(), expression)
+        return TypeScriptSourceCode("xju.json_codec.isKeyOfFloat")
+    def get_typescript_asa(self,
+                           namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        self.ensure_typescript_defs(namespace)
+        return as_instance_of_expression(self.get_type_fqn())
     def get_typescript_asa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         self.ensure_typescript_defs(namespace)
-        return as_instance_of_key_of_expression(self.get_type_fqn(), expression)
+        return as_key_of_expression(self.get_type_fqn())
     pass
 
 class LiteralStrCodecImpl:
@@ -1892,37 +1489,19 @@ class LiteralStrCodecImpl:
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(json.dumps(self.value))
     def ensure_typescript_defs(self, namespace) -> None:
-        ensure_xju_ts_defs(namespace)
+        pass
     def get_typescript_isa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        tt=self.typescript_type()
-        return TypeScriptSourceCode(f"({expression})==={tt}" " && {applyDefaults: ():true => true}")
+            return TypeScriptSourceCode("xju.json_codec.isInstanceOfLiteral({self.typescript_type()})")
     def get_typescript_isa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        tt=self.typescript_type()
-        return TypeScriptSourceCode(f"({expression})==={tt}")
+            return TypeScriptSourceCode("xju.json_codec.isKeyOfLiteral({self.typescript_type()})")
     def get_typescript_asa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        tt=self.typescript_type()
-        return TypeScriptSourceCode(
-            f"((v: any): xju.ts.ApplyDefaults => {{\n"
-            f"    const value={json.dumps(self.value)};\n"
-            f"    if (v !== {tt}) throw new Error(`the ${{typeof v}} ${{xju.ts.format_(v)}} is not the string ${{xju.ts.format_(value)}}`);\n"
-            "    return {applyDefaults: ():true => true};\n"
-            f"}})({expression})")
+            return TypeScriptSourceCode("xju.json_codec.asInstanceOfLiteral({self.typescript_type()})")
     def get_typescript_asa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        tt=self.typescript_type()
-        return TypeScriptSourceCode(
-            f"((v: any): {tt} => {{\n"
-            f"    const value={tt};\n"
-            f"    if (v !== value) throw new Error(`the ${{typeof v}} ${{xju.ts.format_(v)}} is not the string ${{xju.ts.format_(value)}}`);\n"
-            "    return v;\n"
-            f"}})({expression})")
+            return TypeScriptSourceCode("xju.json_codec.asKeyOfLiteral({self.typescript_type()})")
     pass
 
 class LiteralIntCodecImpl:
@@ -1959,42 +1538,23 @@ class LiteralIntCodecImpl:
             'enum': [ f"{self.value}" ]
         }
     def typescript_type(self) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(f'{self.value}')
+        return TypeScriptSourceCode(json.dumps(self.value))
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(f"'{self.value}'")
+        return TypeScriptSourceCode(json.dumps(self.typescript_type()))
     def ensure_typescript_defs(self, namespace) -> None:
-        ensure_xju_ts_defs(namespace)
+        pass
     def get_typescript_isa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        tt=self.typescript_type()
-        return TypeScriptSourceCode(
-            f"// is a {self.typescript_type()}?\n"
-            f"({expression})==={tt} " " && {applyDefaults: ():true => true}")
+            return TypeScriptSourceCode("xju.json_codec.isInstanceOfLiteral({self.typescript_type()})")
     def get_typescript_isa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        tt=self.typescript_as_object_key_type()
-        return TypeScriptSourceCode(
-            f"((v:any): v is {tt}=>(parseFloat(v)==={self.value}))({expression})")
+            return TypeScriptSourceCode("xju.json_codec.isKeyOfLiteral({self.typescript_type()})")
     def get_typescript_asa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        tt=self.typescript_type()
-        return TypeScriptSourceCode(
-            f"((v: any): xju.ts.ApplyDefaults => {{\n"
-            f"    if (v !== {tt}) throw new Error(`the ${{typeof v}} ${{xju.ts.format_(v)}} is not the number {self.value}`);\n"
-            "    return {applyDefaults: ():true => true};\n"
-            f"}})({expression})")
+            return TypeScriptSourceCode("xju.json_codec.asInstanceOfLiteral({self.typescript_type()})")
     def get_typescript_asa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        tt=self.typescript_as_object_key_type()
-        return TypeScriptSourceCode(
-            f"((v: any): {tt} => {{\n"
-            f"    if (parseInt(v) !== parseInt({tt})) throw new Error(`(${{typeof v}}) ${{xju.ts.format_(v)}} is not the stringified number {self.value}`);\n"
-            f"    return v as {tt};\n"
-            f"}})({expression})")
+            return TypeScriptSourceCode("xju.json_codec.asKeyOfLiteral({self.typescript_type()})")
     pass
 
 class LiteralBoolCodecImpl:
@@ -2031,41 +1591,23 @@ class LiteralBoolCodecImpl:
             'enum': [ 'true' if self.value else 'false' ]
         }
     def typescript_type(self) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode('true' if self.value else 'false')
+        return TypeScriptSourceCode(json.dumps(self.value))
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode("'true'") if self.value else TypeScriptSourceCode("'false'")
+        return TypeScriptSourceCode(json.dumps(self.typescript_type()))
     def ensure_typescript_defs(self, namespace) -> None:
-        ensure_xju_ts_defs(namespace)
+        pass
     def get_typescript_isa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        tt=self.typescript_type()
-        return TypeScriptSourceCode(f"({expression})==={tt} " " && {applyDefaults: ():true => true}")
+            return TypeScriptSourceCode("xju.json_codec.isInstanceOfLiteral({self.typescript_type()})")
     def get_typescript_isa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        tt=self.typescript_as_object_key_type()
-        return TypeScriptSourceCode(
-            f"((v:any): v is {tt}=>(v==={tt}))({expression})")
+            return TypeScriptSourceCode("xju.json_codec.isKeyOfLiteral({self.typescript_type()})")
     def get_typescript_asa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        tt=self.typescript_type()
-        return TypeScriptSourceCode(
-            f"((v: any): xju.ts.ApplyDefaults => {{\n"
-            f"    if (v !== {tt}) throw new Error(`the ${{typeof v}} ${{xju.ts.format_(v)}} is not {self.typescript_type()}`);\n"
-            "    return {applyDefaults: ():true => true};\n"
-            f"}})({expression})")
+            return TypeScriptSourceCode("xju.json_codec.asInstanceOfLiteral({self.typescript_type()})")
     def get_typescript_asa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        tt=self.typescript_as_object_key_type()
-        typescript_value=tt
-        return TypeScriptSourceCode(
-            f"((v: any): {tt} => {{\n"
-            f"    if (v !== `${{{typescript_value}}}`) throw new Error(`(${{typeof v}}) ${{xju.ts.format_(v)}} is not {typescript_value}`);\n"
-            f"    return v as {typescript_value};\n"
-            f"}})({expression})")
+            return TypeScriptSourceCode("xju.json_codec.asKeyOfLiteral({self.typescript_type()})")
     pass
 
 @dataclass
@@ -2104,31 +1646,16 @@ class BytesCodecImpl:
     def ensure_typescript_defs(self, namespace) -> None:
         pass
     def get_typescript_isa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(
-            f"// is a {self.typescript_type()}?\n"
-            f"{self.value_codec.get_typescript_isa(expression,namespace)}")
+        return TypeScriptSourceCode(f"xju.json_codec.isInstanceOfBytes")
     def get_typescript_isa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
         
     def get_typescript_asa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(f"""\
-(((v):xju.ts.ApplyDefaults => {{
-    const r={indent(4,self.value_codec.get_typescript_asa(TypeScriptSourceCode("v"),namespace))};
-    v.forEach( (x:any,i:number) => {{
-        if ((x as number) < 0 || (x as number) > 255) {{
-            throw new Error(`${{xju.ts.format_(x)}} at index ${{i}} is not in range 0..255`);
-        }}
-    }});
-    return r;
-}})({expression}))""")
+        return TypeScriptSourceCode(f"xju.json_codec.asInstanceOfBytes")
     def get_typescript_asa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
     pass
@@ -2161,19 +1688,15 @@ class CustomClassCodec(Protocol):
         return TypeScriptSourceCode('')
     @staticmethod
     def xju_json_codec_5_get_typescript_isa(
-            expression:TypeScriptSourceCode,
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that turns {expression} into either:
-            false - indicating expression is not a T
-            xju.ts.ApplyDefaults - expression is a T
+        '''return typescript source that evaluates to a xju.json_codec.IsInstance
            - may add any supporting definitions to namespace, e.g. type for T itself'''
         assert False  #pragma NO COVER
         return TypeScriptSourceCode('')
     @staticmethod
     def xju_json_codec_5_get_typescript_asa(
-            expression:TypeScriptSourceCode,
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that verifies {expression} (with defaults applied) is a T and returns a xju.ts.ApplyDefaults, throwing an Error if {expression} is not valid as a T
+        '''return typescript source code that evaluates to a xju.json_codec.AsInstance
            - may add any supporting definitions to namespace, e.g. type for T itself'''
         assert False  #pragma NO COVER
         return TypeScriptSourceCode('')
@@ -2197,18 +1720,16 @@ class CustomStringKeyClassCodec(Protocol):
         return 'String'
 
     @staticmethod
-    def xju_json_codec_get_typescript_isa_key(
-            expression:TypeScriptSourceCode,
+    def xju_json_codec_5_get_typescript_isa_key(
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that turns {expression} into a bool indicating whether the (string) expression is a T-as-object-key
+        '''return typescript source code that evaluates to a xju.json_codec.IsKey
            - may add any supporting definitions to namespace, e.g. type for T itself'''
         assert False  #pragma NO COVER
         return TypeScriptSourceCode('')
     @staticmethod
-    def xju_json_codec_get_typescript_asa_key(
-            expression:TypeScriptSourceCode,
+    def xju_json_codec_5_get_typescript_asa_key(
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that safely casts {expression} to a T-as-object-key i.e. a string, throwing an Error if {expression} is not valid as a T-as-object-key
+        '''return typescript source code that evaluates to a xju.json_codec.AsKey
            - may add any supporting definitions to namespace, e.g. type for T itself'''
         assert False  #pragma NO COVER
         return TypeScriptSourceCode('')
@@ -2233,18 +1754,16 @@ class CustomNonStringKeyClassCodec(Protocol):
         return 'NonString'
 
     @staticmethod
-    def xju_json_codec_get_typescript_isa_key(
-            expression:TypeScriptSourceCode,
+    def xju_json_codec_5_get_typescript_isa_key(
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that turns {expression} into a bool indicating whether the (string) expression is a T-as-object-key
+        '''return typescript source code that evaluates to a xju.json_codec.IsKey
            - may add any supporting definitions to namespace, e.g. type for T itself'''
         assert False  #pragma NO COVER
         return TypeScriptSourceCode('')
     @staticmethod
-    def xju_json_codec_get_typescript_asa_key(
-            expression:TypeScriptSourceCode,
+    def xju_json_codec_5_get_typescript_asa_key(
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that safely casts {expression} to a T-as-object-key i.e. a string, throwing an Error if {expression} is not valid as a T-as-object-key
+        '''return typescript source code that evaluates to a xju.json_codec.AsKey
            - may add any supporting definitions to namespace, e.g. type for T itself'''
         assert False  #pragma NO COVER
         return TypeScriptSourceCode('')
@@ -2396,7 +1915,7 @@ class ClassCodecImpl:
     def ensure_typescript_defs(self,namespace)->None:
         '''ensure {namespace} has a typescript definition for {self.get_type_fqn()}'''
         if self.custom_codec is not None:
-            return ensure_xju_ts_defs(namespace)
+            return
         typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
         typescript_type_name=typescript_fqn[-1]
@@ -2409,357 +1928,61 @@ class ClassCodecImpl:
                 ''.join([f"    {attr_codec.encoded_name.value()}: {indent(4,attr_codec.codec.typescript_type())};\n"
                          for attr_name, attr_codec in self.attr_codecs.items()])+
                 f"}};")
-            attrs=[indent(8, f"'{attr_name}', {attr_codec.get_typescript_asa()}")
-                   for attr_name, attr_codec in self.attr_codecs.items()]
             target_namespace.defs[TypeScriptUQN(f"asInstanceOf{typescript_type_name}")]=TypeScriptSourceCode(
                 f"function asInstanceOf{typescript_type_name}(v:any): {tt}\n"
                 f"{{\n"
-                f"    const r=xju.ts.asInstanceOfClass('{typescript_type_name}', [\n"
-                f"        {'\n        '.join(attrs)}"
-                f"    ]).f(v);\n"
+                f"    const r=_asInstanceOf{typescript_type_name}(v);\n"
                 f"    r.applyDefaults();\n"
                 f"    return v as {tt};\n"
                 f"}}\n")
             target_namespace.defs[TypeScriptUQN(f"isInstanceOf{typescript_type_name}")]=TypeScriptSourceCode(
                 f"function isInstanceOf{typescript_type_name}(v:any): v is {tt}\n"
                 f"{{\n"
-                f"    const r:false|xju.ts.ApplyDefaults=_isInstanceOf{typescript_type_name}(v);\n"
+                f"    const r:false|xju.json_codec.ApplyDefaults=_isInstanceOf{typescript_type_name}(v);\n"
                 f"    return r && r.applyDefaults();\n"
                 f"}}\n")
-            def attr_isa(attr_codec: AttrCodec) -> str:
-                isa=indent(4,attr_codec.codec.get_typescript_isa(TypeScriptSourceCode(f'v["{attr_codec.encoded_name.val}"]'),namespace))
-                if isinstance(attr_codec, AttrCodecWithDefault):
-                    return str(indent(4,TypeScriptSourceCode(
-                        f"    // .{attr_codec.encoded_name}\n"
-                        f"if (!v.hasOwnProperty( {attr_codec.encoded_name.val}))" "{\n"
-                        "    defaulters.push(() => {attr_codec.codec.encode(attr_codec.default_value)});\n"
-                        "}\n"
-                        "else{\n"
-                        f"    const r:false|xju.ts.ApplyDefaults={isa};\n"
-                        "    if (r===false) return false;\n"
-                        "    defaulters.push(r);\n"
-                        "}\n"
-                    )))
-                return str(indent(4,TypeScriptSourceCode(
-                    f"    // .{attr_codec.encoded_name}\n"
-                    "{\n"
-                    f"    const r:false|xju.ts.ApplyDefaults={isa};\n"
-                    "    if (r===false) return false;\n"
-                    "    defaulters.push(r);\n"
-                    "}\n"
-                )))
+            attrs=[indent(8, f"'{attr_name}', {attr_codec.get_typescript_asa()}")
+                   for attr_name, attr_codec in self.attr_codecs.items()]
+            target_namespace.defs[TypeScriptUQN(f"_asInstanceOf{typescript_type_name}")]=TypeScriptSourceCode(
+                f"const _asInstanceOf{typescript_type_name} = xju.json_codec.asInstanceOfClass('{tt}', [\n"
+                f"        {',\n        '.join(attrs)}"
+                f"    ]);\n")
+            attrs=[indent(8, f"'{attr_name}', {attr_codec.get_typescript_isa()}")
+                   for attr_name, attr_codec in self.attr_codecs.items()]
             target_namespace.defs[TypeScriptUQN(f"_isInstanceOf{typescript_type_name}")]=TypeScriptSourceCode(
-                f"function _isInstanceOf{typescript_type_name}(v:any): false|xju.ts.ApplyDefaults\n"
-                "{\n"
-                "    if (typeof v !== 'object' || Array.isArray(v) || v===null) return false;\n"
-                "    const defaulters:Array<xju.ts.ApplyDefaults>=[];\n"
-                f"{'\n'.join([attr_isa(attr_codec) for attr_codec in self.attr_codecs.values()])}\n"
-                "    return { applyDefaults: ():true => { defaulters.forEach((d) => d.applyDefaults()); return true; } };\n"
-                "}")
+                f"const _isInstanceOf{typescript_type_name} = xju.json_codec.isInstanceOfClass('{tt}', [\n"
+                f"        {',\n        '.join(attrs)}"
+                f"    ]);\n")
             pass
         pass
     def get_typescript_isa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         if self.custom_codec is not None:
-            return self.custom_codec.xju_json_codec_5_get_typescript_isa(expression,namespace)
+            return self.custom_codec.xju_json_codec_5_get_typescript_isa(namespace)
         self.ensure_typescript_defs(namespace)
-        return is_instance_of_expression(self.get_type_fqn(), expression)
+        return is_instance_of_expression(self.get_type_fqn())
 
     def get_typescript_isa_key(self,
                                expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         if self.custom_codec is not None and isinstance(
                 self.custom_codec,(CustomStringKeyClassCodec, CustomNonStringKeyClassCodec)):
-            return self.custom_codec.xju_json_codec_get_typescript_isa_key(expression,namespace)
+            return self.custom_codec.xju_json_codec_5_get_typescript_isa_key(namespace)
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
         
     def get_typescript_asa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         if self.custom_codec is not None:
-            ensure_xju_ts_defs(namespace)
-            return self.custom_codec.xju_json_codec_5_get_typescript_asa(expression,namespace)
+            return self.custom_codec.xju_json_codec_5_get_typescript_asa(namespace)
         self.ensure_typescript_defs(namespace)
-        return as_instance_of_expression(self.get_type_fqn(), expression)
+        return as_instance_of_expression(self.get_type_fqn())
     def get_typescript_asa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         if self.custom_codec is not None and isinstance(
                 self.custom_codec,(CustomStringKeyClassCodec, CustomNonStringKeyClassCodec)):
-            return self.custom_codec.xju_json_codec_get_typescript_asa_key(expression,namespace)
+            return self.custom_codec.xju_json_codec_5_get_typescript_asa_key(namespace)
         raise Exception(f"{self.typescript_type()} is not allowed as a typescript object key type")
     pass
-
-def ensure_xju_ts_defs(target_namespace: TypeScriptNamespace) -> None:
-    xju_ts_name=[TypeScriptUQN('xju'), TypeScriptUQN('ts')]
-    def add(name: TypeScriptUQN, defn: TypeScriptSourceCode) -> None:
-        xju_ts=target_namespace.get_namespace_of(xju_ts_name+[name])
-        if name not in xju_ts.defs:
-            xju_ts.defs[name] = defn
-            pass
-        pass
-    add(TypeScriptUQN("ApplyDefaults"), TypeScriptSourceCode('''\
-interface ApplyDefaults {
-    applyDefaults(): true;
-}'''))
-    add(TypeScriptUQN("AsInstance"), TypeScriptSourceCode('''\
-interface AsInstance {
-    typeName: string;
-    f: (x:any) => ApplyDefaults;
-}'''))
-    add(TypeScriptUQN("str"), TypeScriptSourceCode(
-        f"""function str(x:any):string {{ return `${{x}}`; }}"""))
-    add(TypeScriptUQN("isObject"), TypeScriptSourceCode(
-        f"""function isObject(x:any):x is object {{ return x !== null && typeof(x) === 'object'; }}"""))
-    add(TypeScriptUQN("assertEqual"), TypeScriptSourceCode("""\
-function assertEqual<T>(x:T, y:T){
-    if (Array.isArray(x) && Array.isArray(y)){
-        assertArraysEqual<any>(x,y);
-    }
-    else if (isObject(x) && isObject(y)){
-        assertObjectsEqual(x,y);
-    }
-    else if (!(x===y)){
-        throw new Error(`${format_(x)} != ${format_(y)}`);
-    }
-}"""))
-    add(TypeScriptUQN("format_"), TypeScriptSourceCode("""\
-function format_<T>(a:T): string {
-    if (Array.isArray(a)) return formatArray(a);
-    if (isObject(a)) return formatObject(a);
-    return JSON.stringify(a);
-}"""))
-    add(TypeScriptUQN("formatArray"), TypeScriptSourceCode("""\
-function formatArray<T>(a:Array<T>): string {
-    if(a.length==0) return "[]";
-    if(a.length==1) return `[${format_(a[0])}]`;
-    var result=`${format_(a[0])}`;
-    for(var i=1;i!=a.length;++i) result=result+`,${format_(a[i])}`;
-    return `[${result}]`;
-}"""))
-    add(TypeScriptUQN("formatObject"), TypeScriptSourceCode("""\
-function formatObject(a:Object): string {
-    var result="{";
-    for(const k of Object.keys(a).slice(0,1)) result=result+` ${k}:${format_(a[k as keyof Object])}`;
-    for(const k of Object.keys(a).slice(1)) result=result+`, ${k}:${format_(a[k as keyof Object])}`;
-    return result+" }";
-}"""))
-    add(TypeScriptUQN("assertArraysEqual"), TypeScriptSourceCode("""\
-function assertArraysEqual<T>(x:Array<T>, y:Array<T>){
-    try{
-        try{
-            assertEqual(x.length, y.length);
-        }
-        catch(e:any){
-            throw new Error(`arrays of different length because ${e}`);
-        }
-        var i;
-        for(i=0; i!=x.length; ++i){
-            try{
-                assertEqual<T>(x[i],y[i]);
-            }
-            catch(e:any){
-                throw new Error(`array element ${i} ${format_(x[i])} != ${format_(y[i])}`);
-            }
-        }
-    }
-    catch(e:any){
-        throw new Error(`array ${format_(x)} != array ${format_(y)} because ${e}`);
-    }
-}"""))
-    add(TypeScriptUQN("assertObjectsEqual"), TypeScriptSourceCode("""\
-function assertObjectsEqual(x:object, y:object){
-    try{
-        var xKeys=new Array<keyof object>();
-        var yKeys=new Array<keyof object>();
-        for(const k in x){if (x.hasOwnProperty(k)) xKeys.push(k as keyof object);}
-        for(const k in y){if (y.hasOwnProperty(k)) yKeys.push(k as keyof object);}
-        assertArraysEqual(xKeys,yKeys);
-        for(var i=0; i!=xKeys.length; ++i){
-            const k = xKeys[i];
-            try{
-                assertEqual(x[k],y[k]);
-            }
-            catch(e){
-                throw new Error(`property ${k} is not equal because ${e}`);
-            }
-        }
-    }
-    catch(e){
-        throw new Error(`object ${format_(x)} != object ${format_(y)} because ${e}`);
-    }
-}"""))
-    add(TypeScriptUQN("applyNoDefaults"), TypeScriptSourceCode("""\
-const applyNoDefaults: ApplyDefaults = {
-    applyDefaults: () => true;
-};"""))
-    add(TypeScriptUQN("asInstanceInContext"), TypeScriptSourceCode("""\
-function asInstanceInContext(asInstanceOf: AsInstance) => AsInstance {
-    return (x: any): ApplyDefaults {
-        try {
-            asInstanceOf.f(x);
-        }
-        catch(e) {
-            throw new Error(`${format_(x)` is not a ${asInstanceOf.typeName} because ${e}`);
-        }
-    }"""))
-    add(TypeScriptUQN("asInstanceOfString"), TypeScriptSourceCode("""\
-function asInstanceOfString(typeName: string) => AsInstance {
-    return asInstanceInContext({
-        typeName: typeName,
-        f: (x: any): ApplyDefaults {
-            if (typeof x !== 'string') {
-                throw new Error(`${format_(x)} is a ${typeof x} not a string`);
-            }
-            return applyNoDefaults;
-        }
-    });
-}"""))
-    add(TypeScriptUQN("asInstanceOfStringPattern"), TypeScriptSourceCode("""\
-function asInstanceOfString(typeName: string, pattern: RegExp) => AsInstance {
-    return asInstanceInContext({
-        typeName,
-        f: (x: any): ApplyDefaults {
-            if (pattern.exec(asInstanceOfString(x))===null) throw new Error(`${{xju.ts.format_(x)}} is not a string with pattern ${pattern}`);
-            return applyNoDefaults;
-        }
-    });
-}"""))
-    add(TypeScriptUQN("asInstanceOfFloat"), TypeScriptSourceCode("""\
-function asInstanceOfFloat(typeName: string) => AsInstance {
-    return asInstanceInContext({
-        typeName,
-        f: (x: any): ApplyDefaults {
-            if (typeof x !== 'number') {
-                throw new Error(`${format_(x)} is a ${typeof x} not a number`);
-            }
-            return applyNoDefaults;
-        }
-    });
-}"""))
-    add(TypeScriptUQN("asInstanceOfInt"), TypeScriptSourceCode("""\
-function asInstanceOfInt(typeName: string) => AsInstance {
-    return asInstanceInContext({
-        typeName,
-        f: (x: any): ApplyDefaults {
-            if (typeof x !== 'number') {
-                throw new Error(`${format_(x)} is a ${typeof x} not a number`);
-            }
-            if (x % 1 !== 0) {
-                throw new Error(`${format_(x)} is not a whole number`);
-            }
-            return applyNoDefaults;
-        }
-    });
-}"""))
-    add(TypeScriptUQN("asInstanceOfBool"), TypeScriptSourceCode("""\
-function asInstanceOfBool(typeName: string) => AsInstance {
-    return asInstanceInContext({
-        typeName,
-        f: (x: any): ApplyDefaults {
-            if (typeof x !== 'boolean') {
-                throw new Error(`${format_(x)} is a ${typeof x} not a boolean`);
-            }
-            return applyNoDefaults;
-        }
-    });
-}"""))
-    add(TypeScriptUQN("asInstanceOfNull"), TypeScriptSourceCode("""\
-function asInstanceOfNull() => AsInstance {
-    return asInstanceInContext({
-        typeName: "null",
-        f: (x: any): ApplyDefaults {
-            if (typeof x !== null) {
-                throw new Error(`${format_(x)} is not null`);
-            }
-            return applyNoDefaults;
-        }
-    });
-}"""))
-    add(TypeScriptUQN("asInstanceOfAny"), TypeScriptSourceCode("""\
-function asInstanceOfAny() => AsInstance {
-    return asInstanceInContext({
-        typeName: "any",
-        f: (x: any): ApplyDefaults {
-            return applyNoDefaults;
-        }
-    });
-}"""))
-    add(TypeScriptUQN("asInstanceOfList"), TypeScriptSourceCode("""\
-function asInstanceOfList(itemType: AsInstance) => AsInstance {
-    return asInstanceInContext({
-        typeName: `Array<${itemType.typeName}>`,
-        f: (x: any): ApplyDefaults {
-            REVISIT;
-        }
-    });
-}"""))
-    add(TypeScriptUQN("asInstanceOfUnion"), TypeScriptSourceCode("""\
-function asInstanceOfUnion(t: string, x:any, alternatives: Array<(v:any)=>xju.ts.ApplyDefaults>): xju.ts.ApplyDefaults {
-    try{
-        var es = new Array<string>();
-
-        for(const a of alternatives) {
-            try {
-                return a(x);
-            }
-            catch(e:any) {
-                es.push(e.message);
-            }
-        }
-        throw new Error(es.join(' and '));
-    }
-    catch(e){
-        throw new Error(`object ${format_(x)} is not a ${t} because ${e}`);
-    }
-}"""))
-    add(TypeScriptUQN("_isInstanceOfUnion"), TypeScriptSourceCode("""\
-function _isInstanceOfUnion(_t: string, x:any, alternatives: Array<(v:any)=>false|xju.ts.ApplyDefaults>): false|xju.ts.ApplyDefaults {
-    for(const a of alternatives) {
-        const r=a(x);
-        if (r !== false) return r;
-    }
-    return false;
-}"""))
-    add(TypeScriptUQN("_asInstanceOfTuple"), TypeScriptSourceCode("""\
-function _asInstanceOfTuple(t: string, x:any, items: Array<(v:any)=>xju.ts.ApplyDefaults>): xju.ts.ApplyDefaults {
-    try{
-        if (!Array.isArray(x)) {
-            throw new Error(`expected an array not a ${typeof x}`);
-        }
-        if (x.length != items.length) {
-            throw new Error(`expected ${items.length} elements not ${x.length}`);
-        }
-        var es = new Array<string>();
-        var defaulters: Array<xju.ts.ApplyDefaults> = [];
-        x.forEach((v: any, i) => {
-            try {
-                defaulters.push(items[i](x));
-            }
-            catch(e:any) {
-                es.push(`element ${i} is invalid because ${e.message}`);
-            }
-        });
-        if (es.length) {
-            throw new Error(es.join(' and '));
-        }
-        return { applyDefaults: ()=>{ defaulters.forEach( (d) => d.applyDefaults() ); return true; } };
-    }
-    catch(e){
-        throw new Error(`object ${format_(x)} is not a ${t} because ${e}`);
-    }
-}"""))
-    add(TypeScriptUQN("_isInstanceOfTuple"), TypeScriptSourceCode("""\
-function _isInstanceOfTuple(_t: string, x:any, items: Array<(v:any)=>false|xju.ts.ApplyDefaults>): false|xju.ts.ApplyDefaults {
-    let defaulters:Array<xju.ts.ApplyDefaults>=[];
-    for(const a of items) {
-        const r=a(x);
-        if (r === false) return r;
-        defaulters.push(r);
-    }
-    return { applyDefaults: ()=>{ defaulters.forEach( (d) => d.applyDefaults() ); return true; } };
-}"""))
     
 @dataclass
 class EnumValueCodecImpl:
@@ -2820,70 +2043,23 @@ class EnumValueCodecImpl:
     def typescript_value(self) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(json.dumps(self.value_codec.encode(self.value.value)))
     def ensure_typescript_defs(self,namespace: TypeScriptNamespace)->None:
-        ensure_xju_ts_defs(namespace)
         pass
     def get_typescript_isa(
             self,
-            expression:TypeScriptSourceCode,
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        if self.is_typescript_pod:
-            tt=self.typescript_type()
-            return TypeScriptSourceCode(
-                f"// is a {self.typescript_type()}?\n"
-                "((v:any): false|xju.ts.ApplyDefaults=>\n"
-                f"    v==={tt}" "&& { applyDefaults: ():true => true }\n"
-                f")({expression})")
-        else:
-            tt=self.typescript_value()
-            return TypeScriptSourceCode(
-                f"// is a {self.typescript_type()}?\n"
-                "((v:any): false|xju.ts.ApplyDefaults=>{\n"
-                "    try{\n"
-                f"        xju.ts.assertEqual(v, {tt});\n"
-                "    }\n"
-                "    catch (_){\n"
-                "        return false;\n"
-                "    }\n"
-                "    return { applyDefaults: ():true => true };\n"
-                "})(" f"{expression}" ")")
-            
+        return TypeScriptSourceCode("xju.json_codec.isInstanceOfLiteral({json.dumps(self.typescript_type())})")
     def get_typescript_isa_key(
             self,
-            expression:TypeScriptSourceCode,
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        # can only be "pod"
-        tt=self.typescript_as_object_key_type()
-        return TypeScriptSourceCode(f"""\
-    ((v:any): v is {tt}=>{{
-        try{{
-            xju.ts.assertEqual(v, {tt});
-        }}
-        catch (_){{
-            return false;
-        }}
-        return true;
-    }})({expression})""")
-
+        return TypeScriptSourceCode("xju.json_codec.isKeyOfLiteral({json.dumps(self.typescript_type())})")
     def get_typescript_asa(
             self,
-            expression:TypeScriptSourceCode,
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        tt=self.typescript_type()
-        return TypeScriptSourceCode(
-            f"((v: any): xju.ts.ApplyDefaults => {{\n"
-            f"    xju.ts.assertEqual(v, {tt});\n"
-            "    return {applyDefaults: ():true => true};\n"
-            f"}})({expression})")
+        return TypeScriptSourceCode("xju.json_codec.asInstanceOfLiteral({json.dumps(self.typescript_type())})")
     def get_typescript_asa_key(
             self,
-            expression:TypeScriptSourceCode,
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        tt=self.typescript_as_object_key_type()
-        return TypeScriptSourceCode(
-            f"((v: any): {tt} => {{\n"
-            f"    xju.ts.assertEqual(v, {tt});\n"
-            f"    return {tt};\n"
-            f"}})({expression})")
+        return TypeScriptSourceCode("xju.json_codec.asKeyOfLiteral({json.dumps(self.typescript_type())})")
     pass
     
 class EnumCodecImpl:
@@ -2946,7 +2122,6 @@ class EnumCodecImpl:
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(f"string /* {self.typescript_type().replace('/*','**').replace('*/','**')} */")
     def ensure_typescript_defs(self, namespace) -> None:
-        ensure_xju_ts_defs(namespace)
         for c in self.value_codecs.values():
             c.ensure_typescript_defs(namespace)
             pass
@@ -2978,92 +2153,58 @@ class EnumCodecImpl:
             target_namespace.defs[TypeScriptUQN(f'isInstanceOf{tt}')]=TypeScriptSourceCode(
                 f"function isInstanceOf{tt}(v:any): v is string\n"
                 f"{{\n"
-                f"    const r:false|xju.ts.ApplyDefaults=_isInstanceOf{tt}(v);\n"
+                f"    const r:false|xju.json_codec.ApplyDefaults=_isInstanceOf{tt}(v);\n"
                 f"    return r&&r.applyDefaults();\n"
                 f"}}")
-            
-            asas=[f"    try{{\n"+
-                  f"        return {indent(8,enum_value_codec.get_typescript_asa(TypeScriptSourceCode('v'),namespace))};\n"+
-                  f"    }}\n"+
-                  f"    catch(e:any){{\n"+
-                  f"        es.push(e.message);\n"+
-                  f"    }};\n"
-                  for _t,enum_value_codec in self.value_codecs.items()]
+            asas=[f"        {indent(8,vc.get_typescript_asa(namespace))})"
+                  for _t,vc in self.value_codecs.items()]
             target_namespace.defs[TypeScriptUQN(f"_asInstanceOf{tt}")]=TypeScriptSourceCode(
-                f"function _asInstanceOf{tt}(v: any): xju.ts.ApplyDefaults {{\n"
-                f"    try{{\n" +
-                f"        var es = new Array<string>();\n"+
-                "".join(asas)+
-                f"        throw new Error(es.join(' and '));\n"+
-                f"    }} catch(e:any)\n"+
-                f"    {{\n"+
-                f"        throw new Error(`${{xju.ts.format_(v)}} is not a {tt} because ${{e}}`);\n"+
-                f"    }}"
-                f"}}")
+                f"const _asInstanceOf{tt} = xju.json_codec.asInstanceOfUnion([\n"
+                f"        {',\n        '.join(asas)}\n"
+                f"    ])")
             
-            isas=[f"    || {indent(8,vc.get_typescript_isa(TypeScriptSourceCode('v'),namespace))}\n"
+            isas=[f"        {indent(8,vc.get_typescript_isa(namespace))}\n"
                   for _t,vc in self.value_codecs.items()]
             target_namespace.defs[TypeScriptUQN(f"_isInstanceOf{tt}")]=TypeScriptSourceCode(
-                f"function _isInstanceOf{tt}(v: any): false|xju.ts.ApplyDefaults {{\n"
-                f"    return false\n" +
-                "".join(isas)+";\n"
-                f"}}")
+                f"const _isInstanceOf{tt} = xju.json_codec.isInstanceOfUnion([\n"
+                f"        {',\n        '.join(isas)}\n"
+                f"    ])")
 
-            kt=self.typescript_as_object_key_type()
-            asas=[f"    try{{\n"+
-                  f"        return {indent(8,enum_value_codec.get_typescript_asa_key(TypeScriptSourceCode('v'),namespace))};\n"+
-                  f"    }}\n"+
-                  f"    catch(e:any){{\n"+
-                  f"        es.push(e.message);\n"+
-                  f"    }};\n"
-                  for _t,enum_value_codec in self.value_codecs.items()]
             if self.use_typescript_enum:
-                target_namespace.defs[TypeScriptUQN(f"asInstanceOfKeyOf{tt}")]=TypeScriptSourceCode(
-                    f"function asInstanceOfKeyOf{tt}(v: any): {kt} {{\n"
-                    f"    try{{\n" +
-                    f"        var es = new Array<string>();\n"+
-                    "".join(asas)+
-                    f"        throw new Error(es.join(' and '));\n"+
-                    f"    }} catch(e:any)\n"+
-                    f"    {{\n"+
-                    f"        throw new Error(`${{xju.ts.format_(v)}} is not a {tt} because ${{e}}`);\n"+
-                    f"    }}"
-                    f"}}")
-
-                isas=[f"    || {indent(8,vc.get_typescript_isa_key(TypeScriptSourceCode('v'),namespace))}\n"
+                asas=[f"        {indent(8,vc.get_typescript_asa_key(namespace))})"
                       for _t,vc in self.value_codecs.items()]
-                target_namespace.defs[TypeScriptUQN(f"isInstanceOfKeyOf{tt}")]=TypeScriptSourceCode(
-                    f"function isInstanceOfKeyOf{tt}(v: any): v is {kt} {{\n"
-                    f"    return false\n" +
-                    "".join(isas)+";\n"
-                    f"}}")
+                target_namespace.defs[TypeScriptUQN(f"_asKeyOf{tt}")]=TypeScriptSourceCode(
+                    f"const _asInstanceOf{tt} = xju.json_codec.asKeyOfUnion([\n"
+                    f"        {',\n        '.join(asas)}\n"
+                    f"    ])")
+
+                isas=[f"        {indent(8,vc.get_typescript_isa_key(namespace))}\n"
+                      for _t,vc in self.value_codecs.items()]
+                target_namespace.defs[TypeScriptUQN(f"_isKeyOf{tt}")]=TypeScriptSourceCode(
+                    f"const _isInstanceOf{tt} = xju.json_codec.isKeyOfUnion([\n"
+                    f"        {',\n        '.join(isas)}\n"
+                    f"    ])")
             pass
         pass
     def get_typescript_isa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         self.ensure_typescript_defs(namespace)
-        return is_instance_of_expression(self.get_type_fqn(), expression)
+        return is_instance_of_expression(self.get_type_fqn())
     def get_typescript_isa_key(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         if self.use_typescript_enum:
-            self.ensure_typescript_defs(namespace)
-            return is_instance_of_expression(self.get_type_fqn(),expression)
+            return is_key_of_expression(self.get_type_fqn())
         else:
             return TypeScriptSourceCode("throw new Error('cannot use {self.get_type_fqn()} as an object key')")
         pass
     def get_typescript_asa(self,
-                           expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         self.ensure_typescript_defs(namespace)
-        return as_instance_of_expression(self.get_type_fqn(), expression)
+        return as_instance_of_expression(self.get_type_fqn())
     def get_typescript_asa_key(self,
-                               expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         if self.use_typescript_enum:
-            self.ensure_typescript_defs(namespace)
-            return as_instance_of_expression(self.get_type_fqn(), expression)
+            return as_key_of_expression(self.get_type_fqn())
         else:
             return TypeScriptSourceCode("throw new Error('cannot use {self.get_type_fqn()} as an object key')")
         pass
@@ -3101,26 +2242,18 @@ class BackRefCodecImpl:
         return self.codec.typescript_as_object_key_type()
     def ensure_typescript_defs(self, namespace) -> None:
         pass
-    def get_typescript_isa(self,
-                           expression:TypeScriptSourceCode,
-                           namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+    def get_typescript_isa(selfnamespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         assert self.codec is not None
-        return self.codec.get_typescript_isa(expression,namespace)
-    def get_typescript_isa_key(self,
-                               expression:TypeScriptSourceCode,
-                               namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        return self.codec.get_typescript_isa(namespace)
+    def get_typescript_isa_key(self,namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         assert self.codec is not None
-        return self.codec.get_typescript_isa_key(expression,namespace)
-    def get_typescript_asa(self,
-                           expression:TypeScriptSourceCode,
-                           namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        return self.codec.get_typescript_isa_key(namespace)
+    def get_typescript_asa(self,namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         assert self.codec is not None
-        return self.codec.get_typescript_asa(expression,namespace)
-    def get_typescript_asa_key(self,
-                               expression:TypeScriptSourceCode,
-                               namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        return self.codec.get_typescript_asa(namespace)
+    def get_typescript_asa_key(self,namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         assert self.codec is not None
-        return self.codec.get_typescript_asa_key(expression,namespace)
+        return self.codec.get_typescript_asa_key(namespace)
 
 def _explodeSchema(
         t:type|NewType|TypeVar|GenericAlias|UnionType|_LiteralGenericAlias|_GenericAlias|Enum|Type[Enum],
@@ -3301,29 +2434,22 @@ def get_type_fqn(t:type) -> str:
         return t.__name__.removeprefix('builtins.').removeprefix('typing.')
     return f"{t.__module__}.{t.__name__}"
 
-def is_instance_of_expression(type_fqn:str, expression: TypeScriptSourceCode) -> TypeScriptSourceCode:
-    """get a.b.c.isInstanceOfX({expression}) source code for {type_fqn} like a.b.c.X"""
+def is_instance_of_expression(type_fqn:str) -> TypeScriptSourceCode:
+    """get a.b.c._isInstanceOfX() source code for {type_fqn} like a.b.c.X"""
     parts=type_fqn.split('.')
-    f='.'.join(parts[0:-1]+[f"_isInstanceOf{parts[-1]}"])
-    return TypeScriptSourceCode(f"{f}({expression})")
+    return '.'.join(parts[0:-1]+[f"_isInstanceOf{parts[-1]}"])
 
-def is_instance_of_key_of_expression(
-        type_fqn:str, expression: TypeScriptSourceCode) -> TypeScriptSourceCode:
-    """get a.b.c.isInstanceOfKeyOfX({expression}) source code for {type_fqn} like a.b.c.X"""
+def is_instance_of_key_of_expression(type_fqn:str) -> TypeScriptSourceCode:
+    """get a.b.c._isKeyOfX() source code for {type_fqn} like a.b.c.X"""
     parts=type_fqn.split('.')
-    f='.'.join(parts[0:-1]+[f"isInstanceOfKeyOf{parts[-1]}"])
-    return TypeScriptSourceCode(f"{f}({expression})")
+    return '.'.join(parts[0:-1]+[f"isKeyOf{parts[-1]}"])
 
-def as_instance_of_expression(type_fqn:str, expression: TypeScriptSourceCode) -> TypeScriptSourceCode:
-    """get a.b.c._asInstanceOfX({expression}) source code for {type_fqn} like a.b.c.X"""
+def as_instance_of_expression(type_fqn:str) -> TypeScriptSourceCode:
+    """get a.b.c._asInstanceOfX() source code for {type_fqn} like a.b.c.X"""
     parts=type_fqn.split('.')
-    f='.'.join(parts[0:-1]+[f"_asInstanceOf{parts[-1]}"])
-    return TypeScriptSourceCode(f"{f}({expression})")
+    return '.'.join(parts[0:-1]+[f"_asInstanceOf{parts[-1]}"])
 
-def as_instance_of_key_of_expression(
-        type_fqn:str, expression: TypeScriptSourceCode) -> TypeScriptSourceCode:
-    """get a.b.c.asInstanceOfKeyOfX({expression}) source code for {type_fqn} like a.b.c.X"""
+def as_instance_of_key_of_expression(type_fqn:str) -> TypeScriptSourceCode:
+    """get a.b.c.asInstanceOfKeyOfX() source code for {type_fqn} like a.b.c.X"""
     parts=type_fqn.split('.')
-    f='.'.join(parts[0:-1]+[f"asInstanceOfKeyOf{parts[-1]}"])
-    return TypeScriptSourceCode(f"{f}({expression})")
-
+    return '.'.join(parts[0:-1]+[f"asKeyOf{parts[-1]}"])

@@ -73,7 +73,7 @@ test%tests.tree
 ()+cmd=(print-wordsizes.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 netflow%tests.tree
 %pytest.tree:leaves
-%typescript-tests
+%local.ts.cov.checked
 
 %pytest.tree==<<
 %local-pytest.tree:leaves
@@ -479,10 +479,11 @@ xn.py.test+mypy_plugin_mod='xju.json_codec_mypy_plugin'+mypy_plugin_mod='xju.cmc
 newtype.py.test+mypy_plugin_mod='xju.json_codec_mypy_plugin'+mypy_plugin_mod='xju.cmc_mypy_plugin':py3.exec.cov
 time.py.test+mypy_plugin_mod='xju.json_codec_mypy_plugin'+mypy_plugin_mod='xju.cmc_mypy_plugin':py3.exec.cov
 
-%typescript-tests==%typescript-tests.tree:leaves
-%typescript-tests.tree==<<
-%test-xn.ts
-%test-json_codec.ts
 
-%test-xn.ts==test-xn.ts+ts_root_dir=(..):node.js.cov
-%test-json_codec.ts==test-json_codec.ts+ts_root_dir=(..):node.js.cov
+%local.ts.cov.checked==%local-ts-to-cover+ts_cov=(%local.ts.cov):list.ts.cov.checked
+%local-ts-to-cover==.:list:list.ts
+%local.ts.cov==%local-tstest.tree:leaves:ts.cov.list:agg.ts.cov
+
+%local-tstest.tree==<<
+test-xn.ts+ts_root_dir=(..):ts.cov
+test-json_codec.ts+ts_root_dir=(..):ts.cov

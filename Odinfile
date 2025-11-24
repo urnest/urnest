@@ -8,6 +8,7 @@
 %all==%all.tree:leaves
 
 %all.tree==<<
+%local.ts.cov.checked
 mypy-plugins%all
 xju%all.tree
 omnicxy%all.tree
@@ -289,4 +290,3 @@ XXXX
 
 %local-tstest.tree==<<
 test-xju.ts+ts_root_dir=(.):ts.cov
-test-xju.ts+ts_root_dir=(.):node.js.cov
