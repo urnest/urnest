@@ -1,0 +1,895 @@
+/// <reference path="../xju.ts"/>
+/// <reference path="../xju/json_codec.ts"/>
+type Lias = Liasee;
+type Liasee = {
+    x: number;
+};
+function asInstanceOfLiasee(v:any): Liasee
+{
+    _asInstanceOfLiasee.f(v).applyDefaults();
+    return v as Liasee;
+}
+
+function isInstanceOfLiasee(v:any): v is Liasee
+{
+    const r:false|xju.json_codec.ApplyDefaults=_isInstanceOfLiasee(v);
+    return r && r.applyDefaults();
+}
+
+const _asInstanceOfLiasee = xju.json_codec.asInstanceOfClass('Liasee', [
+    {propertyName: 'x', asInstance: xju.json_codec.asInstanceOfInt('int')}
+]);
+
+const _isInstanceOfLiasee = xju.json_codec.isInstanceOfClass('Liasee', [
+    {propertyName:'x', isInstance:xju.json_codec.isInstanceOfInt}
+]);
+
+function asInstanceOfLias(v:any):Lias {
+    _asInstanceOfLiasee.f(v).applyDefaults();
+    return v as Lias;}
+function isInstanceOfLias(v:any):v is Lias {
+    const r=_isInstanceOfLiasee(v);
+    return r&&r.applyDefaults();
+}
+type Liaser = {
+    l: Liasee;
+};
+function asInstanceOfLiaser(v:any): Liaser
+{
+    _asInstanceOfLiaser.f(v).applyDefaults();
+    return v as Liaser;
+}
+
+function isInstanceOfLiaser(v:any): v is Liaser
+{
+    const r:false|xju.json_codec.ApplyDefaults=_isInstanceOfLiaser(v);
+    return r && r.applyDefaults();
+}
+
+const _asInstanceOfLiaser = xju.json_codec.asInstanceOfClass('Liaser', [
+    {propertyName: 'l', asInstance: _asInstanceOfLiasee}
+]);
+
+const _isInstanceOfLiaser = xju.json_codec.isInstanceOfClass('Liaser', [
+    {propertyName:'l', isInstance:_isInstanceOfLiasee}
+]);
+
+namespace xju {
+    export namespace misc {
+        export type ByteCount = number;
+        export function isInstanceOfByteCount(v:any): v is ByteCount
+        {
+            const r=xju.json_codec.isInstanceOfInt(v);
+            return r&&r.applyDefaults();
+        }
+        export function asInstanceOfByteCount(v: any): ByteCount {
+            _asInstanceOfByteCount.f(v).applyDefaults();
+            return v as ByteCount;
+        }
+        export const _asInstanceOfByteCount = xju.json_codec.asInstanceOfInt('ByteCount');
+        export const _asKeyOfByteCount = xju.json_codec.asKeyOfInt('ByteCount');
+    }
+    
+    export namespace json_codec {
+        export type TypeScriptUQN = string;
+        export function isInstanceOfTypeScriptUQN(v:any): v is TypeScriptUQN
+        {
+            const r=_isInstanceOfTypeScriptUQN(v);
+            return r&&r.applyDefaults();
+        }
+        export function asInstanceOfTypeScriptUQN(v: any): TypeScriptUQN {
+            _asInstanceOfTypeScriptUQN.f(v).applyDefaults();
+            return v as TypeScriptUQN;
+        }
+        export const _isInstanceOfTypeScriptUQN = xju.json_codec.isInstanceOfString;
+        export const _isKeyOfTypeScriptUQN = xju.json_codec.isKeyOfString;
+        export const _asInstanceOfTypeScriptUQN = xju.json_codec.asInstanceOfString('TypeScriptUQN');
+        export const _asKeyOfTypeScriptUQN = xju.json_codec.asKeyOfString('TypeScriptUQN');
+        export type TypeScriptSourceCode = string;
+        export function isInstanceOfTypeScriptSourceCode(v:any): v is TypeScriptSourceCode
+        {
+            const r=_isInstanceOfTypeScriptSourceCode(v);
+            return r&&r.applyDefaults();
+        }
+        export function asInstanceOfTypeScriptSourceCode(v: any): TypeScriptSourceCode {
+            _asInstanceOfTypeScriptSourceCode.f(v).applyDefaults();
+            return v as TypeScriptSourceCode;
+        }
+        export const _isInstanceOfTypeScriptSourceCode = xju.json_codec.isInstanceOfString;
+        export const _isKeyOfTypeScriptSourceCode = xju.json_codec.isKeyOfString;
+        export const _asInstanceOfTypeScriptSourceCode = xju.json_codec.asInstanceOfString('TypeScriptSourceCode');
+        export const _asKeyOfTypeScriptSourceCode = xju.json_codec.asKeyOfString('TypeScriptSourceCode');
+        export type TypeScriptNamespace = {
+            defs: { [key: string /* xju.json_codec.TypeScriptUQN */]: xju.json_codec.TypeScriptSourceCode|xju.json_codec.TypeScriptNamespace };
+        };
+        export function asInstanceOfTypeScriptNamespace(v:any): xju.json_codec.TypeScriptNamespace
+        {
+            _asInstanceOfTypeScriptNamespace.f(v).applyDefaults();
+            return v as xju.json_codec.TypeScriptNamespace;
+        }
+        
+        export function isInstanceOfTypeScriptNamespace(v:any): v is xju.json_codec.TypeScriptNamespace
+        {
+            const r:false|xju.json_codec.ApplyDefaults=_isInstanceOfTypeScriptNamespace(v);
+            return r && r.applyDefaults();
+        }
+        
+        export const _asInstanceOfTypeScriptNamespace = xju.json_codec.asInstanceOfClass('xju.json_codec.TypeScriptNamespace', [
+            {propertyName: 'defs', asInstance: xju.json_codec.asInstanceOfDict(
+                xju.json_codec._asKeyOfTypeScriptUQN,
+                xju.json_codec.asInstanceOfUnion([
+                    xju.json_codec._asInstanceOfTypeScriptSourceCode,
+                    {
+                        typeName: "xju.json_codec.TypeScriptNamespace",
+                        f:(x:any) => xju.json_codec._asInstanceOfTypeScriptNamespace.f(x)
+                    }
+                ])
+            )}
+        ]);
+        
+        export const _isInstanceOfTypeScriptNamespace = xju.json_codec.isInstanceOfClass('xju.json_codec.TypeScriptNamespace', [
+            {propertyName:'defs', isInstance:xju.json_codec.isInstanceOfDict(
+                xju.json_codec._isKeyOfTypeScriptUQN,
+                xju.json_codec.isInstanceOfUnion([
+                    xju.json_codec._isInstanceOfTypeScriptSourceCode,
+                    (x:any) => xju.json_codec._isInstanceOfTypeScriptNamespace(x)
+                ])
+            )}
+        ]);
+    }
+    
+    export namespace time {
+        export type Timestamp = number;
+        export function isInstanceOfTimestamp(v:any): v is Timestamp
+        {
+            const r=xju.json_codec.isInstanceOfFloat(v);
+            return r&&r.applyDefaults();
+        }
+        export function asInstanceOfTimestamp(v: any): Timestamp {
+            const r=_asInstanceOfTimestamp.f(v);
+            r.applyDefaults();
+            return v as Timestamp;
+        }
+        export const _isInstanceOfTimestamp = xju.json_codec.isInstanceOfFloat;
+        export const _isKeyOfTimestamp = xju.json_codec.isKeyOfFloat;
+        export const _asInstanceOfTimestamp = xju.json_codec.asInstanceOfFloat('Timestamp');
+        export const _asKeyOfTimestamp = xju.json_codec.asKeyOfFloat('Timestamp');
+        export type Duration = number;
+        export function isInstanceOfDuration(v:any): v is Duration
+        {
+            const r=xju.json_codec.isInstanceOfFloat(v);
+            return r&&r.applyDefaults();
+        }
+        export function asInstanceOfDuration(v: any): Duration {
+            _asInstanceOfDuration.f(v).applyDefaults();
+            return v as Duration;
+        }
+        export const _asInstanceOfDuration = xju.json_codec.asInstanceOfFloat('Duration');
+        export const _asKeyOfDuration = xju.json_codec.asKeyOfFloat('Duration');
+    }
+    
+    export type NorS = number|string;
+    export function asInstanceOfNorS(v:any):NorS {
+        xju.json_codec.asInstanceOfUnion([
+                xju.json_codec.asInstanceOfInt('int'),
+                xju.json_codec.asInstanceOfString('string')
+            ]).f(v).applyDefaults();
+        return v as NorS;}
+    export function isInstanceOfNorS(v:any):v is NorS {
+        const r=xju.json_codec.isInstanceOfUnion([
+                xju.json_codec.isInstanceOfInt,
+                xju.json_codec.isInstanceOfString
+            ])(v);
+        return r&&r.applyDefaults();
+    }
+}
+
+type Metres = number;
+function isInstanceOfMetres(v:any): v is Metres
+{
+    const r=xju.json_codec.isInstanceOfFloat(v);
+    return r&&r.applyDefaults();
+}
+function asInstanceOfMetres(v: any): Metres {
+    _asInstanceOfMetres.f(v).applyDefaults();
+    return v as Metres;
+}
+const _asInstanceOfMetres = xju.json_codec.asInstanceOfFloat('Metres');
+const _asKeyOfMetres = xju.json_codec.asKeyOfFloat('Metres');
+type FullName = {
+    first_name: string;
+    middle_names: Array<string>;
+    last_name: string;
+    class: "Upper"|"Middle"|"Lower";
+};
+function asInstanceOfFullName(v:any): FullName
+{
+    _asInstanceOfFullName.f(v).applyDefaults();
+    return v as FullName;
+}
+
+function isInstanceOfFullName(v:any): v is FullName
+{
+    const r:false|xju.json_codec.ApplyDefaults=_isInstanceOfFullName(v);
+    return r && r.applyDefaults();
+}
+
+const _asInstanceOfFullName = xju.json_codec.asInstanceOfClass('FullName', [
+    {propertyName: 'first_name', asInstance: xju.json_codec.asInstanceOfString('string')},
+    {propertyName: 'middle_names', asInstance: xju.json_codec.asInstanceOfList(xju.json_codec.asInstanceOfString('string'))},
+    {propertyName: 'last_name', asInstance: xju.json_codec.asInstanceOfString('string')},
+    {propertyName: 'class', asInstance: xju.json_codec.asInstanceOfUnion([
+        xju.json_codec.asInstanceOfLiteral("Upper"),
+        xju.json_codec.asInstanceOfLiteral("Middle"),
+        xju.json_codec.asInstanceOfLiteral("Lower")
+    ])}
+]);
+
+const _isInstanceOfFullName = xju.json_codec.isInstanceOfClass('FullName', [
+    {propertyName:'first_name', isInstance:xju.json_codec.isInstanceOfString},
+    {propertyName:'middle_names', isInstance:xju.json_codec.isInstanceOfList(xju.json_codec.isInstanceOfString)},
+    {propertyName:'last_name', isInstance:xju.json_codec.isInstanceOfString},
+    {propertyName:'class', isInstance:xju.json_codec.isInstanceOfUnion([
+        xju.json_codec.isInstanceOfLiteral("Upper"),
+        xju.json_codec.isInstanceOfLiteral("Middle"),
+        xju.json_codec.isInstanceOfLiteral("Lower")
+    ])}
+]);
+
+type Surname = string;
+function isInstanceOfSurname(v:any): v is Surname
+{
+    const r=_isInstanceOfSurname(v);
+    return r&&r.applyDefaults();
+}
+function asInstanceOfSurname(v: any): Surname {
+    _asInstanceOfSurname.f(v).applyDefaults();
+    return v as Surname;
+}
+const _isInstanceOfSurname = xju.json_codec.isInstanceOfStringPattern(new RegExp("^\\S*$"));
+const _isKeyOfSurname = xju.json_codec.isKeyOfStringPattern(new RegExp("^\\S*$"));
+const _asInstanceOfSurname = xju.json_codec.asInstanceOfStringPattern('Surname', new RegExp("^\\S*$"));
+const _asKeyOfSurname = xju.json_codec.asKeyOfStringPattern('Surname', new RegExp("^\\S*$"));
+type DontEncode = {
+    y: string;
+};
+function asInstanceOfDontEncode(v:any): DontEncode
+{
+    _asInstanceOfDontEncode.f(v).applyDefaults();
+    return v as DontEncode;
+}
+
+function isInstanceOfDontEncode(v:any): v is DontEncode
+{
+    const r:false|xju.json_codec.ApplyDefaults=_isInstanceOfDontEncode(v);
+    return r && r.applyDefaults();
+}
+
+const _asInstanceOfDontEncode = xju.json_codec.asInstanceOfClass('DontEncode', [
+    {propertyName: 'y', asInstance: xju.json_codec.asInstanceOfString('string')}
+]);
+
+const _isInstanceOfDontEncode = xju.json_codec.isInstanceOfClass('DontEncode', [
+    {propertyName:'y', isInstance:xju.json_codec.isInstanceOfString}
+]);
+
+enum O {
+    a = "fred",
+    b = "jock"
+};
+
+function asInstanceOfO(v: any): O
+{
+    const r=_asInstanceOfO.f(v);
+    r.applyDefaults();
+    return v as O;
+}
+function isInstanceOfO(v:any): v is string
+{
+    const r:false|xju.json_codec.ApplyDefaults=_isInstanceOfO(v);
+    return r&&r.applyDefaults();
+}
+const _asInstanceOfO = xju.json_codec.asInstanceOfUnion([
+        xju.json_codec.asInstanceOfLiteral(O.a),
+    xju.json_codec.asInstanceOfLiteral(O.b)
+]);
+const _isInstanceOfO = xju.json_codec.isInstanceOfUnion([
+        xju.json_codec.isInstanceOfLiteral(O.a),
+    xju.json_codec.isInstanceOfLiteral(O.b)
+]);
+const _asKeyOfO = xju.json_codec.asKeyOfUnion([
+        xju.json_codec.asKeyOfLiteral(O.a),
+    xju.json_codec.asKeyOfLiteral(O.b)
+]);
+const _isKeyOfO = xju.json_codec.isKeyOfUnion([
+        xju.json_codec.isKeyOfLiteral(O.a),
+    xju.json_codec.isKeyOfLiteral(O.b)
+]);
+type MixedEnum =
+    {"k": 1, "v": "fred"} |
+    {"k": 2, "v": "jock"};
+
+function asInstanceOfMixedEnum(v: any): MixedEnum
+{
+    const r=_asInstanceOfMixedEnum.f(v);
+    r.applyDefaults();
+    return v as MixedEnum;
+}
+function isInstanceOfMixedEnum(v:any): v is string
+{
+    const r:false|xju.json_codec.ApplyDefaults=_isInstanceOfMixedEnum(v);
+    return r&&r.applyDefaults();
+}
+const _asInstanceOfMixedEnum = xju.json_codec.asInstanceOfUnion([
+        xju.json_codec.asInstanceOfLiteral({"k": 1, "v": "fred"}),
+    xju.json_codec.asInstanceOfLiteral({"k": 2, "v": "jock"})
+]);
+const _isInstanceOfMixedEnum = xju.json_codec.isInstanceOfUnion([
+        xju.json_codec.isInstanceOfLiteral({"k": 1, "v": "fred"}),
+    xju.json_codec.isInstanceOfLiteral({"k": 2, "v": "jock"})
+]);
+type And = {
+    a: [string|And|Or,string|And|Or,Array<string|And|Or>];
+};
+function asInstanceOfAnd(v:any): And
+{
+    _asInstanceOfAnd.f(v).applyDefaults();
+    return v as And;
+}
+
+function isInstanceOfAnd(v:any): v is And
+{
+    const r:false|xju.json_codec.ApplyDefaults=_isInstanceOfAnd(v);
+    return r && r.applyDefaults();
+}
+
+type Or = {
+    o: [string|And|Or,string|And|Or,Array<string|And|Or>];
+};
+function asInstanceOfOr(v:any): Or
+{
+    _asInstanceOfOr.f(v).applyDefaults();
+    return v as Or;
+}
+
+function isInstanceOfOr(v:any): v is Or
+{
+    const r:false|xju.json_codec.ApplyDefaults=_isInstanceOfOr(v);
+    return r && r.applyDefaults();
+}
+
+const _asInstanceOfOr = xju.json_codec.asInstanceOfClass('Or', [
+    {propertyName: 'o', asInstance: xju.json_codec.asInstanceOfTuple([
+        {
+            typeName: "string|And|Or",
+            f:(x:any) => xju.json_codec.asInstanceOfUnion([
+                    xju.json_codec.asInstanceOfString('string'),
+                    _asInstanceOfAnd,
+                    _asInstanceOfOr
+                ]).f(x)
+        },
+        {
+            typeName: "string|And|Or",
+            f:(x:any) => xju.json_codec.asInstanceOfUnion([
+                    xju.json_codec.asInstanceOfString('string'),
+                    _asInstanceOfAnd,
+                    _asInstanceOfOr
+                ]).f(x)
+        },
+        xju.json_codec.asInstanceOfList({
+            typeName: "string|And|Or",
+            f:(x:any) => xju.json_codec.asInstanceOfUnion([
+                    xju.json_codec.asInstanceOfString('string'),
+                    _asInstanceOfAnd,
+                    _asInstanceOfOr
+                ]).f(x)
+        })
+    ])}
+]);
+
+const _isInstanceOfOr = xju.json_codec.isInstanceOfClass('Or', [
+    {propertyName:'o', isInstance:xju.json_codec.isInstanceOfTuple([
+        (x:any) => xju.json_codec.isInstanceOfUnion([
+            xju.json_codec.isInstanceOfString,
+            _isInstanceOfAnd,
+            _isInstanceOfOr
+        ])(x),
+        (x:any) => xju.json_codec.isInstanceOfUnion([
+            xju.json_codec.isInstanceOfString,
+            _isInstanceOfAnd,
+            _isInstanceOfOr
+        ])(x),
+        xju.json_codec.isInstanceOfList((x:any) => xju.json_codec.isInstanceOfUnion([
+            xju.json_codec.isInstanceOfString,
+            _isInstanceOfAnd,
+            _isInstanceOfOr
+        ])(x))
+    ])}
+]);
+
+const _asInstanceOfAnd = xju.json_codec.asInstanceOfClass('And', [
+    {propertyName: 'a', asInstance: xju.json_codec.asInstanceOfTuple([
+        {
+            typeName: "string|And|Or",
+            f:(x:any) => xju.json_codec.asInstanceOfUnion([
+                    xju.json_codec.asInstanceOfString('string'),
+                    _asInstanceOfAnd,
+                    _asInstanceOfOr
+                ]).f(x)
+        },
+        {
+            typeName: "string|And|Or",
+            f:(x:any) => xju.json_codec.asInstanceOfUnion([
+                    xju.json_codec.asInstanceOfString('string'),
+                    _asInstanceOfAnd,
+                    _asInstanceOfOr
+                ]).f(x)
+        },
+        xju.json_codec.asInstanceOfList({
+            typeName: "string|And|Or",
+            f:(x:any) => xju.json_codec.asInstanceOfUnion([
+                    xju.json_codec.asInstanceOfString('string'),
+                    _asInstanceOfAnd,
+                    _asInstanceOfOr
+                ]).f(x)
+        })
+    ])}
+]);
+
+const _isInstanceOfAnd = xju.json_codec.isInstanceOfClass('And', [
+    {propertyName:'a', isInstance:xju.json_codec.isInstanceOfTuple([
+        (x:any) => xju.json_codec.isInstanceOfUnion([
+            xju.json_codec.isInstanceOfString,
+            _isInstanceOfAnd,
+            _isInstanceOfOr
+        ])(x),
+        (x:any) => xju.json_codec.isInstanceOfUnion([
+            xju.json_codec.isInstanceOfString,
+            _isInstanceOfAnd,
+            _isInstanceOfOr
+        ])(x),
+        xju.json_codec.isInstanceOfList((x:any) => xju.json_codec.isInstanceOfUnion([
+            xju.json_codec.isInstanceOfString,
+            _isInstanceOfAnd,
+            _isInstanceOfOr
+        ])(x))
+    ])}
+]);
+
+type EncodableData = {
+    an_int: number;
+    a_float: number;
+    a_str: string;
+    a_new_int: number;
+    an_xju_int: xju.misc.ByteCount;
+    a_new_float: number;
+    an_xju_float: Metres;
+    a_new_str: string;
+    an_xju_str: xju.json_codec.TypeScriptUQN;
+    a_null: null;
+    a_boolean: boolean;
+    a_union: FullName|Surname|null;
+    a_list: Array<number>;
+    any_list: Array<any>;
+    a_set: Array<number> /* with unique elements */;
+    any_set: Array<any> /* with unique elements */;
+    a_frozen_set: Array<number> /* with unique elements */;
+    any_frozen_set: Array<any> /* with unique elements */;
+    some_bytes: Array<number> /* bytes */;
+    a_tuple: [number,string];
+    a_literal_str: "ann"|"mai";
+    a_literal_int: 7;
+    a_literal_bool: true;
+    a_class: FullName;
+    a_dont_encode: DontEncode;
+    fred_7_false: "fred"|7|false;
+    a_recurse_self: xju.json_codec.TypeScriptNamespace;
+    a_timestamp: xju.time.Timestamp;
+    an_enum: O;
+    a_mixed_in_enum: MixedEnum;
+    a_recursive: string|And|Or;
+    an_enum_value: O.a;
+    a_json: null|boolean|{ [key: string]: any }|Array<any>|number|string;
+    a_custom_encoded: number /* IpV4Addr */;
+    another_custom_encoded: string /* IpV4AddrWithPrefix */;
+    non_key_custom_encoded: number /* Even.value/2! */;
+};
+function asInstanceOfEncodableData(v:any): EncodableData
+{
+    _asInstanceOfEncodableData.f(v).applyDefaults();
+    return v as EncodableData;
+}
+
+function isInstanceOfEncodableData(v:any): v is EncodableData
+{
+    const r:false|xju.json_codec.ApplyDefaults=_isInstanceOfEncodableData(v);
+    return r && r.applyDefaults();
+}
+
+const _asInstanceOfEncodableData = xju.json_codec.asInstanceOfClass('EncodableData', [
+    {propertyName: 'an_int', asInstance: xju.json_codec.asInstanceOfInt('int')},
+    {propertyName: 'a_float', asInstance: xju.json_codec.asInstanceOfFloat('float')},
+    {propertyName: 'a_str', asInstance: xju.json_codec.asInstanceOfString('string'), defaultValue: "a_str_default"},
+    {propertyName: 'a_new_int', asInstance: xju.json_codec.asInstanceOfInt('int')},
+    {propertyName: 'an_xju_int', asInstance: xju.misc._asInstanceOfByteCount},
+    {propertyName: 'a_new_float', asInstance: xju.json_codec.asInstanceOfFloat('float')},
+    {propertyName: 'an_xju_float', asInstance: _asInstanceOfMetres},
+    {propertyName: 'a_new_str', asInstance: xju.json_codec.asInstanceOfString('string')},
+    {propertyName: 'an_xju_str', asInstance: xju.json_codec._asInstanceOfTypeScriptUQN},
+    {propertyName: 'a_null', asInstance: xju.json_codec.asInstanceOfNull},
+    {propertyName: 'a_boolean', asInstance: xju.json_codec.asInstanceOfBool('bool')},
+    {propertyName: 'a_union', asInstance: xju.json_codec.asInstanceOfUnion([
+        _asInstanceOfFullName,
+        _asInstanceOfSurname,
+        xju.json_codec.asInstanceOfNull
+    ])},
+    {propertyName: 'a_list', asInstance: xju.json_codec.asInstanceOfList(xju.json_codec.asInstanceOfInt('int'))},
+    {propertyName: 'any_list', asInstance: xju.json_codec.asInstanceOfAnyList},
+    {propertyName: 'a_set', asInstance: xju.json_codec.asInstanceOfList(xju.json_codec.asInstanceOfInt('int'))},
+    {propertyName: 'any_set', asInstance: xju.json_codec.asInstanceOfAnyList},
+    {propertyName: 'a_frozen_set', asInstance: xju.json_codec.asInstanceOfList(xju.json_codec.asInstanceOfInt('int'))},
+    {propertyName: 'any_frozen_set', asInstance: xju.json_codec.asInstanceOfAnyList},
+    {propertyName: 'some_bytes', asInstance: xju.json_codec.asInstanceOfBytes},
+    {propertyName: 'a_tuple', asInstance: xju.json_codec.asInstanceOfTuple([
+        xju.json_codec.asInstanceOfInt('int'),
+        xju.json_codec.asInstanceOfString('string')
+    ])},
+    {propertyName: 'a_literal_str', asInstance: xju.json_codec.asInstanceOfUnion([
+        xju.json_codec.asInstanceOfLiteral("ann"),
+        xju.json_codec.asInstanceOfLiteral("mai")
+    ])},
+    {propertyName: 'a_literal_int', asInstance: xju.json_codec.asInstanceOfLiteral(7)},
+    {propertyName: 'a_literal_bool', asInstance: xju.json_codec.asInstanceOfLiteral(true)},
+    {propertyName: 'a_class', asInstance: _asInstanceOfFullName},
+    {propertyName: 'a_dont_encode', asInstance: _asInstanceOfDontEncode},
+    {propertyName: 'fred_7_false', asInstance: xju.json_codec.asInstanceOfUnion([
+        xju.json_codec.asInstanceOfLiteral("fred"),
+        xju.json_codec.asInstanceOfLiteral(7),
+        xju.json_codec.asInstanceOfLiteral(false)
+    ])},
+    {propertyName: 'a_recurse_self', asInstance: xju.json_codec._asInstanceOfTypeScriptNamespace},
+    {propertyName: 'a_timestamp', asInstance: xju.time._asInstanceOfTimestamp},
+    {propertyName: 'an_enum', asInstance: _asInstanceOfO},
+    {propertyName: 'a_mixed_in_enum', asInstance: _asInstanceOfMixedEnum},
+    {propertyName: 'a_recursive', asInstance: xju.json_codec.asInstanceOfUnion([
+        xju.json_codec.asInstanceOfString('string'),
+        _asInstanceOfAnd,
+        _asInstanceOfOr
+    ])},
+    {propertyName: 'an_enum_value', asInstance: xju.json_codec.asInstanceOfLiteral(O.a)},
+    {propertyName: 'a_json', asInstance: xju.json_codec.asInstanceOfUnion([
+        xju.json_codec.asInstanceOfNull,
+        xju.json_codec.asInstanceOfBool('bool'),
+        xju.json_codec.asInstanceOfAnyDict,
+        xju.json_codec.asInstanceOfAnyList,
+        xju.json_codec.asInstanceOfFloat('float'),
+        xju.json_codec.asInstanceOfString('string')
+    ])},
+    {propertyName: 'a_custom_encoded', asInstance: xju.json_codec.asInstanceInContext({
+        typeName: 'IpV4Addr',
+        f: (x:any) => {
+            const r=xju.json_codec.asInstanceOfInt('int').f(x);
+            xju.assert.assertNumberInRange(x,0,4294967295);
+            return r;
+        }
+    })},
+    {propertyName: 'another_custom_encoded', asInstance: xju.json_codec.asInstanceInContext({
+        typeName: 'IpV4AddrWithPrefix',
+        f: (x:any) => {
+            const r=xju.json_codec.asInstanceOfString('string').f(x);
+            const [_,a,b,c,d,m]=xju.assert.assertMatches(
+                /^([0-9]+)[.]([0-9]+)[.]([0-9]+)[.]([0-9]+)[/]([0-9]+)$/, x as string);
+            [a,b,c,d].forEach(v=> xju.assert.assertNumberInRange(parseInt(v),0,255));
+            xju.assert.assertNumberInRange(parseInt(m),0,32);
+            return r;
+        }
+    })},
+    {propertyName: 'non_key_custom_encoded', asInstance: xju.json_codec.asInstanceInContext({
+        typeName: 'Even',
+        f: (x:any) => {
+            return xju.json_codec.asInstanceOfInt('int').f(x);
+        }
+    })}
+]);
+
+const _isInstanceOfEncodableData = xju.json_codec.isInstanceOfClass('EncodableData', [
+    {propertyName:'an_int', isInstance:xju.json_codec.isInstanceOfInt},
+    {propertyName:'a_float', isInstance:xju.json_codec.isInstanceOfFloat},
+    {propertyName:'a_str', isInstance:xju.json_codec.isInstanceOfString, defaultValue: "a_str_default"},
+    {propertyName:'a_new_int', isInstance:xju.json_codec.isInstanceOfInt},
+    {propertyName:'an_xju_int', isInstance:xju.json_codec.isInstanceOfInt},
+    {propertyName:'a_new_float', isInstance:xju.json_codec.isInstanceOfFloat},
+    {propertyName:'an_xju_float', isInstance:xju.json_codec.isInstanceOfFloat},
+    {propertyName:'a_new_str', isInstance:xju.json_codec.isInstanceOfString},
+    {propertyName:'an_xju_str', isInstance:xju.json_codec._isInstanceOfTypeScriptUQN},
+    {propertyName:'a_null', isInstance:xju.json_codec.isInstanceOfNull},
+    {propertyName:'a_boolean', isInstance:xju.json_codec.isInstanceOfBool},
+    {propertyName:'a_union', isInstance:xju.json_codec.isInstanceOfUnion([
+        _isInstanceOfFullName,
+        _isInstanceOfSurname,
+        xju.json_codec.isInstanceOfNull
+    ])},
+    {propertyName:'a_list', isInstance:xju.json_codec.isInstanceOfList(xju.json_codec.isInstanceOfInt)},
+    {propertyName:'any_list', isInstance:xju.json_codec.isInstanceOfAnyList},
+    {propertyName:'a_set', isInstance:xju.json_codec.isInstanceOfList(xju.json_codec.isInstanceOfInt)},
+    {propertyName:'any_set', isInstance:xju.json_codec.isInstanceOfAnyList},
+    {propertyName:'a_frozen_set', isInstance:xju.json_codec.isInstanceOfList(xju.json_codec.isInstanceOfInt)},
+    {propertyName:'any_frozen_set', isInstance:xju.json_codec.isInstanceOfAnyList},
+    {propertyName:'some_bytes', isInstance:xju.json_codec.isInstanceOfBytes},
+    {propertyName:'a_tuple', isInstance:xju.json_codec.isInstanceOfTuple([
+        xju.json_codec.isInstanceOfInt,
+        xju.json_codec.isInstanceOfString
+    ])},
+    {propertyName:'a_literal_str', isInstance:xju.json_codec.isInstanceOfUnion([
+        xju.json_codec.isInstanceOfLiteral("ann"),
+        xju.json_codec.isInstanceOfLiteral("mai")
+    ])},
+    {propertyName:'a_literal_int', isInstance:xju.json_codec.isInstanceOfLiteral(7)},
+    {propertyName:'a_literal_bool', isInstance:xju.json_codec.isInstanceOfLiteral(true)},
+    {propertyName:'a_class', isInstance:_isInstanceOfFullName},
+    {propertyName:'a_dont_encode', isInstance:_isInstanceOfDontEncode},
+    {propertyName:'fred_7_false', isInstance:xju.json_codec.isInstanceOfUnion([
+        xju.json_codec.isInstanceOfLiteral("fred"),
+        xju.json_codec.isInstanceOfLiteral(7),
+        xju.json_codec.isInstanceOfLiteral(false)
+    ])},
+    {propertyName:'a_recurse_self', isInstance:xju.json_codec._isInstanceOfTypeScriptNamespace},
+    {propertyName:'a_timestamp', isInstance:xju.time._isInstanceOfTimestamp},
+    {propertyName:'an_enum', isInstance:_isInstanceOfO},
+    {propertyName:'a_mixed_in_enum', isInstance:_isInstanceOfMixedEnum},
+    {propertyName:'a_recursive', isInstance:xju.json_codec.isInstanceOfUnion([
+        xju.json_codec.isInstanceOfString,
+        _isInstanceOfAnd,
+        _isInstanceOfOr
+    ])},
+    {propertyName:'an_enum_value', isInstance:xju.json_codec.isInstanceOfLiteral(O.a)},
+    {propertyName:'a_json', isInstance:xju.json_codec.isInstanceOfUnion([
+        xju.json_codec.isInstanceOfNull,
+        xju.json_codec.isInstanceOfBool,
+        xju.json_codec.isInstanceOfAnyDict,
+        xju.json_codec.isInstanceOfAnyList,
+        xju.json_codec.isInstanceOfFloat,
+        xju.json_codec.isInstanceOfString
+    ])},
+    {propertyName:'a_custom_encoded', isInstance:(x:any) => {
+        const r=xju.json_codec.isInstanceOfInt(x);
+        if (r===false || (x as number) < 0 || (x as number >= 4294967295)) {
+            return false;
+        }
+        return r;
+    }},
+    {propertyName:'another_custom_encoded', isInstance:(x:any) => {
+        if (!xju.json_codec.isInstanceOfString(x)) {
+            return false;
+        }
+        const r=/^([0-9]+)[.]([0-9]+)[.]([0-9]+)[.]([0-9]+)[/]([0-9]+)$/.exec(x as string);
+        if (r===null) {
+            return false;
+        }
+        const [a,b,c,d,m] = r;
+        return !([a,b,c,d].filter(v => parseInt(v) < 0 || parseInt(v) > 255).length ||
+                 parseInt(m) < 0 || parseInt(m) > 32) && xju.json_codec.applyNoDefaults;
+    }},
+    {propertyName:'non_key_custom_encoded', isInstance:(x:any) => {
+        const r=xju.json_codec.isInstanceOfInt(x);
+        return r;
+    }}
+]);
+
+type EncodableKeyTypes = {
+    str_key: { [key: string]: number };
+    int_key: { [key: string /* int */]: number };
+    more_keys: { [key: string /* null */|string /* xju.misc.ByteCount */|string /* float */|string /* bool */]: number };
+    duration_key: { [key: string /* xju.time.Duration */]: number };
+    timestamp_key: { [key: string /* xju.time.Timestamp */]: number };
+    non_str_literal_key: { [key: string|string]: number };
+    str_literal_key: { [key: "a\n\"nail\"'s tip"|O.a|string /* Surname */]: number };
+    enum_key: { [key: string /* O */]: number };
+    custom_key: { [key: string /* number ** IpV4Addr ** */]: number };
+    alt_custom_key: { [key: string /* string ** IpV4AddrWithPrefix ** */]: number };
+    newstr_key: { [key: string]: number };
+    xjustr_key: { [key: string /* xju.json_codec.TypeScriptUQN */]: number };
+    newfloat_key: { [key: string /* float */]: number };
+    xjufloat_key: { [key: string /* Metres */]: number };
+    newint_key: { [key: string /* int */]: number };
+    newbool_key: { [key: string /* bool */]: number };
+    any_key: { [key: string]: any };
+};
+function asInstanceOfEncodableKeyTypes(v:any): EncodableKeyTypes
+{
+    _asInstanceOfEncodableKeyTypes.f(v).applyDefaults();
+    return v as EncodableKeyTypes;
+}
+
+function isInstanceOfEncodableKeyTypes(v:any): v is EncodableKeyTypes
+{
+    const r:false|xju.json_codec.ApplyDefaults=_isInstanceOfEncodableKeyTypes(v);
+    return r && r.applyDefaults();
+}
+
+const _asInstanceOfEncodableKeyTypes = xju.json_codec.asInstanceOfClass('EncodableKeyTypes', [
+    {propertyName: 'str_key', asInstance: xju.json_codec.asInstanceOfDict(
+        xju.json_codec.asKeyOfString('string'),
+        xju.json_codec.asInstanceOfInt('int')
+    )},
+    {propertyName: 'int_key', asInstance: xju.json_codec.asInstanceOfDict(
+        xju.json_codec.asKeyOfInt('int'),
+        xju.json_codec.asInstanceOfInt('int')
+    )},
+    {propertyName: 'more_keys', asInstance: xju.json_codec.asInstanceOfDict(
+        xju.json_codec.asKeyOfUnion([
+            xju.json_codec.asKeyOfNull,
+            xju.misc._asKeyOfByteCount,
+            xju.json_codec.asKeyOfFloat('float'),
+            xju.json_codec.asKeyOfBool('bool')
+        ]),
+        xju.json_codec.asInstanceOfInt('int')
+    )},
+    {propertyName: 'duration_key', asInstance: xju.json_codec.asInstanceOfDict(
+        xju.time._asKeyOfDuration,
+        xju.json_codec.asInstanceOfInt('int')
+    )},
+    {propertyName: 'timestamp_key', asInstance: xju.json_codec.asInstanceOfDict(
+        xju.time._asKeyOfTimestamp,
+        xju.json_codec.asInstanceOfInt('int')
+    )},
+    {propertyName: 'non_str_literal_key', asInstance: xju.json_codec.asInstanceOfDict(
+        xju.json_codec.asKeyOfUnion([
+            xju.json_codec.asKeyOfLiteral(10),
+            xju.json_codec.asKeyOfLiteral(true)
+        ]),
+        xju.json_codec.asInstanceOfInt('int')
+    )},
+    {propertyName: 'str_literal_key', asInstance: xju.json_codec.asInstanceOfDict(
+        xju.json_codec.asKeyOfUnion([
+            xju.json_codec.asKeyOfLiteral("a\n\"nail\"'s tip"),
+            xju.json_codec.asKeyOfLiteral(O.a),
+            _asKeyOfSurname
+        ]),
+        xju.json_codec.asInstanceOfInt('int')
+    )},
+    {propertyName: 'enum_key', asInstance: xju.json_codec.asInstanceOfDict(
+        _asKeyOfO,
+        xju.json_codec.asInstanceOfInt('int')
+    )},
+    {propertyName: 'custom_key', asInstance: xju.json_codec.asInstanceOfDict(
+        xju.json_codec.asKeyInContext({
+            typeName: 'IpV4Addr',
+            f: (x:any) => {
+                xju.json_codec.asKeyOfInt('int').f(x);
+                xju.assert.assertNumberInRange(x,0,4294967295);
+            }
+        }),
+        xju.json_codec.asInstanceOfInt('int')
+    )},
+    {propertyName: 'alt_custom_key', asInstance: xju.json_codec.asInstanceOfDict(
+        xju.json_codec.asKeyInContext({
+            typeName: 'IpV4Addr',
+            f: (x:any) => {
+                // note javascript turns the key into a string even if, say, it is a number
+                const [a,b,c,d,m]=xju.assert.assertMatches(
+                    /^([0-9]+)[.]([0-9]+)[.]([0-9]+)[.]([0-9]+)[/]([0-9]+)$/, x as string);
+                [a,b,c,d].forEach(v=> xju.assert.assertNumberInRange(parseInt(v),0,255));
+                xju.assert.assertNumberInRange(parseInt(m),0,32);
+            }
+        }),
+        xju.json_codec.asInstanceOfInt('int')
+    )},
+    {propertyName: 'newstr_key', asInstance: xju.json_codec.asInstanceOfDict(
+        xju.json_codec.asKeyOfString('string'),
+        xju.json_codec.asInstanceOfInt('int')
+    )},
+    {propertyName: 'xjustr_key', asInstance: xju.json_codec.asInstanceOfDict(
+        xju.json_codec._asKeyOfTypeScriptUQN,
+        xju.json_codec.asInstanceOfInt('int')
+    )},
+    {propertyName: 'newfloat_key', asInstance: xju.json_codec.asInstanceOfDict(
+        xju.json_codec.asKeyOfFloat('float'),
+        xju.json_codec.asInstanceOfInt('int')
+    )},
+    {propertyName: 'xjufloat_key', asInstance: xju.json_codec.asInstanceOfDict(
+        _asKeyOfMetres,
+        xju.json_codec.asInstanceOfInt('int')
+    )},
+    {propertyName: 'newint_key', asInstance: xju.json_codec.asInstanceOfDict(
+        xju.json_codec.asKeyOfInt('int'),
+        xju.json_codec.asInstanceOfInt('int')
+    )},
+    {propertyName: 'newbool_key', asInstance: xju.json_codec.asInstanceOfDict(
+        xju.json_codec.asKeyOfBool('bool'),
+        xju.json_codec.asInstanceOfInt('int')
+    )},
+    {propertyName: 'any_key', asInstance: xju.json_codec.asInstanceOfAnyDict}
+]);
+
+const _isInstanceOfEncodableKeyTypes = xju.json_codec.isInstanceOfClass('EncodableKeyTypes', [
+    {propertyName:'str_key', isInstance:xju.json_codec.isInstanceOfDict(
+        xju.json_codec.isKeyOfString,
+        xju.json_codec.isInstanceOfInt
+    )},
+    {propertyName:'int_key', isInstance:xju.json_codec.isInstanceOfDict(
+        xju.json_codec.isKeyOfInt,
+        xju.json_codec.isInstanceOfInt
+    )},
+    {propertyName:'more_keys', isInstance:xju.json_codec.isInstanceOfDict(
+        xju.json_codec.isKeyOfUnion([
+            xju.json_codec.isKeyOfNull,
+            xju.json_codec.isKeyOfInt,
+            xju.json_codec.isKeyOfFloat,
+            xju.json_codec.isKeyOfBool
+        ]),
+        xju.json_codec.isInstanceOfInt
+    )},
+    {propertyName:'duration_key', isInstance:xju.json_codec.isInstanceOfDict(
+        xju.json_codec.isKeyOfFloat,
+        xju.json_codec.isInstanceOfInt
+    )},
+    {propertyName:'timestamp_key', isInstance:xju.json_codec.isInstanceOfDict(
+        xju.time._isKeyOfTimestamp,
+        xju.json_codec.isInstanceOfInt
+    )},
+    {propertyName:'non_str_literal_key', isInstance:xju.json_codec.isInstanceOfDict(
+        xju.json_codec.isKeyOfUnion([
+            xju.json_codec.isKeyOfLiteral(10),
+            xju.json_codec.isKeyOfLiteral(true)
+        ]),
+        xju.json_codec.isInstanceOfInt
+    )},
+    {propertyName:'str_literal_key', isInstance:xju.json_codec.isInstanceOfDict(
+        xju.json_codec.isKeyOfUnion([
+            xju.json_codec.isKeyOfLiteral("a\n\"nail\"'s tip"),
+            xju.json_codec.isKeyOfLiteral(O.a),
+            _isKeyOfSurname
+        ]),
+        xju.json_codec.isInstanceOfInt
+    )},
+    {propertyName:'enum_key', isInstance:xju.json_codec.isInstanceOfDict(
+        _isKeyOfO,
+        xju.json_codec.isInstanceOfInt
+    )},
+    {propertyName:'custom_key', isInstance:xju.json_codec.isInstanceOfDict(
+        (x:any) => (xju.json_codec.isKeyOfInt(x) && (x as number) >= 0 && (x as number <= 4294967295)),
+        xju.json_codec.isInstanceOfInt
+    )},
+    {propertyName:'alt_custom_key', isInstance:xju.json_codec.isInstanceOfDict(
+        (x:any) => {
+            // note javascript turns the key into a string even if, say, it is a number
+            const r=/^([0-9]+)[.]([0-9]+)[.]([0-9]+)[.]([0-9]+)[/]([0-9]+)$/.exec(x as string);
+            if (r===null) {
+                return false;
+            }
+            const [_,a,b,c,d,m] = r;
+            return !([a,b,c,d].filter(v => parseInt(v) < 0 || parseInt(v) > 255).length ||
+                     parseInt(m) < 0 || parseInt(m) > 32);
+        },
+        xju.json_codec.isInstanceOfInt
+    )},
+    {propertyName:'newstr_key', isInstance:xju.json_codec.isInstanceOfDict(
+        xju.json_codec.isKeyOfString,
+        xju.json_codec.isInstanceOfInt
+    )},
+    {propertyName:'xjustr_key', isInstance:xju.json_codec.isInstanceOfDict(
+        xju.json_codec._isKeyOfTypeScriptUQN,
+        xju.json_codec.isInstanceOfInt
+    )},
+    {propertyName:'newfloat_key', isInstance:xju.json_codec.isInstanceOfDict(
+        xju.json_codec.isKeyOfFloat,
+        xju.json_codec.isInstanceOfInt
+    )},
+    {propertyName:'xjufloat_key', isInstance:xju.json_codec.isInstanceOfDict(
+        xju.json_codec.isKeyOfFloat,
+        xju.json_codec.isInstanceOfInt
+    )},
+    {propertyName:'newint_key', isInstance:xju.json_codec.isInstanceOfDict(
+        xju.json_codec.isKeyOfInt,
+        xju.json_codec.isInstanceOfInt
+    )},
+    {propertyName:'newbool_key', isInstance:xju.json_codec.isInstanceOfDict(
+        xju.json_codec.isKeyOfBool,
+        xju.json_codec.isInstanceOfInt
+    )},
+    {propertyName:'any_key', isInstance:xju.json_codec.isInstanceOfAnyDict}
+]);
+
+const good_encodable_data=() => ({"an_int": 7, "a_float": 9.2, "a_str": "fred", "a_new_int": 22, "an_xju_int": 88, "a_new_float": 2.2, "an_xju_float": 18.2, "a_new_str": "red", "an_xju_str": "ally", "a_null": null, "a_boolean": true, "a_union": "walker", "a_list": [1, 2, 3], "any_list": [1, null, "a"], "a_set": [4, 5, 6], "any_set": [null, 2], "a_frozen_set": [7], "any_frozen_set": [2, 4.6], "some_bytes": [10, 11, 12], "a_tuple": [8, "jock"], "a_literal_str": "mai", "a_literal_int": 7, "a_literal_bool": true, "a_class": {"first_name": "fran", "middle_names": ["jan"], "last_name": "lan", "class": "Upper"}, "a_dont_encode": {"y": "yyy"}, "fred_7_false": false, "a_recurse_self": {"defs": {}}, "a_timestamp": 45000.0, "an_enum": "fred", "a_mixed_in_enum": {"k": 2, "v": "jock"}, "a_recursive": {"a": [{"o": ["1", "2", ["7"]]}, "3", [{"a": ["4", "6", ["8"]]}]]}, "an_enum_value": "fred", "a_json": 9.0, "a_custom_encoded": 2975337473, "another_custom_encoded": "177.88.12.0/22", "non_key_custom_encoded": 3});
+const good_encodable_key_types=() => ({"str_key": {"fred": 3}, "int_key": {"1": 4}, "more_keys": {"9": 2, "null": 1, "5.5": 3, "true": 4}, "duration_key": {"77.2": 1}, "timestamp_key": {"88.1": 1}, "non_str_literal_key": {"10": 1, "true": 2}, "str_literal_key": {"a\n\"nail\"'s tip": 3, "fred": 4, "rooster": 5}, "enum_key": {"fred": 1, "jock": 2}, "custom_key": {"3221751809": 1}, "alt_custom_key": {"192.8.8.1/24": 1}, "newstr_key": {"red": 1, "green": 2}, "xjustr_key": {"ally": 9}, "newfloat_key": {"22.0": 1}, "xjufloat_key": {"22.5": 1}, "newint_key": {"7": 1}, "newbool_key": {"false": 1}, "any_key": {"8": 1, "fred": 2, "null": 3, "7.6": 4, "true": 5}});

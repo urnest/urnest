@@ -14,6 +14,7 @@
 //
 
 /// <reference path="../xju/xn.ts"/>
+/// <reference path="../xju/assert.ts"/>
 /// <reference path="../xju.ts"/>
 
 namespace xju {
@@ -103,10 +104,11 @@ namespace xju {
       };
     }
     export function asInstanceOfStringPattern(typeName: string, pattern: RegExp): AsInstance {
+      const asString=asInstanceOfString('string');
       return asInstanceInContext({
         typeName,
         f: (x: any): ApplyDefaults => {
-          asInstanceOfString(x);
+          asString.f(x);
           if (pattern.exec(x)===null) throw new Error(`${xju.format_(x)} is not a string with pattern ${pattern}`);
           return applyNoDefaults;
         }
@@ -228,8 +230,7 @@ namespace xju {
     export const isKeyOfNull: IsKey = (x:any) => {
       return x == 'null';
     }
-    export function asInstanceOfNull(): AsInstance {
-      return asInstanceInContext({
+    export const asInstanceOfNull = asInstanceInContext({
         typeName: "null",
         f: (x: any): ApplyDefaults => {
           if (x !== null) {
@@ -238,9 +239,7 @@ namespace xju {
           return applyNoDefaults;
         }
       });
-    }
-    export function asKeyOfNull(): AsKey {
-      return asKeyInContext({
+    export const asKeyOfNull = asKeyInContext({
         typeName: "null",
         f: (x: any) => {
           if (typeof x !== 'string') {
@@ -251,12 +250,11 @@ namespace xju {
           }
         }
       });
-    }
 
     export function isInstanceOfLiteral(literalValue: any): IsInstance {
       return (x:any) => {
         try {
-          xju.assertEqual(x, literalValue);
+          xju.assert.assertEqual(x, literalValue);
           return applyNoDefaults;
         }
         catch (e:any) {
@@ -285,7 +283,7 @@ namespace xju {
       return asInstanceInContext({
         typeName,
         f: (x: any): ApplyDefaults => {
-          xju.assertEqual(x, literalValue);
+          xju.assert.assertEqual(x, literalValue);
           return applyNoDefaults;
         }
       });
@@ -299,11 +297,11 @@ namespace xju {
             throw new Error(`${format_(x)} is not a string`);
           }
           if (typeof literalValue === 'string') {
-            xju.assertEqual(x, literalValue);
+            xju.assert.assertEqual(x, literalValue);
           }
           else{
             try{
-              xju.assertEqual(JSON.parse(x), literalValue);
+              xju.assert.assertEqual(JSON.parse(x), literalValue);
             }
             catch(e){
               throw new Error(`${xju.format_(x)} is not the JSON representation of ${literalValue}`);
@@ -458,7 +456,7 @@ namespace xju {
               es.push(e);
             }
           }
-          throw new Error(es.map( (error) => `${error}`).join(' and '));
+          throw new Error(es.map( (error) => `${error}`.slice('Error: '.length)).join(' and '));
         }
       });
     }
@@ -476,7 +474,7 @@ namespace xju {
               es.push(e);
             }
           }
-          throw new Error(es.map( (error) => `${error}`).join(' and '));
+          throw new Error(es.map( (error) => `${error}`.slice('Error: '.length)).join(' and '));
         }
       });
     }
@@ -484,16 +482,19 @@ namespace xju {
     // dict
     export function isInstanceOfDict(
       isKey: IsKey,
-      isValue: IsInstanceOf): IsInstance {
+      isValue: IsInstance): IsInstance {
       return (x:any) => {
-        if (!xju.isObject(x)) return false;
-        if (Array.isArray(x)) return false;
+        if (!xju.isNonArrayObject(x)) return false;
         const defaulters: Array<ApplyDefaults> = [];
         for(const key in x) {
           if (x.hasOwnProperty(key)) {
-            if (!isKey(key)) return false;
-            const r = isInstance(x[key as keyof typeof x]);
-            if (r===false) return false;
+            if (!isKey(key)) {
+              return false;
+            }
+            const r = isValue(x[key as keyof typeof x]);
+            if (r===false) {
+              return false;
+            }
             defaulters.push(r);
           }
         }          
@@ -507,21 +508,18 @@ namespace xju {
     }
     export function asInstanceOfDict(
       asKey: AsKey,
-      asValue: AsInstanceOf
+      asValue: AsInstance
     ): AsInstance {
       return asInstanceInContext({
-        typeName: `{ [key ${asKey.typename}] : ${asValue.typeName} }`,
+        typeName: `{ [key ${asKey.typeName}] : ${asValue.typeName} }`,
         f: (x: any): ApplyDefaults => {
-          if (!xju.isObject(x)) {
-            throw new Error(`not an object it is a ${typeof x}`);
-          }
-          if (Array.isArray(x)) {
-            throw new Error('not an object it is an array');
+          if (!xju.isNonArrayObject(x)) {
+            throw new Error(`${xju.format_(x)} is not a non-array object`);
           }
           const defaulters: Array<ApplyDefaults> = [];
           for(const key in x){
             try {
-              asKey(key);
+              asKey.f(key);
               if (x.hasOwnProperty(key)) {
                 defaulters.push(asValue.f(x[key as keyof typeof x]));
               }
@@ -542,18 +540,14 @@ namespace xju {
 
     // dict[any,any]
     export const isInstanceOfAnyDict = (x:any) => {
-      if (!xju.isObject(x)) return false;
-      if (Array.isArray(x)) return false;
+      if (!xju.isNonArrayObject(x)) return false;
       return applyNoDefaults;
     };
     export const asInstanceOfAnyDict = asInstanceInContext({
       typeName: `{ [key any] : any }`,
       f: (x: any): ApplyDefaults => {
-        if (!xju.isObject(x)) {
-          throw new Error(`not an object it is a ${typeof x}`);
-        }
-        if (Array.isArray(x)) {
-          throw new Error('not an object it is an array');
+        if (!xju.isNonArrayObject(x)) {
+          throw new Error(`${xju.format_(x)} is not a non-array object`);
         }
         return applyNoDefaults;
       }
@@ -617,8 +611,7 @@ namespace xju {
       }>
     ): IsInstance {
       return (x:any) => {
-        if (!xju.isObject(x)) return false;
-        if (Array.isArray(x)) return false;
+        if (!xju.isNonArrayObject(x)) return false;
         const defaulters: Array<ApplyDefaults> = [];
         for(const {propertyName, isInstance, defaultValue} of items) {
           if (x.hasOwnProperty(propertyName)) {
@@ -656,11 +649,8 @@ namespace xju {
       return asInstanceInContext({
         typeName: `${className}`,
         f: (x: any): ApplyDefaults => {
-          if (!xju.isObject(x)) {
-            throw new Error(`not an object it is a ${typeof x}`);
-          }
-          if (Array.isArray(x)) {
-            throw new Error('not an object it is an array');
+          if (!xju.isNonArrayObject(x)) {
+            throw new Error(`${xju.format_(x)} is not a non-array object`);
           }
           const defaulters: Array<ApplyDefaults> = [];
           items.forEach( ({propertyName, asInstance, defaultValue}) => {

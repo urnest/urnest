@@ -3,14 +3,17 @@ d=$(cd $(dirname "$0") && pwd)
 
 js=$1;shift
 js_flags=$1;shift;
+params=$1;shift;
 
 cmd="$ODIN_NODE_JS --test --experimental-test-coverage"
 if [ -n "$js_flags" ]; then cmd="$cmd $(cat $js_flags)"; fi
+cmd="$cmd $js"
+if [ -n "$params" ]; then cmd="$cmd $(cat $params)"; fi
 
 verbose(){
   test -z "$ODINVERBOSE"||echo "$@"
 }
-verbose "$cmd $js"
+verbose "$cmd"
 (
 export PATH="$ODIN_NODE_JS_PATH"
 if ! which "$ODIN_NODE_JS" >/dev/null
@@ -19,7 +22,7 @@ then
   false
 fi &&
 
-if x=$(NODE_V8_COVERAGE=. $cmd $js)
+if x=$(NODE_V8_COVERAGE=. $cmd)
 then
   echo "$x" | grep "/$(basename $js) " | (
     read a b c d e f g h i lines_not_covered

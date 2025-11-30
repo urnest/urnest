@@ -30,7 +30,6 @@ from xju.json_codec import (
     codec,
     JsonType,
     AnyJsonCodecImpl,
-    SelfCodecImpl,
     encode_attr_as,
     TypeScriptSourceCode,
     TypeScriptNamespace,

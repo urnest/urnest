@@ -36,7 +36,7 @@ for i, c in enumerate(range(ord('0'),ord('9')+1)):
     b64_vocab[c]=52+i
     pass
 b64_vocab[ord('+')]=62
-b64_vocab[ord('/')]=62
+b64_vocab[ord('/')]=63
 
 def parse_val(s: str) -> tuple[int, str]:
     rem = s[:]
@@ -85,19 +85,23 @@ def read_source_map(path: Path) -> tuple[list[Path],SourceMap]:
     data=json.loads(path.read_text())
     source_root=Path(data['sourceRoot'])
     source_list=list(data["sources"])
-    lines=[ [parse_vql(s) for s in line.split(',') if s] for line in list(data['mappings'].split(';')) ]
+    lines=[ [(s, parse_vql(s)) for s in line.split(',') if s] for line in list(data['mappings'].split(';')) ]
     
     current_source=0
     current_line_index=0
     result:SourceMap=SourceMap()
     for (i, line) in enumerate(lines):
-        for seg, vql in enumerate(line):
+        for seg, s_vql in enumerate(line):
+            s, vql = s_vql
             match vql:
                 case SourceCol():
                     current_source += vql.rel_source_index
                     current_line_index = current_line_index + vql.rel_line
-                    result.setdefault(LineNumber(i+1), []).append(
-                        Mapped(path=source_root/source_list[current_source],line=LineNumber(current_line_index+1)))
+                    mapped=Mapped(path=source_root/source_list[current_source],
+                                  line=LineNumber(current_line_index+1))
+                    #print(f"{s} -> {vql}")
+                    #print(f"{i+1} -> {mapped.path}:{mapped.line}")
+                    result.setdefault(LineNumber(i+1), []).append(mapped)
                 case None:
                     pass
             pass

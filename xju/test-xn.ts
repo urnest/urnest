@@ -13,7 +13,7 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
 
-/// <reference path="../xju.ts"/>
+/// <reference path="../xju/assert.ts"/>
 /// <reference path="../xju/xn.ts"/>
 
-xju.assertEqual(`${xju.xn.inContext("open file 'fred.txt'", new Error("permission denied"))}`, 'Error: failed to open file \'fred.txt\' because permission denied');
+xju.assert.assertEqual(`${xju.xn.inContext("open file 'fred.txt'", new Error("permission denied"))}`, 'Error: failed to open file \'fred.txt\' because permission denied');

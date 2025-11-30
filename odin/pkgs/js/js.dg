@@ -16,4 +16,4 @@
 $ODIN_NODE_JS 'name of node.js executable' = 'node';
 $ODIN_NODE_JS_PATH 'path to set when running node.js ($ODIN_NODE_JS)' = '/usr/bin:/bin';
 
-EXEC (node.js.cov.sh) (:js) (+js_flags) => (:node.js.cov);
+EXEC (node.js.cov.sh) (:js) (+js_flags) (+cmd :ls) NEEDS (+cmd) (+need) => (:node.js.cov);

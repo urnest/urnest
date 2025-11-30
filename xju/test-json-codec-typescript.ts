@@ -1,157 +1,32 @@
-export {};
+// Copyright (c) 2025 Trevor Taylor
+// 
+// Permission to use, copy, modify, and/or distribute this software for
+// any purpose with or without fee is hereby granted, provided that all
+// copyright notices and this permission notice appear in all copies.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+//
 
-import {
-  isInstanceOfEncodableData,
-  asInstanceOfEncodableKeyTypes,
-  isInstanceOfEncodableKeyTypes,
-  asInstanceOfLias,
-  isInstanceOfLias,
-  asInstanceOfLiasee,
-  isInstanceOfLiasee,
-  asInstanceOfLiaser,
-  isInstanceOfLiaser,
-  asInstanceOfEncodableData,
-  asInstanceOfSurname,
-  isInstanceOfOr,
-  asInstanceOfOr,
-  isInstanceOfAnd,
-  asInstanceOfAnd,
-  xju,
-} from "./json_codec_typescript_test.js";
-
-function str(x:any):string { return `${x}`; }
-function isObject(x:any):x is object { return x !== null && typeof(x) === 'object'; }
-function assert_not_equal<T>(x:T, y:T){
-    try{
-        xju.ts.assertEqual(x,y);
-    }
-    catch(e){
-        return;
-    }
-    throw new Error(`${format_(x)} == ${format_(y)}`);
-}
-function format_<T>(a:T): string {
-    if (Array.isArray(a)) return format_array(a);
-    if (isObject(a)) return format_object(a);
-    return JSON.stringify(a);
-}
-function format_array<T>(a:Array<T>): string {
-    if(a.length==0) return "[]";
-    if(a.length==1) return `[${format_(a[0])}]`;
-    var result=`${format_(a[0])}`;
-    for(var i=1;i!=a.length;++i) result=result+`,${format_(a[i])}`;
-    return `[${result}]`;
-}
-function format_object<T>(a:T): string {
-    var result="{";
-    for(const k in a) result=result+` ${k}:${format_(a[k])},`;
-    return result+"}";
-}
-
-function assert_arrays_equal<T>(x:Array<T>, y:Array<T>){
-    try{
-        try{
-            xju.ts.assertEqual(x.length, y.length);
-        }
-        catch(e:any){
-            throw new Error(`arrays of different length because ${e}`);
-        }
-        var i;
-        for(i=0; i!=x.length; ++i){
-            try{
-                xju.ts.assertEqual<T>(x[i],y[i]);
-            }
-            catch(e:any){
-                throw new Error(`array element ${i} ${format_(x[i])} != ${format_(y[i])}`);
-            }
-        }
-    }
-    catch(e:any){
-        throw new Error(`array ${format_(x)} != array ${format_(y)} because ${e}`);
-    }
-}
-function assert_objects_equal(x:object, y:object){
-    try{
-        var xKeys=new Array<keyof object>();
-        var yKeys=new Array<keyof object>();
-        for(const k in x){if (x.hasOwnProperty(k)) xKeys.push(k as keyof object);}
-        for(const k in y){if (y.hasOwnProperty(k)) yKeys.push(k as keyof object);}
-        assert_arrays_equal(xKeys,yKeys);
-        for(var i=0; i!=xKeys.length; ++i){
-            const k = xKeys[i];
-            try{
-                xju.ts.assertEqual(x[k],y[k]);
-            }
-            catch(e){
-                throw new Error(`property ${k} is not equal because ${e}`);
-            }
-        }
-    }
-    catch(e){
-        throw new Error(`object ${format_(x)} != object ${format_(y)} because ${e}`);
-    }
-}
-function assert_x_contains_y(x:string, y:string){
-    if (x.indexOf(y)==-1){
-        throw new Error(`"${x}" does not contain "${y}"`)
-    }
-}
-function assert_true(x:boolean){
-    if (!x){
-        throw new Error(`"${x}" is false, expected true`);
-    }
-}
-function assert_false(x:boolean){
-    if (x){
-        throw new Error(`"${x}" is true, expected false`);
-    }
-}
-function assert_never_reached(){
-   throw new Error(`should not be here`);
-}
-
+/// <reference path="../xju/assert.ts"/>
+/// <reference path="../xju/json_codec_typescript_test.ts"/>
 
 //encodableData
 (() => {
-    const good = () => ({
-        an_int: 7,
-        a_float: 9.2,
-        a_str: 'fred',
-        a_new_int: 22,
-        an_xju_int: 88,
-        a_new_float: 2.2,
-        an_xju_float: 18.2,
-        a_new_str: 'red',
-        an_xju_str: "ally",
-        a_null: null,
-        a_boolean: true,
-        a_union: 'walker',
-        a_list: [1,2,3],
-        any_list: [1,null,'a'],
-        a_set: [4,5,6],
-        any_set: [null, 2],
-        a_frozen_set: [7],
-        any_frozen_set: [2, 4.6], // python reorders
-        some_bytes: [10,11,12],
-        a_tuple: [8, 'jock'] as [number, string],
-        a_literal_str: 'mai',
-        a_literal_int: 7,
-        a_literal_bool: true,
-        a_class: {first_name:"fran",middle_names:["jan"],last_name:"lan",class:"Upper"},
-        a_dont_encode:{y:'yyy'},
-        fred_7_false:false,
-        a_recurse_self:{defs:{}},
-        a_timestamp:45000,
-        an_enum:'fred',
-        a_mixed_in_enum:{k:2,v:'jock'},
-        a_recursive:{"a": [{"o": ["1","2",[]]},"3", [{ "a": ["4","6",[]] }]]},
-        an_enum_value:"fred",
-        a_custom_encoded:2975337473,
-        another_custom_encoded:"177.88.12.0/22"
-    });
+    const good = good_encodable_data;
 
-    xju.ts.assertEqual(asInstanceOfEncodableData({"an_int": 7, "a_float": 9.2, "a_str": "fred", "a_new_int": 22, "an_xju_int": 88, "a_new_float": 2.2, "an_xju_float": 18.2, "a_new_str": "red", "an_xju_str": "ally", "a_null": null, "a_boolean": true, "a_union": "walker", "a_list": [1, 2, 3], "any_list": [1, null, "a"], "a_set": [4, 5, 6], "any_set": [null, 2], "a_frozen_set": [7], "any_frozen_set": [2, 4.6], "some_bytes": [10, 11, 12], "a_tuple": [8, "jock"], "a_literal_str": "mai", "a_literal_int": 7, "a_literal_bool": true, "a_class": {"first_name": "fran", "middle_names": ["jan"], "last_name": "lan", "class": "Upper"}, "a_dont_encode": {"y": "yyy"}, "fred_7_false": false, "a_recurse_self": {"defs": {}}, "a_timestamp": 45000.0, "an_enum": "fred", "a_mixed_in_enum": {"k": 2, "v": "jock"}, "a_recursive": {"a": [{"o": ["1", "2", []]}, "3", [{"a": ["4", "6", []]}]]}, "an_enum_value": "fred", "a_custom_encoded": 2975337473, "another_custom_encoded": "177.88.12.0/22"}) as object, good());
-    xju.ts.assertEqual(isInstanceOfEncodableData({"an_int": 7, "a_float": 9.2, "a_str": "fred", "a_new_int": 22, "an_xju_int": 88, "a_new_float": 2.2, "an_xju_float": 18.2, "a_new_str": "red", "an_xju_str": "ally", "a_null": null, "a_boolean": true, "a_union": "walker", "a_list": [1, 2, 3], "any_list": [1, null, "a"], "a_set": [4, 5, 6], "any_set": [null, 2], "a_frozen_set": [7], "any_frozen_set": [2, 4.6], "some_bytes": [10, 11, 12], "a_tuple": [8, "jock"], "a_literal_str": "mai", "a_literal_int": 7, "a_literal_bool": true, "a_class": {"first_name": "fran", "middle_names": ["jan"], "last_name": "lan", "class": "Upper"}, "a_dont_encode": {"y": "yyy"}, "fred_7_false": false, "a_recurse_self": {"defs": {}}, "a_timestamp": 45000.0, "an_enum": "fred", "a_mixed_in_enum": {"k": 2, "v": "jock"}, "a_recursive": {"a": [{"o": ["1", "2", []]}, "3", [{"a": ["4", "6", []]}]]}, "an_enum_value": "fred", "a_custom_encoded": 2975337473, "another_custom_encoded": "177.88.12.0/22"}), true);
+    xju.assert.assertEqual(asInstanceOfEncodableData({"an_int": 7, "a_float": 9.2, "a_str": "fred", "a_new_int": 22, "an_xju_int": 88, "a_new_float": 2.2, "an_xju_float": 18.2, "a_new_str": "red", "an_xju_str": "ally", "a_null": null, "a_boolean": true, "a_union": "walker", "a_list": [1, 2, 3], "any_list": [1, null, "a"], "a_set": [4, 5, 6], "any_set": [null, 2], "a_frozen_set": [7], "any_frozen_set": [2, 4.6], "some_bytes": [10, 11, 12], "a_tuple": [8, "jock"], "a_literal_str": "mai", "a_literal_int": 7, "a_literal_bool": true, "a_class": {"first_name": "fran", "middle_names": ["jan"], "last_name": "lan", "class": "Upper"}, "a_dont_encode": {"y": "yyy"}, "fred_7_false": false, "a_recurse_self": {"defs": {}}, "a_timestamp": 45000.0, "an_enum": "fred", "a_mixed_in_enum": {"k": 2, "v": "jock"}, "a_recursive": {"a": [{"o": ["1", "2", ["7"]]}, "3", [{"a": ["4", "6", ["8"]]}]]}, "an_enum_value": "fred", "a_json": 9, "a_custom_encoded": 2975337473, "another_custom_encoded": "177.88.12.0/22", "non_key_custom_encoded": 3}) as object, good());
+    xju.assert.assertEqual(isInstanceOfEncodableData({"an_int": 7, "a_float": 9.2, "a_str": "fred", "a_new_int": 22, "an_xju_int": 88, "a_new_float": 2.2, "an_xju_float": 18.2, "a_new_str": "red", "an_xju_str": "ally", "a_null": null, "a_boolean": true, "a_union": "walker", "a_list": [1, 2, 3], "any_list": [1, null, "a"], "a_set": [4, 5, 6], "any_set": [null, 2], "a_frozen_set": [7], "any_frozen_set": [2, 4.6], "some_bytes": [10, 11, 12], "a_tuple": [8, "jock"], "a_literal_str": "mai", "a_literal_int": 7, "a_literal_bool": true, "a_class": {"first_name": "fran", "middle_names": ["jan"], "last_name": "lan", "class": "Upper"}, "a_dont_encode": {"y": "yyy"}, "fred_7_false": false, "a_recurse_self": {"defs": {}}, "a_timestamp": 45000.0, "an_enum": "fred", "a_mixed_in_enum": {"k": 2, "v": "jock"}, "a_recursive": {"a": [{"o": ["1", "2", ["7"]]}, "3", [{"a": ["4", "6", ["8"]]}]]}, "an_enum_value": "fred", "a_json": 9, "a_custom_encoded": 2975337473, "another_custom_encoded": "177.88.12.0/22", "non_key_custom_encoded": 3}), true);
+
+    xju.assert.assertEqual(asInstanceOfEncodableData({"an_int": 7, "a_float": 9.2, "a_new_int": 22, "an_xju_int": 88, "a_new_float": 2.2, "an_xju_float": 18.2, "a_new_str": "red", "an_xju_str": "ally", "a_null": null, "a_boolean": true, "a_union": "walker", "a_list": [1, 2, 3], "any_list": [1, null, "a"], "a_set": [4, 5, 6], "any_set": [null, 2], "a_frozen_set": [7], "any_frozen_set": [2, 4.6], "some_bytes": [10, 11, 12], "a_tuple": [8, "jock"], "a_literal_str": "mai", "a_literal_int": 7, "a_literal_bool": true, "a_class": {"first_name": "fran", "middle_names": ["jan"], "last_name": "lan", "class": "Upper"}, "a_dont_encode": {"y": "yyy"}, "fred_7_false": false, "a_recurse_self": {"defs": {}}, "a_timestamp": 45000.0, "an_enum": "fred", "a_mixed_in_enum": {"k": 2, "v": "jock"}, "a_recursive": {"a": [{"o": ["1", "2", ["7"]]}, "3", [{"a": ["4", "6", ["8"]]}]]}, "an_enum_value": "fred", "a_json": 9, "a_custom_encoded": 2975337473, "another_custom_encoded": "177.88.12.0/22", "non_key_custom_encoded": 3}) as object,{
+      ...good(), a_str: "a_str_default"
+    });
+    xju.assert.assertEqual(isInstanceOfEncodableData({"an_int": 7, "a_float": 9.2, "a_new_int": 22, "an_xju_int": 88, "a_new_float": 2.2, "an_xju_float": 18.2, "a_new_str": "red", "an_xju_str": "ally", "a_null": null, "a_boolean": true, "a_union": "walker", "a_list": [1, 2, 3], "any_list": [1, null, "a"], "a_set": [4, 5, 6], "any_set": [null, 2], "a_frozen_set": [7], "any_frozen_set": [2, 4.6], "some_bytes": [10, 11, 12], "a_tuple": [8, "jock"], "a_literal_str": "mai", "a_literal_int": 7, "a_literal_bool": true, "a_class": {"first_name": "fran", "middle_names": ["jan"], "last_name": "lan", "class": "Upper"}, "a_dont_encode": {"y": "yyy"}, "fred_7_false": false, "a_recurse_self": {"defs": {}}, "a_timestamp": 45000.0, "an_enum": "fred", "a_mixed_in_enum": {"k": 2, "v": "jock"}, "a_recursive": {"a": [{"o": ["1", "2", ["7"]]}, "3", [{"a": ["4", "6", ["8"]]}]]}, "an_enum_value": "fred", "a_json": 9, "a_custom_encoded": 2975337473, "another_custom_encoded": "177.88.12.0/22", "non_key_custom_encoded": 3}), true);
 
     const errors:Array<string> = [];
     try {
@@ -159,11 +34,11 @@ function assert_never_reached(){
             ...good(),
             an_int: 7.6
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('an_int');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'Error: { an_int:7.6, a_float:9.2, a_str:"fred", a_new_int:22, an_xju_int:88, a_new_float:2.2, an_xju_float:18.2, a_new_str:"red", an_xju_str:"ally", a_null:null, a_boolean:true, a_union:"walker", a_list:[1,2,3], any_list:[1,null,"a"], a_set:[4,5,6], any_set:[null,2], a_frozen_set:[7], any_frozen_set:[2,4.6], some_bytes:[10,11,12], a_tuple:[8,"jock"], a_literal_str:"mai", a_literal_int:7, a_literal_bool:true, a_class:{ first_name:"fran", middle_names:["jan"], last_name:"lan", class:"Upper" }, a_dont_encode:{ y:"yyy" }, fred_7_false:false, a_recurse_self:{ defs:{ } }, a_timestamp:45000, an_enum:"fred", a_mixed_in_enum:{ k:2, v:"jock" }, a_recursive:{ a:[{ o:["1","2",[]] },"3",[{ a:["4","6",[]] }]] }, an_enum_value:"fred", a_custom_encoded:2975337473, another_custom_encoded:"177.88.12.0/22" }');
+            xju.assert.assertXcontainsY(xju.str(e), 'Error: failed to verify { an_int:7.6, a_float:9.2, a_str:\"fred\", a_new_int:22, an_xju_int:88, a_new_float:2.2, an_xju_float:18.2, a_new_str:\"red\", an_xju_str:\"ally\", a_null:null, a_boolean:true, a_union:\"walker\", a_list:[1,2,3], any_list:[1,null,\"a\"], a_set:[4,5,6], any_set:[null,2], a_frozen_set:[7], any_frozen_set:[2,4.6], some_bytes:[10,11,12], a_tuple:[8,\"jock\"], a_literal_str:\"mai\", a_literal_int:7, a_literal_bool:true, a_class:{ first_name:\"fran\", middle_names:[\"jan\"], last_name:\"lan\", class:\"Upper\" }, a_dont_encode:{ y:\"yyy\" }, fred_7_false:false, a_recurse_self:{ defs:{ } }, a_timestamp:45000, an_enum:\"fred\", a_mixed_in_enum:{ k:2, v:\"jock\" }, a_recursive:{ a:[{ o:[\"1\",\"2\",[\"7\"]] },\"3\",[{ a:[\"4\",\"6\",[\"8\"]] }]] }, an_enum_value:\"fred\", a_json:9, a_custom_encoded:2975337473, another_custom_encoded:\"177.88.12.0/22\", non_key_custom_encoded:3 } is a EncodableData because failed to validate property an_int because failed to verify 7.6 is a int because 7.6 is not a whole number');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -174,11 +49,11 @@ function assert_never_reached(){
             ...good(),
             a_float: null
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('a_float');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute a_float is invalid because Error: null is not a number it is a object');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_float because failed to verify null is a float because null is a object not a number');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -189,11 +64,11 @@ function assert_never_reached(){
             ...good(),
             a_str: 77
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('a_str');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'is not a EncodableData because Error: attribute a_str is invalid because Error: 77 is not a string it is a number');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_str because failed to verify 77 is a string because 77 is a number not a string');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -204,11 +79,11 @@ function assert_never_reached(){
             ...good(),
             a_new_int: []
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('a_new_int');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'is not a EncodableData because Error: attribute a_new_int is invalid because Error: [] is not a number it is a object');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_new_int because failed to verify [] is a int because [] is a object not a number');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -219,11 +94,11 @@ function assert_never_reached(){
             ...good(),
             an_xju_int: []
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('an_xju_int');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute an_xju_int is invalid because Error: [] is not a xju.misc.ByteCount i.e. a number, it is a object');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property an_xju_int because failed to verify [] is a ByteCount because [] is a object not a number');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -234,11 +109,11 @@ function assert_never_reached(){
             ...good(),
             a_new_float: []
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('a_new_float');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'is not a EncodableData because Error: attribute a_new_float is invalid because Error: [] is not a number it is a object');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_new_float because failed to verify [] is a float because [] is a object not a number');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -249,11 +124,11 @@ function assert_never_reached(){
             ...good(),
             an_xju_float: []
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('an_xju_float');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute an_xju_float is invalid because Error: [] is not a Metres i.e. a number, it is a object');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property an_xju_float because failed to verify [] is a Metres because [] is a object not a number');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -264,11 +139,11 @@ function assert_never_reached(){
             ...good(),
             a_new_str: { }
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('a_new_str');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'is not a EncodableData because Error: attribute a_new_str is invalid because Error: { } is not a string it is a object');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_new_str because failed to verify { } is a string because { } is a object not a string');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -279,11 +154,11 @@ function assert_never_reached(){
             ...good(),
             an_xju_str: { }
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('an_xju_str');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute an_xju_str is invalid because Error: { } is not a xju.json_codec.TypeScriptUQN i.e. a string, it is a object');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property an_xju_str because failed to verify { } is a TypeScriptUQN because { } is a object not a string');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -294,11 +169,11 @@ function assert_never_reached(){
             ...good(),
             a_null: { }
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('a_null');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'is not a EncodableData because Error: attribute a_null is invalid because Error: { } is not null it is a object');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_null because failed to verify { } is a null because { } is not null');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -309,11 +184,11 @@ function assert_never_reached(){
             ...good(),
             a_boolean: 99
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('a_boolean');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'is not a EncodableData because Error: attribute a_boolean is invalid because Error: 99 is not a boolean it is a number');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_boolean because failed to verify 99 is a bool because 99 is a number not a boolean');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -324,11 +199,11 @@ function assert_never_reached(){
             ...good(),
             a_union: 99
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('a_union');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute a_union is invalid because Error: object 99 is not a FullName|Surname|null because Error: 99 is not a FullName because Error: 99 is not an object it is a number and 99 is not a Surname i.e. a string, it is a number and 99 is not null it is a number');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_union because failed to verify 99 is a FullName|Surname|null because failed to verify 99 is a FullName because 99 is not a non-array object and failed to verify 99 is a Surname because failed to verify 99 is a string because 99 is a number not a string and failed to verify 99 is a null because 99 is not null');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -339,11 +214,11 @@ function assert_never_reached(){
             ...good(),
             a_list: [null]
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('a_list');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'is not a EncodableData because Error: attribute a_list is invalid because Error: [null] is not a Array<number> because Error: item at index 0 is invalid because Error: null is not a number it is a object');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_list because failed to verify [null] is a Array<int> because failed to validate item 0 because failed to verify null is a int because null is a object not a number');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -354,11 +229,11 @@ function assert_never_reached(){
             ...good(),
             any_list: null
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('any_list');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute any_list is invalid because Error: null is not an Array it is a object');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property any_list because failed to verify null is a Array because null is not an array it is a object');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -369,11 +244,11 @@ function assert_never_reached(){
             ...good(),
             a_set: [null]
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('a_set');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'is not a EncodableData because Error: attribute a_set is invalid because Error: [null] is not a Array<number> /* with unique elements */ because Error: item at index 0 is invalid because Error: null is not a number it is a object');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_set because failed to verify [null] is a Array<int> because failed to validate item 0 because failed to verify null is a int because null is a object not a number');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -384,11 +259,11 @@ function assert_never_reached(){
             ...good(),
             any_set: { }
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('any_set');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute any_set is invalid because Error: [object Object] is not an Array<any> /* with unique elements */ it is a object');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property any_set because failed to verify { } is a Array because { } is not an array it is a object');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -399,11 +274,11 @@ function assert_never_reached(){
             ...good(),
             a_frozen_set: [null]
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('a_frozen_set');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'is not a EncodableData because Error: attribute a_frozen_set is invalid because Error: [null] is not a Array<number> /* with unique elements */ because Error: null is not a number it is a object');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_frozen_set because failed to verify [null] is a Array<int> because failed to validate item 0 because failed to verify null is a int because null is a object not a number');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -414,11 +289,11 @@ function assert_never_reached(){
             ...good(),
             a_frozen_set: [null]
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('a_frozen_set2');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute a_frozen_set is invalid because Error: [null] is not a Array<number> /* with unique elements */ because Error: null is not a number it is a object');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_frozen_set because failed to verify [null] is a Array<int> because failed to validate item 0 because failed to verify null is a int because null is a object not a number');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -429,11 +304,11 @@ function assert_never_reached(){
             ...good(),
             some_bytes: [3000]
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('some_bytes');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'is not a EncodableData because Error: attribute some_bytes is invalid because Error: 3000 at index 0 is not in range 0..255');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property some_bytes because failed to verify [3000] is a bytes because failed to validate item 0 because 3000 is not in range 0..255');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -444,11 +319,11 @@ function assert_never_reached(){
             ...good(),
             a_tuple: [3000,99]
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('a_tuple');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'is not a EncodableData because Error: attribute a_tuple is invalid because Error: [3000,99] is not a [number,string] because Error: 99 is not a string it is a number');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_tuple because failed to verify [3000,99] is a [int,string] because failed to validate item 1 because failed to verify 99 is a string because 99 is a number not a string');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -459,11 +334,11 @@ function assert_never_reached(){
             ...good(),
             a_literal_str: "kai"
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('a_literal_str');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute a_literal_str is invalid because Error: object \"kai\" is not a \"ann\"|\"mai\" because Error: the string \"kai\" is not the string \"ann\" and the string \"kai\" is not the string \"mai\"');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_literal_str because failed to verify \"kai\" is a \"ann\"|\"mai\" because failed to verify \"kai\" is a \"ann\" because \"kai\" != \"ann\" and failed to verify \"kai\" is a \"mai\" because \"kai\" != \"mai\"');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -474,11 +349,11 @@ function assert_never_reached(){
             ...good(),
             a_literal_int: 8
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('a_literal_int');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'is not a EncodableData because Error: attribute a_literal_int is invalid because Error: the number 8 is not the number 7');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_literal_int because failed to verify 8 is a 7 because 8 != 7');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -489,11 +364,11 @@ function assert_never_reached(){
             ...good(),
             a_literal_bool: false
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('a_literal_bool');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'is not a EncodableData because Error: attribute a_literal_bool is invalid because Error: the boolean false is not true');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_literal_bool because failed to verify false is a true because false != true');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -504,11 +379,11 @@ function assert_never_reached(){
             ...good(),
             a_class: {first_name:8,middle_names:["jan"],last_name:"lan"}
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('a_class');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute first_name is invalid because Error: 8 is not a string it is a number');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_class because failed to verify { first_name:8, middle_names:[\"jan\"], last_name:\"lan\" } is a FullName because failed to validate property first_name because failed to verify 8 is a string because 8 is a number not a string');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -519,11 +394,11 @@ function assert_never_reached(){
             ...good(),
             fred_7_false:'jan'
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('fred_7_false');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute fred_7_false is invalid because Error: object \"jan\" is not a \"fred\"|7|false because Error: the string \"jan\" is not the string \"fred\" and the string \"jan\" is not the number 7 and the string \"jan\" is not false');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property fred_7_false because failed to verify \"jan\" is a \"fred\"|7|false because failed to verify \"jan\" is a \"fred\" because \"jan\" != \"fred\" and failed to verify \"jan\" is a 7 because \"jan\" != 7 and failed to verify \"jan\" is a false because \"jan\" != false');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -534,11 +409,11 @@ function assert_never_reached(){
             ...good(),
             a_recurse_self:999
         });
-        assert_not_equal(x,x);
+        xju.assert.assertNotEqual(x,x);
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'a_recurse_self is invalid because Error: 999 is not a xju.json_codec.TypeScriptNamespace because Error: 999 is not an object it is a number');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_recurse_self because failed to verify 999 is a xju.json_codec.TypeScriptNamespace because 999 is not a non-array object');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -549,11 +424,11 @@ function assert_never_reached(){
             ...good(),
             a_recurse_self:{ 'defs': 1 }
         });
-        assert_not_equal(x,x);
+        xju.assert.assertNotEqual(x,x);
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute a_recurse_self is invalid because Error: { defs:1 } is not a xju.json_codec.TypeScriptNamespace because Error: attribute defs is invalid because Error: 1 is not a { [key: string /* xju.json_codec.TypeScriptUQN */]: xju.json_codec.TypeScriptSourceCode|xju.json_codec.TypeScriptNamespace } because Error: 1 is not an object it is a number');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_recurse_self because failed to verify { defs:1 } is a xju.json_codec.TypeScriptNamespace because failed to validate property defs because failed to verify 1 is a { [key TypeScriptUQN] : TypeScriptSourceCode|xju.json_codec.TypeScriptNamespace } because 1 is not a non-array object');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -564,11 +439,11 @@ function assert_never_reached(){
             ...good(),
             a_recurse_self:{ 'defs': { 1: null } }
         });
-        assert_not_equal(x,x);
+        xju.assert.assertNotEqual(x,x);
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute defs is invalid because Error: { 1:null } is not a { [key: string /* xju.json_codec.TypeScriptUQN */]: xju.json_codec.TypeScriptSourceCode|xju.json_codec.TypeScriptNamespace } because Error: element \"1\" is invalid because Error: object null is not a xju.json_codec.TypeScriptSourceCode|xju.json_codec.TypeScriptNamespace because Error: null is not a xju.json_codec.TypeScriptSourceCode i.e. a string, it is a object and null is not a xju.json_codec.TypeScriptNamespace because Error: null is not an object it is null');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_recurse_self because failed to verify { defs:{ 1:null } } is a xju.json_codec.TypeScriptNamespace because failed to validate property defs because failed to verify { 1:null } is a { [key TypeScriptUQN] : TypeScriptSourceCode|xju.json_codec.TypeScriptNamespace } because failed to validate property 1 because failed to verify null is a TypeScriptSourceCode|xju.json_codec.TypeScriptNamespace because failed to verify null is a TypeScriptSourceCode because null is a object not a string and failed to verify null is a xju.json_codec.TypeScriptNamespace because null is not a non-array object');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -579,11 +454,11 @@ function assert_never_reached(){
             ...good(),
             a_timestamp:null
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('a_timestamp');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'null is not a xju.time.Timestamp i.e. a number, it is a object');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_timestamp because failed to verify null is a Timestamp because null is a object not a number');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -594,11 +469,11 @@ function assert_never_reached(){
             ...good(),
             an_enum:7
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('an_enum');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute an_enum is invalid because Error: 7 is not a O because Error: 7 != "fred" and 7 != "jock"');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property an_enum because failed to verify 7 is a \"fred\"|\"jock\" because failed to verify 7 is a \"fred\" because 7 != \"fred\" and failed to verify 7 is a \"jock\" because 7 != \"jock\"');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -609,11 +484,11 @@ function assert_never_reached(){
             ...good(),
             a_mixed_in_enum:{k:2,v:'brad'}
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('a_mixed_in_enum');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute a_mixed_in_enum is invalid because Error: { k:2, v:"brad" } is not a MixedEnum because Error: object { k:2, v:"brad" } != object { k:1, v:"fred" } because Error: property k is not equal because Error: 2 != 1 and object { k:2, v:"brad" } != object { k:2, v:"jock" } because Error: property v is not equal because Error: "brad" != "jock"');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_mixed_in_enum because failed to verify { k:2, v:\"brad\" } is a {\"k\":1,\"v\":\"fred\"}|{\"k\":2,\"v\":\"jock\"} because failed to verify { k:2, v:\"brad\" } is a {\"k\":1,\"v\":\"fred\"} because failed to verify object { k:2, v:\"brad\" } == object { k:1, v:\"fred\" } because failed to verify property k equal because 2 != 1 and failed to verify { k:2, v:\"brad\" } is a {\"k\":2,\"v\":\"jock\"} because failed to verify object { k:2, v:\"brad\" } == object { k:2, v:\"jock\" } because failed to verify property v equal because \"brad\" != \"jock\"');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -624,11 +499,11 @@ function assert_never_reached(){
             ...good(),
             an_enum_value:"paul"
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('an_enum_value');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute an_enum_value is invalid because Error: "paul" != "fred"');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property an_enum_value because failed to verify \"paul\" is a \"fred\" because \"paul\" != \"fred\"');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -639,11 +514,11 @@ function assert_never_reached(){
             ...good(),
             a_recursive:[]
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('a_recursive');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute a_recursive is invalid because Error: object [] is not a string|And|Or because Error: [] is not a string it is a object and [] is not a And because Error: [] is an array and [] is not a Or because Error: [] is an array');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_recursive because failed to verify [] is a string|And|Or because failed to verify [] is a string because [] is a object not a string and failed to verify [] is a And because [] is not a non-array object and failed to verify [] is a Or because [] is not a non-array object');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -654,11 +529,11 @@ function assert_never_reached(){
             ...good(),
             a_recursive:{"a": [{"o": ["1","2",[]]},"3"]}
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('a_recursive');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute o is invalid because Error: undefined is not a [string|And|Or,string|And|Or,Array<string|And|Or>] because Error: undefined is not an array it is a undefined');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_recursive because failed to verify { a:[{ o:[\"1\",\"2\",[]] },\"3\"] } is a string|And|Or because failed to verify { a:[{ o:[\"1\",\"2\",[]] },\"3\"] } is a string because { a:[{ o:[\"1\",\"2\",[]] },\"3\"] } is a object not a string and failed to verify { a:[{ o:[\"1\",\"2\",[]] },\"3\"] } is a And because failed to validate property a because failed to verify [{ o:[\"1\",\"2\",[]] },\"3\"] is a [string|And|Or,string|And|Or,Array<string|And|Or>] because length is 2 not 3 and failed to verify { a:[{ o:[\"1\",\"2\",[]] },\"3\"] } is a Or because failed to validate property o because property o is missing');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -669,60 +544,83 @@ function assert_never_reached(){
             ...good(),
             a_recursive:{"a": [{"o": ["1","2",[]]},"3", [{ "a": ["6",[]] }]]}
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('a_recursize');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), '[\"6\",[]] does not have 3 elements (it has 2 elements)');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_recursive because failed to verify { a:[{ o:[\"1\",\"2\",[]] },\"3\",[{ a:[\"6\",[]] }]] } is a string|And|Or because failed to verify { a:[{ o:[\"1\",\"2\",[]] },\"3\",[{ a:[\"6\",[]] }]] } is a string because { a:[{ o:[\"1\",\"2\",[]] },\"3\",[{ a:[\"6\",[]] }]] } is a object not a string and failed to verify { a:[{ o:[\"1\",\"2\",[]] },\"3\",[{ a:[\"6\",[]] }]] } is a And because failed to validate property a because failed to verify [{ o:[\"1\",\"2\",[]] },\"3\",[{ a:[\"6\",[]] }]] is a [string|And|Or,string|And|Or,Array<string|And|Or>] because failed to validate item 2 because failed to verify [{ a:[\"6\",[]] }] is a Array<string|And|Or> because failed to validate item 0 because failed to verify { a:[\"6\",[]] } is a string|And|Or because failed to verify { a:[\"6\",[]] } is a string because { a:[\"6\",[]] } is a object not a string and failed to verify { a:[\"6\",[]] } is a And because failed to validate property a because failed to verify [\"6\",[]] is a [string|And|Or,string|And|Or,Array<string|And|Or>] because length is 2 not 3 and failed to verify { a:[\"6\",[]] } is a Or because failed to validate property o because property o is missing and failed to verify { a:[{ o:[\"1\",\"2\",[]] },\"3\",[{ a:[\"6\",[]] }]] } is a Or because failed to validate property o because property o is missing');
         }
         catch(ee){
             errors.push(`${ee}`);
         }
     }
-    xju.ts.assertEqual(errors, []);
+    try {
+        asInstanceOfEncodableData({
+            ...good(),
+            a_custom_encoded:-1
+        });
+        xju.assert.assertNeverReached('a_custom_encoded');
+    }
+    catch(e){
+        try{
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_custom_encoded because failed to verify -1 is a IpV4Addr because -1 is not in range 0..4294967295');
+        }
+        catch(ee){
+            errors.push(`${ee}`);
+        }
+    }
+    xju.assert.assertEqual(isInstanceOfEncodableData({
+      ...good(),
+      a_custom_encoded:-1
+    }), false);
+    try {
+        asInstanceOfEncodableData({
+            ...good(),
+            another_custom_encoded:-1
+        });
+        xju.assert.assertNeverReached('another_custom_encoded');
+    }
+    catch(e){
+        try{
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property another_custom_encoded because failed to verify -1 is a IpV4AddrWithPrefix because failed to verify -1 is a string because -1 is a number not a string');
+        }
+        catch(ee){
+            errors.push(`${ee}`);
+        }
+    }
+    xju.assert.assertEqual(isInstanceOfEncodableData({
+      ...good(),
+      another_custom_encoded:-1
+    }), false);
+    xju.assert.assertEqual(isInstanceOfEncodableData({
+      ...good(),
+      another_custom_encoded:"1"
+    }), false);
+
+    xju.assert.assertEqual(errors, []);
 
     // misc coverage:
-    xju.ts.assertEqual(asInstanceOfSurname("walker"), "walker");
-    xju.ts.assertEqual(xju.json_codec.asInstanceOfTypeScriptNamespace({ defs:{ "a": "true;" } }), { defs:{ "a": "true;" } });
-    xju.ts.assertEqual(xju.json_codec.isInstanceOfTypeScriptNamespace({ defs:{ "a": "true;" } }), true);
-    xju.ts.assertEqual(xju.json_codec.asInstanceOfTypeScriptSourceCode("true;"), "true;");
-    xju.ts.assertEqual(xju.json_codec.isInstanceOfTypeScriptSourceCode("true;"), true);
-    xju.ts.assertEqual(xju.json_codec.asInstanceOfKeyOfTypeScriptSourceCode("true;"), "true;");
-    xju.ts.assertEqual(xju.json_codec.isInstanceOfKeyOfTypeScriptSourceCode("true;"), true);
-    xju.ts.assertEqual(xju.time.asInstanceOfTimestamp(8.8), 8.8);
-    xju.ts.assertEqual(xju.time.isInstanceOfTimestamp(8.8), true);
-    xju.ts.assertEqual(isInstanceOfOr({"o": ["1","2",[]]}),true);
-    xju.ts.assertEqual(asInstanceOfOr({"o": ["1","2",[]]}),{"o": ["1","2",[]]});
-    xju.ts.assertEqual(isInstanceOfAnd({ "a": ["4","6",[]] }),true);
-    xju.ts.assertEqual(asInstanceOfAnd({ "a": ["4","6",[]] }),{ "a": ["4","6",[]] });
+    xju.assert.assertEqual(asInstanceOfSurname("walker"), "walker");
+    xju.assert.assertEqual(xju.json_codec.asInstanceOfTypeScriptNamespace({ defs:{ "a": "true;" } }), { defs:{ "a": "true;" } });
+    xju.assert.assertEqual(xju.json_codec.isInstanceOfTypeScriptNamespace({ defs:{ "a": "true;" } }), true);
+    xju.assert.assertEqual(xju.json_codec.asInstanceOfTypeScriptSourceCode("true;"), "true;");
+    xju.assert.assertEqual(xju.json_codec.isInstanceOfTypeScriptSourceCode("true;"), true);
+    xju.assert.assertEqual(xju.time.asInstanceOfTimestamp(8.8), 8.8);
+    xju.assert.assertEqual(xju.time.isInstanceOfTimestamp(8.8), true);
+    xju.assert.assertEqual(isInstanceOfOr({"o": ["1","2",[]]}),true);
+    xju.assert.assertEqual(asInstanceOfOr({"o": ["1","2",[]]}),{"o": ["1","2",[]]});
+    xju.assert.assertEqual(isInstanceOfAnd({ "a": ["4","6",[]] }),true);
+    xju.assert.assertEqual(asInstanceOfAnd({ "a": ["4","6",[]] }),{ "a": ["4","6",[]] });
     
 })();
 
 
 //EncodableKeyTypes
 (() => {
-    const good = () => ({
-        str_key:{ fred:3 },
-        int_key:{ 1:4 },
-        more_keys:{ 9:2, null:1, 5.5:3, true:4 },
-        duration_key:{ 77.2:1 },
-        timestamp_key:{ 88.1:1 },
-        non_str_literal_key:{ 10:1, true:2 },
-        str_literal_key:{ "a\n\"nail\"'s tip":3, fred:4, rooster:5 },
-        enum_key:{ fred:1, jock:2 },
-        custom_key:{ 3221751809:1 },
-        alt_custom_key:{ "192.8.8.1/24":1 },
-        newstr_key:{ red:1, green:2 },
-        xjustr_key:{ ally: 9},
-        newfloat_key:{ 22:1 },
-        xjufloat_key:{ 22.5:1 },
-        newint_key:{ 7:1 },
-        newbool_key:{ false:1 },
-        any_key:{ 8:1, fred:2, null:3, 7.6:4, true:5 }
-    });
+    const good = good_encodable_key_types;
 
-    xju.ts.assertEqual(asInstanceOfEncodableKeyTypes({"str_key": {"fred": 3}, "int_key": {"1": 4}, "more_keys": {"null": 1, "9": 2, "5.5": 3, "true": 4}, "duration_key": {"77.2": 1}, "timestamp_key": {"88.1": 1}, "non_str_literal_key": {"10": 1, "true": 2}, "str_literal_key": {"a\n\"nail\"'s tip": 3, "fred": 4, "rooster": 5}, "enum_key": {"fred": 1, "jock": 2}, "custom_key": {"3221751809": 1}, "alt_custom_key": {"192.8.8.1/24": 1}, "newstr_key": {"red": 1, "green": 2}, xjustr_key:{ally: 9}, "newfloat_key": {"22": 1}, xjufloat_key:{ 22.5:1 }, "newint_key": {"7": 1}, "newbool_key": {"false": 1}, "any_key": {"8": 1, "fred": 2, "null": 3, "7.6": 4, "true": 5}}) as object, good());
-    xju.ts.assertEqual(isInstanceOfEncodableKeyTypes(good()), true);
+    xju.assert.assertEqual(asInstanceOfEncodableKeyTypes({"str_key": {"fred": 3}, "int_key": {"1": 4}, "more_keys": {"null": 1, "9": 2, "5.5": 3, "true": 4}, "duration_key": {"77.2": 1}, "timestamp_key": {"88.1": 1}, "non_str_literal_key": {"10": 1, "true": 2}, "str_literal_key": {"a\n\"nail\"'s tip": 3, "fred": 4, "rooster": 5}, "enum_key": {"fred": 1, "jock": 2}, "custom_key": {"3221751809": 1}, "alt_custom_key": {"192.8.8.1/24": 1}, "newstr_key": {"red": 1, "green": 2}, xjustr_key:{ally: 9}, "newfloat_key": {"22.0": 1}, xjufloat_key:{ 22.5:1 }, "newint_key": {"7": 1}, "newbool_key": {"false": 1}, "any_key": {"8": 1, "fred": 2, "null": 3, "7.6": 4, "true": 5}}) as object, good());
+    xju.assert.assertEqual(isInstanceOfEncodableKeyTypes(good()), true);
 
     const errors:Array<string> = [];
     try {
@@ -730,11 +628,11 @@ function assert_never_reached(){
             ...good(),
             str_key:null
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('str_key');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute str_key is invalid because Error: null is not a { [key: string]: number } because Error: null is not an object it is null');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property str_key because failed to verify null is a { [key string] : int } because null is not a non-array object');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -745,11 +643,11 @@ function assert_never_reached(){
             ...good(),
             int_key:null
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('int_key');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'Error: { str_key:{ fred:3 }, int_key:null, more_keys:{ 9:2, null:1, 5.5:3, true:4 }, duration_key:{ 77.2:1 }, timestamp_key:{ 88.1:1 }, non_str_literal_key:{ 10:1, true:2 }, str_literal_key:{ a\n"nail"\'s tip:3, fred:4, rooster:5 }, enum_key:{ fred:1, jock:2 }, custom_key:{ 3221751809:1 }, alt_custom_key:{ 192.8.8.1/24:1 }, newstr_key:{ red:1, green:2 }, xjustr_key:{ ally:9 }, newfloat_key:{ 22:1 }, xjufloat_key:{ 22.5:1 }, newint_key:{ 7:1 }, newbool_key:{ false:1 }, any_key:{ 8:1, fred:2, null:3, 7.6:4, true:5 } } is not a EncodableKeyTypes because Error: attribute int_key is invalid because Error: null is not a { [key: string /* int */]: number } because Error: null is not an object it is null');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property int_key because failed to verify null is a { [key int] : int } because null is not a non-array object');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -760,11 +658,11 @@ function assert_never_reached(){
             ...good(),
             more_keys:null
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('more_keys');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute more_keys is invalid because Error: null is not a { [key: string /* string ** null **|string ** xju.misc.ByteCount **|string ** float **|string ** bool ** */]: number } because Error: null is not an object it is null');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property more_keys because failed to verify null is a { [key null|ByteCount|float|bool] : int } because null is not a non-array object');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -775,11 +673,11 @@ function assert_never_reached(){
             ...good(),
             duration_key:null
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('duration_key');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute duration_key is invalid because Error: null is not a { [key: string /* xju.time.Duration */]: number } because Error: null is not an object it is null');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property duration_key because failed to verify null is a { [key Duration] : int } because null is not a non-array object');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -790,11 +688,11 @@ function assert_never_reached(){
             ...good(),
             timestamp_key:null
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('timestamp_key');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute timestamp_key is invalid because Error: null is not a { [key: string /* xju.time.Timestamp */]: number } because Error: null is not an object it is null');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property timestamp_key because failed to verify null is a { [key Timestamp] : int } because null is not a non-array object');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -805,11 +703,11 @@ function assert_never_reached(){
             ...good(),
             non_str_literal_key:null
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('non_str_literal_key');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), "attribute non_str_literal_key is invalid because Error: null is not a { [key: string /* '10'|'true' */]: number } because Error: null is not an object it is null");
+            xju.assert.assertXcontainsY(xju.str(e), "failed to validate property non_str_literal_key because failed to verify null is a { [key 10|true] : int } because null is not a non-array object");
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -820,11 +718,11 @@ function assert_never_reached(){
             ...good(),
             str_literal_key:null
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('str_literal_key');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute str_literal_key is invalid because Error: null is not a { [key: string /* \"a\n\"nail\"\'s tip\"|O.a|string ** Surname ** */]: number } because Error: null is not an object it is null');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property str_literal_key because failed to verify null is a { [key \"a\\n\\\"nail\\\"\'s tip\"|\"fred\"|Surname] : int } because null is not a non-array object');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -835,11 +733,11 @@ function assert_never_reached(){
             ...good(),
             enum_key:null
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('enum_key');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute enum_key is invalid because Error: null is not a { [key: string /* O */]: number } because Error: null is not an object it is null');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property enum_key because failed to verify null is a { [key \"fred\"|\"jock\"] : int } because null is not a non-array object');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -850,11 +748,11 @@ function assert_never_reached(){
             ...good(),
             custom_key:null
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('custom_key');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute custom_key is invalid because Error: null is not a { [key: string /* number ** IpV4Addr ** */]: number } because Error: null is not an object it is null');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property custom_key because failed to verify null is a { [key IpV4Addr] : int } because null is not a non-array object');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -865,11 +763,11 @@ function assert_never_reached(){
             ...good(),
             alt_custom_key:null
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('alt_custom_key');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute alt_custom_key is invalid because Error: null is not a { [key: string /* string ** IpV4AddrWithPrefix ** */]: number } because Error: null is not an object it is null');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property alt_custom_key because failed to verify null is a { [key IpV4Addr] : int } because null is not a non-array object');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -878,13 +776,32 @@ function assert_never_reached(){
     try {
         asInstanceOfEncodableKeyTypes({
             ...good(),
-            newstr_key:null
+            alt_custom_key:{7:1}
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('alt_custom_key2');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute newstr_key is invalid because Error: null is not a { [key: string]: number } because Error: null is not an object it is null');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property 7 because failed to verify \"7\" is a keyof IpV4Addr because \"7\" does not match /^([0-9]+)[.]([0-9]+)[.]([0-9]+)[.]([0-9]+)[/]([0-9]+)$/');
+        }
+        catch(ee){
+            errors.push(`${ee}`);
+        }
+    }
+    xju.assert.assertEqual(isInstanceOfEncodableKeyTypes({
+      ...good(),
+      alt_custom_key:{7:1}
+    }),false);
+    try {
+        asInstanceOfEncodableKeyTypes({
+            ...good(),
+            newstr_key:null
+        });
+        xju.assert.assertNeverReached('newstr_key');
+    }
+    catch(e){
+        try{
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property newstr_key because failed to verify null is a { [key string] : int } because null is not a non-array object');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -895,11 +812,11 @@ function assert_never_reached(){
             ...good(),
             xjustr_key:null
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('xjustr_key');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute xjustr_key is invalid because Error: null is not a { [key: string /* xju.json_codec.TypeScriptUQN */]: number } because Error: null is not an object it is null');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property xjustr_key because failed to verify null is a { [key TypeScriptUQN] : int } because null is not a non-array object');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -910,11 +827,11 @@ function assert_never_reached(){
             ...good(),
             newfloat_key:null
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('newfloat_key');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute newfloat_key is invalid because Error: null is not a { [key: string /* float */]: number } because Error: null is not an object it is null');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property newfloat_key because failed to verify null is a { [key float] : int } because null is not a non-array object');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -925,11 +842,11 @@ function assert_never_reached(){
             ...good(),
             xjufloat_key:null
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('xjufloat_key');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute xjufloat_key is invalid because Error: null is not a { [key: string /* Metres */]: number } because Error: null is not an object it is null');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property xjufloat_key because failed to verify null is a { [key Metres] : int } because null is not a non-array object');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -940,11 +857,11 @@ function assert_never_reached(){
             ...good(),
             newint_key:null
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('newint_key');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute newint_key is invalid because Error: null is not a { [key: string /* int */]: number } because Error: null is not an object it is null');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property newint_key because failed to verify null is a { [key int] : int } because null is not a non-array object');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -955,11 +872,11 @@ function assert_never_reached(){
             ...good(),
             newbool_key:null
         });
-        assert_never_reached();
+        xju.assert.assertNeverReached('newbool_key');
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute newbool_key is invalid because Error: null is not a { [key: string /* bool */]: number } because Error: null is not an object it is null');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property newbool_key because failed to verify null is a { [key bool] : int } because null is not a non-array object');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -970,17 +887,17 @@ function assert_never_reached(){
             ...good(),
             any_key:null
         });
-        assert_not_equal(x, x);
+        xju.assert.assertNotEqual(x, x);
     }
     catch(e){
         try{
-            assert_x_contains_y(str(e), 'attribute any_key is invalid because Error: null is not a { [key: string]: any } because Error: null is not an object it is null');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property any_key because failed to verify null is a { [key any] : any } because null is not a non-array object');
         }
         catch(ee){
             errors.push(`${ee}`);
         }
     }
-    xju.ts.assertEqual(errors, []);
+    xju.assert.assertEqual(errors, []);
 })();
 
 
@@ -991,75 +908,75 @@ function assert_never_reached(){
     if (typeof y !== 'number') {
         throw new Error(`typeof y is ${typeof y} not number`);
     }
-    xju.ts.assertEqual(y, 8);
-    xju.ts.assertEqual(xju.isInstanceOfNorS(x),true);
+    xju.assert.assertEqual(y, 8);
+    xju.assert.assertEqual(xju.isInstanceOfNorS(x),true);
     x = "fred";
     y = xju.asInstanceOfNorS(x);
-    xju.ts.assertEqual(typeof y, 'string');
-    xju.ts.assertEqual(y, "fred");
+    xju.assert.assertEqual(typeof y, 'string');
+    xju.assert.assertEqual(y, "fred");
     try{
       y = xju.asInstanceOfNorS([]);
-      assert_not_equal(y,y);
+      xju.assert.assertNotEqual(y,y);
     }
     catch(e) {
-      xju.ts.assertEqual(`${e}`, 'Error: object [] is not a number|string because Error: [] is not a number it is a object and [] is not a string it is a object');
+      xju.assert.assertEqual(`${e}`, 'Error: failed to verify [] is a int|string because failed to verify [] is a int because [] is a object not a number and failed to verify [] is a string because [] is a object not a string');
     }
-    xju.ts.assertEqual(xju.isInstanceOfNorS([]),false);
+    xju.assert.assertEqual(xju.isInstanceOfNorS([]),false);
 })();
 //NewInt alias
 (() => {
     var x:any = 8;
     var y:xju.misc.ByteCount = xju.misc.asInstanceOfByteCount(x);
-    xju.ts.assertEqual(y, 8);
+    xju.assert.assertEqual(y, 8);
     if (!xju.misc.isInstanceOfByteCount(x)) {
         throw new Error(`${y} (of type ${typeof y}) is not a xju.misc.ByteCount`);
     }
-    xju.ts.assertEqual(x, 8);
+    xju.assert.assertEqual(x, 8);
 })();
 //NewFloat alias
 (() => {
     var x:any = 8.8;
     var y:xju.time.Duration = xju.time.asInstanceOfDuration(x);
-    xju.ts.assertEqual(y, 8.8);
+    xju.assert.assertEqual(y, 8.8);
     if (!xju.time.isInstanceOfDuration(x)) {
         throw new Error(`${y} (of type ${typeof y}) is not a xju.time.Duration`);
     }
-    xju.ts.assertEqual(x, 8.8);
+    xju.assert.assertEqual(x, 8.8);
 })();
 //NewStr alias
 (() => {
     var x:any = "fred";
     var y:xju.json_codec.TypeScriptUQN = xju.json_codec.asInstanceOfTypeScriptUQN(x);
-    xju.ts.assertEqual(y, "fred");
+    xju.assert.assertEqual(y, "fred");
     if (!xju.json_codec.isInstanceOfTypeScriptUQN(x)) {
         throw new Error(`${y} (of type ${typeof y}) is not a xju.json_codec.TypeScriptUQN`);
     }
-    xju.ts.assertEqual(x, "fred");
+    xju.assert.assertEqual(x, "fred");
 })();
 
 
 //Lias
 (() => {
-    xju.ts.assertEqual(asInstanceOfLias({"x":8}),{x:8});
+    xju.assert.assertEqual(asInstanceOfLias({"x":8}),{x:8});
     isInstanceOfLias({"x":8});
-    xju.ts.assertEqual(asInstanceOfLiasee({"x":8}),{x:8});
+    xju.assert.assertEqual(asInstanceOfLiasee({"x":8}),{x:8});
     isInstanceOfLiasee({"x":8});
     try{
       const y = asInstanceOfLiasee({"x":[]});
-      assert_not_equal(y,y);
+      xju.assert.assertNotEqual(y,y);
     }
     catch(e){
-      xju.ts.assertEqual(`${e}`,'Error: { x:[] } is not a Liasee because Error: attribute x is invalid because Error: [] is not a number it is a object');
+      xju.assert.assertEqual(`${e}`,'Error: failed to verify { x:[] } is a Liasee because failed to validate property x because failed to verify [] is a int because [] is a object not a number');
     }
-    xju.ts.assertEqual(asInstanceOfLiaser({l:{"x":8}}),{l:{x:8}});
-    xju.ts.assertEqual(isInstanceOfLiaser({l:{"x":8}}),true);
-    xju.ts.assertEqual(isInstanceOfLiaser({"x":[]}),false);
+    xju.assert.assertEqual(asInstanceOfLiaser({l:{"x":8}}),{l:{x:8}});
+    xju.assert.assertEqual(isInstanceOfLiaser({l:{"x":8}}),true);
+    xju.assert.assertEqual(isInstanceOfLiaser({"x":[]}),false);
     try{
       const y = asInstanceOfLiaser({l:{"x":[]}});
-      assert_not_equal(y,y);
+      xju.assert.assertNotEqual(y,y);
     }
     catch(e){
-      xju.ts.assertEqual(`${e}`,'Error: { l:{ x:[] } } is not a Liaser because Error: attribute l is invalid because Error: { x:[] } is not a Liasee because Error: attribute x is invalid because Error: [] is not a number it is a object');
+      xju.assert.assertEqual(`${e}`,'Error: failed to verify { l:{ x:[] } } is a Liaser because failed to validate property l because failed to verify { x:[] } is a Liasee because failed to validate property x because failed to verify [] is a int because [] is a object not a number');
     }
 
     isInstanceOfLias({"x":8});
@@ -1067,81 +984,104 @@ function assert_never_reached(){
 
 //xju.ts
 (() => {
-  xju.ts.assertEqual(1, 1);
-  xju.ts.assertEqual([1], [1]);
-  xju.ts.assertEqual({a:1},{a:1});
+  xju.assert.assertEqual(1, 1);
+  xju.assert.assertEqual([1], [1]);
+  xju.assert.assertEqual({a:1},{a:1});
   const errors:Array<string> = [];
   try {
-    xju.ts.assertEqual(1,2);
-    assert_never_reached();
+    xju.assert.assertEqual(1,2);
+    xju.assert.assertNeverReached('1==2?');
   }
   catch(e){
     try{
-      assert_x_contains_y(str(e), '1 != 2');
+      xju.assert.assertXcontainsY(xju.str(e), '1 != 2');
     }
     catch(ee){
       errors.push(`${ee}`);
     }
   }
   try {
-    xju.ts.assertEqual([1],[2]);
-    assert_never_reached();
+    xju.assert.assertEqual([1],[2]);
+    xju.assert.assertNeverReached('[1]==[2]?');
   }
   catch(e){
     try{
-      assert_x_contains_y(str(e), 'array element 0 1 != 2');
+      xju.assert.assertXcontainsY(xju.str(e), 'array element 0 1 != 2');
     }
     catch(ee){
       errors.push(`${ee}`);
     }
   }
   try {
-    xju.ts.assertEqual([1],[1,1]);
-    assert_never_reached();
+    xju.assert.assertEqual([1],[1,1]);
+    xju.assert.assertNeverReached('[1]==[1,1]?');
   }
   catch(e){
     try{
-      assert_x_contains_y(str(e), 'arrays of different length because Error: 1 != 2');
+      xju.assert.assertXcontainsY(xju.str(e), 'Error: failed to verify array [1] == array [1,1] because failed to verify arrays have same length because 1 != 2');
     }
     catch(ee){
       errors.push(`${ee}`);
     }
   }
   try {
-    xju.ts.assertEqual({a:1},{b:1});
-    assert_never_reached();
+    xju.assert.assertEqual({a:1},{b:1});
+    xju.assert.assertNeverReached('{a:1}=={b:1}?');
   }
   catch(e){
     try{
-      assert_x_contains_y(str(e), 'object { a:1 } != object { b:1 } because Error: array [\"a\"] != array [\"b\"] because Error: array element 0 \"a\" != \"b\"');
+      xju.assert.assertXcontainsY(xju.str(e), 'Error: failed to verify object { a:1 } == object { b:1 } because failed to verify array [\"a\"] == array [\"b\"] because array element 0 \"a\" != \"b\"');
     }
     catch(ee){
       errors.push(`${ee}`);
     }
   }
   try {
-    xju.ts.assertEqual({a:1},{a:2});
-    assert_never_reached();
+    xju.assert.assertEqual({a:1},{a:2});
+    xju.assert.assertNeverReached('{a:1}=={a:2}?');
   }
   catch(e){
     try{
-      assert_x_contains_y(str(e), 'object { a:1 } != object { a:2 } because Error: property a is not equal because Error: 1 != 2');
+      xju.assert.assertXcontainsY(xju.str(e), 'Error: failed to verify object { a:1 } == object { a:2 } because failed to verify property a equal because 1 != 2');
     }
     catch(ee){
       errors.push(`${ee}`);
     }
   }
   try {
-    xju.ts.assertEqual({a:1},{a:1,b:2});
-    assert_never_reached();
+    xju.assert.assertEqual({a:1},{a:1,b:2});
+    xju.assert.assertNeverReached('{a:1}=={a:1,b:2}?');
   }
   catch(e){
     try{
-      assert_x_contains_y(str(e), 'object { a:1 } != object { a:1, b:2 } because Error: array [\"a\"] != array [\"a\",\"b\"] because Error: arrays of different length because Error: 1 != 2');
+      xju.assert.assertXcontainsY(xju.str(e), 'Error: failed to verify object { a:1 } == object { a:1, b:2 } because failed to verify array [\"a\"] == array [\"a\",\"b\"] because failed to verify arrays have same length because 1 != 2');
     }
     catch(ee){
       errors.push(`${ee}`);
     }
   }
-  xju.ts.assertEqual(errors, []);
+  xju.assert.assertEqual(errors, []);
+})();
+
+// coverage
+(() => {
+  const good = good_encodable_data();
+  xju.assert.assertEqual(asInstanceOfMetres(good.an_xju_float),18.2);
+  xju.assert.assertEqual(isInstanceOfMetres(good.an_xju_float),true);
+
+  xju.assert.assertEqual(asInstanceOfFullName({first_name: "fran", middle_names: ["jan"], last_name: "lan", "class": "Upper"}),{first_name: "fran", middle_names: ["jan"], last_name: "lan", "class": "Upper"});
+  xju.assert.assertEqual(isInstanceOfFullName({first_name: "fran", middle_names: ["jan"], last_name: "lan", "class": "Upper"}),true);
+
+  xju.assert.assertEqual(asInstanceOfSurname("Walker"),"Walker");
+  xju.assert.assertEqual(isInstanceOfSurname("Walker"),true);
+
+  xju.assert.assertEqual(asInstanceOfDontEncode({"y": "yyy"}),{"y": "yyy"});
+  xju.assert.assertEqual(isInstanceOfDontEncode({"y": "yyy"}),true);
+
+  xju.assert.assertEqual(asInstanceOfO("fred"),O.a);
+  xju.assert.assertEqual(isInstanceOfO("fred"),true);
+
+  xju.assert.assertEqual(asInstanceOfMixedEnum({"k": 2, "v": "jock"}),{"k": 2, "v": "jock"});
+  xju.assert.assertEqual(isInstanceOfMixedEnum({"k": 2, "v": "jock"}),true);
+
 })();

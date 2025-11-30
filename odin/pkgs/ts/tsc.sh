@@ -22,7 +22,7 @@ then
   exit 0
 fi
 
-cmd="$ODIN_TSC --traceResolution --outFile js --sourceRoot $root_dir --sourceMap $ODIN_TSC_FLAGS"
+cmd="$ODIN_TSC --outFile js --sourceRoot $root_dir --sourceMap $ODIN_TSC_FLAGS"
 if [ -n "$ts_flags" ]; then cmd="$cmd $(cat $ts_flags)"; fi
 
 verbose(){
@@ -46,7 +46,7 @@ verbose "$cmd $ts"
       while read e
       do
         rel=$(expr "$e" : '\([^(]*\)')
-        abs=$(cd $(dirname $rel) && pwd)/$(basename $rel)
+        abs=$(cd $(dirname "$rel") && pwd)/$(basename "$rel")
         echo "$e" | sed -e "s=$rel.\([0-9]*\),\([0-9]*\).=$abs:\1:\2=g" >&2
       done
     false

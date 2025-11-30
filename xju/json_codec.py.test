@@ -16,7 +16,6 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 from sys import path
-import ipaddress
 from os.path import dirname
 if path[0]==dirname(__file__): path.pop(0)
 
@@ -36,6 +35,7 @@ from xju.json_codec import (
     BackRefCodecImpl,
     NoopCodecImpl,
     indent,
+    get_default_value
 )
 
 from typing import cast,Type,Literal,Any,Self,NewType,Generic,TypeVar,Callable,Union,Final,ClassVar
@@ -44,7 +44,7 @@ from types import NoneType
 from dataclasses import dataclass, field
 import re
 import sys
-import ipaddress
+from ipaddress import IPv4Address,IPv4Interface,IPv4Network
 from enum import Enum, StrEnum, IntEnum, auto
 
 from xju.assert_ import Assert
@@ -868,14 +868,19 @@ Assert(codec(Address).encode(
 # to support encoding of external types with control over their json representation
 # ... to be usable as a dictionary key, the class also has to implement either
 # the CustomStringKeyClassCodec or CustomNonStringKeyClassCodec
-class IpV4Addr(ipaddress.IPv4Address):
-    __xju_json_codec=codec(str)
+class IpV4Addr(IPv4Address):
+    def __eq__(self, b) -> bool:
+        return str(self)==str(b)
+    def __hash__(self) -> int:
+        return super().__hash__()
+
+    __xju_json_codec=codec(int)
 
     # xju.json_codec.CustomClassCodec:
     @staticmethod
     def xju_json_codec_encode(x:object) -> JsonType:
         assert isinstance(x,IpV4Addr)
-        return IpV4Addr.__xju_json_codec.encode(x.exploded)
+        return IpV4Addr.__xju_json_codec.encode(int(x))
     @staticmethod
     def xju_json_codec_decode(x:JsonType) -> object:
         return IpV4Addr(IpV4Addr.__xju_json_codec.decode(x))
@@ -891,105 +896,194 @@ class IpV4Addr(ipaddress.IPv4Address):
         }
     @staticmethod
     def xju_json_codec_get_typescript_type() -> TypeScriptSourceCode:
-        return TypeScriptSourceCode('string /* IpV4Addr */')
+        return TypeScriptSourceCode('number /* IpV4Addr */')
     @staticmethod
-    def xju_json_codec_get_typescript_isa(
-            expression:TypeScriptSourceCode,
+    def xju_json_codec_5_get_typescript_isa(
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that turns {expression} into a bool indicating whether the expression is a T'''
-        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
-        return IpV4Addr.__xju_json_codec.get_typescript_isa(expression,namespace)
+        '''return typescript source that evaluates to a xju.json_codec.IsInstance
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        return TypeScriptSourceCode(
+            f"(x:any) => {{\n"
+            f"    const r=xju.json_codec.isInstanceOfInt(x);\n"
+            f"    if (r===false || (x as number) < 0 || (x as number >= {2**32-1})) {{\n"
+            f"        return false;\n"
+            f"    }}\n"
+            f"    return r;\n"
+            f"}}")
     @staticmethod
-    def xju_json_codec_get_typescript_asa(
-            expression:TypeScriptSourceCode,
+    def xju_json_codec_5_get_typescript_asa(
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that safely casts {expression} to a T, throwing an Error if {expression} is not valid as a T'''
+        '''return typescript source code that verifies {expression} with defaults applied would be a T and returns xju.json_codec.ApplyDefaults that would apply defaults, throwing an Error if {expression} is not valid as a T'''
         '''- may add any supporting definitions to namespace, e.g. type for T itself'''
-        return IpV4Addr.__xju_json_codec.get_typescript_asa(expression,namespace)
+        return TypeScriptSourceCode("\n".join([
+            f"xju.json_codec.asInstanceInContext({{"
+            ,f"    typeName: 'IpV4Addr',"
+            ,f"    f: (x:any) => {{"
+            ,f"        const r=xju.json_codec.asInstanceOfInt('int').f(x);"
+            ,f"        xju.assert.assertNumberInRange(x,0,{2**32-1});"
+            ,f"        return r;"
+            ,f"    }}"
+            ,f"}})"]))
+
+    # xju.json_codec.CustomNonStringKeyClassCodec:
+    @staticmethod
+    def xju_json_codec_get_object_key_json_schema(definitions:dict[str,dict]) -> dict:
+        '''return json schema for T when used as an object key
+           - may add any supporting definitions to definitions'''
+        return {
+            'description': "stringified-int IpV4Addr",
+            'type': 'string',
+            'pattern': r'^(0|[1-9][0-9]*)$'
+        }
+
+    @staticmethod
+    def xju_json_codec_typescript_key_type()->Literal['NonString']:
+        return 'NonString'
+    
+    @staticmethod
+    def xju_json_codec_5_get_typescript_isa_key(
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source code that evaluates to a xju.json_codec.IsKey
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        return TypeScriptSourceCode(
+            f"(x:any) => (xju.json_codec.isKeyOfInt(x) && (x as number) >= 0 && (x as number <= {2**32-1}))"
+        )
+
+    @staticmethod
+    def xju_json_codec_5_get_typescript_asa_key(
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source code that evaluates to a xju.json_codec.AsKey
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        return TypeScriptSourceCode("\n".join([
+            f"xju.json_codec.asKeyInContext({{"
+            ,f"    typeName: 'IpV4Addr',"
+            ,f"    f: (x:any) => {{"
+            ,f"        xju.json_codec.asKeyOfInt('int').f(x);"
+            ,f"        xju.assert.assertNumberInRange(x,0,{2**32-1});"
+            ,f"    }}"
+            ,f"}})"]))
+    pass
+
+Assert(IpV4Addr).isSubclassOf(CustomClassCodec)
+Assert(IpV4Addr).isSubclassOf(CustomNonStringKeyClassCodec)
+
+@dataclass
+class IpV4AddrWithPrefix(IPv4Interface):
+    """An IP host address in a network, e.g. 10.1.1.49/24"""
+    if_str: str
+    __codec=codec(str)
+    def __post_init__(self):
+        super().__init__(self.if_str)
+        pass
+    def __eq__(self, b) -> bool:
+        return self.if_str == b.if_str
+    def __hash__(self) -> int:
+        return hash(self.if_str)
+    @staticmethod
+    def xju_json_codec_decode(x:JsonType) -> object:
+        return IpV4AddrWithPrefix(IpV4AddrWithPrefix.__codec.decode(x))
+    @staticmethod
+    def xju_json_codec_encode(x:object) -> JsonType:
+        assert isinstance(x,IpV4AddrWithPrefix)
+        return IpV4AddrWithPrefix.__codec.encode(x.if_str)
+    @staticmethod
+    def xju_json_codec_get_json_schema(definitions:dict[str,dict]) -> dict:
+        '''return json schema for T'''
+        '''- may add any supporting definitions to definitions'''
+        return IpV4AddrWithPrefix.__codec.get_json_schema()
+    @staticmethod
+    def xju_json_codec_get_typescript_type() -> TypeScriptSourceCode:
+        return TypeScriptSourceCode('string /* IpV4AddrWithPrefix */')
+    @staticmethod
+    def xju_json_codec_5_get_typescript_isa(
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source that evaluates to a xju.json_codec.IsInstance
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        return TypeScriptSourceCode(
+            f"(x:any) => {{\n"
+            f"    if (!xju.json_codec.isInstanceOfString(x)) {{\n"
+            f"        return false;\n"
+            f"    }}\n"
+            f"    const r=/^([0-9]+)[.]([0-9]+)[.]([0-9]+)[.]([0-9]+)[/]([0-9]+)$/.exec(x as string);\n"
+            f"    if (r===null) {{\n"
+            f"        return false;\n"
+            f"    }}\n"
+            f"    const [a,b,c,d,m] = r;\n"
+            f"    return !([a,b,c,d].filter(v => parseInt(v) < 0 || parseInt(v) > 255).length ||\n"
+            f"             parseInt(m) < 0 || parseInt(m) > 32) && xju.json_codec.applyNoDefaults;\n"
+            f"}}")
+    @staticmethod
+    def xju_json_codec_5_get_typescript_asa(
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source code that evaluates to a xju.json_codec.AsInstance
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        return TypeScriptSourceCode(
+            f"xju.json_codec.asInstanceInContext({{\n"
+            f"    typeName: 'IpV4AddrWithPrefix',\n"
+            f"    f: (x:any) => {{\n"
+            f"        const r=xju.json_codec.asInstanceOfString('string').f(x);\n"
+            f"        const [_,a,b,c,d,m]=xju.assert.assertMatches(\n"
+            f"            /^([0-9]+)[.]([0-9]+)[.]([0-9]+)[.]([0-9]+)[/]([0-9]+)$/, x as string);\n"
+            f"        [a,b,c,d].forEach(v=> xju.assert.assertNumberInRange(parseInt(v),0,255));\n"
+            f"        xju.assert.assertNumberInRange(parseInt(m),0,32);\n"
+            f"        return r;\n"
+            f"    }}\n"
+            f"}})")
 
     # xju.json_codec.CustomStringKeyClassCodec:
     @staticmethod
     def xju_json_codec_get_object_key_json_schema(definitions:dict[str,dict]) -> dict:
         '''return json schema for T when used as an object key
            - may add any supporting definitions to definitions'''
-        return IpV4Addr.xju_json_codec_get_json_schema(definitions)
+        return IpV4AddrWithPrefix.xju_json_codec_get_json_schema(definitions)
     @staticmethod
     def xju_json_codec_typescript_key_type()->Literal['String']:
         return 'String'
     @staticmethod
-    def xju_json_codec_get_typescript_isa_key(
-            expression:TypeScriptSourceCode,
+    def xju_json_codec_5_get_typescript_isa_key(
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that turns {expression} into a bool indicating whether the expression is a T-as-object-key'''
-        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
-        return IpV4Addr.__xju_json_codec.get_typescript_isa_key(expression,namespace)
+        '''return typescript source code that evaluates to a xju.json_codec.IsKey
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        return TypeScriptSourceCode(
+            f"(x:any) => {{\n"
+            f"    // note javascript turns the key into a string even if, say, it is a number\n"
+            f"    const r=/^([0-9]+)[.]([0-9]+)[.]([0-9]+)[.]([0-9]+)[/]([0-9]+)$/.exec(x as string);\n"
+            f"    if (r===null) {{\n"
+            f"        return false;\n"
+            f"    }}\n"
+            f"    const [_,a,b,c,d,m] = r;\n"
+            f"    return !([a,b,c,d].filter(v => parseInt(v) < 0 || parseInt(v) > 255).length ||\n"
+            f"             parseInt(m) < 0 || parseInt(m) > 32);\n"
+            f"}}")
     @staticmethod
-    def xju_json_codec_get_typescript_asa_key(
-            expression:TypeScriptSourceCode,
-            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that safely casts {expression} to a T, throwing an Error if {expression} is not valid as a T-as-object-key'''
-        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
-        return IpV4Addr.__xju_json_codec.get_typescript_asa(expression,namespace)
-    pass
-
-Assert(IpV4Addr).isSubclassOf(CustomClassCodec)
-Assert(IpV4Addr).isSubclassOf(CustomStringKeyClassCodec)
-Assert(codec(IpV4Addr).encode(IpV4Addr('172.18.12.1')))=='172.18.12.1'
-Assert(codec(IpV4Addr).decode('172.18.12.1')).isInstanceOf(IpV4Addr)
-Assert(codec(IpV4Addr).decode('172.18.12.1'))==IpV4Addr('172.18.12.1')
-
-
-# REVISIT: adjust IpAddrWithPrefix to generate a typescript alias
-@dataclass
-class IpAddrWithPrefix(ipaddress.IPv4Interface):
-    """An IP host address in a network, e.g. 10.1.1.49/24"""
-    if_str: str
-    __codec=codec(str)
-    def __post_init__(self):
-        super().__init__(self.if_str)
-    @staticmethod
-    def xju_json_codec_decode(x:JsonType) -> object:
-        return IpAddrWithPrefix(IpAddrWithPrefix.__codec.decode(x))
-    @staticmethod
-    def xju_json_codec_encode(x:object) -> JsonType:
-        assert isinstance(x,IpAddrWithPrefix)
-        return IpAddrWithPrefix.__codec.encode(x.if_str)
-    @staticmethod
-    def xju_json_codec_get_json_schema(definitions:dict[str,dict]) -> dict:
-        '''return json schema for T'''
-        '''- may add any supporting definitions to definitions'''
-        return IpAddrWithPrefix.__codec.get_json_schema()
-    @staticmethod
-    def xju_json_codec_get_typescript_type() -> TypeScriptSourceCode:
-        return TypeScriptSourceCode('string /* IpV4AddrWithPrefix */')
-    @staticmethod
-    def xju_json_codec_get_typescript_isa(
-            expression:TypeScriptSourceCode,
-            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that turns {expression} into a bool indicating whether the expression is a T'''
-        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
-        return IpAddrWithPrefix.__codec.get_typescript_isa(expression,namespace)
-    @staticmethod
-    def xju_json_codec_get_typescript_asa(
-            expression:TypeScriptSourceCode,
+    def xju_json_codec_5_get_typescript_asa_key(
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         '''return typescript source code that safely casts {expression} to a T, throwing an Error if {expression} is not valid as a T-as-object-key'''
         '''- may add any supporting definitions to namespace, e.g. type for T itself'''
-        return IpAddrWithPrefix.__codec.get_typescript_asa(expression,namespace)
+        return TypeScriptSourceCode("\n".join([
+            f"xju.json_codec.asKeyInContext({{"
+            ,f"    typeName: 'IpV4Addr',"
+            ,f"    f: (x:any) => {{"
+            ,f"        // note javascript turns the key into a string even if, say, it is a number"
+            ,f"        const [a,b,c,d,m]=xju.assert.assertMatches("
+            ,f"            /^([0-9]+)[.]([0-9]+)[.]([0-9]+)[.]([0-9]+)[/]([0-9]+)$/, x as string);"
+            ,f"        [a,b,c,d].forEach(v=> xju.assert.assertNumberInRange(parseInt(v),0,255));"
+            ,f"        xju.assert.assertNumberInRange(parseInt(m),0,32);"
+            ,f"    }}"
+            ,f"}})"]))
     pass
 
-Assert(IpAddrWithPrefix).isSubclassOf(CustomClassCodec)
-assert not issubclass(IpAddrWithPrefix, CustomStringKeyClassCodec)
-assert not issubclass(IpAddrWithPrefix, CustomNonStringKeyClassCodec)
+Assert(IpV4AddrWithPrefix).isSubclassOf(CustomClassCodec)
+Assert(IpV4AddrWithPrefix).isSubclassOf(CustomStringKeyClassCodec)
 
 @dataclass
 class Router:
     name: str
-    ifv4: IpAddrWithPrefix
+    ifv4: IpV4AddrWithPrefix
 
-Assert(codec(Router).decode({'name':'fred','ifv4':'10.1.7.44/22'}))==Router(name='fred',ifv4=IpAddrWithPrefix('10.1.7.44/22'))
-Assert(codec(Router).decode({'name':'fred','ifv4':'10.1.7.44/22'}).ifv4.network)==ipaddress.IPv4Network("10.1.4.0/22")
-Assert(codec(Router).encode(Router(name='fred',ifv4=IpAddrWithPrefix('10.1.7.44/22'))))=={'name':'fred','ifv4':'10.1.7.44/22'}
+Assert(codec(Router).decode({'name':'fred','ifv4':'10.1.7.44/22'}))==Router(name='fred',ifv4=IpV4AddrWithPrefix('10.1.7.44/22'))
+Assert(codec(Router).decode({'name':'fred','ifv4':'10.1.7.44/22'}).ifv4.network)==IPv4Network("10.1.4.0/22")
+Assert(codec(Router).encode(Router(name='fred',ifv4=IpV4AddrWithPrefix('10.1.7.44/22'))))=={'name':'fred','ifv4':'10.1.7.44/22'}
 
 
 # class does not have to be a dataclass...
@@ -1546,85 +1640,6 @@ codec(O).ensure_typescript_defs(typescript_namespace)
 # ... get_formatted_defs() generates the typescript source code:
 Assert(typescript_namespace.get_formatted_defs())==TypeScriptSourceCode(
     '''\
-namespace xju {
-    export namespace ts {
-        export function str(x:any):string { return `${x}`; }
-        export function isObject(x:any):x is object { return x !== null && typeof(x) === \'object\'; }
-        export function assertEqual<T>(x:T, y:T){
-            if (Array.isArray(x) && Array.isArray(y)){
-                assertArraysEqual<any>(x,y);
-            }
-            else if (isObject(x) && isObject(y)){
-                assertObjectsEqual(x,y);
-            }
-            else if (!(x===y)){
-                throw new Error(`${format_(x)} != ${format_(y)}`);
-            }
-        }
-        export function format_<T>(a:T): string {
-            if (Array.isArray(a)) return formatArray(a);
-            if (isObject(a)) return formatObject(a);
-            return JSON.stringify(a);
-        }
-        export function formatArray<T>(a:Array<T>): string {
-            if(a.length==0) return "[]";
-            if(a.length==1) return `[${format_(a[0])}]`;
-            var result=`${format_(a[0])}`;
-            for(var i=1;i!=a.length;++i) result=result+`,${format_(a[i])}`;
-            return `[${result}]`;
-        }
-        export function formatObject(a:Object): string {
-            var result="{";
-            for(const k of Object.keys(a).slice(0,1)) result=result+` ${k}:${format_(a[k as keyof Object])}`;
-            for(const k of Object.keys(a).slice(1)) result=result+`, ${k}:${format_(a[k as keyof Object])}`;
-            return result+" }";
-        }
-        export function assertArraysEqual<T>(x:Array<T>, y:Array<T>){
-            try{
-                try{
-                    assertEqual(x.length, y.length);
-                }
-                catch(e:any){
-                    throw new Error(`arrays of different length because ${e}`);
-                }
-                var i;
-                for(i=0; i!=x.length; ++i){
-                    try{
-                        assertEqual<T>(x[i],y[i]);
-                    }
-                    catch(e:any){
-                        throw new Error(`array element ${i} ${format_(x[i])} != ${format_(y[i])}`);
-                    }
-                }
-            }
-            catch(e:any){
-                throw new Error(`array ${format_(x)} != array ${format_(y)} because ${e}`);
-            }
-        }
-        export function assertObjectsEqual(x:object, y:object){
-            try{
-                var xKeys=new Array<keyof object>();
-                var yKeys=new Array<keyof object>();
-                for(const k in x){if (x.hasOwnProperty(k)) xKeys.push(k as keyof object);}
-                for(const k in y){if (y.hasOwnProperty(k)) yKeys.push(k as keyof object);}
-                assertArraysEqual(xKeys,yKeys);
-                for(var i=0; i!=xKeys.length; ++i){
-                    const k = xKeys[i];
-                    try{
-                        assertEqual(x[k],y[k]);
-                    }
-                    catch(e){
-                        throw new Error(`property ${k} is not equal because ${e}`);
-                    }
-                }
-            }
-            catch(e){
-                throw new Error(`object ${format_(x)} != object ${format_(y)} because ${e}`);
-            }
-        }
-    }
-}
-
 enum O {
     a = "fred",
     b = 7
@@ -1632,56 +1647,31 @@ enum O {
 
 function asInstanceOfO(v: any): O
 {
-    return (((v: any): O => {try{
-        var es = new Array<string>();
-        try{
-            return ((v: any): O.a => {
-                xju.ts.assertEqual(v, O.a);
-                return O.a;
-            })(v);
-        }
-        catch(e:any){
-            es.push(e.message);
-        };
-        try{
-            return ((v: any): O.b => {
-                xju.ts.assertEqual(v, O.b);
-                return O.b;
-            })(v);
-        }
-        catch(e:any){
-            es.push(e.message);
-        };
-        throw new Error(es.join(\' and \'));
-    } catch(e:any)
-    {
-        throw new Error(`${xju.ts.format_(v)} is not a O because ${e}`);
-    }})(v));
+    const r=_asInstanceOfO.f(v);
+    r.applyDefaults();
+    return v as O;
 }
-function isInstanceOfO(v:any): v is O
+function isInstanceOfO(v:any): v is string
 {
-    return ((v:any): v is O=>{
-        return false ||
-               ((v:any): v is O.a=>{
-                        try{
-                            xju.ts.assertEqual(v, O.a);
-                        }
-                        catch (_){
-                            return false;
-                        }
-                        return true;
-                    })(v) ||
-               ((v:any): v is O.b=>{
-                        try{
-                            xju.ts.assertEqual(v, O.b);
-                        }
-                        catch (_){
-                            return false;
-                        }
-                        return true;
-                    })(v);
-    })(v);
-}''')
+    const r:false|xju.json_codec.ApplyDefaults=_isInstanceOfO(v);
+    return r&&r.applyDefaults();
+}
+const _asInstanceOfO = xju.json_codec.asInstanceOfUnion([
+        xju.json_codec.asInstanceOfLiteral(O.a),
+    xju.json_codec.asInstanceOfLiteral(O.b)
+]);
+const _isInstanceOfO = xju.json_codec.isInstanceOfUnion([
+        xju.json_codec.isInstanceOfLiteral(O.a),
+    xju.json_codec.isInstanceOfLiteral(O.b)
+]);
+const _asKeyOfO = xju.json_codec.asKeyOfUnion([
+        xju.json_codec.asKeyOfLiteral(O.a),
+    xju.json_codec.asKeyOfLiteral(O.b)
+]);
+const _isKeyOfO = xju.json_codec.isKeyOfUnion([
+        xju.json_codec.isKeyOfLiteral(O.a),
+    xju.json_codec.isKeyOfLiteral(O.b)
+]);''')
 
 # https://github.com/urnest/urnest/issues/2
 ArgType = TypeVar("ArgType")
@@ -1774,10 +1764,9 @@ else:
 
 # invalid dict key encoded value
 try:
-    x=codec(dict[tuple[int,str],str]).encode(  # type: ignore
-        {(1,'fred'):'jock'})
+    x=codec(dict[tuple[int,str],str])  # type: ignore  # json_codec plugin correctly rejects
 except Exception as e:
-    Assert(readable_repr(e)).matches(r"key encoder .*TupleCodec.* produced non-str/bool/int/float/None .1, 'fred'. from dict key [(]1, 'fred'[)]")
+    Assert(readable_repr(e)).contains('tuple[int,str] is not valid as a json object key')
 else:
     assert False
     pass
@@ -1874,13 +1863,6 @@ else:
                         codec(B).get_json_schema())
     pass
 
-# backref can't ever be used as json object key, but for coverage:
-Assert(BackRefCodecImpl(NoopCodecImpl(str)).get_object_key_json_schema({}))=={'$ref': '#/definitions/str'}
-Assert(BackRefCodecImpl(NoopCodecImpl(str)).typescript_as_object_key_type())==TypeScriptSourceCode("string")
-Assert(BackRefCodecImpl(NoopCodecImpl(str)).typescript_as_object_key_type())==TypeScriptSourceCode("string")
-Assert(BackRefCodecImpl(NoopCodecImpl(str)).get_typescript_asa_key(TypeScriptSourceCode("null"),typescript_namespace))==TypeScriptSourceCode("((v: any): string => {\n    if (typeof v !== 'string' /* string */) throw new Error(`${xju.ts.format_(v)} is not a string it is a ${typeof v}`);\n    return v as string;\n})(null)")
-Assert(BackRefCodecImpl(NoopCodecImpl(str)).get_typescript_isa_key(TypeScriptSourceCode("null"),typescript_namespace))==TypeScriptSourceCode("(typeof (null) == 'string')")
-
 # coverage of nested Self
 @dataclass
 class SList:
@@ -1907,3 +1889,52 @@ class TSList:
 Assert(codec(TSList).encode(TSList(3,TSList.Tail(5,None))))=={'val': 3, 'tail': {'val': 5, 'next': None}}
 
 Assert(indent(4, TypeScriptSourceCode('')))==''
+
+
+class DV1:
+    x: int = 2
+    y: str
+    pass
+
+Assert(get_default_value(DV1, "x"))==(2,)
+Assert(get_default_value(DV1, "y"))==None
+
+@dataclass
+class DV2:
+    x: int = field(default=2)
+    pass
+
+Assert(get_default_value(DV2, "x"))==(2,)
+
+def fred()->Literal["fred"]:
+    return "fred"
+
+@dataclass
+class DV3:
+    y: int
+    x: str = field(default_factory=fred)
+    pass
+
+Assert(get_default_value(DV3, "x"))==("fred",)
+Assert(get_default_value(DV3, "y"))==None
+
+class LiteralO(Enum):
+    a='fred'
+    b=(1,2,3)
+    pass
+
+try:
+    codec(LiteralO).encode(3.2)  # type: ignore  # json_codec plugin correctly rejects
+except Exception as e:
+    Assert(readable_repr(e)).contains('3.2 is not an instance of class LiteralO (it is of class float).')
+else:
+    assert False
+    pass
+
+try:
+    codec(LiteralO).decode(3.2)  # type: ignore  # json_codec plugin correctly rejects
+except Exception as e:
+    Assert(readable_repr(e)).contains("Failed to decode 3.2 to a <enum 'LiteralO'> because")
+else:
+    assert False
+    pass

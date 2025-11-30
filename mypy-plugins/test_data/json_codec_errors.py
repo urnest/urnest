@@ -129,19 +129,17 @@ class IpAddrWithPrefix(ipaddress.IPv4Interface):
     def xju_json_codec_get_typescript_type() -> TypeScriptSourceCode:
         return TypeScriptSourceCode('string /* IpV4AddrWithPrefix */')
     @staticmethod
-    def xju_json_codec_get_typescript_isa(
-            expression:TypeScriptSourceCode,
+    def xju_json_codec_5_get_typescript_isa(
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that turns {expression} into a bool indicating whether the expression is a T'''
-        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
-        return IpAddrWithPrefix.__codec.get_typescript_isa(expression,namespace)
+        '''return typescript source that evaluates to a xju.json_codec.IsInstance
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        return TypeScriptSourceCode('''xju.json_codec.isInstanceOfString''')
     @staticmethod
-    def xju_json_codec_get_typescript_asa(
-            expression:TypeScriptSourceCode,
+    def xju_json_codec_5_get_typescript_asa(
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that safely casts {expression} to a T, throwing an Error if {expression} is not valid as a T-as-object-key'''
-        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
-        return IpAddrWithPrefix.__codec.get_typescript_asa(expression,namespace)
+        '''return typescript source code that evaluates to a xju.json_codec.AsInstance
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        return TypeScriptSourceCode('''xju.json_codec.asInstanceOfString("IpAddrWithPrefix")''')
     pass
 
 Assert(IpAddrWithPrefix).isSubclassOf(CustomClassCodec)

@@ -16,8 +16,8 @@
 %test-members-2
 %test-jc
 %test_xn_plugin
+%test_xn_abstract_method_docstring
 xn_mypy_plugin.py.test+(%py-opts)+py_sp=(.):py3.exec.cov
-(test_data/xn_abstract_method_docstring.py)+(%py-opts)+py_sp=(test_data)+mypy_flags=--show-traceback+mypy_plugin=(xn_mypy_plugin.py):main.mypy3
 
 %py-opts==<<
 +py_sp=(..)
@@ -85,7 +85,7 @@ FILE:88: error: dict keys must be str,xju.newtype.Str or any union of int, float
 FILE:89: error: dict keys must be str,xju.newtype.Str or any union of int, float, bool, None, xju.newtype.Int, xju.newtype.Float, xju.newtype.Bool (not builtins.bytes)  [misc]
 FILE:98: error: dict keys must be str,xju.newtype.Str or any union of int, float, bool, None, xju.newtype.Int, xju.newtype.Float, xju.newtype.Bool (not json_codec_errors.FullName)  [misc]
 FILE:102: error: NewType json_codec_errors.FullerName is not based on str, int, bool or float and so cannot be used as a dictionary key  [misc]
-FILE:151: error: json_codec_errors.IpAddrWithPrefix has custom encoding but is neither a CustomStringKeyClassCodec nor a CustomNonStringKeyClassCodec: json_codec_errors.IpAddrWithPrefix must implement one of these if it is to be used as a dictionary key  [misc]
+FILE:149: error: json_codec_errors.IpAddrWithPrefix has custom encoding but is neither a CustomStringKeyClassCodec nor a CustomNonStringKeyClassCodec: json_codec_errors.IpAddrWithPrefix must implement one of these if it is to be used as a dictionary key  [misc]
 
 %test_json_codec_errors.errors==test_data/json_codec_errors.py+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(json_codec_mypy_plugin.py):main.mypy3:err
 
@@ -430,3 +430,11 @@ FILE: note: In function "cm":
 FILE:255: error: decorator contextmanager not supported with in_function_context (only property, abstractmethod, classmethod supported; use in_context directly instead in this case)  [misc]
 
 %test_xn_plugin.errors==(test_data/xn_in_function_context_errors.py)+(%py-opts)+py_sp=(test_data)+mypy_flags=--show-traceback+mypy_plugin=(xn_mypy_plugin.py):main.mypy3:err
+
+%test_xn_abstract_method_docstring==%test_xn_abstract_method_docstring.errors+cmd=(%verify-errs) (test_data/xn_abstract_method_docstring.py:filename) (%test_xn_abstract_method_docstring.expect):exec.output
+
+%test_xn_abstract_method_docstring.expect==<<
+FILE: note: In member "ff" of class "BI":
+FILE:10: error: m2.B.ff is not an xn-supported function reference  [misc]
+
+%test_xn_abstract_method_docstring.errors==(test_data/xn_abstract_method_docstring.py)+(%py-opts)+py_sp=(test_data)+mypy_flags=--show-traceback+mypy_plugin=(xn_mypy_plugin.py):main.mypy3:err

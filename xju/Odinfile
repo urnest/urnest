@@ -421,41 +421,6 @@ print(open(sys.argv[1]).read().replace('# generated Int methods here...',int_met
     '# generated Float methods here...',float_methods).replace(
     '# generated Bool methods here...',bool_methods))
 
-%json_codec_typescript_test==()+cmd=(%json_codec_typescript_test.sh) (%json_codec_typescript_tsc/test-json-codec-typescript.js) (%json_codec_typescript_tsc/json_codec_typescript_test.js):exec.output
-
-%json_codec_typescript_tsc==()+cmd=(%json_codec_typescript_tsc.sh) (%json_codec_typescript_test_ts.dir) (test-json-codec-typescript.ts)+need=(%json_codec_typescript_test_ts.dir/json_codec_typescript_test.ts):output
-
-%json_codec_typescript_test_ts.dir==(make-json-codec-ts-test+(%py-opts):py3.exec.output)+cmd=cat '>json_codec_typescript_test.ts':output
-
-%json_codec_typescript_test.ts==%json_codec_typescript_test_ts.dir/json_codec_typescript_test.ts
-
-%json_codec_typescript_tsc.sh==!<<
-#!/bin/sh
-set -ex
-cp $1/json_codec_typescript_test.ts .
-cp $2 .
-/home/xju/node_modules/typescript/bin/tsc --traceResolution --sourceMap --moduleResolution node --module nodenext --lib es2015 --strict "json_codec_typescript_test.ts" --outDir . >&2
-/home/xju/node_modules/typescript/bin/tsc --traceResolution --sourceMap --moduleResolution node --module nodenext --lib es2015 --strict $(basename "$2") --outDir . >&2
-
-%json_codec_typescript_test.sh==!<<
-#!/bin/sh
-set -e
-cp $1 test-json-codec-typescript.js
-cp $2 json_codec_typescript_test.js
-out=$(NODE_PATH=$(dirname $1) NODE_V8_COVERAGE=. node --test --experimental-test-coverage test-json-codec-typescript.js) || (
-  echo "$out" >&2
-  exit 1
-)
-echo "$out" | grep json_codec_typescript_test.js | (
-  read a b c d e f g h i lines_not_covered
-  python3 -c "print('\n'.join([f'error:$2:{_}: not covered' for _ in '$lines_not_covered'.split(',')]))"
-  test -z "$lines_not_covered"
-)
-
-# convenience:
-%json_codec_typescript_test.js==()+cmd=(%json_codec_typescript_test.sh) (%json_codec_typescript_test_ts.dir) (%json_codec_typescript_test_ts.dir/json_codec_typescript_test.ts):exec/files.tar+member='json_codec_typescript_test.js':extract_file
-
-
 # run unit tests against pip-installed code rather than local source
 %pytest-v-installed==%pytest-v-installed.tree:leaves
 
@@ -481,9 +446,14 @@ time.py.test+mypy_plugin_mod='xju.json_codec_mypy_plugin'+mypy_plugin_mod='xju.c
 
 
 %local.ts.cov.checked==%local-ts-to-cover+ts_cov=(%local.ts.cov):list.ts.cov.checked
-%local-ts-to-cover==.:list:list.ts
+%local-ts-to-cover==.:list:list.ts:ls+cmd=grep -v 'test-':stdout:list
 %local.ts.cov==%local-tstest.tree:leaves:ts.cov.list:agg.ts.cov
 
 %local-tstest.tree==<<
 test-xn.ts+ts_root_dir=(..):ts.cov
+test-assert.ts+ts_root_dir=(..):ts.cov
 test-json_codec.ts+ts_root_dir=(..):ts.cov
+test-json-codec-typescript.ts+ts_root_dir=(..):ts.cov
+
+%json-codec-ts-test==make-json-codec-ts-test+(%py-opts):py3.exec.files
+json_codec_typescript_test.ts==%json-codec-ts-test+member='json_codec_typescript_test.ts':extract_file

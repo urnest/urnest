@@ -4,6 +4,7 @@
 
 import json
 import re
+from pathlib import Path
 from typing import Literal, Self, NewType, ClassVar
 from types import NoneType
 from ipaddress import IPv4Address,IPv4Interface
@@ -66,7 +67,62 @@ class NonStringKey:
 # to support encoding of external types with control over their json representation
 # ... to be usable as a dictionary key, the class also has to implement either
 # the CustomStringKeyClassCodec or CustomNonStringKeyClassCodec
+@dataclass
+class Even:
+    """note not usable as a dict key"""
+    value: int  # ... -2, 0, 2, 4 ...
+    __xju_json_codec=codec(int)
+
+    def __post_init(self):
+        assert self.value % 1 == 0, f"{self.value} is not an even number"
+        pass
+    
+    # xju.json_codec.CustomClassCodec:
+    @staticmethod
+    def xju_json_codec_encode(x:"Even") -> JsonType:
+        return Even.__xju_json_codec.encode(int(x.value/2))
+    @staticmethod
+    def xju_json_codec_decode(x:JsonType) -> "Even":
+        return Even(Even.__xju_json_codec.decode(x)*2)
+    @staticmethod
+    def xju_json_codec_get_json_schema(definitions:dict[str,dict]) -> dict:
+        '''return json schema for T'''
+        '''- may add any supporting definitions to definitions'''
+        return Even.__xju_json_codec.get_json_schema()
+    @staticmethod
+    def xju_json_codec_get_typescript_type() -> TypeScriptSourceCode:
+        return TypeScriptSourceCode('number /* Even.value/2! */')
+    @staticmethod
+    def xju_json_codec_5_get_typescript_isa(
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source that evaluates to a xju.json_codec.IsInstance
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        return TypeScriptSourceCode(
+            f"(x:any) => {{\n"
+            f"    const r=xju.json_codec.isInstanceOfInt(x);\n"
+            f"    return r;\n"
+            f"}}")
+    @staticmethod
+    def xju_json_codec_5_get_typescript_asa(
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source code that verifies {expression} with defaults applied would be a T and returns xju.json_codec.ApplyDefaults that would apply defaults, throwing an Error if {expression} is not valid as a T'''
+        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
+        return TypeScriptSourceCode("\n".join([
+            f"xju.json_codec.asInstanceInContext({{"
+            ,f"    typeName: 'Even',"
+            ,f"    f: (x:any) => {{"
+            ,f"        return xju.json_codec.asInstanceOfInt('int').f(x);"
+            ,f"    }}"
+            ,f"}})"]))
+
+    
 class IpV4Addr(IPv4Address):
+    """usable as a dict key (non-string key type)"""
+    def __eq__(self, b) -> bool:
+        return str(self)==str(b)
+    def __hash__(self) -> int:
+        return super().__hash__()
+
     __xju_json_codec=codec(int)
 
     # xju.json_codec.CustomClassCodec:
@@ -87,25 +143,31 @@ class IpV4Addr(IPv4Address):
         return TypeScriptSourceCode('number /* IpV4Addr */')
     @staticmethod
     def xju_json_codec_5_get_typescript_isa(
-            expression:TypeScriptSourceCode,
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that turns {expression} into a
-            false - indicating expression is not a T
-            xju.ts.ApplyDefaults - expression is a T
+        '''return typescript source that evaluates to a xju.json_codec.IsInstance
            - may add any supporting definitions to namespace, e.g. type for T itself'''
-        return (TypeScriptSourceCode(f"// is a IpV4Addr?\n") +
-                # note codec(int).get_typescript_isa here will apply
-                # defaults, which is not "correct", but we know it
-                # will never actually have any defaults to apply
-                IpV4Addr.__xju_json_codec.get_typescript_isa(expression,namespace)+
-                TypeScriptSourceCode(" && {applyDefaults: ():true=>true}"))
+        return TypeScriptSourceCode(
+            f"(x:any) => {{\n"
+            f"    const r=xju.json_codec.isInstanceOfInt(x);\n"
+            f"    if (r===false || (x as number) < 0 || (x as number >= {2**32-1})) {{\n"
+            f"        return false;\n"
+            f"    }}\n"
+            f"    return r;\n"
+            f"}}")
     @staticmethod
     def xju_json_codec_5_get_typescript_asa(
-            expression:TypeScriptSourceCode,
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that verifies {expression} with defaults applied would be a T and returns xju.ts.ApplyDefaults that would apply defaults, throwing an Error if {expression} is not valid as a T'''
+        '''return typescript source code that verifies {expression} with defaults applied would be a T and returns xju.json_codec.ApplyDefaults that would apply defaults, throwing an Error if {expression} is not valid as a T'''
         '''- may add any supporting definitions to namespace, e.g. type for T itself'''
-        return IpV4Addr.__xju_json_codec.get_typescript_asa(expression,namespace) + TypeScriptSourceCode(" && {applyDefaults: ():true=>true }")
+        return TypeScriptSourceCode("\n".join([
+            f"xju.json_codec.asInstanceInContext({{"
+            ,f"    typeName: 'IpV4Addr',"
+            ,f"    f: (x:any) => {{"
+            ,f"        const r=xju.json_codec.asInstanceOfInt('int').f(x);"
+            ,f"        xju.assert.assertNumberInRange(x,0,{2**32-1});"
+            ,f"        return r;"
+            ,f"    }}"
+            ,f"}})"]))
 
     # xju.json_codec.CustomNonStringKeyClassCodec:
     @staticmethod
@@ -123,21 +185,27 @@ class IpV4Addr(IPv4Address):
         return 'NonString'
     
     @staticmethod
-    def xju_json_codec_get_typescript_isa_key(
-            expression:TypeScriptSourceCode,
+    def xju_json_codec_5_get_typescript_isa_key(
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that turns {expression} into a bool indicating whether the expression is a T-as-object-key'''
-        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
-        # REVISIT: should validate the int value 0<=v<2^32
-        return IpV4Addr.__xju_json_codec.get_typescript_isa_key(expression,namespace)
+        '''return typescript source code that evaluates to a xju.json_codec.IsKey
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        return TypeScriptSourceCode(
+            f"(x:any) => (xju.json_codec.isKeyOfInt(x) && (x as number) >= 0 && (x as number <= {2**32-1}))"
+        )
+
     @staticmethod
-    def xju_json_codec_get_typescript_asa_key(
-            expression:TypeScriptSourceCode,
+    def xju_json_codec_5_get_typescript_asa_key(
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that safely casts {expression} to a T, throwing an Error if {expression} is not valid as a T-as-object-key'''
-        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
-        # REVISIT: should validate the int value 0<=v<2^32
-        return IpV4Addr.__xju_json_codec.get_typescript_asa_key(expression,namespace)
+        '''return typescript source code that evaluates to a xju.json_codec.AsKey
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        return TypeScriptSourceCode("\n".join([
+            f"xju.json_codec.asKeyInContext({{"
+            ,f"    typeName: 'IpV4Addr',"
+            ,f"    f: (x:any) => {{"
+            ,f"        xju.json_codec.asKeyOfInt('int').f(x);"
+            ,f"        xju.assert.assertNumberInRange(x,0,{2**32-1});"
+            ,f"    }}"
+            ,f"}})"]))
     pass
 
 Assert(IpV4Addr).isSubclassOf(CustomClassCodec)
@@ -146,13 +214,16 @@ Assert(IpV4Addr).isSubclassOf(CustomNonStringKeyClassCodec)
 @dataclass
 class IpV4AddrWithPrefix(IPv4Interface):
     """An IP host address in a network, e.g. 10.1.1.49/24"""
+    """usable as a dict key (string key type)"""
     if_str: str
     __codec=codec(str)
     def __post_init__(self):
         super().__init__(self.if_str)
         pass
-    def __hash__(self):
-        return hash((self.if_str, super().__hash__()))
+    def __eq__(self, b) -> bool:
+        return self.if_str == b.if_str
+    def __hash__(self) -> int:
+        return hash(self.if_str)
     @staticmethod
     def xju_json_codec_decode(x:JsonType) -> object:
         return IpV4AddrWithPrefix(IpV4AddrWithPrefix.__codec.decode(x))
@@ -170,24 +241,39 @@ class IpV4AddrWithPrefix(IPv4Interface):
         return TypeScriptSourceCode('string /* IpV4AddrWithPrefix */')
     @staticmethod
     def xju_json_codec_5_get_typescript_isa(
-            expression:TypeScriptSourceCode,
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that turns {expression} into a
-            false - indicating expression is not a T
-            xju.ts.ApplyDefaults - expression is a T
+        '''return typescript source that evaluates to a xju.json_codec.IsInstance
            - may add any supporting definitions to namespace, e.g. type for T itself'''
-        return (TypeScriptSourceCode(f"// is a IpV4AddrWithPrefix?\n")+
-                IpV4AddrWithPrefix.__codec.get_typescript_isa(expression,namespace)+
-                TypeScriptSourceCode(" && {applyDefaults: ():true=>true}"))
+        return TypeScriptSourceCode(
+            f"(x:any) => {{\n"
+            f"    if (!xju.json_codec.isInstanceOfString(x)) {{\n"
+            f"        return false;\n"
+            f"    }}\n"
+            f"    const r=/^([0-9]+)[.]([0-9]+)[.]([0-9]+)[.]([0-9]+)[/]([0-9]+)$/.exec(x as string);\n"
+            f"    if (r===null) {{\n"
+            f"        return false;\n"
+            f"    }}\n"
+            f"    const [a,b,c,d,m] = r;\n"
+            f"    return !([a,b,c,d].filter(v => parseInt(v) < 0 || parseInt(v) > 255).length ||\n"
+            f"             parseInt(m) < 0 || parseInt(m) > 32) && xju.json_codec.applyNoDefaults;\n"
+            f"}}")
     @staticmethod
     def xju_json_codec_5_get_typescript_asa(
-            expression:TypeScriptSourceCode,
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that verifies {expression} with defaults applied would be a T and returns xju.ts.ApplyDefaults that would apply defaults, throwing an Error if {expression} is not valid as a T'''
-        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
-        # __codec.get_typescript_asa strictly applies defaults but
-        # we know in this case that does nothing so we can use it here
-        return IpV4AddrWithPrefix.__codec.get_typescript_asa(expression,namespace) + TypeScriptSourceCode(" && {applyDefaults: ():true=>true }")
+        '''return typescript source code that evaluates to a xju.json_codec.AsInstance
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        return TypeScriptSourceCode(
+            f"xju.json_codec.asInstanceInContext({{\n"
+            f"    typeName: 'IpV4AddrWithPrefix',\n"
+            f"    f: (x:any) => {{\n"
+            f"        const r=xju.json_codec.asInstanceOfString('string').f(x);\n"
+            f"        const [_,a,b,c,d,m]=xju.assert.assertMatches(\n"
+            f"            /^([0-9]+)[.]([0-9]+)[.]([0-9]+)[.]([0-9]+)[/]([0-9]+)$/, x as string);\n"
+            f"        [a,b,c,d].forEach(v=> xju.assert.assertNumberInRange(parseInt(v),0,255));\n"
+            f"        xju.assert.assertNumberInRange(parseInt(m),0,32);\n"
+            f"        return r;\n"
+            f"    }}\n"
+            f"}})")
 
     # xju.json_codec.CustomStringKeyClassCodec:
     @staticmethod
@@ -199,21 +285,37 @@ class IpV4AddrWithPrefix(IPv4Interface):
     def xju_json_codec_typescript_key_type()->Literal['String']:
         return 'String'
     @staticmethod
-    def xju_json_codec_get_typescript_isa_key(
-            expression:TypeScriptSourceCode,
+    def xju_json_codec_5_get_typescript_isa_key(
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that turns {expression} into a bool indicating whether the expression is a T-as-object-key'''
-        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
-        # REVISIT: tighten to use regex and test
-        return IpV4AddrWithPrefix.__codec.get_typescript_isa_key(expression,namespace)
+        '''return typescript source code that evaluates to a xju.json_codec.IsKey
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        return TypeScriptSourceCode(
+            f"(x:any) => {{\n"
+            f"    // note javascript turns the key into a string even if, say, it is a number\n"
+            f"    const r=/^([0-9]+)[.]([0-9]+)[.]([0-9]+)[.]([0-9]+)[/]([0-9]+)$/.exec(x as string);\n"
+            f"    if (r===null) {{\n"
+            f"        return false;\n"
+            f"    }}\n"
+            f"    const [_,a,b,c,d,m] = r;\n"
+            f"    return !([a,b,c,d].filter(v => parseInt(v) < 0 || parseInt(v) > 255).length ||\n"
+            f"             parseInt(m) < 0 || parseInt(m) > 32);\n"
+            f"}}")
     @staticmethod
-    def xju_json_codec_get_typescript_asa_key(
-            expression:TypeScriptSourceCode,
+    def xju_json_codec_5_get_typescript_asa_key(
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         '''return typescript source code that safely casts {expression} to a T, throwing an Error if {expression} is not valid as a T-as-object-key'''
         '''- may add any supporting definitions to namespace, e.g. type for T itself'''
-        # REVISIT: tighten to use regex and test
-        return IpV4AddrWithPrefix.__codec.get_typescript_asa(expression,namespace)
+        return TypeScriptSourceCode("\n".join([
+            f"xju.json_codec.asKeyInContext({{"
+            ,f"    typeName: 'IpV4Addr',"
+            ,f"    f: (x:any) => {{"
+            ,f"        // note javascript turns the key into a string even if, say, it is a number"
+            ,f"        const [a,b,c,d,m]=xju.assert.assertMatches("
+            ,f"            /^([0-9]+)[.]([0-9]+)[.]([0-9]+)[.]([0-9]+)[/]([0-9]+)$/, x as string);"
+            ,f"        [a,b,c,d].forEach(v=> xju.assert.assertNumberInRange(parseInt(v),0,255));"
+            ,f"        xju.assert.assertNumberInRange(parseInt(m),0,32);"
+            ,f"    }}"
+            ,f"}})"]))
     pass
 
 Assert(IpV4AddrWithPrefix).isSubclassOf(CustomClassCodec)
@@ -272,8 +374,6 @@ class Or:
 
 B = Union[str, And, Or]
 
-codec(B).add_typescript_alias(namespace, [TypeScriptUQN('B')])
-
 @dataclass(init=False)
 class MixedEnumValue:
     def __init__(self, *args, **argv):
@@ -294,11 +394,11 @@ class MixedEnum(MixedEnumValue, Enum):
     b = MixedEnumValue(2, 'jock')
     pass
 
-@dataclass
+@dataclass(kw_only=True)
 class EncodableData:
     an_int: int
     a_float: float
-    a_str: str
+    a_str: str = "a_str_default"
     a_new_int: Votes
     an_xju_int: ByteCount
     a_new_float: Milligrams
@@ -328,17 +428,19 @@ class EncodableData:
     a_mixed_in_enum: MixedEnum
     a_recursive: B
     an_enum_value: Literal[O.a]
+    a_json: JsonType
 
     a_custom_encoded: IpV4Addr
     another_custom_encoded: IpV4AddrWithPrefix
+    non_key_custom_encoded: Even
 
     # dictionary key encodings (json object keys must be strings; various python
     # dict key types are supported and encoded to/from strings)
 
     cl: ClassVar[int] = 3
 
-encodableData_codec=codec(EncodableData)
-encodableData_codec.ensure_typescript_defs(namespace)
+encodable_data_codec=codec(EncodableData)
+encodable_data_codec.ensure_typescript_defs(namespace)
 codec(int|str).add_typescript_alias(namespace, [TypeScriptUQN('xju'),TypeScriptUQN('NorS')])
 
 
@@ -366,217 +468,78 @@ class EncodableKeyTypes:
 encodable_key_types_codec=codec(EncodableKeyTypes)
 encodable_key_types_codec.ensure_typescript_defs(namespace)
 
-print(namespace.get_formatted_defs('export '))
+good_encodable_data=json.loads('''{
+        "an_int": 7,
+        "a_float": 9.2,
+        "a_str": "fred",
+        "a_new_int": 22,
+        "an_xju_int": 88,
+        "a_new_float": 2.2,
+        "an_xju_float": 18.2,
+        "a_new_str": "red",
+        "an_xju_str": "ally",
+        "a_null": null,
+        "a_boolean": true,
+        "a_union": "walker",
+        "a_list": [1,2,3],
+        "any_list": [1,null,"a"],
+        "a_set": [4,5,6],
+        "any_set": [null, 2],
+        "a_frozen_set": [7],
+        "any_frozen_set": [2, 4.6],
+        "some_bytes": [10,11,12],
+        "a_tuple": [8, "jock"],
+        "a_literal_str": "mai",
+        "a_literal_int": 7,
+        "a_literal_bool": true,
+        "a_class": {"first_name":"fran","middle_names":["jan"],"last_name":"lan","class":"Upper"},
+        "a_dont_encode":{"y":"yyy"},
+        "fred_7_false":false,
+        "a_recurse_self":{"defs":{}},
+        "a_timestamp":45000,
+        "an_enum":"fred",
+        "a_mixed_in_enum":{"k":2,"v":"jock"},
+        "a_recursive":{"a": [{"o": ["1","2",["7"]]},"3", [{ "a": ["4","6",["8"]] }]]},
+        "an_enum_value":"fred",
+        "a_json":9,
+        "a_custom_encoded":2975337473,
+        "another_custom_encoded":"177.88.12.0/22",
+        "non_key_custom_encoded":3
+    }''')
+
+good_encodable_key_types=EncodableKeyTypes(
+    str_key={ "fred":3 },
+    int_key={ 1:4 },
+    more_keys={ 9:2, None:1, 5.5:3, True:4 },
+    duration_key={ Duration(77.2):1 },
+    timestamp_key={ Timestamp(88.1):1 },
+    non_str_literal_key={ 10:1, True:2 },
+    str_literal_key={ "a\n\"nail\"'s tip":3, O.a:4, Surname("rooster"):5 },
+    enum_key={ O.a:1, O.b:2 },
+    custom_key={ IpV4Addr(3221751809):1 },
+    alt_custom_key={ IpV4AddrWithPrefix("192.8.8.1/24"):1 },
+    newstr_key={ Colour("red"):1, Colour("green"):2 },
+    xjustr_key={ TypeScriptUQN("ally"): 9},
+    newfloat_key={ Milligrams(22.0):1 },
+    xjufloat_key={ Metres(22.5):1 },
+    newint_key={ Votes(7):1 },
+    newbool_key={ Enabled(False):1 },
+    any_key={ "8":1, "fred":2, "null":3, "7.6":4, "true":5 }  # keys have to be strings to json.dumps
+)
+Assert(encodable_key_types_codec.encode(good_encodable_key_types))==encodable_key_types_codec.encode(encodable_key_types_codec.decode(encodable_key_types_codec.encode(good_encodable_key_types)))
+
+with open('json_codec_typescript_test.ts','w') as f:
+    print('/// <reference path="../xju.ts"/>', file=f)
+    print('/// <reference path="../xju/json_codec.ts"/>', file=f)
+    print(namespace.get_formatted_defs(), file=f)
+    print(f"const good_encodable_data=() => ({json.dumps(encodable_data_codec.encode(encodable_data_codec.decode(good_encodable_data)))});", file=f)
+    print(f"const good_encodable_key_types=() => ({json.dumps(encodable_key_types_codec.encode(good_encodable_key_types))});", file=f)
+    pass
 
 try:
     codec(int|str).add_typescript_alias(namespace, [TypeScriptUQN('xju'),TypeScriptUQN('NorS')])
 except Exception as e:
     Assert(readable_repr(e)).contains('is already defined')
-else:
-    assert False
-    pass
-
-Assert(codec(int).typescript_as_object_key_type())==TypeScriptSourceCode("string /* int */")
-Assert(codec(float).typescript_as_object_key_type())==TypeScriptSourceCode("string /* float */")
-Assert(codec(bool).typescript_as_object_key_type())==TypeScriptSourceCode("string /* bool */")
-Assert(codec(NoneType).typescript_as_object_key_type())==TypeScriptSourceCode("string /* null */")
-
-try:
-    codec(list[int]).typescript_as_object_key_type()
-except Exception as e:
-    Assert(readable_repr(e))=='Array<number> is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(list).typescript_as_object_key_type()
-except Exception as e:
-    Assert(readable_repr(e))=='Array<any> is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(set[int]).typescript_as_object_key_type()
-except Exception as e:
-    Assert(readable_repr(e))=='Array<number> /* with unique elements */ is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(set).typescript_as_object_key_type()
-except Exception as e:
-    Assert(readable_repr(e))=='Array<any> /* with unique elements */ is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(frozenset[int]).typescript_as_object_key_type()
-except Exception as e:
-    Assert(readable_repr(e))=='Array<number> /* with unique elements */ is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(frozenset).typescript_as_object_key_type()
-except Exception as e:
-    Assert(readable_repr(e))=='Array<any> /* with unique elements */ is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(tuple[bool]).typescript_as_object_key_type()
-except Exception as e:
-    Assert(readable_repr(e))=='[boolean] is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(dict).typescript_as_object_key_type()
-except Exception as e:
-    Assert(readable_repr(e))=='{ [key: string]: any } is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(dict[str,str]).typescript_as_object_key_type()
-except Exception as e:
-    Assert(readable_repr(e))=='{ [key: string]: string } is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-Assert(codec(ByteCount).typescript_as_object_key_type())==TypeScriptSourceCode('string /* xju.misc.ByteCount */')
-Assert(codec(Duration).typescript_as_object_key_type())==TypeScriptSourceCode('string /* xju.time.Duration */')
-
-Assert(codec(Timestamp).typescript_as_object_key_type())==TypeScriptSourceCode(
-    "string /* xju.time.Timestamp */")
-
-try:
-    codec(NonStringKey).typescript_as_object_key_type()
-except Exception as e:
-    Assert(readable_repr(e))=='NonStringKey is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-Assert(codec(O).typescript_as_object_key_type())==TypeScriptSourceCode("string /* O */")
-
-try:
-    AnyJsonCodecImpl().typescript_as_object_key_type()
-except Exception as e:
-    Assert(readable_repr(e))=='any is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-    
-try:
-    codec(FullName).typescript_as_object_key_type()
-except Exception as e:
-    Assert(readable_repr(e))=='FullName is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-    
-try:
-    codec(bytes).typescript_as_object_key_type()
-except Exception as e:
-    Assert(readable_repr(e))=='Array<number> /* bytes */ is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(Selfish).typescript_as_object_key_type()
-except Exception as e:
-    Assert(readable_repr(e))=='Selfish is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(Selfish).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)
-except Exception as e:
-    Assert(readable_repr(e))=='Selfish is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(Selfish).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)
-except Exception as e:
-    Assert(readable_repr(e))=='Selfish is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(list[int]).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)
-except Exception as e:
-    Assert(readable_repr(e))=='Array<number> is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(list).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)
-except Exception as e:
-    Assert(readable_repr(e))=='Array<any> is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(set[str]).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)
-except Exception as e:
-    Assert(readable_repr(e))=='Array<string> /* with unique elements */ is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(set).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)
-except Exception as e:
-    Assert(readable_repr(e))=='Array<any> /* with unique elements */ is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(frozenset[str]).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)
-except Exception as e:
-    Assert(readable_repr(e))=='Array<string> /* with unique elements */ is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(frozenset).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)
-except Exception as e:
-    Assert(readable_repr(e))=='Array<any> /* with unique elements */ is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(tuple[int,str]).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)
-except Exception as e:
-    Assert(readable_repr(e))=='[number,string] is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(tuple[int,str]).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)
-except Exception as e:
-    Assert(readable_repr(e))=='[number,string] is not allowed as a typescript object key type'
 else:
     assert False
     pass
@@ -609,274 +572,28 @@ else:
     pass
 
 try:
-    codec(dict[dict[int,bool],str]).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)  # type: ignore  # json_codec_plugin correctly rejects
+    codec(dict[list[int],str])  # type: ignore # json_codec_plugin correctly rejects
 except Exception as e:
-    Assert(readable_repr(e))=='{ [key: string /* int */]: boolean } is not allowed as a typescript object key type'
+    Assert(readable_repr(e)).contains("list[int] is not valid as a json object key")
+else:
+    assert False
+    pass
+
+Assert(codec(Even).get_json_schema())=={'type': 'integer', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}}
+
+try:
+    codec(IpV4Addr).encode(None)  # type: ignore  # json_codec plugin correctly rejects
+except Exception as e:
+    Assert(readable_repr(e)).contains("None (of type <class 'NoneType'>) is not a <class '__main__.IpV4Addr'>")
 else:
     assert False
     pass
 
 try:
-    codec(dict[dict,str]).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)  # type: ignore  # json_codec_plugin correctly rejects
+    codec(IpV4Addr).decode(None)
 except Exception as e:
-    Assert(readable_repr(e))=='{ [key: string]: any } is not allowed as a typescript object key type'
+    Assert(readable_repr(e)).contains("None (of type <class 'NoneType'>) is not a <class 'int'>.")
 else:
     assert False
     pass
 
-try:
-    codec(dict[JsonType,str]).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)  # type: ignore  # json_codec_plugin correctly rejects
-except Exception as e:
-    Assert(readable_repr(e))=="Failed to get typescript type of dictionary key that is any of (<class 'NoneType'>, <class 'bool'>, <class 'dict'>, <class 'list'>, <class 'float'>, <class 'str'>) because\n{ [key: string]: any } is not allowed as a typescript object key type."
-else:
-    assert False
-    pass
-
-try:
-    codec(bytes).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)  # type: ignore  # json_codec_plugin correctly rejects
-except Exception as e:
-    Assert(readable_repr(e))=='Array<number> /* bytes */ is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(dict).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)  # type: ignore  # json_codec_plugin correctly rejects
-except Exception as e:
-    Assert(readable_repr(e))=='{ [key: string]: any } is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(JsonType).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)  # type: ignore  # json_codec_plugin correctly rejects
-except Exception as e:
-    Assert(readable_repr(e))=='{ [key: string]: any } is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(list[int]).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)
-except Exception as e:
-    Assert(readable_repr(e))=='Array<number> is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(list).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)
-except Exception as e:
-    Assert(readable_repr(e))=='Array<any> is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(set[str]).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)
-except Exception as e:
-    Assert(readable_repr(e))=='Array<string> /* with unique elements */ is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(set).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)
-except Exception as e:
-    Assert(readable_repr(e))=='Array<any> /* with unique elements */ is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(frozenset[str]).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)
-except Exception as e:
-    Assert(readable_repr(e))=='Array<string> /* with unique elements */ is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(frozenset).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)
-except Exception as e:
-    Assert(readable_repr(e))=='Array<any> /* with unique elements */ is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(tuple[int,str]).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)
-except Exception as e:
-    Assert(readable_repr(e))=='[number,string] is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(tuple[int,str]).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)
-except Exception as e:
-    Assert(readable_repr(e))=='[number,string] is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(dict[dict[int,bool],str]).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)  # type: ignore  # json_codec_plugin correctly rejects
-except Exception as e:
-    Assert(readable_repr(e))=='{ [key: string /* int */]: boolean } is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(dict[dict,str]).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)  # type: ignore  # json_codec_plugin correctly rejects
-except Exception as e:
-    Assert(readable_repr(e))=='{ [key: string]: any } is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    AnyJsonCodecImpl().get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)
-except Exception as e:
-    Assert(readable_repr(e))=='any is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(bytes).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)  # type: ignore  # json_codec_plugin correctly rejects
-except Exception as e:
-    Assert(readable_repr(e))=='Array<number> /* bytes */ is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(dict).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)  # type: ignore  # json_codec_plugin correctly rejects
-except Exception as e:
-    Assert(readable_repr(e))=='{ [key: string]: any } is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    AnyJsonCodecImpl().get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)
-except Exception as e:
-    Assert(readable_repr(e))=='any is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(FullName).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)  # type: ignore  # json_codec_plugin correctly rejects
-except Exception as e:
-    Assert(readable_repr(e))=='FullName is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(FullName).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)  # type: ignore  # json_codec_plugin correctly rejects
-except Exception as e:
-    Assert(readable_repr(e))=='FullName is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(dict[list[int],str]).get_json_schema()  # type: ignore # json_codec_plugin correctly rejects
-except Exception as e:
-    Assert(readable_repr(e)).contains("list is not allowed as json object key type")
-else:
-    assert False
-    pass
-
-try:
-    codec(dict[list,str]).get_json_schema()  # type: ignore # json_codec_plugin correctly rejects
-except Exception as e:
-    Assert(readable_repr(e)).contains("list is not allowed as json object key type")
-else:
-    assert False
-    pass
-
-try:
-    codec(dict[set[str],str]).get_json_schema()  # type: ignore # json_codec_plugin correctly rejects
-except Exception as e:
-    Assert(readable_repr(e)).contains("set is not allowed as json object key type")
-else:
-    assert False
-    pass
-
-try:
-    codec(dict[frozenset[str],str]).get_json_schema()  # type: ignore # json_codec_plugin correctly rejects
-except Exception as e:
-    Assert(readable_repr(e)).contains("frozenset is not allowed as json object key type")
-else:
-    assert False
-    pass
-
-try:
-    codec(dict[set,str]).get_json_schema()  # type: ignore # json_codec_plugin correctly rejects
-except Exception as e:
-    Assert(readable_repr(e)).contains("set is not allowed as json object key type")
-else:
-    assert False
-    pass
-
-try:
-    codec(dict[frozenset,str]).get_json_schema()  # type: ignore # json_codec_plugin correctly rejects
-except Exception as e:
-    Assert(readable_repr(e)).contains("frozenset is not allowed as json object key type")
-else:
-    assert False
-    pass
-
-try:
-    codec(dict[tuple[int,str],str]).get_json_schema()  # type: ignore # json_codec_plugin correctly rejects
-except Exception as e:
-    Assert(readable_repr(e)).contains("tuple is not allowed as json object key type")
-else:
-    assert False
-    pass
-
-try:
-    codec(dict[dict[int,str],str]).get_json_schema()  # type: ignore # json_codec_plugin correctly rejects
-except Exception as e:
-    Assert(readable_repr(e)).contains("dict is not allowed as json object key type")
-else:
-    assert False
-    pass
-
-try:
-    codec(dict[dict,str]).get_json_schema()  # type: ignore # json_codec_plugin correctly rejects
-except Exception as e:
-    Assert(readable_repr(e)).contains("dict is not allowed as json object key type")
-else:
-    assert False
-    pass
-
-try:
-    # unreachable via codec()
-    AnyJsonCodecImpl().get_object_key_json_schema({})
-except Exception as e:
-    Assert(readable_repr(e)).contains("any json type is not allowed as json object key type")
-else:
-    assert False
-    pass
-
-try:
-    codec(dict[bytes,str]).get_json_schema()  # type: ignore # json_codec_plugin correctly rejects
-except Exception as e:
-    Assert(readable_repr(e)).contains("bytes is not allowed as json object key type")
-else:
-    assert False
-    pass
-
-try:
-    codec(dict[FullName,str]).get_json_schema()  # type: ignore # json_codec_plugin correctly rejects
-except Exception as e:
-    Assert(readable_repr(e)).contains("FullName is not allowed as json object key type")
-else:
-    assert False
-    pass

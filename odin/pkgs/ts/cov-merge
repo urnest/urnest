@@ -14,7 +14,11 @@ covs=[ (Path(p), set(uncovered_lines))
        for p, uncovered_lines in json.loads(Path(cov_file).read_text()).items()
        ]
 for path, set_of_uncovered_lines in covs:
-    result[path]=result.get(path, set()).symmetric_difference(set_of_uncovered_lines)
+    match result.get(path):
+        case None:
+            result[path]=set_of_uncovered_lines
+        case not_yet_covered:
+            result[path]=not_yet_covered.intersection(set_of_uncovered_lines)
     pass
 
 Path('agg.ts.cov').write_text(json.dumps({
