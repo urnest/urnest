@@ -145,10 +145,10 @@ def in_context(context:str,
         name=exceptionType.__name__
         def init(self,v):
             Xn.__init__(self,v)
-            for a in set.difference(set(dir(v)),set(dir(Xn))):
+            for a in set.difference(set(dir(v)),set(dir(Xn)).union({'cause','context'})):
                 try:
                     setattr(self,a,getattr(v,a))
-                except AttributeError:
+                except AttributeError:  #pragma NO COVER
                     pass
                 pass
             pass

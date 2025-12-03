@@ -549,6 +549,24 @@ def test25():
         pass
     pass
 
+
+def test27():
+    """check that in_context works with jsonschema.ValidationError"""
+    try:
+        import jsonschema # type: ignore
+    except:
+        print('WARNING: skipped json_codec json_schema tests because jsonschema not importable',
+              file=sys.stderr)
+    else:
+        try:
+            jsonschema.validate({'x':2}, {'$ref': '#/definitions/dict[int,str]', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'dict[int,str]': {'type': 'object', 'additionalProperties': {'type': 'string'}}}})
+            assert False
+        except jsonschema.ValidationError:
+            Assert(readable_repr(in_context(f"validate to bad schema"))).contains("Failed to validate to bad schema because\n2 is not of type 'string'")
+            pass
+        pass
+    pass
+    
 tests=[var for name,var in sorted(vars().items())
        if name.startswith('test') and callable(var)]
 for t in tests: t()
