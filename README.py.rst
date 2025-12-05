@@ -147,6 +147,7 @@ Various modules implemented to some broad principles:
 * extensible with custom encodings
 
 * see `xju/json_codec.py.test <xju/json_codec.py.test>`_ for full sample code
+* see `xju/test-json-codec-typescript.ts <xju/test-json-codec-typescript.ts>`_ for typescript sample code
 
 
 `xju.jsonschema <xju/jsonschema.py>`_
