@@ -1,7 +1,7 @@
-#ifndef SYSTEM_HEADER
-#define SYSTEM_HEADER
+#ifndef GMC_SYSTEM_H
+#define GMC_SYSTEM_H
 
-#include "config.hh"
+#include <config/config.hh>
 
 #ifdef STDC_HEADERS
 #include <ctype.h>

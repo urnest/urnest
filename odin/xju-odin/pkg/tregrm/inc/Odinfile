@@ -1,4 +1,27 @@
-# ./Odin/pkg/tregrm/inc/Odinfile
+# as a sanity check, verify that we can regenerate our own tok.h and nod.h unaltered
+# we don't overwrite the committed files automatically as they should not normally change
+# (if they do change, the responsible person will commit the changes once they're correct)
+%check==%check.ls:list
 
-TokTyp_.h == ../tregrm.ygi :tok.h +default=(TokTyp_.h.dflt) :boot
-NodTyp_.h == ../tregrm.ygi :nod.h +default=(NodTyp_.h.dflt) :boot
+%check.ls==<<
+%check_tok_typ_h
+%check_nod_typ_h
+
+%check_tok_typ_h==(TokTyp_.h)+cmd=diff (%ygt/tok.h) (TokTyp_.h):stdout
+%check_nod_typ_h==(NodTyp_.h)+cmd=diff (%ygt/nod.h) (NodTyp_.h):stdout
+
+%ygt==()+cmd=(%ygt.sh) (../ygt.sh) (../tregrm.ygi) (..%exe):output
+
+%ygt.sh==!<<
+#!/bin/sh -e
+ygt_sh=$1; ygi=$2; tregrm=$3; yaccid=$4;
+$ygt_sh "$ygi" "$yaccid" "$tregrm"
+if test -r ERRORS && [ $(wc -c < ERRORS) != 0 ]
+then
+  cat ERRORS >&2
+  exit 1
+fi
+if test -r WARNINGS && [ $(wc -l < WARNINGS) != 0 ]
+then
+  cat WARNINGS >&2
+fi

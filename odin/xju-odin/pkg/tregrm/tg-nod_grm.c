@@ -13,11 +13,16 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/AttTyp_.h"
-#include "inc/MarkTyp_.h"
-#include "inc/NodTyp_.h"
+#include <gmc/gmc.h>
+#include <tregrm/inc/AttTyp_.h>
+#include <tregrm/inc/MarkTyp_.h>
+#include <gmc/nod.h>
+#include <gmc/nod.h>
+#include <tregrm/inc/Type.hh>
+#include <tregrm/inc/Func.hh>
 
+tp_Nod Make_SymNod(tp_NodTyp, tp_Sym);
+tp_Nod Make_Nod(tp_NodTyp, tp_Nod);
 
 void
 Write_Node_Grammar(FilDsc, Rules_Nod)
@@ -56,7 +61,7 @@ Write_Node_Grammar(FilDsc, Rules_Nod)
 	       Node_Nod = Nod_FirstSon(Node_Nod); }/*if*/;
 	    Node_Sym = Nod_Sym(Node_Nod);
 	    if (!Get_Att(ATP_NodePrinted, Node_Sym).Int) {
-	       Attribute.Int = TRUE;
+	       Attribute.Int = true;
 	       Set_Att(ATP_NodePrinted, Node_Sym, Attribute);
 	       Write(FilDsc, "<");
 	       Write(FilDsc, Sym_Str(Node_Sym));

@@ -67,9 +67,11 @@
 
 
 /* First part of user prologue.  */
-#line 1 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 1 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
 
-#include "inc/GMC.h"
+#include "gmc/gmc.h"
+#include "gmc/nod.h"
+#include "tregrm/inc/Func.hh"
 extern int num_ParseErrors;
 tp_Nod YY_Parse() {tp_Nod Nod;
 num_ParseErrors = 0; Init_Lex(); Init_ConstructTree();
@@ -79,7 +81,7 @@ void yyerror(GMC_ARG(char*, s)) GMC_DCL(char*, s)
 {num_ParseErrors++; ParseError(s);}
 int yylex() {return YY_Lex();}
 
-#line 83 "y.tab.c"
+#line 85 "y.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -626,12 +628,12 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    37,    37,    44,    49,    52,    56,    59,    63,    65,
-      69,    74,    77,    81,    84,    88,    92,    96,   100,   108,
-     113,   116,   120,   123,   127,   132,   135,   139,   142,   146,
-     152,   156,   159,   163,   170,   172,   176,   180,   183,   187,
-     191,   194,   197,   200,   204,   208,   210,   212,   216,   219,
-     223,   230,   232,   234,   236
+       0,    39,    39,    46,    51,    54,    58,    61,    65,    67,
+      71,    76,    79,    83,    86,    90,    94,    98,   102,   110,
+     115,   118,   122,   125,   129,   134,   137,   141,   144,   148,
+     154,   158,   161,   165,   172,   174,   178,   182,   185,   189,
+     193,   196,   199,   202,   206,   210,   212,   214,   218,   221,
+     225,   232,   234,   236,   238
 };
 #endif
 
@@ -1245,211 +1247,211 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* xTreeGrammar: xIncludes xScanner xNodes xRules  */
-#line 40 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 42 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
            {Action(1,4);}
-#line 1251 "y.tab.c"
+#line 1253 "y.tab.c"
     break;
 
   case 3: /* xIncludes: xIncludes_1  */
-#line 44 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 46 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
                 {Action(2,1);}
-#line 1257 "y.tab.c"
+#line 1259 "y.tab.c"
     break;
 
   case 5: /* xIncludes_1: %empty  */
-#line 52 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 54 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
      {Action(0,0);}
-#line 1263 "y.tab.c"
+#line 1265 "y.tab.c"
     break;
 
   case 6: /* xIncludes_101: xIncludes_101 xIncludeFile  */
-#line 57 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 59 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
                  {Action(0,2);}
-#line 1269 "y.tab.c"
+#line 1271 "y.tab.c"
     break;
 
   case 10: /* xScanner: xScanner_1  */
-#line 69 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 71 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
                {Action(3,1);}
-#line 1275 "y.tab.c"
+#line 1277 "y.tab.c"
     break;
 
   case 12: /* xScanner_1: %empty  */
-#line 77 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 79 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
      {Action(0,0);}
-#line 1281 "y.tab.c"
+#line 1283 "y.tab.c"
     break;
 
   case 13: /* xScanner_101: xScanner_101 xLexicalDefinition  */
-#line 82 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 84 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
                        {Action(0,2);}
-#line 1287 "y.tab.c"
+#line 1289 "y.tab.c"
     break;
 
   case 15: /* xLexicalDefinition: TOK_EOF_ TOK_Equals TOK_Nameleaf  */
-#line 90 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 92 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
                  {Action(4,1);}
-#line 1293 "y.tab.c"
+#line 1295 "y.tab.c"
     break;
 
   case 16: /* xLexicalDefinition: TOK_ERR_ TOK_Equals TOK_Nameleaf  */
-#line 94 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 96 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
                  {Action(5,1);}
-#line 1299 "y.tab.c"
+#line 1301 "y.tab.c"
     break;
 
   case 17: /* xLexicalDefinition: TOK_AStringleaf TOK_Equals TOK_Nameleaf  */
-#line 98 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 100 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
                  {Action(6,2);}
-#line 1305 "y.tab.c"
+#line 1307 "y.tab.c"
     break;
 
   case 18: /* xLexicalDefinition: TOK_QStringleaf TOK_Equals TOK_Nameleaf TOK_DoubleArrow TOK_QStringleaf  */
-#line 104 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 106 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
                     {Action(7,3);}
-#line 1311 "y.tab.c"
+#line 1313 "y.tab.c"
     break;
 
   case 19: /* xNodes: xNodes_1  */
-#line 108 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 110 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
              {Action(8,1);}
-#line 1317 "y.tab.c"
+#line 1319 "y.tab.c"
     break;
 
   case 21: /* xNodes_1: %empty  */
-#line 116 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 118 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
      {Action(0,0);}
-#line 1323 "y.tab.c"
+#line 1325 "y.tab.c"
     break;
 
   case 22: /* xNodes_101: xNodes_101 TOK_QStringleaf  */
-#line 121 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 123 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
                     {Action(0,2);}
-#line 1329 "y.tab.c"
+#line 1331 "y.tab.c"
     break;
 
   case 24: /* xRules: xRules_1  */
-#line 127 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 129 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
              {Action(9,1);}
-#line 1335 "y.tab.c"
+#line 1337 "y.tab.c"
     break;
 
   case 26: /* xRules_1: %empty  */
-#line 135 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 137 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
      {Action(0,0);}
-#line 1341 "y.tab.c"
+#line 1343 "y.tab.c"
     break;
 
   case 27: /* xRules_101: xRules_101 xRule  */
-#line 140 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 142 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
           {Action(0,2);}
-#line 1347 "y.tab.c"
+#line 1349 "y.tab.c"
     break;
 
   case 29: /* xRule: TOK_Nameleaf xAlternateList TOK_SemiColon  */
-#line 148 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 150 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
                   {Action(10,2);}
-#line 1353 "y.tab.c"
+#line 1355 "y.tab.c"
     break;
 
   case 30: /* xAlternateList: xAlternateList_1  */
-#line 152 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 154 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
                      {Action(11,1);}
-#line 1359 "y.tab.c"
+#line 1361 "y.tab.c"
     break;
 
   case 31: /* xAlternateList_1: xAlternateList_1 xAlternate  */
-#line 157 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 159 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
                {Action(0,2);}
-#line 1365 "y.tab.c"
+#line 1367 "y.tab.c"
     break;
 
   case 33: /* xAlternate: TOK_SingleArrow xExpression xAlternate_1  */
-#line 165 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 167 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
                  {Action(12,2);}
-#line 1371 "y.tab.c"
+#line 1373 "y.tab.c"
     break;
 
   case 35: /* xAlternate_1: %empty  */
-#line 172 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 174 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
      {Action(0,0);}
-#line 1377 "y.tab.c"
+#line 1379 "y.tab.c"
     break;
 
   case 36: /* xExpression: xExpression_1  */
-#line 176 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 178 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
                   {Action(-13,1);}
-#line 1383 "y.tab.c"
+#line 1385 "y.tab.c"
     break;
 
   case 37: /* xExpression_1: xExpression_1 xTerm  */
-#line 181 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 183 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
           {Action(0,2);}
-#line 1389 "y.tab.c"
+#line 1391 "y.tab.c"
     break;
 
   case 38: /* xExpression_1: %empty  */
-#line 183 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 185 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
      {Action(0,0);}
-#line 1395 "y.tab.c"
+#line 1397 "y.tab.c"
     break;
 
   case 39: /* xTerm: xElement TOK_DoubleSlash xElement  */
-#line 189 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 191 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
              {Action(14,2);}
-#line 1401 "y.tab.c"
+#line 1403 "y.tab.c"
     break;
 
   case 40: /* xTerm: xElement TOK_Plus  */
-#line 192 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 194 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
              {Action(15,1);}
-#line 1407 "y.tab.c"
+#line 1409 "y.tab.c"
     break;
 
   case 41: /* xTerm: xElement TOK_Star  */
-#line 195 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 197 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
              {Action(16,1);}
-#line 1413 "y.tab.c"
+#line 1415 "y.tab.c"
     break;
 
   case 42: /* xTerm: xElement TOK_Question  */
-#line 198 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 200 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
                  {Action(17,1);}
-#line 1419 "y.tab.c"
+#line 1421 "y.tab.c"
     break;
 
   case 49: /* xTreeSpec: TOK_DoubleArrow xNodeName TOK_Question  */
-#line 221 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 223 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
                  {Action(18,1);}
-#line 1425 "y.tab.c"
+#line 1427 "y.tab.c"
     break;
 
   case 50: /* xTreeSpec: TOK_DoubleArrow TOK_LeftParen xNodeName TOK_RightParen  */
-#line 226 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 228 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
                    {Action(19,1);}
-#line 1431 "y.tab.c"
+#line 1433 "y.tab.c"
     break;
 
   case 52: /* TOK_Nameleaf: TOK_Name  */
-#line 232 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 234 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
                          {Action(20,-1);}
-#line 1437 "y.tab.c"
+#line 1439 "y.tab.c"
     break;
 
   case 53: /* TOK_AStringleaf: TOK_AString  */
-#line 234 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 236 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
                                {Action(21,-1);}
-#line 1443 "y.tab.c"
+#line 1445 "y.tab.c"
     break;
 
   case 54: /* TOK_QStringleaf: TOK_QString  */
-#line 236 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 238 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
                                {Action(22,-1);}
-#line 1449 "y.tab.c"
+#line 1451 "y.tab.c"
     break;
 
 
-#line 1453 "y.tab.c"
+#line 1455 "y.tab.c"
 
       default: break;
     }
@@ -1642,5 +1644,5 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 238 "/home/xju/tmp/oc122/xjutv/FILES/x/l/tregrm.ygi.2611851.y"
+#line 240 "/home/xju/tmp/octs/xjutv/FILES/a/q/tregrm.ygi.1630580.y"
 

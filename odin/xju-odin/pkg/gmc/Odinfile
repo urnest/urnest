@@ -1,0 +1,12 @@
+%all==%all.ls:list
+
+%all.ls==<<
+%gmc.a
+inotify-stub.c+inc_sp=(..):o
+err-no-ipc.c+inc_sp=(..):o
+
+%gmc.c.sm==<<
+gmc.c
+
+
+%gmc.a==%gmc.c.sm+inc_sp=(..):a

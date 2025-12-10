@@ -15,15 +15,16 @@ geoff@boulder.colorado.edu
 
 #include <stdio.h>
 
-#include "inc/GMC.h"
-#include "inc/Str.h"
-#include "inc/AttTyp_.h"
-#include "inc/TokTyp_.h"
-
+#include <gmc/gmc.h>
+#include <gmc/nod.h>
+#include <tregrm/inc/AttTyp_.h>
+#include <tregrm/inc/TokTyp_.h>
+#include <tregrm/inc/Type.hh>
+#include <tregrm/inc/Func.hh>
 
 int	NextChar;
 
-boolean	LastEOL;
+bool	LastEOL;
 int	LineNum;
 int	TokNum;
 
@@ -36,9 +37,9 @@ GetChar()
    if (LastEOL) {
       LineNum += 1;
       TokNum = 0;
-      LastEOL = FALSE; }/*if*/;
+      LastEOL = false; }/*if*/;
    Ch = getchar();
-   if (Ch == '\n') LastEOL = TRUE;
+   if (Ch == '\n') LastEOL = true;
    return Ch;
    }/*GetChar*/
 
@@ -51,7 +52,7 @@ Init_Lex()
 
    LineNum = 0;
    TokNum = 0;
-   LastEOL = TRUE;
+   LastEOL = true;
    NextChar = GetChar();
 
    Sym = Str_Sym("EOF"); Attribute.Int = TOK_EOF_;
@@ -86,7 +87,7 @@ YY_Lex()
    int SymTok;
 
    TokNum += 1;
-   while (TRUE) {
+   while (true) {
       Chr = NextChar;
       if (Chr != EOF) NextChar = GetChar();
       switch (Chr) {
@@ -200,7 +201,7 @@ YY_Lex()
    }/*YY_Lex*/
 
 
-boolean
+bool
 IsNameChr(Chr)
    char Chr;
 {
@@ -218,10 +219,10 @@ IsNameChr(Chr)
       case '0' : case '1' : case '2' : case '3' : case '4' :
       case '5' : case '6' : case '7' : case '8' : case '9' :
       case '-' : case '_' : case '.' : case '/' : case ',' :{
-	 return TRUE;
+	 return true;
 	 break;}/*case*/;
       default :{
-	 return FALSE; };}/*switch*/;
+	 return false; };}/*switch*/;
 /* NOTREACHED */
    }/*IsNameChr*/
 

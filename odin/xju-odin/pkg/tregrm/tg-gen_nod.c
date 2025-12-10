@@ -13,7 +13,10 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
+#include <gmc/gmc.h>
+#include <gmc/nod.h>
+#include <tregrm/inc/Type.hh>
+#include <tregrm/inc/Func.hh>
 
 
 void
@@ -24,15 +27,20 @@ Gen_NodeTypes(FilDsc, Nodes_Nod)
    tp_Nod NodeType_Nod;
    int i;
 
-   Write(FilDsc, "#ifndef TP_YYNODTYP\n#define TP_YYNODTYP\n\n");
+   Write(FilDsc, "#ifndef TP_YYNODTYP\n#define TP_YYNODTYP\n\ntypedef enum NodTyp {");
    for (i=1; i<=Nod_NumSons(Nodes_Nod); i++) {
+      if (i>1) {
+         Write(FilDsc, ",\n");
+      }
+      else {
+         Write(FilDsc, "\n");
+      }
       NodeType_Nod = Nod_Son(i, Nodes_Nod);
-      Write(FilDsc, "#define ");
+      Write(FilDsc, "  ");
       Write(FilDsc, Sym_Str(Nod_Sym(NodeType_Nod)));
-      Write(FilDsc, " ");
-      WriteInt(FilDsc, i);
-      Writeln(FilDsc, ""); }/*for*/;
-   Write(FilDsc, "\n#endif\n");
+      Write(FilDsc, "=");
+      WriteInt(FilDsc, i); }/*for*/;
+   Write(FilDsc, "\n} tp_NodTyp;\n\n#endif\n");
    }/*Gen_NodeTypes*/
 
 

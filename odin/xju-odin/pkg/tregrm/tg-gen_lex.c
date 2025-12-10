@@ -13,8 +13,10 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/NodTyp_.h"
+#include <gmc/gmc.h>
+#include <gmc/nod.h>
+#include <tregrm/inc/Type.hh>
+#include <tregrm/inc/Func.hh>
 
 
 void
@@ -41,12 +43,13 @@ Gen_LexTypes(FilDsc, Scanner_Nod)
       Write(FilDsc, Sym_Str(Nod_Sym(Nod_Son(Son, LexDef_Nod))));
       Write(FilDsc, " ");
       WriteInt(FilDsc, Num);
-      Writeln(FilDsc, ""); }/*for*/;
+      Writeln(FilDsc, "");
+   }/*for*/;
    Writeln(FilDsc, "\n#endif");
    }/*Gen_LexTypes*/
    
 
-boolean
+bool
 Is_UserLeafDef(Nod)
    tp_Nod Nod;
 {

@@ -7,16 +7,25 @@
 %odin-install! == <<
    %exe > $ODINPKG/tregrm.exe
 
-%exe == %tregrm.c.sm +ignore=\\.hh\$ :exe
+%all==%all.ls:list
+%all.ls==<<
+inc%check
 
-%debug! == %tregrm.c.sm +debug +ignore=\\.hh\$ +gnu :dbx
+%c-opts==<<
++inc_sp=(.)
++inc_sp=(..)
+
+%exe == %tregrm.c.sm+(%c-opts) +ignore=\\.hh\$ :exe
+
+%debug! == %tregrm.c.sm+(%c-opts) +debug +ignore=\\.hh\$ +gnu :dbx
 
 %tregrm.c.sm == <<
    tg-main.c; tg-anal.c; tg-att.c; tg-dummy.c; tg-gen_grm.c
    tg-gen_lex.c; tg-gen_nod.c; tg-nod_grm.c; tg-yylex.c; tregrm-yacc.c
-   ../odin/if-err.c +define=NO_IPC
-   ../odin/if-file.c; ../odin/if-io.c; ../odin/if-nod.c; ../odin/if-symbol.c
-   ../odin/if-inotify-stub.c
+   ../gmc/gmc.c
+   ../gmc/err-no-ipc.c
+   ../gmc/inotify-stub.c
+   ../gmc/nod.c
 
    == () +cmd='if [ "$ODINBOOT" = "" ] ; then echo "\
 tregrm-yacc.c == tregrm.ygi :c +default=(tregrm-yacc.c.dflt) :boot \

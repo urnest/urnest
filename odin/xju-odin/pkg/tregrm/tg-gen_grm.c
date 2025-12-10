@@ -13,11 +13,12 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/AttTyp_.h"
-#include "inc/Lex_.h"
-#include "inc/NodTyp_.h"
-
+#include <gmc/gmc.h>
+#include <gmc/nod.h>
+#include <tregrm/inc/Type.hh>
+#include <tregrm/inc/AttTyp_.h>
+#include <tregrm/inc/Lex_.h>
+#include <tregrm/inc/Func.hh>
 
 #define				MAX_Dummys 100
 
@@ -77,7 +78,7 @@ Gen_Grammar(FilDsc, Includes_Nod, Scanner_Nod, Rules_Nod)
       for (i1=1; i1<Nod_NumSons(AltList_Nod); i1++) {
 	 Alternative_Nod = Nod_Son(i1, AltList_Nod);
 	 NumSons = 0;
-	 Gen_Seq(FilDsc, Nod_Son(1, Alternative_Nod), Symbol, TRUE, &Offset, &NumSons);
+	 Gen_Seq(FilDsc, Nod_Son(1, Alternative_Nod), Symbol, true, &Offset, &NumSons);
 	 Gen_Act(FilDsc, Alternative_Nod, NumSons);
 	 Writeln(FilDsc, "|"); }/*for*/;
       Alternative_Nod = Nod_Son(Nod_NumSons(AltList_Nod), AltList_Nod);
@@ -87,7 +88,7 @@ Gen_Grammar(FilDsc, Includes_Nod, Scanner_Nod, Rules_Nod)
 	 if (Nod_NumSons(Alternative_Nod) == 1) {
 	    Gen_Rule(FilDsc, Node, Symbol, &Offset, &NumSons);
 	 }else{
-	    Gen_Seq(FilDsc, Node, Symbol, TRUE, &Offset, &NumSons);
+	    Gen_Seq(FilDsc, Node, Symbol, true, &Offset, &NumSons);
 	    Gen_Act(FilDsc, Alternative_Nod, NumSons);
 	    Writeln(FilDsc, ";");
 	    };}/*select*/;
@@ -149,7 +150,7 @@ Gen_Rule(FilDsc, Node, Symbol, Offset_Ptr, NumSons_Ptr)
 
    switch (Nod_NodTyp(Node)) {
       case SEQ: case NAME: case DSTRNG: case KSTRNG: {
-	 Gen_Seq(FilDsc, Node, Symbol, TRUE, Offset_Ptr, NumSons_Ptr);
+	 Gen_Seq(FilDsc, Node, Symbol, true, Offset_Ptr, NumSons_Ptr);
 	 Write_Act(FilDsc, 0, *NumSons_Ptr);
 	 Writeln(FilDsc, ";");
 	 break;}/*case*/;
@@ -159,11 +160,11 @@ Gen_Rule(FilDsc, Node, Symbol, Offset_Ptr, NumSons_Ptr)
 	 *NumSons_Ptr = 1;
 	 nodson = Nod_Son(1, Node);
 	 ioftmp = *Offset_Ptr;
-	 Gen_Seq(FilDsc, nodson, Symbol, TRUE, Offset_Ptr, NumSons_Ptr);
+	 Gen_Seq(FilDsc, nodson, Symbol, true, Offset_Ptr, NumSons_Ptr);
 	 Write_Act(FilDsc, 0, *NumSons_Ptr);
 	 Write(FilDsc, "|\n    ");
 	 *NumSons_Ptr = 0;
-	 Gen_Seq(FilDsc, nodson, Symbol, FALSE, &ioftmp, NumSons_Ptr);
+	 Gen_Seq(FilDsc, nodson, Symbol, false, &ioftmp, NumSons_Ptr);
 	 Write_Act(FilDsc, 0, *NumSons_Ptr);
 	 Writeln(FilDsc, ";");
 	 break;}/*case*/;
@@ -173,7 +174,7 @@ Gen_Rule(FilDsc, Node, Symbol, Offset_Ptr, NumSons_Ptr)
 	 *NumSons_Ptr = 1;
 	 nodson = Nod_Son(1, Node);
 	 ioftmp = *Offset_Ptr;
-	 Gen_Seq(FilDsc, nodson, Symbol, TRUE, Offset_Ptr, NumSons_Ptr);
+	 Gen_Seq(FilDsc, nodson, Symbol, true, Offset_Ptr, NumSons_Ptr);
 	 Write_Act(FilDsc, 0, *NumSons_Ptr);
 	 Write(FilDsc, "|\n\n    ");
 	 Write_Act(FilDsc, 0, 0);
@@ -184,7 +185,7 @@ Gen_Rule(FilDsc, Node, Symbol, Offset_Ptr, NumSons_Ptr)
 	 *NumSons_Ptr = 0;
 	 nodson = Nod_Son(1, Node);
 	 ioftmp = *Offset_Ptr;
-	 Gen_Seq(FilDsc, nodson, Symbol, TRUE, Offset_Ptr, NumSons_Ptr);
+	 Gen_Seq(FilDsc, nodson, Symbol, true, Offset_Ptr, NumSons_Ptr);
 	 Write_Act(FilDsc, 0, *NumSons_Ptr);
 	 Write(FilDsc, "|\n\n    ");
 	 Write_Act(FilDsc, 0, 0);
@@ -196,13 +197,13 @@ Gen_Rule(FilDsc, Node, Symbol, Offset_Ptr, NumSons_Ptr)
 	 *NumSons_Ptr = 1;
 	 ndson1 = Nod_Son(1, Node);
 	 ndson2 = Nod_Son(2, Node);
-	 Gen_Seq(FilDsc, ndson2, Symbol, TRUE, Offset_Ptr, NumSons_Ptr);
+	 Gen_Seq(FilDsc, ndson2, Symbol, true, Offset_Ptr, NumSons_Ptr);
 	 ioftmp = *Offset_Ptr;
-	 Gen_Seq(FilDsc, ndson1, Symbol, TRUE, Offset_Ptr, NumSons_Ptr);
+	 Gen_Seq(FilDsc, ndson1, Symbol, true, Offset_Ptr, NumSons_Ptr);
 	 Write_Act(FilDsc, 0, *NumSons_Ptr);
 	 Write(FilDsc, "|\n    ");
 	 *NumSons_Ptr = 0;
-	 Gen_Seq(FilDsc, ndson1, Symbol, FALSE, &ioftmp, NumSons_Ptr);
+	 Gen_Seq(FilDsc, ndson1, Symbol, false, &ioftmp, NumSons_Ptr);
 	 Write_Act(FilDsc, 0, *NumSons_Ptr);
 	 Writeln(FilDsc, ";");
 	 break;}/*case*/;
@@ -216,7 +217,7 @@ Gen_Seq(FilDsc, Node, Symbol, ensymf, Offset_Ptr, NumSons_Ptr)
    tp_FilDsc FilDsc;
    tp_Nod Node;
    tp_Sym Symbol;
-   boolean ensymf;
+   bool ensymf;
    int *Offset_Ptr, *NumSons_Ptr;
 {
    int i;
@@ -236,7 +237,7 @@ Gen_Token(FilDsc, Node, Symbol, ensymf, Offset_Ptr, NumSons_Ptr)
    tp_FilDsc FilDsc;
    tp_Nod Node;
    tp_Sym Symbol;
-   boolean ensymf;
+   bool ensymf;
    int *Offset_Ptr, *NumSons_Ptr;
 {
    tp_Str Str;

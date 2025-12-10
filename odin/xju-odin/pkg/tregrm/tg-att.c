@@ -13,8 +13,10 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/AttTyp_.h"
+#include <gmc/gmc.h>
+#include <gmc/nod.h>
+#include <tregrm/inc/Type.hh>
+#include <tregrm/inc/AttTyp_.h>
 
 typedef tp_Att tps_AttArr [MAX_ATP];
 typedef tp_Att * tp_AttArr;

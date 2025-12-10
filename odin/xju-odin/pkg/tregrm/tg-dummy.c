@@ -13,7 +13,8 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
+#include <gmc/gmc.h>
+#include <gmc/nod.h>
 
 typedef struct {
    tp_Nod Node;
@@ -24,7 +25,7 @@ typedef struct {
 tps_Dummy	DummyStack [MAX_DummyStack];
 int		num_DummyStack = 0;
 
-boolean
+bool
 Empty_DummyStack()
 {
    return (num_DummyStack == 0);

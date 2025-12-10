@@ -1,27 +1,29 @@
 #ifndef TP_YYNODTYP
 #define TP_YYNODTYP
 
-#define PROGRM 1
-#define NOD_Include 2
-#define SCANNR 3
-#define EOFLDF 4
-#define ERRLDF 5
-#define NONLDF 6
-#define LEAFDF 7
-#define NODES 8
-#define RULES 9
-#define RULE 10
-#define ALTLST 11
-#define ALTRNT 12
-#define SEQ 13
-#define LIST 14
-#define PLUS 15
-#define STAR 16
-#define QUESTION 17
-#define OPTNAL 18
-#define OUTNOD 19
-#define NAME 20
-#define DSTRNG 21
-#define KSTRNG 22
+typedef enum NodTyp {
+  PROGRM=1,
+  NOD_Include=2,
+  SCANNR=3,
+  EOFLDF=4,
+  ERRLDF=5,
+  NONLDF=6,
+  LEAFDF=7,
+  NODES=8,
+  RULES=9,
+  RULE=10,
+  ALTLST=11,
+  ALTRNT=12,
+  SEQ=13,
+  LIST=14,
+  PLUS=15,
+  STAR=16,
+  QUESTION=17,
+  OPTNAL=18,
+  OUTNOD=19,
+  NAME=20,
+  DSTRNG=21,
+  KSTRNG=22
+} tp_NodTyp;
 
 #endif

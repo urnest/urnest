@@ -1,10 +1,6 @@
-#include "inc/GMC.h"
-#include "inc/System.hh"
-#include "inc/Type.hh"
-#include "inc/Func.hh"
-#include "inc/Var.hh"
+#include "gmc/inotify.h"
+#include <stdlib.h>
 
-#include <sys/inotify.h>
 int Create_Inotify_Fd(){
   abort();
 }

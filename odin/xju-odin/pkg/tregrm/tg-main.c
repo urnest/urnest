@@ -13,7 +13,11 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
+#include <gmc/gmc.h>
+#include <gmc/nod.h>
+#include <tregrm/inc/Type.hh>
+#include <stdlib.h>
+#include <tregrm/inc/Func.hh>
 
 tp_Str		Author = "geoff@cs.colorado.edu";
 
@@ -29,8 +33,7 @@ main()
 
    DumpCore = (getenv("DUMPCORE") != 0);
 
-   Init_IO();
-   Init_Err();
+   Init_Gmc();
 
    Root = YY_Parse();
    if (Num_Errors() > 0) return 101;
@@ -43,17 +46,17 @@ main()
    Analyze(Scanner_Nod, Nodes_Nod, Rules_Nod);
    if (Num_Errors() > 0) return 102;
 
-   FilDsc = FileName_WFilDsc("LEX_TAB", FALSE);
+   FilDsc = FileName_WFilDsc("LEX_TAB", false);
    Gen_LexTypes(FilDsc, Scanner_Nod);
    Close(FilDsc);
    if (Num_Errors() > 0) return 103;
 
-   FilDsc = FileName_WFilDsc("NOD_TAB", FALSE);
+   FilDsc = FileName_WFilDsc("NOD_TAB", false);
    Gen_NodeTypes(FilDsc, Nodes_Nod);
    Close(FilDsc);
    if (Num_Errors() > 0) return 104;
 
-   FilDsc = FileName_WFilDsc("GRM_TAB", FALSE);
+   FilDsc = FileName_WFilDsc("GRM_TAB", false);
    Gen_Grammar(FilDsc, Includes_Nod, Scanner_Nod, Rules_Nod);
    Close(FilDsc);
    if (Num_Errors() > 0) return 105;

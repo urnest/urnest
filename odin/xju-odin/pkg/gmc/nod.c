@@ -13,7 +13,9 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
+#include <gmc/gmc.h>
+#include <gmc/nod.h>
+#include <stdlib.h>
 
 int		num_ParseErrors = 0;
 
@@ -32,8 +34,7 @@ typedef struct _tps_Nod {
    }				tps_Nod;
 
 
-tp_Nod
-New_Nod(GMC_ARG_VOID)
+tp_Nod New_Nod()
 {
    tp_Nod Nod;
 
@@ -52,11 +53,7 @@ New_Nod(GMC_ARG_VOID)
    }/*New_Nod*/
 
 
-void
-Ret_Nod(
-   GMC_ARG(tp_Nod, Nod)
-   )
-   GMC_DCL(tp_Nod, Nod)
+void Ret_Nod(tp_Nod Nod)
 {
    if (Nod == NIL) {
       return; }/*if*/;
@@ -67,80 +64,46 @@ Ret_Nod(
    }/*Ret_Nod*/
 
 
-tp_NodTyp
-Nod_NodTyp(
-   GMC_ARG(tp_Nod, Nod)
-   )
-   GMC_DCL(tp_Nod, Nod)
+tp_NodTyp Nod_NodTyp(tp_Nod Nod)
 {
    if (Nod == ERROR) return ERROR;
    return Nod->NodTyp;
    }/*Nod_NodTyp*/
 
 
-void
-Set_Nod_NodTyp(
-   GMC_ARG(tp_Nod, Nod),
-   GMC_ARG(tp_NodTyp, NodTyp)
-   )
-   GMC_DCL(tp_Nod, Nod)
-   GMC_DCL(tp_NodTyp, NodTyp)
+void Set_Nod_NodTyp(tp_Nod Nod,tp_NodTyp NodTyp)
 {
    Nod->NodTyp = NodTyp;
    }/*Set_Nod_NodTyp*/
 
 
-tp_Nod
-Nod_FirstSon(
-   GMC_ARG(tp_Nod, Nod)
-   )
-   GMC_DCL(tp_Nod, Nod)
+tp_Nod Nod_FirstSon(tp_Nod Nod)
 {
    if (Nod == ERROR) return ERROR;
    return Nod->Son;
    }/*Nod_FirstSon*/
 
 
-void
-Set_Nod_FirstSon(
-   GMC_ARG(tp_Nod, Nod),
-   GMC_ARG(tp_Nod, FirstSon)
-   )
-   GMC_DCL(tp_Nod, Nod)
-   GMC_DCL(tp_Nod, FirstSon)
+void Set_Nod_FirstSon(tp_Nod Nod,tp_Nod FirstSon)
 {
    Nod->Son = FirstSon;
    }/*Set_Nod_FirstSon*/
 
 
-tp_Nod
-Nod_Brother(
-   GMC_ARG(tp_Nod, Nod)
-   )
-   GMC_DCL(tp_Nod, Nod)
+tp_Nod Nod_Brother(tp_Nod Nod)
 {
    if (Nod == ERROR) return ERROR;
    return Nod->Brother;
    }/*Nod_Brother*/
 
 
-void
-Set_Nod_Brother(
-   GMC_ARG(tp_Nod, Nod),
-   GMC_ARG(tp_Nod, Brother)
-   )
-   GMC_DCL(tp_Nod, Nod)
-   GMC_DCL(tp_Nod, Brother)
+void Set_Nod_Brother(tp_Nod Nod,tp_Nod Brother)
 {
    Nod->Brother = Brother;
    }/*Set_Nod_Brother*/
 
 
-int
-Nod_NumSons(
-   GMC_ARG(tp_Nod, Nod)
-   )
-   GMC_DCL(tp_Nod, Nod)
+int Nod_NumSons(tp_Nod Nod)
 {
    tp_Nod SonNod;
    int NumSons;
@@ -153,13 +116,7 @@ Nod_NumSons(
    }/*Nod_NumSons*/
 
 
-tp_Nod
-Nod_Son(
-   GMC_ARG(int, I),
-   GMC_ARG(tp_Nod, Nod)
-   )
-   GMC_DCL(int, I)
-   GMC_DCL(tp_Nod, Nod)
+tp_Nod Nod_Son(int I,tp_Nod Nod)
 {
    tp_Nod SonNod;
    int i;
@@ -176,24 +133,14 @@ Nod_Son(
    }/*Nod_Son*/
 
 
-tp_Sym
-Nod_Sym(
-   GMC_ARG(tp_Nod, Nod)
-   )
-   GMC_DCL(tp_Nod, Nod)
+tp_Sym Nod_Sym(tp_Nod Nod)
 {
    if (Nod == ERROR) return ERROR;
    return Nod->Sym;
    }/*Nod_Sym*/
 
 
-void
-Set_Nod_Sym(
-   GMC_ARG(tp_Nod, Nod),
-   GMC_ARG(tp_Sym, Sym)
-   )
-   GMC_DCL(tp_Nod, Nod)
-   GMC_DCL(tp_Sym, Sym)
+void Set_Nod_Sym(tp_Nod Nod,tp_Sym Sym)
 {
    Nod->Sym = Sym;
    }/*Set_Nod_Sym*/
@@ -201,37 +148,21 @@ Set_Nod_Sym(
 
 #ifdef NODATT
 
-tp_Nod
-Get_NodAtt(
-   GMC_ARG(tp_Nod, Nod)
-   )
-   GMC_DCL(tp_Nod, Nod)
+tp_Nod Get_NodAtt(tp_Nod Nod)
 {
    FORBIDDEN(Nod == ERROR);
    return (Nod->Att);
    }/*Get_NodAtt*/
 
 
-tp_Nod
-Set_NodAtt(
-   GMC_ARG(tp_Nod, Nod),
-   GMC_ARG(tp_Nod, Att)
-   )
-   GMC_DCL(tp_Nod, Nod)
-   GMC_DCL(tp_Nod, Att)
+tp_Nod Set_NodAtt(tp_Nod Nod,tp_Nod Att)
 {
    FORBIDDEN(Nod == ERROR);
    Nod->Att = Att;
    }/*Set_NodAtt*/
 
 
-void
-Set_All_NodAtts(
-   GMC_ARG(tp_Nod, Nod),
-   GMC_ARG(tp_Nod, Att)
-   )
-   GMC_DCL(tp_Nod, Nod)
-   GMC_DCL(tp_Nod, Att)
+void Set_All_NodAtts(tp_Nod Nod,tp_Nod Att)
 {
    FORBIDDEN(Nod == ERROR);
    Nod->Att = Att;
@@ -253,7 +184,7 @@ int			num_StackElmS = 0;
 static tp_StackElm	FreeStackElm = NIL;
 
 static tp_StackElm
-New_StackElm(GMC_ARG_VOID)
+New_StackElm()
 {
    tp_StackElm StackElm;
 
@@ -268,18 +199,14 @@ New_StackElm(GMC_ARG_VOID)
 
 static tp_StackElm	SymStack = NIL;
 
-static boolean
-Empty_SymStack(GMC_ARG_VOID)
+static bool
+Empty_SymStack()
 {
    return (SymStack == NIL);
    }/*Empty_SymStack*/
 
 
-void
-Push_SymStack(
-   GMC_ARG(tp_Sym, Sym)
-   )
-   GMC_DCL(tp_Sym, Sym)
+void Push_SymStack(tp_Sym Sym)
 {
    tp_StackElm StackElm;
 
@@ -292,7 +219,7 @@ Push_SymStack(
 
 
 static tp_Sym
-TopOf_SymStack(GMC_ARG_VOID)
+TopOf_SymStack()
 {
    FORBIDDEN(SymStack == NIL);
    return (tp_Sym)SymStack->Value;
@@ -300,7 +227,7 @@ TopOf_SymStack(GMC_ARG_VOID)
 
 
 static void
-Pop_SymStack(GMC_ARG_VOID)
+Pop_SymStack()
 {
    tp_StackElm OldFreeStackElm;
 
@@ -314,18 +241,15 @@ Pop_SymStack(GMC_ARG_VOID)
 
 static tp_StackElm	NodStack = NIL;
 
-static boolean
-Empty_NodStack(GMC_ARG_VOID)
+static bool
+Empty_NodStack()
 {
    return (NodStack == NIL);
    }/*Empty_NodStack*/
 
 
 static void
-Push_NodStack(
-   GMC_ARG(tp_Nod, Nod)
-   )
-   GMC_DCL(tp_Nod, Nod)
+Push_NodStack(tp_Nod Nod)
 {
    tp_StackElm StackElm;
 
@@ -338,7 +262,7 @@ Push_NodStack(
 
 
 static tp_Nod
-TopOf_NodStack(GMC_ARG_VOID)
+TopOf_NodStack()
 {
    FORBIDDEN(NodStack == NIL);
    return (tp_Nod)NodStack->Value;
@@ -346,7 +270,7 @@ TopOf_NodStack(GMC_ARG_VOID)
 
 
 static void
-Pop_NodStack(GMC_ARG_VOID)
+Pop_NodStack()
 {
    tp_StackElm OldFreeStackElm;
 
@@ -360,18 +284,15 @@ Pop_NodStack(GMC_ARG_VOID)
 
 static tp_StackElm	SonStack = NIL;
 
-static boolean
-Empty_SonStack(GMC_ARG_VOID)
+static bool
+Empty_SonStack()
 {
    return (SonStack == NIL);
    }/*Empty_SonStack*/
 
 
 static void
-Push_SonStack(
-   GMC_ARG(int, NumSons)
-   )
-   GMC_DCL(int, NumSons)
+Push_SonStack(int NumSons)
 {
    tp_StackElm StackElm;
 
@@ -384,7 +305,7 @@ Push_SonStack(
 
 
 static int
-TopOf_SonStack(GMC_ARG_VOID)
+TopOf_SonStack()
 {
    FORBIDDEN(SonStack == NIL);
    return SonStack->Count;
@@ -392,7 +313,7 @@ TopOf_SonStack(GMC_ARG_VOID)
 
 
 static void
-Pop_SonStack(GMC_ARG_VOID)
+Pop_SonStack()
 {
    tp_StackElm OldFreeStackElm;
 
@@ -404,8 +325,7 @@ Pop_SonStack(GMC_ARG_VOID)
    }/*Pop_SonStack*/
 
 
-void
-Init_ConstructTree(GMC_ARG_VOID)
+void Init_ConstructTree()
 {
    while (!Empty_SymStack()) {
       Pop_SymStack(); }/*while*/;
@@ -418,12 +338,7 @@ Init_ConstructTree(GMC_ARG_VOID)
 
 
 static void
-MakeLeaf(
-   GMC_ARG(tp_NodTyp, NodTyp),
-   GMC_ARG(tp_Sym, Sym)
-   )
-   GMC_DCL(tp_NodTyp, NodTyp)
-   GMC_DCL(tp_Sym, Sym)
+MakeLeaf(tp_NodTyp NodTyp,tp_Sym Sym)
 {
    tp_Nod Nod;
 
@@ -436,10 +351,7 @@ MakeLeaf(
 
 
 static void
-MakeEmptyNod(
-   GMC_ARG(tp_NodTyp, NodTyp)
-   )
-   GMC_DCL(tp_NodTyp, NodTyp)
+MakeEmptyNod(tp_NodTyp NodTyp)
 {
    tp_Nod Nod;
 
@@ -451,10 +363,7 @@ MakeEmptyNod(
 
 
 static void
-MakeNod(
-   GMC_ARG(int, Typ)
-   )
-   GMC_DCL(int, Typ)
+MakeNod(int Typ)
 {
    tp_NodTyp NodTyp;
    tp_Nod Nod, NewNod, Brother;
@@ -482,10 +391,7 @@ MakeNod(
 
 
 static void
-CollectSons(
-   GMC_ARG(int, Number)
-   )
-   GMC_DCL(int, Number)
+CollectSons(int Number)
 {
    int NumSons, i;
 
@@ -498,8 +404,7 @@ CollectSons(
    }/*CollectSons*/
 
 
-tp_Nod
-End_ConstructTree(GMC_ARG_VOID)
+tp_Nod End_ConstructTree()
 {
    tp_Nod Root;
 
@@ -514,13 +419,7 @@ End_ConstructTree(GMC_ARG_VOID)
    }/*End_ConstructTree*/
 
 
-void
-Action(
-   GMC_ARG(int, Typ),
-   GMC_ARG(int, NumSons)
-   )
-   GMC_DCL(int, Typ)
-   GMC_DCL(int, NumSons)
+void Action(int Typ,int NumSons)
 {
    tp_Sym Sym;
 
