@@ -46,7 +46,7 @@ static tp_FilHdr		FreeFilHdr = &_FreeFilHdr;
 
 
 void
-Init_FilHdrs(GMC_ARG_VOID)
+Init_FilHdrs()
 {
    UsedFilHdr->PrevFree = UsedFilHdr;
    UsedFilHdr->NextFree = UsedFilHdr;
@@ -58,7 +58,7 @@ Init_FilHdrs(GMC_ARG_VOID)
 
 
 void
-Init_FilHdrTree(GMC_ARG_VOID)
+Init_FilHdrTree()
 {
    RootFilHdr = LocHdr_FilHdr(RootLocHdr);
    NetRootFilHdr = Do_Key(Copy_FilHdr(RootFilHdr), "");
@@ -74,19 +74,14 @@ Init_FilHdrTree(GMC_ARG_VOID)
 
 
 tp_LocHdr
-Alloc_HdrInf(GMC_ARG_VOID)
+Alloc_HdrInf()
 {
    return (tp_LocHdr) Alloc(sizeof(tps_HdrInf));
    }/*Alloc_HdrInf*/
 
 
 static void
-Transfer_FilHdr(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilHdr, FHLst)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilHdr, FHLst)
+Transfer_FilHdr(tp_FilHdr FilHdr,tp_FilHdr FHLst)
 {
    FilHdr->PrevFree->NextFree = FilHdr->NextFree;
    FilHdr->NextFree->PrevFree = FilHdr->PrevFree;
@@ -98,10 +93,7 @@ Transfer_FilHdr(
 
 
 tp_FilHdr
-Copy_FilHdr(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+Copy_FilHdr(tp_FilHdr FilHdr)
 {
    if (FilHdr == ERROR) return ERROR;
    if (FilHdr->Cnt == 0) {
@@ -112,10 +104,7 @@ Copy_FilHdr(
 
 
 void
-Ret_FilHdr(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+Ret_FilHdr(tp_FilHdr FilHdr)
 {
    if (FilHdr == ERROR) return;
    FilHdr->Cnt -= 1;
@@ -124,7 +113,7 @@ Ret_FilHdr(
 
 
 void
-Free_FilHdrs(GMC_ARG_VOID)
+Free_FilHdrs()
 {
    tp_FilHdr FilHdr, NextFilHdr;
 
@@ -161,10 +150,7 @@ Free_FilHdrs(GMC_ARG_VOID)
 
 
 static void
-UnHash_FilHdr(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+UnHash_FilHdr(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr->Modified);
    UnHash_Item((tp_Item)FilHdr);
@@ -173,7 +159,7 @@ UnHash_FilHdr(
 
 
 tp_FilHdr
-New_FilHdr(GMC_ARG_VOID)
+New_FilHdr()
 {
    tp_FilHdr FilHdr;
 
@@ -213,20 +199,14 @@ New_FilHdr(GMC_ARG_VOID)
 
 
 static tp_FilHdr
-Lookup_FilHdr(
-   GMC_ARG(tp_LocHdr, LocHdr)
-   )
-   GMC_DCL(tp_LocHdr, LocHdr)
+Lookup_FilHdr(tp_LocHdr LocHdr)
 {
    return Copy_FilHdr((tp_FilHdr)Lookup_Item(LocHdr));
    }/*Lookup_FilHdr*/
 
 
 tp_FilHdr
-LocHdr_FilHdr(
-   GMC_ARG(tp_LocHdr, LocHdr)
-   )
-   GMC_DCL(tp_LocHdr, LocHdr)
+LocHdr_FilHdr(tp_LocHdr LocHdr)
 {
    tp_FilHdr FilHdr;
    tps_HdrInf HdrInfBuf;
@@ -263,10 +243,7 @@ LocHdr_FilHdr(
 
 
 void
-Init_HdrInf(
-   GMC_ARG(tp_HdrInf, HdrInf)
-   )
-   GMC_DCL(tp_HdrInf, HdrInf)
+Init_HdrInf(tp_HdrInf HdrInf)
 {
    HdrInf->LocHdr = NIL;
    HdrInf->DataNum = 0;
@@ -305,10 +282,7 @@ Init_HdrInf(
 
 
 void
-SetModified(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+SetModified(tp_FilHdr FilHdr)
 {
    if (FilHdr->Modified) return;
    FilHdr->Modified = TRUE;
@@ -318,17 +292,14 @@ SetModified(
 
 
 static void
-WriteFilHdr(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+WriteFilHdr(tp_FilHdr FilHdr)
 {
    WriteHdrInf(&(FilHdr->HdrInf), FilHdr->LocHdr);
    }/*WriteFilHdr*/
 
 
 void
-WriteFilHdrs(GMC_ARG_VOID)
+WriteFilHdrs()
 {
    while (ModFilHdr != NIL) {
       FORBIDDEN(!ModFilHdr->Modified);
@@ -338,8 +309,8 @@ WriteFilHdrs(GMC_ARG_VOID)
    }/*WriteFilHdrs*/
 
 
-boolean
-FilHdrs_InUse(GMC_ARG_VOID)
+bool
+FilHdrs_InUse()
 {
    tp_FilHdr FilHdr;
 
@@ -358,7 +329,7 @@ FilHdrs_InUse(GMC_ARG_VOID)
 
 
 void
-CleanUp(GMC_ARG_VOID)
+CleanUp()
 {
    Update_Info();
    Free_FilHdrs();

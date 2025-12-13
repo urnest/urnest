@@ -1,29 +1,31 @@
 #ifndef TP_YYNODTYP
 #define TP_YYNODTYP
 
-#define NSTDEF 1
-#define FILDEF 2
-#define SEGDEF 3
-#define EXEDEF 4
-#define TEXDEF 5
-#define ETXDEF 6
-#define DRVFLS 7
-#define DRVFIL 8
-#define EMPFIL 9
-#define ARTFIL 10
-#define ABSFIL 11
-#define PRMOPR 12
-#define APLOPR 13
-#define DRVOPR 14
-#define HODOPR 15
-#define ELMOPR 16
-#define DIROPR 17
-#define SEGOPR 18
-#define OPRTNS 19
-#define PRMVLS 20
-#define STRING 21
-#define HOSTWD 22
-#define WORD 23
-#define OBJTID 24
+typedef enum NodTyp {
+  NSTDEF=1,
+  FILDEF=2,
+  SEGDEF=3,
+  EXEDEF=4,
+  TEXDEF=5,
+  ETXDEF=6,
+  DRVFLS=7,
+  DRVFIL=8,
+  EMPFIL=9,
+  ARTFIL=10,
+  ABSFIL=11,
+  PRMOPR=12,
+  APLOPR=13,
+  DRVOPR=14,
+  HODOPR=15,
+  ELMOPR=16,
+  DIROPR=17,
+  SEGOPR=18,
+  OPRTNS=19,
+  PRMVLS=20,
+  STRING=21,
+  SCAN_HOSTWD=22,
+  WORD=23,
+  SCAN_OBJTID=24
+} tp_NodTyp;
 
 #endif

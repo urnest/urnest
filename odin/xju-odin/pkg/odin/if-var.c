@@ -20,8 +20,8 @@ geoff@boulder.colorado.edu
 #include "inc/Str.h"
 #include "inc/Version.h"
 
-boolean		History;
-boolean		KeepGoing;
+bool		History;
+bool		KeepGoing;
 int		ErrLevel;
 int		WarnLevel;
 tp_LogLevel	LogLevel;
@@ -30,9 +30,9 @@ int		VerifyLevel;
 
 
 void
-Init_Vars(GMC_ARG_VOID)
+Init_Vars()
 {
-   boolean Abort;
+   bool Abort;
    tp_Str Val;
 
    Val = GetEnv("ODINKEEPGOING");
@@ -68,10 +68,7 @@ Init_Vars(GMC_ARG_VOID)
 
 
 void
-Local_LogMessage(
-   GMC_ARG(char*, Message)
-   )
-   GMC_DCL(char*, Message)
+Local_LogMessage(char* Message)
 {
    Writeln(StdOutFD, Message);
    Flush(StdOutFD);
@@ -79,16 +76,13 @@ Local_LogMessage(
 
 
 void
-Local_FileErrMessage(
-   GMC_ARG(tp_FileName, FileName)
-   )
-   GMC_DCL(tp_FileName, FileName)
+Local_FileErrMessage(tp_FileName FileName)
 {
    tp_FilDsc FilDsc;
    tps_Str StrBuf;
    tp_Str Str;
 
-   FilDsc = FileName_RFilDsc(FileName, FALSE);
+   FilDsc = FileName_RFilDsc(FileName, false);
    if (FilDsc == ERROR) {
       Write(StdOutFD, "** Could not read: ");
       Writeln(StdOutFD, FileName);
@@ -103,7 +97,7 @@ Local_FileErrMessage(
 
 
 void
-ShowVars(GMC_ARG_VOID)
+ShowVars()
 {
    Writeln(StdOutFD, "Dir MaxBuilds BuildHosts Size KeepGoing History");
    Writeln(StdOutFD, "LogLevel ErrLevel WarnLevel HelpLevel VerifyLevel");
@@ -111,10 +105,7 @@ ShowVars(GMC_ARG_VOID)
 
 
 void
-HelpVar(
-   GMC_ARG(tp_Nod, Nod)
-   )
-   GMC_DCL(tp_Nod, Nod)
+HelpVar(tp_Nod Nod)
 {
    tp_Str VarStr;
 
@@ -172,10 +163,7 @@ HelpVar(
 
 
 void
-ShowVar(
-   GMC_ARG(tp_Nod, Nod)
-   )
-   GMC_DCL(tp_Nod, Nod)
+ShowVar(tp_Nod Nod)
 {
    tp_Str VarStr;
    int Count, Size;
@@ -225,31 +213,24 @@ ShowVar(
 
 
 void
-SetVar(
-   GMC_ARG(boolean*, AbortPtr),
-   GMC_ARG(tp_Str, VarStr),
-   GMC_ARG(tp_Str, ValStr)
-   )
-   GMC_DCL(boolean*, AbortPtr)
-   GMC_DCL(tp_Str, VarStr)
-   GMC_DCL(tp_Str, ValStr)
+SetVar(bool* AbortPtr,tp_Str VarStr,tp_Str ValStr)
 {
    int Level;
    tps_FileName DirBuf;
    tp_Status Status;
-   boolean ExecFlag;
+   bool ExecFlag;
 
-   *AbortPtr = FALSE;
+   *AbortPtr = false;
    /*select*/{
       if (strcasecmp(VarStr, "dir") == 0) {
-	 Get_OdinFile(DirBuf, &Status, &ExecFlag, ValStr, TRUE);
+	 Get_OdinFile(DirBuf, &Status, &ExecFlag, ValStr, true);
 	 if (Status < STAT_OK) {
 	    SystemError("Cannot access directory: <%s>.\n", ValStr);
-	    *AbortPtr = TRUE;
+	    *AbortPtr = true;
 	    return; }/*if*/;
 	 if (strcmp(DirBuf, "") == 0) {
 	    SystemError("No file value associated with: %s\n", ValStr);
-	    *AbortPtr = TRUE;
+	    *AbortPtr = true;
 	    return; }/*if*/;
 	 ChangeDir(AbortPtr, DirBuf);
 	 if (*AbortPtr) {
@@ -264,7 +245,7 @@ SetVar(
 	 Level = Str_PosInt(ValStr);
 	 if (Level < 0 || Level > 4) {
 	    SystemError("** ErrLevel must be between 0 and 4.\n");
-	    *AbortPtr = TRUE;
+	    *AbortPtr = true;
 	    return; }/*if*/;
 	 ErrLevel = Level;
 	 Set_ErrLevel(Level);
@@ -272,7 +253,7 @@ SetVar(
 	 Level = Str_PosInt(ValStr);
 	 if (Level < 0 || Level > 4) {
 	    SystemError("** WarnLevel must be between 0 and 4.\n");
-	    *AbortPtr = TRUE;
+	    *AbortPtr = true;
 	    return; }/*if*/;
 	 WarnLevel = Level;
 	 Set_WarnLevel(Level);
@@ -280,29 +261,29 @@ SetVar(
 	 Level = Str_PosInt(ValStr);
 	 if (Level < 1 || Level > 2) {
 	    SystemError("** HelpLevel must be between 1 and 2.\n");
-	    *AbortPtr = TRUE;
+	    *AbortPtr = true;
 	    return; }/*if*/;
 	 HelpLevel = Level;
 	 Set_HelpLevel(Level);
       }else if (strcasecmp(VarStr, "history") == 0) {
 	 ;/*select*/{
 	    if (strcasecmp(ValStr, "yes") == 0) {
-	       History = TRUE;
+	       History = true;
 	    }else if (strcasecmp(ValStr, "no") == 0) {
-	       History = FALSE;
+	       History = false;
 	    }else{
 	       SystemError("** History must be \"yes\" or \"no\".\n");
-	       *AbortPtr = TRUE;
+	       *AbortPtr = true;
 	       return; };}/*select*/;
       }else if (strcasecmp(VarStr, "keepgoing") == 0) {
 	 ;/*select*/{
 	    if (strcasecmp(ValStr, "yes") == 0) {
-	       KeepGoing = TRUE;
+	       KeepGoing = true;
 	    }else if (strcasecmp(ValStr, "no") == 0) {
-	       KeepGoing = FALSE;
+	       KeepGoing = false;
 	    }else{
 	       SystemError("** KeepGoing must be \"yes\" or \"no\".\n");
-	       *AbortPtr = TRUE;
+	       *AbortPtr = true;
 	       return; };}/*select*/;
 	 Set_KeepGoing(KeepGoing);
       }else if (strcasecmp(VarStr, "loglevel") == 0) {
@@ -310,7 +291,7 @@ SetVar(
 	 if (Level < 0 || Level > LOGLEVEL_MAX) {
 	    SystemError("** LogLevel must be between 0 and %d.\n",
 			LOGLEVEL_MAX);
-	    *AbortPtr = TRUE;
+	    *AbortPtr = true;
 	    return; }/*if*/;
 	 LogLevel = Level;
 	 Set_LogLevel(Level);
@@ -325,52 +306,45 @@ SetVar(
 	 Set_MaxJobs(MaxBuilds);
       }else if (strcasecmp(VarStr, "size") == 0) {
 	 SystemError("** Size is a read-only variable.\n");
-	 *AbortPtr = TRUE;
+	 *AbortPtr = true;
       }else if (strcasecmp(VarStr, "verifylevel") == 0) {
 	 Level = Str_PosInt(ValStr);
 	 if (Level < 0 || Level > 2) {
 	    SystemError("** VerifyLevel must be between 0 and 2.\n");
-	    *AbortPtr = TRUE;
+	    *AbortPtr = true;
 	    return; }/*if*/;
 	 VerifyLevel = Level;
       }else if (strcasecmp(VarStr, "version") == 0) {
 	 SystemError("** Version is a read-only variable.\n");
-	 *AbortPtr = TRUE;
+	 *AbortPtr = true;
 
       }else if (strcasecmp(VarStr, "clients") == 0) {
 	 SystemError("** Clients is a read-only variable.\n");
-	 *AbortPtr = TRUE;
+	 *AbortPtr = true;
       }else if (strcmp(VarStr, "DEBUG") == 0) {
 	 Set_Debug(ValStr);
 
       }else{
 	 SystemError("** Unknown variable name, <%s> **.\n", VarStr);
-	 *AbortPtr = TRUE; };}/*select*/;
+	 *AbortPtr = true; };}/*select*/;
    }/*SetVar*/
 
 
 void
-Set_HostVar(
-   GMC_ARG(boolean*, AbortPtr),
-   GMC_ARG(tp_Str, VarStr),
-   GMC_ARG(tp_Str, ValStr)
-   )
-   GMC_DCL(boolean*, AbortPtr)
-   GMC_DCL(tp_Str, VarStr)
-   GMC_DCL(tp_Str, ValStr)
+Set_HostVar(bool* AbortPtr,tp_Str VarStr,tp_Str ValStr)
 {
    tps_Str StrBuf;
    int status;
 
    if (IsDef_EnvVar(VarStr)) {
       SystemError("Cannot change value of package variable: %s.\n", VarStr);
-      *AbortPtr = TRUE;
+      *AbortPtr = true;
       return; }/*if*/;
    (void)sprintf(StrBuf, "%s=%s", VarStr, ValStr);
    status = putenv(Malloc_Str(StrBuf));
    FORBIDDEN(status != 0);
    RBS_VarDef(StrBuf);
-   *AbortPtr = FALSE;
+   *AbortPtr = false;
    }/*Set_HostVar*/
 
 

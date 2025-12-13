@@ -1676,6 +1676,138 @@ class CustomNonStringKeyClassCodec(Protocol):
         return TypeScriptSourceCode('')
     pass
 
+@runtime_checkable
+class CustomGenericClassCodec(Protocol):
+    '''implement these methods on class T to use custom encoding of instances of T
+       where T is a Generic class and custom encoding needs the concreate type parameters'''
+    @staticmethod
+    def xju_json_codec_encode_generic(
+            x:object,  # x is a T
+            type_var_map:dict[TypeVar,type]
+    ) -> JsonType:
+        assert False  #pragma NO COVER
+        pass
+    @staticmethod
+    def xju_json_codec_decode_generic(
+            x:JsonType,
+            type_var_map:dict[TypeVar,type]) -> object:  # must return a T
+        assert False  #pragma NO COVER
+        pass
+    @staticmethod
+    def xju_json_codec_get_json_schema_generic(
+            definitions:dict[str,dict],
+            type_var_map:dict[TypeVar,type]) -> dict:
+        '''return json schema for T
+           - may add any supporting definitions to definitions'''
+        assert False  #pragma NO COVER
+        return {}
+    @staticmethod
+    def xju_json_codec_get_typescript_type_generic(
+            type_var_map:dict[TypeVar,type]) -> TypeScriptSourceCode:
+        '''return the typescript type that this class encodes to
+           e.g. number
+        '''
+        assert False  #pragma NO COVER
+        return TypeScriptSourceCode('')
+    @staticmethod
+    def xju_json_codec_5_get_typescript_isa_generic(
+            namespace: TypeScriptNamespace,
+            type_var_map:dict[TypeVar,type]) -> TypeScriptSourceCode:
+        '''return typescript source that evaluates to a xju.json_codec.IsInstance
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        assert False  #pragma NO COVER
+        return TypeScriptSourceCode('')
+    @staticmethod
+    def xju_json_codec_5_get_typescript_asa_generic(
+            namespace: TypeScriptNamespace,
+            type_var_map:dict[TypeVar,type]) -> TypeScriptSourceCode:
+        '''return typescript source code that evaluates to a xju.json_codec.AsInstance
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        assert False  #pragma NO COVER
+        return TypeScriptSourceCode('')
+    pass
+
+@runtime_checkable
+class CustomStringKeyGenericClassCodec(Protocol):
+    '''
+    implement these methods as well as CustomClassCodec method on class T to use custom encoding
+    of instances of T as dict keys where encoded value when used as a dict key is a string
+    where T is a Generic class and custom encoding needs the concreate type parameters
+    '''
+    @staticmethod
+    def xju_json_codec_get_object_key_json_schema_generic(
+            definitions:dict[str,dict],
+            type_var_map:dict[TypeVar,type]) -> dict:
+        '''return json schema for T when used as an object key
+           - may add any supporting definitions to definitions'''
+        assert False  #pragma NO COVER
+        return {}
+    @staticmethod
+    def xju_json_codec_typescript_key_type_generic(type_var_map:dict[TypeVar,type])-> Literal['String']:
+        assert False #pragma NO COVER
+        return 'String'
+
+    @staticmethod
+    def xju_json_codec_5_get_typescript_isa_key_generic(
+            namespace: TypeScriptNamespace,
+            type_var_map:dict[TypeVar,type]) -> TypeScriptSourceCode:
+        '''return typescript source code that evaluates to a xju.json_codec.IsKey
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        assert False  #pragma NO COVER
+        return TypeScriptSourceCode('')
+    @staticmethod
+    def xju_json_codec_5_get_typescript_asa_key_generic(
+            namespace: TypeScriptNamespace,
+            type_var_map:dict[TypeVar,type]) -> TypeScriptSourceCode:
+        '''return typescript source code that evaluates to a xju.json_codec.AsKey
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        assert False  #pragma NO COVER
+        return TypeScriptSourceCode('')
+    pass
+
+assert not issubclass(CustomStringKeyClassCodec, CustomStringKeyGenericClassCodec)
+
+@runtime_checkable
+class CustomNonStringKeyGenericClassCodec(Protocol):
+    '''
+    implement these methods as well as CustomClassCodec method on class T to use custom encoding
+    of instances of T as dict keys where encoded value when used as a dict key not a string
+    i.e. is int/float/bool or None,
+    where T is a Generic class and custom encoding needs the concreate type parameters
+    '''
+    @staticmethod
+    def xju_json_codec_get_object_key_json_schema_generic(
+            definitions:dict[str,dict],
+            type_var_map:dict[TypeVar,type]) -> dict:
+        '''return json schema for T when used as an object key
+           - may add any supporting definitions to definitions'''
+        assert False  #pragma NO COVER
+        return {}
+    @staticmethod
+    def xju_json_codec_typescript_key_type_generic(type_var_map:dict[TypeVar,type])-> Literal['NonString']:
+        assert False #pragma NO COVER
+        return 'NonString'
+
+    @staticmethod
+    def xju_json_codec_5_get_typescript_isa_key_generic(
+            namespace: TypeScriptNamespace,
+            type_var_map:dict[TypeVar,type]) -> TypeScriptSourceCode:
+        '''return typescript source code that evaluates to a xju.json_codec.IsKey
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        assert False  #pragma NO COVER
+        return TypeScriptSourceCode('')
+    @staticmethod
+    def xju_json_codec_5_get_typescript_asa_key_generic(
+            namespace: TypeScriptNamespace,
+            type_var_map:dict[TypeVar,type]) -> TypeScriptSourceCode:
+        '''return typescript source code that evaluates to a xju.json_codec.AsKey
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        assert False  #pragma NO COVER
+        return TypeScriptSourceCode('')
+    pass
+
+assert not issubclass(CustomNonStringKeyClassCodec, CustomNonStringKeyGenericClassCodec)
+
 class PythonAttrNameTag: pass
 class PythonAttrName(xju.newtype.Str[PythonAttrNameTag]): pass
 class JsonAttrNameTag: pass
@@ -1727,24 +1859,102 @@ def dont_encode_attr(t: type, attr: PythonAttrName) -> None:
         raise in_function_context(dont_encode_attr, vars()) from None
     pass
 
-class ClassCodecImpl:
-    t:type
-    attr_codecs:dict[str,AttrCodec]  # codec
-    custom_codec:CustomClassCodec|None = None
-    def __init__(self, t:type, attr_codecs:dict[str,Any]):
-        self.t=t
-        self.attr_codecs=attr_codecs
-        if issubclass(t,CustomClassCodec):
-            self.custom_codec=t
-        pass
+@dataclass
+class CustomGenericClassCodecImpl:
+    t:type[CustomGenericClassCodec]
+    type_var_map:dict[TypeVar,type]
+
     def encode(self,x) -> JsonType:
         'encode {x} as a {self.t}'
         try:
             if not isinstance(x, self.t):
                 xt=type(x)
                 raise Exception(f'{x!r} (of type {xt}) is not a {self.t}')
-            if self.custom_codec is not None:
-                return self.custom_codec.xju_json_codec_encode(x)
+            return self.t.xju_json_codec_encode_generic(x,self.type_var_map)
+        except Exception:
+            raise in_function_context(CustomGenericClassCodecImpl.encode,vars()) from None
+        pass
+    def decode(self,x) -> object:
+        'decode {x} as a {self.t}'
+        try:
+            result=self.t.xju_json_codec_decode_generic(x,self.type_var_map)
+            assert isinstance(result,self.t), (repr(result),self.t)
+            return result
+        except Exception:
+            raise in_function_context(CustomGenericClassCodecImpl.decode,vars()) from None
+        pass
+    def get_type_fqn(self):
+        '''get the fully qualified name of {self.t}'''
+        return get_type_fqn(self.t)
+    def get_json_schema(self, definitions:dict[str,dict]) -> dict:
+        return self.t.xju_json_codec_get_json_schema_generic(definitions,self.type_var_map)
+    def typescript_type(self) -> TypeScriptSourceCode:
+        return self.t.xju_json_codec_get_typescript_type_generic(self.type_var_map)
+    def ensure_typescript_defs(self,namespace)->None:
+        '''ensure {namespace} has a typescript definition for {self.get_type_fqn()}'''
+        return None
+    def get_typescript_isa(self,namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        return self.t.xju_json_codec_5_get_typescript_isa_generic(namespace,self.type_var_map)
+
+    def get_typescript_asa(self,namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        return self.t.xju_json_codec_5_get_typescript_asa_generic(namespace,self.type_var_map)
+    pass
+
+assert isinstance(CustomGenericClassCodecImpl, CodecImplProto)
+assert not isinstance(CustomGenericClassCodecImpl, UsableAsKeyProto)
+
+
+@dataclass
+class CustomClassCodecImpl:
+    t:type[CustomClassCodec]
+
+    def encode(self,x) -> JsonType:
+        'encode {x} as a {self.t}'
+        try:
+            return self.t.xju_json_codec_encode(x)
+        except Exception:
+            raise in_function_context(CustomClassCodecImpl.encode,vars()) from None
+        pass
+    def decode(self,x) -> object:
+        'decode {x} as a {self.t}'
+        try:
+            result=self.t.xju_json_codec_decode(x)
+            assert isinstance(result,self.t), (repr(result),self.t)
+            return result
+        except Exception:
+            raise in_function_context(CustomClassCodecImpl.decode,vars()) from None
+        pass
+    def get_type_fqn(self):
+        '''get the fully qualified name of {self.t}'''
+        return get_type_fqn(self.t)
+    def get_json_schema(self, definitions:dict[str,dict]) -> dict:
+        return self.t.xju_json_codec_get_json_schema(definitions)
+    def typescript_type(self) -> TypeScriptSourceCode:
+        return self.t.xju_json_codec_get_typescript_type()
+    def ensure_typescript_defs(self,namespace)->None:
+        '''ensure {namespace} has a typescript definition for {self.get_type_fqn()}'''
+        return None
+    def get_typescript_isa(self,
+                           namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        return self.t.xju_json_codec_5_get_typescript_isa(namespace)
+    def get_typescript_asa(self,
+                           namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        return self.t.xju_json_codec_5_get_typescript_asa(namespace)
+    pass
+    
+assert not isinstance(CustomClassCodecImpl, UsableAsKeyProto)
+
+@dataclass
+class ClassCodecImpl:
+    t:type
+    attr_codecs:dict[str,AttrCodec]
+
+    def encode(self,x) -> JsonType:
+        'encode {x} as a {self.t}'
+        try:
+            if not isinstance(x, self.t):
+                xt=type(x)
+                raise Exception(f'{x!r} (of type {xt}) is not a {self.t}')
             result={}
             for n, attr_codec in self.attr_codecs.items():
                 try:
@@ -1760,10 +1970,6 @@ class ClassCodecImpl:
     def decode(self,x) -> object:
         'decode {x} as a {self.t}'
         try:
-            if self.custom_codec is not None:
-                result=self.custom_codec.xju_json_codec_decode(x)
-                assert isinstance(result,self.t), (repr(result),self.t)
-                return result
             attr_values={}
             for n, attr_codec in self.attr_codecs.items():
                 encoded_name = attr_codec.encoded_name.value()
@@ -1787,8 +1993,6 @@ class ClassCodecImpl:
         '''get the fully qualified name of {self.t}'''
         return get_type_fqn(self.t)
     def get_json_schema(self, definitions:dict[str,dict]) -> dict:
-        if self.custom_codec is not None:
-            return self.custom_codec.xju_json_codec_get_json_schema(definitions)
         fqn=self.get_type_fqn()
         self_ref=f'#/definitions/{fqn}'
         if not fqn in definitions:
@@ -1805,13 +2009,9 @@ class ClassCodecImpl:
             '$ref': self_ref
         }
     def typescript_type(self) -> TypeScriptSourceCode:
-        if self.custom_codec is not None:
-            return self.custom_codec.xju_json_codec_get_typescript_type()
         return TypeScriptSourceCode(self.get_type_fqn())
     def ensure_typescript_defs(self,namespace)->None:
         '''ensure {namespace} has a typescript definition for {self.get_type_fqn()}'''
-        if self.custom_codec is not None:
-            return
         typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
         typescript_type_name=typescript_fqn[-1]
@@ -1859,45 +2059,92 @@ class ClassCodecImpl:
         pass
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        if self.custom_codec is not None:
-            return self.custom_codec.xju_json_codec_5_get_typescript_isa(namespace)
         self.ensure_typescript_defs(namespace)
         return is_instance_of_expression(self.get_type_fqn())
 
     def get_typescript_asa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        if self.custom_codec is not None:
-            return self.custom_codec.xju_json_codec_5_get_typescript_asa(namespace)
         self.ensure_typescript_defs(namespace)
         return as_instance_of_expression(self.get_type_fqn())
     pass
     
 assert not isinstance(ClassCodecImpl, UsableAsKeyProto)
 
-class ClassUsableAsObjectKeyCodecImpl:
-    t:type
-    attr_codecs:dict[str,AttrCodec]  # codec
-    custom_codec:type[CustomStringKeyClassCodec] | type[CustomNonStringKeyClassCodec]
-    def __init__(self, t:type[CustomStringKeyClassCodec] | type[CustomNonStringKeyClassCodec],
-                 attr_codecs:dict[str,Any]):
-        self.t=t
-        self.attr_codecs=attr_codecs
-        self.custom_codec=t
-        pass
+@dataclass
+class GenericClassUsableAsObjectKeyCodecImpl:
+    t:type[CustomStringKeyGenericClassCodec] | type[CustomNonStringKeyGenericClassCodec]
+    type_var_map:dict[TypeVar,type]
+
     def encode(self,x) -> JsonType:
         'encode {x} as a {self.t}'
         try:
             if not isinstance(x, self.t):
                 xt=type(x)
                 raise Exception(f'{x!r} (of type {xt}) is not a {self.t}')
-            return self.custom_codec.xju_json_codec_encode(x)
+            return self.t.xju_json_codec_encode_generic(x,self.type_var_map)
+        except Exception:
+            raise in_function_context(GenericClassUsableAsObjectKeyCodecImpl.encode,vars()) from None
+        pass
+    def decode(self,x) -> object:
+        'decode {x} as a {self.t}'
+        try:
+            result=self.t.xju_json_codec_decode_generic(x,self.type_var_map)
+            assert isinstance(result,self.t), (repr(result),self.t)
+            return result
+        except Exception:
+            raise in_function_context(GenericClassUsableAsObjectKeyCodecImpl.decode,vars()) from None
+        pass
+    def get_type_fqn(self):
+        '''get the fully qualified name of {self.t}'''
+        return get_type_fqn(self.t)
+    def get_json_schema(self, definitions:dict[str,dict]) -> dict:
+        return self.t.xju_json_codec_get_json_schema_generic(definitions,self.type_var_map)
+    def get_object_key_json_schema(self, definitions:dict[str,dict]) -> dict:
+        return self.t.xju_json_codec_get_object_key_json_schema_generic(definitions,self.type_var_map)
+    def typescript_type(self) -> TypeScriptSourceCode:
+        return self.t.xju_json_codec_get_typescript_type_generic(self.type_var_map)
+    def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
+        return TypeScriptSourceCode(
+            f"string /* {self.t.xju_json_codec_get_typescript_type_generic(self.type_var_map).replace('/*','**').replace('*/','**')} */")
+    def ensure_typescript_defs(self,namespace)->None:
+        '''ensure {namespace} has a typescript definition for {self.get_type_fqn()}'''
+        pass
+    def get_typescript_isa(self,
+                           namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        return self.t.xju_json_codec_5_get_typescript_isa_generic(namespace,self.type_var_map)
+
+    def get_typescript_isa_key(self,
+                               namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        return self.t.xju_json_codec_5_get_typescript_isa_key_generic(namespace,self.type_var_map)
+        
+    def get_typescript_asa(self,
+                           namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        return self.t.xju_json_codec_5_get_typescript_asa_generic(namespace,self.type_var_map)
+    def get_typescript_asa_key(self,
+                               namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        return self.t.xju_json_codec_5_get_typescript_asa_key_generic(namespace,self.type_var_map)
+    pass
+    
+assert isinstance(GenericClassUsableAsObjectKeyCodecImpl, UsableAsKeyProto)
+
+@dataclass
+class ClassUsableAsObjectKeyCodecImpl:
+    t:type[CustomStringKeyClassCodec] | type[CustomNonStringKeyClassCodec]
+
+    def encode(self,x) -> JsonType:
+        'encode {x} as a {self.t}'
+        try:
+            if not isinstance(x, self.t):
+                xt=type(x)
+                raise Exception(f'{x!r} (of type {xt}) is not a {self.t}')
+            return self.t.xju_json_codec_encode(x)
         except Exception:
             raise in_function_context(ClassUsableAsObjectKeyCodecImpl.encode,vars()) from None
         pass
     def decode(self,x) -> object:
         'decode {x} as a {self.t}'
         try:
-            result=self.custom_codec.xju_json_codec_decode(x)
+            result=self.t.xju_json_codec_decode(x)
             assert isinstance(result,self.t), (repr(result),self.t)
             return result
         except Exception:
@@ -1907,31 +2154,31 @@ class ClassUsableAsObjectKeyCodecImpl:
         '''get the fully qualified name of {self.t}'''
         return get_type_fqn(self.t)
     def get_json_schema(self, definitions:dict[str,dict]) -> dict:
-        return self.custom_codec.xju_json_codec_get_json_schema(definitions)
+        return self.t.xju_json_codec_get_json_schema(definitions)
     def get_object_key_json_schema(self, definitions:dict[str,dict]) -> dict:
-        return self.custom_codec.xju_json_codec_get_object_key_json_schema(definitions)
+        return self.t.xju_json_codec_get_object_key_json_schema(definitions)
     def typescript_type(self) -> TypeScriptSourceCode:
-        return self.custom_codec.xju_json_codec_get_typescript_type()
+        return self.t.xju_json_codec_get_typescript_type()
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(
-            f"string /* {self.custom_codec.xju_json_codec_get_typescript_type().replace('/*','**').replace('*/','**')} */")
+            f"string /* {self.t.xju_json_codec_get_typescript_type().replace('/*','**').replace('*/','**')} */")
     def ensure_typescript_defs(self,namespace)->None:
         '''ensure {namespace} has a typescript definition for {self.get_type_fqn()}'''
         pass
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        return self.custom_codec.xju_json_codec_5_get_typescript_isa(namespace)
+        return self.t.xju_json_codec_5_get_typescript_isa(namespace)
 
     def get_typescript_isa_key(self,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        return self.custom_codec.xju_json_codec_5_get_typescript_isa_key(namespace)
+        return self.t.xju_json_codec_5_get_typescript_isa_key(namespace)
         
     def get_typescript_asa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        return self.custom_codec.xju_json_codec_5_get_typescript_asa(namespace)
+        return self.t.xju_json_codec_5_get_typescript_asa(namespace)
     def get_typescript_asa_key(self,
                                namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        return self.custom_codec.xju_json_codec_5_get_typescript_asa_key(namespace)
+        return self.t.xju_json_codec_5_get_typescript_asa_key(namespace)
     pass
     
 assert isinstance(ClassUsableAsObjectKeyCodecImpl, UsableAsKeyProto)
@@ -2368,13 +2615,16 @@ def _explodeSchemaRec(
                 for type_var, value in
                 list((type_var_map or {}).items())+list(zip(get_origin(t).__parameters__, get_args(t)))
             }
-            return _explodeSchema(get_origin(t), local_type_var_map,codec_backrefs)
+            return _explodeSchema(
+                get_origin(t),
+                local_type_var_map,codec_backrefs)
         if type(t) is EnumType and issubclass(t, Enum):
             value_codecs={
-                name: EnumValueCodecImpl(name,
-                                         vv.__class__,
-                                         vv,
-                                         _explodeSchema(type(vv.value),type_var_map,codec_backrefs))
+                name: EnumValueCodecImpl(
+                    name,
+                    vv.__class__,
+                    vv,
+                    _explodeSchema(type(vv.value),type_var_map,codec_backrefs))
                 for name,vv in t.__members__.items()
             }
             use_typescript_enum = all([v.is_typescript_pod for v in value_codecs.values()])
@@ -2396,20 +2646,28 @@ def _explodeSchemaRec(
         self_ref=BackRefCodecImpl(None)
         codec_backrefs[Self]=self_ref
         try:
+            if issubclass(t, (CustomStringKeyGenericClassCodec,CustomNonStringKeyGenericClassCodec)):
+                result=GenericClassUsableAsObjectKeyCodecImpl(t,type_var_map)
+                self_ref.codec=result
+                return result
+            if issubclass(t, CustomGenericClassCodec):
+                result=CustomGenericClassCodecImpl(t,type_var_map)
+                self_ref.codec=result
+                return result
             if issubclass(t, (CustomStringKeyClassCodec,CustomNonStringKeyClassCodec)):
-                result=ClassUsableAsObjectKeyCodecImpl(
-                t,{n: make_attr_codec(t, n, nt, type_var_map, codec_backrefs)
-                   for n,nt in get_type_hints(t).items()
-                   if not ((type(nt) is _GenericAlias and type(get_origin(nt)) is _SpecialForm and str(get_origin(nt))=="typing.ClassVar") or
-                           (dont_encode is not None and PythonAttrName(n) in dont_encode))})
+                result=ClassUsableAsObjectKeyCodecImpl(t)
+                self_ref.codec=result
+                return result
+            if issubclass(t, CustomClassCodec):
+                result=CustomClassCodecImpl(t)
                 self_ref.codec=result
                 return result
             else:
                 result=ClassCodecImpl(
-                t,{n: make_attr_codec(t, n, nt, type_var_map, codec_backrefs)
-                   for n,nt in get_type_hints(t).items()
-                   if not ((type(nt) is _GenericAlias and type(get_origin(nt)) is _SpecialForm and str(get_origin(nt))=="typing.ClassVar") or
-                           (dont_encode is not None and PythonAttrName(n) in dont_encode))})
+                    t,{n: make_attr_codec(t, n, nt, type_var_map, codec_backrefs)
+                       for n,nt in get_type_hints(t).items()
+                       if not ((type(nt) is _GenericAlias and type(get_origin(nt)) is _SpecialForm and str(get_origin(nt))=="typing.ClassVar") or
+                               (dont_encode is not None and PythonAttrName(n) in dont_encode))})
                 self_ref.codec=result
                 return result
         finally:
@@ -2491,9 +2749,14 @@ def get_default_value(cls, attr_name: str) -> None | tuple[Any]:
         return (getattr(cls,attr_name),)
     return None
 
-def make_attr_codec(t, attr_name: str, nt,
-                    type_var_map:dict[TypeVar,Any]|None,
-                    codec_backrefs: dict[type|NewType|TypeVar|GenericAlias|UnionType|_LiteralGenericAlias|_GenericAlias|Enum|Type[Enum], BackRefCodecImpl]) -> AttrCodecWithDefault | AttrCodec:
+def make_attr_codec(
+        t:type,
+        attr_name: str, nt:type,
+        type_var_map:dict[TypeVar,Any]|None,
+        codec_backrefs: dict[
+            type|NewType|TypeVar|GenericAlias|UnionType|_LiteralGenericAlias|_GenericAlias|Enum|Type[Enum], BackRefCodecImpl
+        ]
+) -> AttrCodecWithDefault | AttrCodec:
     match get_default_value(t, attr_name):
         case None:
             return AttrCodec(get_attr_encoded_name(getmro(t), PythonAttrName(attr_name)),

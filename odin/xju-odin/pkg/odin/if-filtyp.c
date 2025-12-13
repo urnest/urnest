@@ -13,16 +13,21 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/Client.h"
-#include "inc/FilTyp.h"
-#include "inc/FTClass_.h"
-#include "inc/NodTyp_.h"
-#include "inc/SrcTyp.h"
-#include "inc/Str.h"
-#include "inc/Status_.h"
-#include "inc/TClass_.h"
-#include "inc/Tool.h"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
+#include <odin/inc/Client.h>
+#include <odin/inc/FilTyp.h>
+#include <odin/inc/FTClass_.h>
+#include <odin/inc/NodTyp_.h>
+#include <odin/inc/SrcTyp.h>
+#include <odin/inc/Status_.h>
+#include <odin/inc/TClass_.h>
+#include <odin/inc/Tool.h>
+#include <string.h>
+#include <stdio.h>
+#include <ctype.h>
 
 
 extern int		num_SrcTypS;
@@ -33,35 +38,23 @@ extern tp_FilTyp	FilTypS;
 
 
 tp_TClass
-Tool_TClass(
-   GMC_ARG(tp_Tool, Tool)
-   )
-   GMC_DCL(tp_Tool, Tool)
+Tool_TClass(tp_Tool Tool)
 {
    return Tool->TClass;}
 
 tp_InpEdg
-Tool_InpEdg(
-   GMC_ARG(tp_Tool, Tool)
-   )
-   GMC_DCL(tp_Tool, Tool)
+Tool_InpEdg(tp_Tool Tool)
 {
    return Tool->InpEdg;}
 
 tp_Package
-Tool_Package(
-   GMC_ARG(tp_Tool, Tool)
-   )
-   GMC_DCL(tp_Tool, Tool)
+Tool_Package(tp_Tool Tool)
 {
    return Tool->Package;}
 
 
-boolean
-IsDerefInput_Tool(
-   GMC_ARG(tp_Tool, Tool)
-   )
-   GMC_DCL(tp_Tool, Tool)
+bool
+IsDerefInput_Tool(tp_Tool Tool)
 {
    switch (Tool->TClass) {
       case TC_PrmValues: case TC_First:
@@ -74,7 +67,7 @@ IsDerefInput_Tool(
       case TC_ActTargets: case TC_TextDef: case TC_VirTargets:
       case TC_VirDir: case TC_Directory:
       case TC_DrvHelp: case TC_PrmHelp: {
-	 return TRUE; break;}/*case*/;
+	 return true; break;}/*case*/;
       case TC_Name: case TC_Names:
       case TC_Union: case TC_FileNames: case TC_Cat:
       case TC_Apply: case TC_Map: case TC_Recurse:
@@ -85,30 +78,24 @@ IsDerefInput_Tool(
       case TC_Str: case TC_Error: case TC_Warning: case TC_InternalPntr:
       case TC_Depend:
       case TC_PrefixHelp: case TC_SuffixHelp: {
-	 return FALSE; break;}/*case*/;
+	 return false; break;}/*case*/;
       default: {
 	 FATALERROR("illegal ToolClass"); };}/*switch*/;
    /*NOTREACHED*/
-   return FALSE;
+   return false;
    }/*IsDerefInput_Tool*/
 
 
-boolean
-IsReport_Tool(
-   GMC_ARG(tp_Tool, Tool)
-   )
-   GMC_DCL(tp_Tool, Tool)
+bool
+IsReport_Tool(tp_Tool Tool)
 {
    FORBIDDEN(Tool == ERROR);
    return (Tool->TClass == TC_Error || Tool->TClass == TC_Warning);
    }/*IsReport_Tool*/
 
 
-boolean
-IsDerefPrmVal_Tool(
-   GMC_ARG(tp_Tool, Tool)
-   )
-   GMC_DCL(tp_Tool, Tool)
+bool
+IsDerefPrmVal_Tool(tp_Tool Tool)
 {
    FORBIDDEN(Tool == ERROR);
    return (Tool->TClass == TC_DerefPrmVal);
@@ -116,12 +103,7 @@ IsDerefPrmVal_Tool(
 
 
 tp_Status
-Get_ToolStatus(
-   GMC_ARG(tp_Tool, Tool),
-   GMC_ARG(tp_Status, DepStatus)
-   )
-   GMC_DCL(tp_Tool, Tool)
-   GMC_DCL(tp_Status, DepStatus)
+Get_ToolStatus(tp_Tool Tool,tp_Status DepStatus)
 {
    tp_Status MinStatus;
 
@@ -174,10 +156,7 @@ Get_ToolStatus(
 
 
 tp_FilTyp
-Key_FilTyp(
-   GMC_ARG(tp_Key, Key)
-   )
-   GMC_DCL(tp_Key, Key)
+Key_FilTyp(tp_Key Key)
 {
    tp_SrcTyp SrcTyp;
    int Length, i;
@@ -200,12 +179,7 @@ Key_FilTyp(
 
 
 void
-Key_InstanceLabel(
-   GMC_ARG(tp_Str, Label),
-   GMC_ARG(tp_Key, Key)
-   )
-   GMC_DCL(tp_Str, Label)
-   GMC_DCL(tp_Key, Key)
+Key_InstanceLabel(tp_Str Label,tp_Key Key)
 {
    tp_SrcTyp SrcTyp;
    int Length, i;
@@ -231,10 +205,7 @@ Key_InstanceLabel(
 
 
 tp_FilTyp
-FTName_FilTyp(
-   GMC_ARG(tp_FTName, FTName)
-   )
-   GMC_DCL(tp_FTName, FTName)
+FTName_FilTyp(tp_FTName FTName)
 {
    int i;
    tp_FilTyp FilTyp;
@@ -250,12 +221,7 @@ FTName_FilTyp(
 
 
 static tp_FilTyp
-FTName_SecOrdFilTyp(
-   GMC_ARG(tp_FTName, FTName),
-   GMC_ARG(tp_FTName, ArgFTName)
-   )
-   GMC_DCL(tp_FTName, FTName)
-   GMC_DCL(tp_FTName, ArgFTName)
+FTName_SecOrdFilTyp(tp_FTName FTName,tp_FTName ArgFTName)
 {
    int i;
    tp_FilTyp FilTyp, ArgFilTyp;
@@ -275,18 +241,7 @@ FTName_SecOrdFilTyp(
 
 
 void
-Build_Label(
-   GMC_ARG(tp_Str, StrBuf),
-   GMC_ARG(tp_Ident, Ident),
-   GMC_ARG(tp_FilTyp, FilTyp),
-   GMC_ARG(tp_LocHdr, LocHdr),
-   GMC_ARG(boolean, UniqueFlag)
-   )
-   GMC_DCL(tp_Str, StrBuf)
-   GMC_DCL(tp_Ident, Ident)
-   GMC_DCL(tp_FilTyp, FilTyp)
-   GMC_DCL(tp_LocHdr, LocHdr)
-   GMC_DCL(boolean, UniqueFlag)
+Build_Label(tp_Str StrBuf,tp_Ident Ident,tp_FilTyp FilTyp,tp_LocHdr LocHdr,bool UniqueFlag)
 {
    (void)strcpy(StrBuf, "");
    /* Ident of RootFilHdr is NIL */
@@ -304,10 +259,7 @@ Build_Label(
 
 
 tp_LocHdr
-CacheFileName_LocHdr(
-   GMC_ARG(tp_FileName, CacheFileName)
-   )
-   GMC_DCL(tp_FileName, CacheFileName)
+CacheFileName_LocHdr(tp_FileName CacheFileName)
 {
    int i;
 
@@ -328,51 +280,36 @@ CacheFileName_LocHdr(
 
 
 void
-SetFilHdr_DrvMarks(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+SetFilHdr_DrvMarks(tp_FilHdr FilHdr)
 {
-   SetFilHdr_Marks(FilHdr, FALSE);
+   SetFilHdr_Marks(FilHdr, false);
    }/*SetFilHdr_DrvMarks*/
 
 
 void
-SetFilHdr_Marks(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(boolean, PrmTypFlag)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(boolean, PrmTypFlag)
+SetFilHdr_Marks(tp_FilHdr FilHdr,bool PrmTypFlag)
 {
    tp_FilTyp FilTyp;
    tps_Str Ident, Label;
 
    FilTyp = FilHdr_FilTyp(FilHdr);
-   SetFilTyp_Marks(FilTyp, TRUE, PrmTypFlag);
+   SetFilTyp_Marks(FilTyp, true, PrmTypFlag);
    if (IsList(FilHdr)) {
-      SetFilTyp_Marks(ListFilTyp, TRUE, PrmTypFlag); }/*if*/;
+      SetFilTyp_Marks(ListFilTyp, true, PrmTypFlag); }/*if*/;
    (void)strcpy(Ident, FilHdr_Ident(FilHdr));
    Key_InstanceLabel(Label, Ident);
    while (strcmp(Label, Ident) != 0) {
-      SetFilTyp_Marks(Key_FilTyp(Label), TRUE, PrmTypFlag);
+      SetFilTyp_Marks(Key_FilTyp(Label), true, PrmTypFlag);
       (void)strcpy(Ident, Label);
       Key_InstanceLabel(Label, Ident); }/*while*/;
    }/*SetFilHdr_Marks*/
 
 
 void
-SetFilTyp_Marks(
-   GMC_ARG(tp_FilTyp, FilTyp),
-   GMC_ARG(boolean, CastFlag),
-   GMC_ARG(boolean, PrmTypFlag)
-   )
-   GMC_DCL(tp_FilTyp, FilTyp)
-   GMC_DCL(boolean, CastFlag)
-   GMC_DCL(boolean, PrmTypFlag)
+SetFilTyp_Marks(tp_FilTyp FilTyp,bool CastFlag,bool PrmTypFlag)
 {
    if (FilTyp->Reach) return;
-   FilTyp->Reach = TRUE;
+   FilTyp->Reach = true;
    SetDrvEdg_Marks(FilTyp->DrvEdg, PrmTypFlag);
    SetEqvEdg_Marks(FilTyp->EqvEdg, CastFlag, PrmTypFlag) ;
    if (CastFlag) SetCastEdg_Marks(FilTyp->CastEdg, PrmTypFlag) ;
@@ -380,28 +317,20 @@ SetFilTyp_Marks(
 
 
 void
-SetFilTyp_Mark(
-   GMC_ARG(tp_FilTyp, FilTyp)
-   )
-   GMC_DCL(tp_FilTyp, FilTyp)
+SetFilTyp_Mark(tp_FilTyp FilTyp)
 {
-   FilTyp->Mark = TRUE;
+   FilTyp->Mark = true;
    }/*SetFilTyp_Mark*/
 
 
 void
-WriteSrcFilTyps(
-   GMC_ARG(tp_FilDsc, FilDsc),
-   GMC_ARG(boolean, IsPrefix)
-   )
-   GMC_DCL(tp_FilDsc, FilDsc)
-   GMC_DCL(boolean, IsPrefix)
+WriteSrcFilTyps(tp_FilDsc FilDsc,bool IsPrefix)
 {
    int i;
    tp_SrcTyp SrcTyp;
-   boolean Found;
+   bool Found;
 
-   Found = FALSE;
+   Found = false;
    /*select*/{
       if (IsPrefix) {
 	 Writeln(FilDsc, "?*? Known Prefix Types:");
@@ -412,50 +341,44 @@ WriteSrcFilTyps(
       if ((IsPrefix == SrcTyp->IsPrefix)
 	  && CurrentClient->HelpLevel >= SrcTyp->FilTyp->HelpLevel) {
 	 WriteNameDesc(FilDsc, SrcTyp->Pattern, SrcTyp->FilTyp->Desc);
-	 Found = TRUE; }/*if*/; }/*for*/;
+	 Found = true; }/*if*/; }/*for*/;
    if (!Found) {
       Writeln(FilDsc, "(none)"); }/*if*/;
    }/*WriteSrcFilTyps*/
 
 
 void
-Clr_FilTypMarks(GMC_ARG_VOID)
+Clr_FilTypMarks()
 {
    int i;
 
    for (i=0; i<num_FilTypS; i++) {
-      FilTypS[i].Reach = FALSE;
-      FilTypS[i].Mark = FALSE; }/*for*/;
+      FilTypS[i].Reach = false;
+      FilTypS[i].Mark = false; }/*for*/;
    }/*Clr_FilTypMarks*/
 
 
 void
-WriteMarkedFilTyps(
-   GMC_ARG(tp_FilDsc, FilDsc)
-   )
-   GMC_DCL(tp_FilDsc, FilDsc)
+WriteMarkedFilTyps(tp_FilDsc FilDsc)
 {
    int i;
    tp_FilTyp FilTyp;
-   boolean Found;
+   bool Found;
 
-   Found = FALSE;
+   Found = false;
    for (i=0; i<num_FilTypS; i++) {
       FilTyp = &FilTypS[i];
       if (FilTyp->Mark && CurrentClient->HelpLevel >= FilTyp->HelpLevel
 	  && !IsSecOrd_FilTyp(FilTyp)) {
 	 WriteNameDesc(FilDsc, FilTyp->FTName, FilTyp->Desc);
-	 Found = TRUE; }/*if*/; }/*for*/;
+	 Found = true; }/*if*/; }/*for*/;
    if (!Found) {
       Writeln(FilDsc, "(none)"); }/*if*/;
    }/*WriteMarkedFilTyps*/
 
 
 tp_FilTyp
-Nod_FilTyp(
-   GMC_ARG(tp_Nod, DrvTyp_Nod)
-   )
-   GMC_DCL(tp_Nod, DrvTyp_Nod)
+Nod_FilTyp(tp_Nod DrvTyp_Nod)
 {
    tp_Str Str, ArgStr;
    tp_FilTyp FilTyp;

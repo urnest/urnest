@@ -28,12 +28,7 @@ static int	Log_InsertNesting = 100;
 
 
 void
-Make_RootHdrInf(
-   GMC_ARG(tp_HdrInf, HdrInf),
-   GMC_ARG(tp_LocHdr, LocHdr)
-   )
-   GMC_DCL(tp_HdrInf, HdrInf)
-   GMC_DCL(tp_LocHdr, LocHdr)
+Make_RootHdrInf(tp_HdrInf HdrInf,tp_LocHdr LocHdr)
 {
    HdrInf->LocHdr = LocHdr;
    HdrInf->FKind = FK_SrcDir;
@@ -46,18 +41,7 @@ Make_RootHdrInf(
 
 
 tp_FilHdr
-Insert_FilHdr(
-   GMC_ARG(tp_FilHdr, BaseFilHdr),
-   GMC_ARG(tp_FKind, FKind),
-   GMC_ARG(tp_FilTyp, FilTyp),
-   GMC_ARG(tp_FilPrm, FilPrm),
-   GMC_ARG(tp_Ident, Ident)
-   )
-   GMC_DCL(tp_FilHdr, BaseFilHdr)
-   GMC_DCL(tp_FKind, FKind)
-   GMC_DCL(tp_FilTyp, FilTyp)
-   GMC_DCL(tp_FilPrm, FilPrm)
-   GMC_DCL(tp_Ident, Ident)
+Insert_FilHdr(tp_FilHdr BaseFilHdr,tp_FKind FKind,tp_FilTyp FilTyp,tp_FilPrm FilPrm,tp_Ident Ident)
 {
    tp_FilHdr FilHdr;
    tp_LocHdr LocHdr;
@@ -96,18 +80,7 @@ Insert_FilHdr(
 
 
 tp_FilHdr
-Extend_FilHdr(
-   GMC_ARG(tp_FilHdr, BaseFilHdr),
-   GMC_ARG(tp_FKind, FKind),
-   GMC_ARG(tp_FilTyp, FilTyp),
-   GMC_ARG(tp_FilPrm, FilPrm),
-   GMC_ARG(tp_Str, IdentStr)
-   )
-   GMC_DCL(tp_FilHdr, BaseFilHdr)
-   GMC_DCL(tp_FKind, FKind)
-   GMC_DCL(tp_FilTyp, FilTyp)
-   GMC_DCL(tp_FilPrm, FilPrm)
-   GMC_DCL(tp_Str, IdentStr)
+Extend_FilHdr(tp_FilHdr BaseFilHdr,tp_FKind FKind,tp_FilTyp FilTyp,tp_FilPrm FilPrm,tp_Str IdentStr)
 {
    tp_FilHdr FilHdr;
    tp_LocHdr LocHdr;
@@ -149,18 +122,7 @@ Extend_FilHdr(
 
 
 tp_FilHdr
-Get_Drv(
-   GMC_ARG(tp_FilHdr, BaseFilHdr),
-   GMC_ARG(tp_FKind, FKind),
-   GMC_ARG(tp_FilTyp, FilTyp),
-   GMC_ARG(tp_FilPrm, FilPrm),
-   GMC_ARG(tp_Ident, Ident)
-   )
-   GMC_DCL(tp_FilHdr, BaseFilHdr)
-   GMC_DCL(tp_FKind, FKind)
-   GMC_DCL(tp_FilTyp, FilTyp)
-   GMC_DCL(tp_FilPrm, FilPrm)
-   GMC_DCL(tp_Ident, Ident)
+Get_Drv(tp_FilHdr BaseFilHdr,tp_FKind FKind,tp_FilTyp FilTyp,tp_FilPrm FilPrm,tp_Ident Ident)
 {
    tp_FilHdr FilHdr, PipeBaseFilHdr;
    tps_Str NewIdent;
@@ -195,14 +157,7 @@ Get_Drv(
 
 
 tp_FilHdr
-Get_KeyDrv(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FKind, FKind),
-   GMC_ARG(tp_Key, Key)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FKind, FKind)
-   GMC_DCL(tp_Key, Key)
+Get_KeyDrv(tp_FilHdr FilHdr,tp_FKind FKind,tp_Key Key)
 {
    return Get_Drv(FilHdr, FKind, Key_FilTyp(Key), RootFilPrm, Key);
    }/*Get_KeyDrv*/

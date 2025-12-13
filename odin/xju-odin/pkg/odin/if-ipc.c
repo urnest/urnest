@@ -34,15 +34,15 @@ char *ctime();
 #define		stdin_fd 0
 #define		IPC_MT_Reply 1
 
-boolean		IsAny_ReadyServerAction = FALSE;
+bool		IsAny_ReadyServerAction = false;
 
 int *IPC_IArg1, *IPC_IArg2, *IPC_IArg3;
 tp_Str IPC_SArg1, IPC_SArg2, IPC_SArg3;
 
-boolean		IsServer = FALSE;
-boolean		IsClient = FALSE;
+bool		IsServer = false;
+bool		IsClient = false;
 
-boolean		IPC_Do_Return = FALSE;
+bool		IPC_Do_Return = false;
 static int	IPC_Nesting = 0;
 
 void		(*IPC_Action)(GMC_P1(int *) GMC_PN(char *));
@@ -52,18 +52,15 @@ static int	ServerFD = -1;
 static int	ServerPId = 0;
 
 
-boolean
-IsServerPId(
-   GMC_ARG(int, PId)
-   )
-   GMC_DCL(int, PId)
+bool
+IsServerPId(int PId)
 {
    return (ServerPId > 0 && ServerPId == PId);
    }/*IsServerPId*/
 
 
 void
-IPC_Init(GMC_ARG_VOID)
+IPC_Init()
 {
 #ifdef HAVE_SIGACTION
    struct sigaction actbuf;
@@ -75,7 +72,7 @@ IPC_Init(GMC_ARG_VOID)
    struct sockaddr *SockAddrPtr;
    struct hostent *HostEnt;
    tps_Str SocketFileName;
-   boolean Abort;
+   bool Abort;
    tp_FilDsc FilDsc;
    char LocalHostName[MAXHOSTNAMELEN], ServerHostName[MAXHOSTNAMELEN];
    time_t t;
@@ -153,8 +150,8 @@ IPC_Init(GMC_ARG_VOID)
       LocalClient = New_Client(0);
       CurrentClient = LocalClient;
       if (GetEnv("ODIN_SERVER") == NIL) {
-	 IsServer = TRUE;
-	 IsClient = TRUE;
+	 IsServer = true;
+	 IsClient = true;
 	 return; }/*if*/;
       ServerPId = fork();
       if (ServerPId < 0) {
@@ -162,7 +159,7 @@ IPC_Init(GMC_ARG_VOID)
 	 SystemError("Could not fork Odin server.\n");
 	 exit(1); }/*if*/;
       if (ServerPId == 0) {
-	 IsServer = TRUE;
+	 IsServer = true;
 	 ChangeDir(&Abort, OdinDirName);
 	 if (Abort) {
 	    SystemError("Cannot access Odin cache directory: %s.\n");
@@ -182,14 +179,14 @@ IPC_Init(GMC_ARG_VOID)
 	    exit(1); }/*if*/;
 	 status = dup2(fd, 2);
 	 FORBIDDEN(status != 2);
-	 Set_IPC_Err(TRUE);
+	 Set_IPC_Err(true);
 	 Lose_ControlTTY();
 	 (void)time(&t);
 	 (void)printf("Odin server started on %s", ctime(&t));
 	 return; }/*if*/;
       (void)close(SocketFD); }/*if*/;
 
-   IsClient = TRUE;
+   IsClient = true;
    if (ServerFD < 0) {
       /*select*/{
 	 if (LocalIPCFlag) {
@@ -197,7 +194,7 @@ IPC_Init(GMC_ARG_VOID)
 	    FORBIDDEN(SocketFD < 0);
 	    status = connect(SocketFD, SockAddrPtr, sizeof(UnSockAddr));
 	 }else{
-	    FilDsc = FileName_RFilDsc(SocketFileName, FALSE);
+	    FilDsc = FileName_RFilDsc(SocketFileName, false);
 	    if (FilDsc == ERROR) {
 	       SystemError("Cache at %s is read-only.\n", OdinDirName);
 	       exit(1); }/*if*/;
@@ -232,14 +229,7 @@ IPC_Init(GMC_ARG_VOID)
 
 
 int
-IPC_Read(
-   GMC_ARG(int, fd),
-   GMC_ARG(char*, buf),
-   GMC_ARG(int, len)
-   )
-   GMC_DCL(int, fd)
-   GMC_DCL(char*, buf)
-   GMC_DCL(int, len)
+IPC_Read(int fd,char* buf,int len)
 {
    int n, i;
 
@@ -252,28 +242,17 @@ IPC_Read(
 
 
 static void
-IPC_Read_Line(
-   GMC_ARG(boolean*, EndFlagPtr),
-   GMC_ARG(tp_Str*, StrPtr),
-   GMC_ARG(tps_Str, StrBuf),
-   GMC_ARG(int*, OffsetPtr),
-   GMC_ARG(int*, LengthPtr)
-   )
-   GMC_DCL(boolean*, EndFlagPtr)
-   GMC_DCL(tp_Str*, StrPtr)
-   GMC_DCL(tps_Str, StrBuf)
-   GMC_DCL(int*, OffsetPtr)
-   GMC_DCL(int*, LengthPtr)
+IPC_Read_Line(bool* EndFlagPtr,tp_Str* StrPtr,tps_Str StrBuf,int* OffsetPtr,int* LengthPtr)
 {
    int count, i, j;
 
    FORBIDDEN(*OffsetPtr != 0);
-   *EndFlagPtr = FALSE;
+   *EndFlagPtr = false;
    *StrPtr = NIL;
    count = read(stdin_fd, &StrBuf[*LengthPtr], MAX_Str-(*LengthPtr));
    FORBIDDEN(count < 0);
    if (count <= 0) {
-      *EndFlagPtr = TRUE;
+      *EndFlagPtr = true;
       return; }/*if*/;
    i = *LengthPtr;
    *LengthPtr += count;
@@ -302,14 +281,7 @@ IPC_Read_Line(
 
 
 static tp_Str
-IPC_Find_Line(
-   GMC_ARG(tps_Str, StrBuf),
-   GMC_ARG(int*, OffsetPtr),
-   GMC_ARG(int*, LengthPtr)
-   )
-   GMC_DCL(tps_Str, StrBuf)
-   GMC_DCL(int*, OffsetPtr)
-   GMC_DCL(int*, LengthPtr)
+IPC_Find_Line(tps_Str StrBuf,int* OffsetPtr,int* LengthPtr)
 {
    int i, j;
    tp_Str Str;
@@ -338,12 +310,7 @@ IPC_Find_Line(
 
 
 static tp_Str
-EditLine(
-   GMC_ARG(tp_Str, StrBuf),
-   GMC_ARG(tp_Str, Prompt)
-   )
-   GMC_DCL(tp_Str, StrBuf)
-   GMC_DCL(tp_Str, Prompt)
+EditLine(tp_Str StrBuf,tp_Str Prompt)
 {
    tp_Str Str;
    int Length;
@@ -368,12 +335,7 @@ EditLine(
 
 
 static void
-IPC_Get_Msg(
-   GMC_ARG(boolean*, AbortPtr),
-   GMC_ARG(int, FD)
-   )
-   GMC_DCL(boolean*, AbortPtr)
-   GMC_DCL(int, FD)
+IPC_Get_Msg(bool* AbortPtr,int FD)
 {
    int cc;
    int MsgType;
@@ -381,22 +343,17 @@ IPC_Get_Msg(
    cc = IPC_Read(FD, (char *)&MsgType, sizeof(MsgType));
    if (cc <= 0) {
       FORBIDDEN(cc < 0);
-      *AbortPtr = TRUE;
+      *AbortPtr = true;
       return; }/*if*/;
    IPC_Do_Msg(AbortPtr, MsgType);
    }/*IPC_Get_Msg*/
 
 
 void
-IPC_Get_Commands(
-   GMC_ARG(boolean*, AbortPtr),
-   GMC_ARG(char*, Prompt)
-   )
-   GMC_DCL(boolean*, AbortPtr)
-   GMC_DCL(char*, Prompt)
+IPC_Get_Commands(bool* AbortPtr,char* Prompt)
 {
    static int inotifyFd=-1;
-   boolean WasPrompted, Abort, Done, EndFlag;
+   bool WasPrompted, Abort, Done, EndFlag;
    fd_set _readfds, *readfds = &_readfds;
    int nfds;
    tp_Client Client, OldCurrentClient;
@@ -408,7 +365,7 @@ IPC_Get_Commands(
    socklen_t AddrLen;
    int FD;
 
-   *AbortPtr = FALSE;
+   *AbortPtr = false;
    FORBIDDEN(Prompt != NIL && IPC_Nesting > 0);
    FORBIDDEN(IPC_Nesting > 1);
    IPC_Nesting += 1;
@@ -422,9 +379,9 @@ IPC_Get_Commands(
 	 IPC_Nesting -= 1;
 	 return; }/*if*/; }/*if*/;
 
-   WasPrompted = FALSE;
+   WasPrompted = false;
 
-   while (TRUE) {
+   while (true) {
       FD_ZERO(readfds);
 
       if (IsClient) {
@@ -441,7 +398,7 @@ IPC_Get_Commands(
 		  if (status == -1) {
 		     SysCallError(StdOutFD, "write(IPC_Get_Commands)");
 		     }/*if*/; };}/*select*/;
-	    WasPrompted = TRUE; }/*if*/;
+	    WasPrompted = true; }/*if*/;
 	 if (Prompt != NIL && Str == NIL) {
 	    FD_SET(stdin_fd, readfds); }/*if*/;
 	 if (ServerFD > 0) {
@@ -483,15 +440,15 @@ IPC_Get_Commands(
 	 if (!IsTTY) {
 	    Exit(1); }/*if*/;
 	 if (!Handled) {
-	    Handled = TRUE;
+	    Handled = true;
 	    InterruptAction();
 	    Offset = 0; Length = 0; Str = NIL; }/*if*/;
 	 if (Prompt != NIL) {
-	    Handled = FALSE;
-	    Signalled = FALSE; }/*if*/; }/*if*/;
+	    Handled = false;
+	    Signalled = false; }/*if*/; }/*if*/;
 
       if (SigChild) {
-	 SigChild = FALSE;
+	 SigChild = false;
 	 ChildAction(AbortPtr, &Done);
 	 if (Done) {
 	    IPC_Nesting -= 1;
@@ -508,7 +465,7 @@ IPC_Get_Commands(
 	    if (*AbortPtr && !IsTTY) {
 	       IPC_Nesting -= 1;
 	       return; }/*if*/;
-	    WasPrompted = FALSE;
+	    WasPrompted = false;
 	    Str = IPC_Find_Line(StrBuf, &Offset, &Length); }/*if*/;
 
 	 for (Host=FirstHost; Host!=NIL; Host=Host_Next(Host)) {
@@ -559,7 +516,7 @@ IPC_Get_Commands(
 	 Purge_Clients();
 
 	 if (IsAny_ReadyServerAction) {
-	    IsAny_ReadyServerAction = FALSE;
+	    IsAny_ReadyServerAction = false;
 	    FOREACH_CLIENT(Client) {
 	       OldCurrentClient = CurrentClient;
 	       CurrentClient = Client;
@@ -578,12 +535,7 @@ IPC_Get_Commands(
 
 
 void
-IPC_Write_Int(
-   GMC_ARG(boolean*, AbortPtr),
-   GMC_ARG(int, Int)
-   )
-   GMC_DCL(boolean*, AbortPtr)
-   GMC_DCL(int, Int)
+IPC_Write_Int(bool* AbortPtr,int Int)
 {
    int fd, cc;
 
@@ -591,7 +543,7 @@ IPC_Write_Int(
 
    if (IsServer) {
       if (!Is_ActiveClient(CurrentClient)) {
-	 *AbortPtr = TRUE;
+	 *AbortPtr = true;
 	 return; }/*if*/;
       FORBIDDEN(Is_LocalClient(CurrentClient));
       fd = Client_FD(CurrentClient); }/*if*/;
@@ -601,12 +553,7 @@ IPC_Write_Int(
 
 
 void
-IPC_Read_Int(
-   GMC_ARG(boolean*, AbortPtr),
-   GMC_ARG(int*, IntPtr)
-   )
-   GMC_DCL(boolean*, AbortPtr)
-   GMC_DCL(int*, IntPtr)
+IPC_Read_Int(bool* AbortPtr,int* IntPtr)
 {
    int fd, cc;
 
@@ -614,7 +561,7 @@ IPC_Read_Int(
 
    if (IsServer) {
       if (!Is_ActiveClient(CurrentClient)) {
-	 *AbortPtr = TRUE;
+	 *AbortPtr = true;
 	 return; }/*if*/;
       FORBIDDEN(Is_LocalClient(CurrentClient));
       fd = Client_FD(CurrentClient); }/*if*/;
@@ -625,12 +572,7 @@ IPC_Read_Int(
 
 
 void
-IPC_Write_Str(
-   GMC_ARG(boolean*, AbortPtr),
-   GMC_ARG(const char*, Str)
-   )
-   GMC_DCL(boolean*, AbortPtr)
-   GMC_DCL(char*, Str)
+IPC_Write_Str(bool* AbortPtr,const char* Str)
 {
    int fd, cc, len;
 
@@ -638,7 +580,7 @@ IPC_Write_Str(
 
    if (IsServer) {
       if (!Is_ActiveClient(CurrentClient)) {
-	 *AbortPtr = TRUE;
+	 *AbortPtr = true;
 	 return; }/*if*/;
       FORBIDDEN(Is_LocalClient(CurrentClient));
       fd = Client_FD(CurrentClient); }/*if*/;
@@ -653,12 +595,7 @@ IPC_Write_Str(
 
 
 void
-IPC_Read_Str(
-   GMC_ARG(boolean*, AbortPtr),
-   GMC_ARG(char*, Str)
-   )
-   GMC_DCL(boolean*, AbortPtr)
-   GMC_DCL(char*, Str)
+IPC_Read_Str(bool* AbortPtr,char* Str)
 {
    int fd, cc, len;
 
@@ -666,7 +603,7 @@ IPC_Read_Str(
 
    if (IsServer) {
       if (!Is_ActiveClient(CurrentClient)) {
-	 *AbortPtr = TRUE;
+	 *AbortPtr = true;
 	 return; }/*if*/;
       FORBIDDEN(Is_LocalClient(CurrentClient));
       fd = Client_FD(CurrentClient); }/*if*/;
@@ -681,7 +618,7 @@ IPC_Read_Str(
 
 
 void
-IPC_Do_Abort(GMC_ARG_VOID)
+IPC_Do_Abort()
 {
    if (!IsServer) {
       DeadServerExit(); }/*if*/;
@@ -692,10 +629,7 @@ IPC_Do_Abort(GMC_ARG_VOID)
 
 
 void
-IPC_Close(
-   GMC_ARG(tp_ClientID, ClientID)
-   )
-   GMC_DCL(tp_ClientID, ClientID)
+IPC_Close(tp_ClientID ClientID)
 {
    int status;
 
@@ -705,7 +639,7 @@ IPC_Close(
 
 
 void
-IPC_Finish(GMC_ARG_VOID)
+IPC_Finish()
 {
    tps_Str SocketFileName;
    int status;

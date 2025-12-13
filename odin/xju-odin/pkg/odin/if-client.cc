@@ -14,17 +14,19 @@ geoff@boulder.colorado.edu
 */
 extern "C"
 {
-#include "inc/GMC.h"
-#include "inc/Client.h"
-#include "inc/FileName.h"
-#include "inc/Flag_.h"
-#include "inc/InpKind_.h"
-#include "inc/Job.h"
-#include "inc/LogLevel_.h"
-#include "inc/Status_.h"
-#include "inc/Str.h"
-#include "inc/Func.hh"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
+#include <odin/inc/Client.h>
+#include <odin/inc/Flag_.h>
+#include <odin/inc/InpKind_.h>
+#include <odin/inc/Job.h>
+#include <odin/inc/LogLevel_.h>
+#include <odin/inc/Status_.h>
 }
+#include <stdlib.h>
+#include <stdio.h>
 
 tp_Client	FirstClient = NIL;
 tp_Client	CurrentClient = NIL;
@@ -65,12 +67,7 @@ int		num_FHLstS = 0;
 
 
 void
-Push_Pending(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_InpKind, InpKind)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_InpKind, InpKind)
+Push_Pending(tp_FilHdr FilHdr,tp_InpKind InpKind)
 {
    tp_Pending Pending;
 
@@ -101,22 +98,22 @@ Push_Pending(
    }/*Push_Pending*/
 
 
-static boolean
-IsAllPendingUpToDate(GMC_ARG_VOID)
+static bool
+IsAllPendingUpToDate()
 {
    tp_Pending Pending;
 
    for (Pending = FirstPending; Pending != NIL; Pending = Pending->Next) {
       if (!IsAllUpToDate(Pending->FilHdr, Pending->InpKind)) {
-	 return FALSE; }/*if*/; }/*for*/;
-   return TRUE;
+	 return false; }/*if*/; }/*for*/;
+   return true;
    }/*IsAllPendingUpToDate*/
 
 
 // Gather reqs for entries for everything on Pending list, putting
 // those reqs on the to-do or pending list.
 static void
-GetAllPending(GMC_ARG_VOID)
+GetAllPending()
 {
    tp_Pending Pending;
    tp_Status Status;
@@ -150,13 +147,13 @@ GetAllPending(GMC_ARG_VOID)
    }/*GetAllPending*/
 
 
-static boolean
+static bool
 Clr_Pending()
 {
    tp_FilHdr FilHdr;
    tp_Pending Pending, LastPending;
 
-   boolean result = TRUE;
+   bool result = true;
 
    if (FirstPending == NIL) {
       return result; }/*if*/;
@@ -166,7 +163,7 @@ Clr_Pending()
       FilHdr = Pending->FilHdr;
       /*select*/{
 	 if (!IsAllDone(FilHdr, Pending->InpKind)) {
-	    result = FALSE;
+	    result = false;
 	    Broadcast(FilHdr, STAT_Pending);
 	 }else if (Is_TgtValErrStatus(FilHdr)) {
 	    Broadcast(FilHdr, STAT_TgtValError); };}/*select*/;
@@ -182,10 +179,7 @@ Clr_Pending()
 
 
 static tp_FHLst
-New_FHLst(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+New_FHLst(tp_FilHdr FilHdr)
 {
    tp_FHLst NewFHLst;
 
@@ -204,17 +198,14 @@ New_FHLst(
 
 
 static void
-Ret_FHLst(
-   GMC_ARG(tp_FHLst, FHLst)
-   )
-   GMC_DCL(tp_FHLst, FHLst)
+Ret_FHLst(tp_FHLst FHLst)
 {
    tp_FHLst TailFHLst;
 
    if (FHLst == NIL) {
       return; }/*if*/;
    TailFHLst = FHLst;
-   while (TRUE) {
+   while (true) {
       Ret_FilHdr(TailFHLst->FilHdr);
       TailFHLst->FilHdr = NIL;
       if (TailFHLst->Next == NIL) {
@@ -226,7 +217,7 @@ Ret_FHLst(
 
 
 void
-Ret_ToDo(GMC_ARG_VOID)
+Ret_ToDo()
 {
    Ret_FHLst(CurrentClient->ToDo);
    CurrentClient->ToDo = NIL;
@@ -235,10 +226,7 @@ Ret_ToDo(GMC_ARG_VOID)
 
 
 tp_Client
-New_Client(
-   GMC_ARG(tp_ClientID, ClientID)
-   )
-   GMC_DCL(tp_ClientID, ClientID)
+New_Client(tp_ClientID ClientID)
 {
    tp_Client Client;
 
@@ -246,13 +234,13 @@ New_Client(
       if (FreeClient == NIL) {
 	 Client = (tp_Client)malloc(sizeof(tps_Client));
 	 num_ClientS += 1;
-	 Client->InUse = FALSE;
+	 Client->InUse = false;
       }else{
 	 Client = FreeClient;
 	 FreeClient = FreeClient->Next; };}/*select*/;
 
    Client->ClientID = ClientID;
-   Client->KeepGoing = FALSE;
+   Client->KeepGoing = false;
    Client->ErrLevel = 0;
    Client->WarnLevel = 0;
    Client->LogLevel = 0;
@@ -264,19 +252,16 @@ New_Client(
    Client->NumJobs = 0;
    Client->MaxJobs = 0;
    Client->Job = NIL;
-   Client->Interrupted = FALSE;
+   Client->Interrupted = false;
    Client->Next = FirstClient; FirstClient = Client;
    FORBIDDEN(Client->InUse);
-   Client->InUse = TRUE;
+   Client->InUse = true;
    return Client;
    }/*New_Client*/
 
 
 void
-Activate_Client(
-   GMC_ARG(tp_Client, Client)
-   )
-   GMC_DCL(tp_Client, Client)
+Activate_Client(tp_Client Client)
 {
    tp_Client OldCurrentClient;
 
@@ -289,25 +274,22 @@ Activate_Client(
 
 
 void
-Ret_Client(
-   GMC_ARG(tp_Client, Client)
-   )
-   GMC_DCL(tp_Client, Client)
+Ret_Client(tp_Client Client)
 {
    FORBIDDEN(!Client->InUse);
    FORBIDDEN(Is_LocalClient(Client) && UseCount > 1);
-   Client->InUse = FALSE;
+   Client->InUse = false;
    }/*Ret_Client*/
 
 
 void
-Purge_Clients(GMC_ARG_VOID)
+Purge_Clients()
 {
-   boolean Changed;
+   bool Changed;
    tp_Client PrevClient, Client, NextClient, OldCurrentClient;
    tp_Job Job, NextJob;
 
-   Changed = FALSE;
+   Changed = false;
    PrevClient = NIL;
    Client = FirstClient;
    while (Client != NIL) {
@@ -316,7 +298,7 @@ Purge_Clients(GMC_ARG_VOID)
 	 if (Client->InUse) {
 	    PrevClient = Client;
 	 }else{
-	    Changed = TRUE;
+	    Changed = true;
 	    Client->Next = FreeClient;
 	    FreeClient = Client;
 	    /*select*/{
@@ -328,14 +310,14 @@ Purge_Clients(GMC_ARG_VOID)
 	    IPC_Close(Client->ClientID);
 	    Client->ClientID = -1;
 	    UseCount -= 1;
-	    Set_Client_FilHdr(Client, (tp_FilHdr)NIL, FALSE);
+	    Set_Client_FilHdr(Client, (tp_FilHdr)NIL, false);
 
 	    OldCurrentClient = CurrentClient;
 	    CurrentClient = Client;
 	    Job = CurrentClient->Job;
 	    while (Job != NIL) {
 	       NextJob = Job->Next;
-	       Local_Job_Done(Job->JobID, TRUE);
+	       Local_Job_Done(Job->JobID, true);
 	       Job = NextJob; }/*while*/;
 	    FORBIDDEN(CurrentClient->Job != NIL);
 	    Ret_ToDo();
@@ -349,102 +331,66 @@ Purge_Clients(GMC_ARG_VOID)
    }/*Purge_Clients*/
 
 
-boolean
-Is_ActiveClient(
-   GMC_ARG(tp_Client, Client)
-   )
-   GMC_DCL(tp_Client, Client)
+bool
+Is_ActiveClient(tp_Client Client)
 {
    return (Client->InUse);
    }/*Is_ActiveClient*/
 
 
 int
-Client_FD(
-   GMC_ARG(tp_Client, Client)
-   )
-   GMC_DCL(tp_Client, Client)
+Client_FD(tp_Client Client)
 {
    return (int)Client->ClientID; }/*Client_FD*/
 
 
-boolean
-Client_Interrupted(
-   GMC_ARG(tp_Client, Client)
-   )
-   GMC_DCL(tp_Client, Client)
+bool
+Client_Interrupted(tp_Client Client)
 {
    return Client->Interrupted; }/*Client_Interrupted*/
 
 
 void
-Set_Client_Interrupted(
-   GMC_ARG(tp_Client, Client),
-   GMC_ARG(boolean, Flag)
-   )
-   GMC_DCL(tp_Client, Client)
-   GMC_DCL(boolean, Flag)
+Set_Client_Interrupted(tp_Client Client,bool Flag)
 {
    FORBIDDEN(Client == NIL);
    Client->Interrupted = Flag;
    }/*Set_Client_Interrupted*/
 
 
-boolean
-Client_KeepGoing(
-   GMC_ARG(tp_Client, Client)
-   )
-   GMC_DCL(tp_Client, Client)
+bool
+Client_KeepGoing(tp_Client Client)
 {
    return Client->KeepGoing; }/*Client_KeepGoing*/
 
 
 int
-Client_ErrLevel(
-   GMC_ARG(tp_Client, Client)
-   )
-   GMC_DCL(tp_Client, Client)
+Client_ErrLevel(tp_Client Client)
 {
    return Client->ErrLevel; }/*Client_ErrLevel*/
 
 
 int
-Client_WarnLevel(
-   GMC_ARG(tp_Client, Client)
-   )
-   GMC_DCL(tp_Client, Client)
+Client_WarnLevel(tp_Client Client)
 {
    return Client->WarnLevel; }/*Client_WarnLevel*/
 
 
 tp_LogLevel
-Client_LogLevel(
-   GMC_ARG(tp_Client, Client)
-   )
-   GMC_DCL(tp_Client, Client)
+Client_LogLevel(tp_Client Client)
 {
    return Client->LogLevel; }/*Client_LogLevel*/
 
 
 tp_FilHdr
-Client_FilHdr(
-   GMC_ARG(tp_Client, Client)
-   )
-   GMC_DCL(tp_Client, Client)
+Client_FilHdr(tp_Client Client)
 {
    return Copy_FilHdr(Client->FilHdr);
    }/*Client_FilHdr*/
 
 
 void
-Set_Client_FilHdr(
-   GMC_ARG(tp_Client, Client),
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(boolean, NeedsData)
-   )
-   GMC_DCL(tp_Client, Client)
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(boolean, NeedsData)
+Set_Client_FilHdr(tp_Client Client,tp_FilHdr FilHdr,bool NeedsData)
 {
    if (Client->FilHdr != NIL) {
       Ret_FilHdr(Client->FilHdr); }/*if*/;
@@ -453,11 +399,8 @@ Set_Client_FilHdr(
    }/*Set_Client_FilHdr*/
 
 
-boolean
-Client_NeedsData(
-   GMC_ARG(tp_Client, Client)
-   )
-   GMC_DCL(tp_Client, Client)
+bool
+Client_NeedsData(tp_Client Client)
 {
    return Client->NeedsData;
    }/*Client_NeedsData*/
@@ -501,10 +444,7 @@ Push_AllReqs()
 
 
 tp_FHLst
-Client_ToDo(
-   GMC_ARG(tp_Client, Client)
-   )
-   GMC_DCL(tp_Client, Client)
+Client_ToDo(tp_Client Client)
 {
    return Client->ToDo; }/*Client_ToDo*/
 
@@ -512,10 +452,7 @@ Client_ToDo(
 // CurrentClient->LastToDo (at head if that is NIL) such
 // post: CurrentClient->LastToDo points to FilHdr
 void
-Push_ToDo(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+Push_ToDo(tp_FilHdr FilHdr)
 {
    tp_FHLst FHLst;
 
@@ -535,10 +472,7 @@ Push_ToDo(
 static tp_FHLst	ToBroadcast = NIL;
 
 void
-Push_ToBroadcast(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+Push_ToBroadcast(tp_FilHdr FilHdr)
 {
    tp_FHLst FHLst;
 
@@ -549,7 +483,7 @@ Push_ToBroadcast(
    }/*Push_ToBroadcast*/
 
 void
-Do_ToBroadcast(GMC_ARG_VOID)
+Do_ToBroadcast()
 {
    tp_FHLst FHLst;
    tp_FilHdr FilHdr;
@@ -563,53 +497,44 @@ Do_ToBroadcast(GMC_ARG_VOID)
 
 
 tp_Job
-Client_Job(
-   GMC_ARG(tp_Client, Client)
-   )
-   GMC_DCL(tp_Client, Client)
+Client_Job(tp_Client Client)
 {
    return Client->Job; }/*Client_Job*/
 
 
 tp_Client
-Client_Next(
-   GMC_ARG(tp_Client, Client)
-   )
-   GMC_DCL(tp_Client, Client)
+Client_Next(tp_Client Client)
 {
    return Client->Next; }/*Client_Next*/
 
 
-boolean
-Is_LocalClient(
-   GMC_ARG(tp_Client, Client)
-   )
-   GMC_DCL(tp_Client, Client)
+bool
+Is_LocalClient(tp_Client Client)
 {
    return (Client == LocalClient);
    }/*Is_LocalClient*/
 
 
-boolean
-Is_ServerAction(GMC_ARG_VOID)
+bool
+Is_ServerAction()
 {
    return (IsServer && CurrentClient->FilHdr != NIL);
    }/*Is_ServerAction*/
 
 
 tp_Job
-New_Job(GMC_ARG_VOID)
+New_Job()
 {
    tp_Job Job;
    tps_Str Str;
-   boolean Abort;
+   bool Abort;
 
    /*select*/{
       if (FreeJob == NIL) {
 	 Job = (tp_Job)malloc(sizeof(tps_Job));
 	 num_JobS += 1;
 	 Job->JobID = num_JobS;
-	 Job->InUse = FALSE;
+	 Job->InUse = false;
 	 (void)sprintf(Str, "%s/JOB%d", JobsDirName, Job->JobID);
 	 Job->JobDirName = Malloc_Str(Str);
 	 MakeDirFile(&Abort, Job->JobDirName);
@@ -625,19 +550,16 @@ New_Job(GMC_ARG_VOID)
 	 Job = FreeJob;
 	 FreeJob = FreeJob->Next; };}/*select*/;
 
-   Job->Canceled = FALSE;
+   Job->Canceled = false;
    Job->Next = NIL;
    FORBIDDEN(Job->InUse);
-   Job->InUse = TRUE;
+   Job->InUse = true;
    return Job;
    }/*New_Job*/
 
 
 tp_Job
-Get_Job(
-   GMC_ARG(tp_JobID, JobID)
-   )
-   GMC_DCL(tp_JobID, JobID)
+Get_Job(tp_JobID JobID)
 {
    tp_Job Job;
 
@@ -649,33 +571,24 @@ Get_Job(
 
 
 void
-Ret_Job(
-   GMC_ARG(tp_Job, Job)
-   )
-   GMC_DCL(tp_Job, Job)
+Ret_Job(tp_Job Job)
 {
    FORBIDDEN(Job == ERROR);
    FORBIDDEN(!Job->InUse);
-   Job->InUse = FALSE;
+   Job->InUse = false;
    Job->Next = FreeJob;
    FreeJob = Job;
    }/*Ret_Job*/
 
 
 tp_FilHdr
-Job_FilHdr(
-   GMC_ARG(tp_Job, Job)
-   )
-   GMC_DCL(tp_Job, Job)
+Job_FilHdr(tp_Job Job)
 {
    return Copy_FilHdr(Job->FilHdr); }/*Job_FilHdr*/
 
 
 tp_Job
-Add_Job(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+Add_Job(tp_FilHdr FilHdr)
 {
    tp_Job Job;
 
@@ -691,10 +604,7 @@ Add_Job(
 
 
 void
-Del_Job(
-   GMC_ARG(tp_Job, Job)
-   )
-   GMC_DCL(tp_Job, Job)
+Del_Job(tp_Job Job)
 {
    tp_Job PrevJob;
 
@@ -719,10 +629,7 @@ Del_Job(
 
 
 void
-Clr_Status(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+Clr_Status(tp_FilHdr FilHdr)
 {
    tp_Client OldCurrentClient;
    tp_Job Job;
@@ -737,7 +644,7 @@ Clr_Status(
 	 if (Job->FilHdr == FilHdr) {
 	    if (!Job->Canceled) {
 	       Do_Log("Canceling", FilHdr, LOGLEVEL_Cancel);
-	       Job->Canceled = TRUE; }/*if*/;
+	       Job->Canceled = true; }/*if*/;
 	    CurrentClient = OldCurrentClient;
 	    return; }/*if*/; }/*for*/; }/*for*/;
    FATALERROR("Could not find canceled job");
@@ -770,23 +677,20 @@ LaunchSomeToDos()
    }
 }
 
-static boolean
+static bool
 ToDoIsAllDone()
 {
   for(tp_FHLst X = CurrentClient->LastToDo; X != NIL; X=X->Next){
     if (!IsAllDone(X->FilHdr, IK_Trans))
     {
-      return FALSE;
+      return false;
     }
   }
-  return TRUE;
+  return true;
 }
 
-boolean
-Is_TgtValErrStatus(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+Is_TgtValErrStatus(tp_FilHdr FilHdr)
 {
    FORBIDDEN(!IsAllDone(FilHdr, IK_Simple));
    return (FilHdr_Status(FilHdr) <= STAT_TgtValError
@@ -795,10 +699,7 @@ Is_TgtValErrStatus(
 
 
 tp_FilHdr
-FilHdr_TgtValFilHdr(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_TgtValFilHdr(tp_FilHdr FilHdr)
 {
    tp_FilElm FilElm;
    tp_FilHdr TgtValFilHdr;
@@ -813,7 +714,7 @@ FilHdr_TgtValFilHdr(
 
 // Progress updates for CurrentClient's target.
 void
-ServerAction(GMC_ARG_VOID)
+ServerAction()
 {
    if (CurrentClient->FilHdr == NIL) {
       return; }/*if*/;
@@ -864,10 +765,7 @@ ServerAction(GMC_ARG_VOID)
 
 
 void
-Local_Do_Interrupt(
-   GMC_ARG(boolean, InterruptAll)
-   )
-   GMC_DCL(boolean, InterruptAll)
+Local_Do_Interrupt(bool InterruptAll)
 {
    tp_FilHdr FilHdr;
    tp_Job Job;
@@ -877,8 +775,8 @@ Local_Do_Interrupt(
    FilHdr = Client_FilHdr(CurrentClient);
    if (FilHdr == NIL) {
       return; }/*if*/;
-   IsAny_ReadyServerAction = TRUE;
-   CurrentClient->Interrupted = TRUE;
+   IsAny_ReadyServerAction = true;
+   CurrentClient->Interrupted = true;
    Ret_FilHdr(FilHdr);
    if (InterruptAll) {
       Job = CurrentClient->Job;
@@ -888,20 +786,20 @@ Local_Do_Interrupt(
    }/*Local_Do_Interrupt*/
 
 
-boolean
-IsAny_ServerAction(GMC_ARG_VOID)
+bool
+IsAny_ServerAction()
 {
    tp_Client Client;
 
    FOREACH_CLIENT(Client) {
       if (Client->FilHdr != NIL || Client->Job != NIL) {
-	 return TRUE; }/*if*/; }/*for*/;
-   return FALSE;
+	 return true; }/*if*/; }/*for*/;
+   return false;
    }/*IsAny_ServerAction*/
 
 
 tp_FilHdr
-Top_CWDFilHdr(GMC_ARG_VOID)
+Top_CWDFilHdr()
 {
    tp_FilHdr DirFilHdr;
 
@@ -913,7 +811,7 @@ Top_CWDFilHdr(GMC_ARG_VOID)
 
 
 tp_FilHdr
-Top_ContextFilHdr(GMC_ARG_VOID)
+Top_ContextFilHdr()
 {
    FORBIDDEN(CurrentClient->CWDFilHdrS == NIL);
    return Copy_FilHdr(CurrentClient->CWDFilHdrS->FilHdr);
@@ -921,10 +819,7 @@ Top_ContextFilHdr(GMC_ARG_VOID)
 
 
 void
-Push_ContextFilHdr(
-   GMC_ARG(tp_FilHdr, CWDFilHdr)
-   )
-   GMC_DCL(tp_FilHdr, CWDFilHdr)
+Push_ContextFilHdr(tp_FilHdr CWDFilHdr)
 {
    tp_FHLst NewCWDFilHdrS;
 
@@ -936,7 +831,7 @@ Push_ContextFilHdr(
 
 
 void
-Pop_ContextFilHdr(GMC_ARG_VOID)
+Pop_ContextFilHdr()
 {
    tp_FHLst FHLst;
 
@@ -949,10 +844,7 @@ Pop_ContextFilHdr(GMC_ARG_VOID)
 
 
 void
-Local_Set_CWD(
-   GMC_ARG(tp_FileName, FileName)
-   )
-   GMC_DCL(tp_FileName, FileName)
+Local_Set_CWD(tp_FileName FileName)
 {
    tp_FilHdr FilHdr;
 
@@ -963,12 +855,7 @@ Local_Set_CWD(
 
 
 void
-Local_Push_Context(
-   GMC_ARG(tp_FileName, DirName),
-   GMC_ARG(tp_FileName, FileName)
-   )
-   GMC_DCL(tp_FileName, DirName)
-   GMC_DCL(tp_FileName, FileName)
+Local_Push_Context(tp_FileName DirName,tp_FileName FileName)
 {
    tp_FilHdr FilHdr;
 
@@ -976,81 +863,60 @@ Local_Push_Context(
    FORBIDDEN(FilHdr == ERROR);
    Push_ContextFilHdr(FilHdr);
    FilHdr = Top_CWDFilHdr();
-   FilHdr_HostFN(DirName, FilHdr, FALSE);
+   FilHdr_HostFN(DirName, FilHdr, false);
    Ret_FilHdr(FilHdr);
    }/*Local_Push_Context*/
 
 
 void
-Local_Pop_Context(
-   GMC_ARG(tp_FileName, DirName)
-   )
-   GMC_DCL(tp_FileName, DirName)
+Local_Pop_Context(tp_FileName DirName)
 {
    tp_FilHdr FilHdr;
 
    Pop_ContextFilHdr();
    FilHdr = Top_CWDFilHdr();
-   FilHdr_HostFN(DirName, FilHdr, FALSE);
+   FilHdr_HostFN(DirName, FilHdr, false);
    Ret_FilHdr(FilHdr);
    }/*Local_Pop_Context*/
 
 
 void
-Local_Set_KeepGoing(
-   GMC_ARG(boolean, Flag)
-   )
-   GMC_DCL(boolean, Flag)
+Local_Set_KeepGoing(bool Flag)
 {
    CurrentClient->KeepGoing = Flag;
    }/*Local_Set_KeepGoing*/
 
 
 void
-Local_Set_ErrLevel(
-   GMC_ARG(int, ErrLevel)
-   )
-   GMC_DCL(int, ErrLevel)
+Local_Set_ErrLevel(int ErrLevel)
 {
    CurrentClient->ErrLevel = ErrLevel;
    }/*Local_Set_ErrLevel*/
 
 
 void
-Local_Set_WarnLevel(
-   GMC_ARG(int, WarnLevel)
-   )
-   GMC_DCL(int, WarnLevel)
+Local_Set_WarnLevel(int WarnLevel)
 {
    CurrentClient->WarnLevel = WarnLevel;
    }/*Local_Set_WarnLevel*/
 
 
 void
-Local_Set_LogLevel(
-   GMC_ARG(tp_LogLevel, LogLevel)
-   )
-   GMC_DCL(tp_LogLevel, LogLevel)
+Local_Set_LogLevel(tp_LogLevel LogLevel)
 {
    CurrentClient->LogLevel = LogLevel;
    }/*Local_Set_LogLevel*/
 
 
 void
-Local_Set_HelpLevel(
-   GMC_ARG(int, HelpLevel)
-   )
-   GMC_DCL(int, HelpLevel)
+Local_Set_HelpLevel(int HelpLevel)
 {
    CurrentClient->HelpLevel = HelpLevel;
    }/*Local_Set_HelpLevel*/
 
 
 void
-Local_Set_MaxJobs(
-   GMC_ARG(int, MaxJobs)
-   )
-   GMC_DCL(int, MaxJobs)
+Local_Set_MaxJobs(int MaxJobs)
 {
    CurrentClient->MaxJobs = MaxJobs;
    }/*Local_Set_MaxJobs*/
@@ -1065,10 +931,7 @@ Local_Get_NumJobs(
 
 
 void
-Local_Get_UseCount(
-   GMC_ARG(int*, CountPtr)
-   )
-   GMC_DCL(int*, CountPtr)
+Local_Get_UseCount(int* CountPtr)
 {
    *CountPtr = (IsClient ? UseCount : (UseCount-1));
    }/*Local_Get_UseCount*/

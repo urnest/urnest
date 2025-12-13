@@ -68,7 +68,7 @@
 
 /* First part of user prologue.  */
 
-#include "inc/GMC.h"
+#include "gmc/nod.h"
 extern int num_ParseErrors;
 tp_Nod OC_Parse() {tp_Nod Nod;
 num_ParseErrors = 0; Init_Lex(); Init_ConstructTree();
@@ -122,8 +122,8 @@ extern int ocdebug;
     OCerror = 256,                 /* error  */
     OCUNDEF = 257,                 /* "invalid token"  */
     WORDTK = 2,                    /* WORDTK  */
-    HOSTWD = 3,                    /* HOSTWD  */
-    OBJTID = 4,                    /* OBJTID  */
+    SCAN_HOSTWD = 3,               /* SCAN_HOSTWD  */
+    SCAN_OBJTID = 4,               /* SCAN_OBJTID  */
     EXCLPT = 5,                    /* EXCLPT  */
     SCOLON = 6,                    /* SCOLON  */
     QUESMK = 7,                    /* QUESMK  */
@@ -145,8 +145,8 @@ extern int ocdebug;
 #define OCerror 256
 #define OCUNDEF 257
 #define WORDTK 2
-#define HOSTWD 3
-#define OBJTID 4
+#define SCAN_HOSTWD 3
+#define SCAN_OBJTID 4
 #define EXCLPT 5
 #define SCOLON 6
 #define QUESMK 7
@@ -183,8 +183,8 @@ enum ocsymbol_kind_t
   OCSYMBOL_OCerror = 1,                    /* error  */
   OCSYMBOL_OCUNDEF = 2,                    /* "invalid token"  */
   OCSYMBOL_WORDTK = 3,                     /* WORDTK  */
-  OCSYMBOL_HOSTWD = 4,                     /* HOSTWD  */
-  OCSYMBOL_OBJTID = 5,                     /* OBJTID  */
+  OCSYMBOL_SCAN_HOSTWD = 4,                /* SCAN_HOSTWD  */
+  OCSYMBOL_SCAN_OBJTID = 5,                /* SCAN_OBJTID  */
   OCSYMBOL_EXCLPT = 6,                     /* EXCLPT  */
   OCSYMBOL_SCOLON = 7,                     /* SCOLON  */
   OCSYMBOL_QUESMK = 8,                     /* QUESMK  */
@@ -218,8 +218,8 @@ enum ocsymbol_kind_t
   OCSYMBOL_xWord = 36,                     /* xWord  */
   OCSYMBOL_xEPString = 37,                 /* xEPString  */
   OCSYMBOL_WORDTKleaf = 38,                /* WORDTKleaf  */
-  OCSYMBOL_HOSTWDleaf = 39,                /* HOSTWDleaf  */
-  OCSYMBOL_OBJTIDleaf = 40                 /* OBJTIDleaf  */
+  OCSYMBOL_SCAN_HOSTWDleaf = 39,           /* SCAN_HOSTWDleaf  */
+  OCSYMBOL_SCAN_OBJTIDleaf = 40            /* SCAN_OBJTIDleaf  */
 };
 typedef enum ocsymbol_kind_t ocsymbol_kind_t;
 
@@ -627,14 +627,14 @@ static const char *ocsymbol_name (ocsymbol_kind_t ocsymbol) OC_ATTRIBUTE_UNUSED;
    First, the terminals, then, starting at OCNTOKENS, nonterminals.  */
 static const char *const octname[] =
 {
-  "\"end of file\"", "error", "\"invalid token\"", "WORDTK", "HOSTWD",
-  "OBJTID", "EXCLPT", "SCOLON", "QUESMK", "PERCNT", "LANGLE", "RANGLE",
-  "COLON", "LPAREN", "RPAREN", "PLUS", "EQUALS", "SLASH", "$accept",
-  "xCommand", "xCommand_1", "xSingleCommand", "xQuery", "xExecute",
-  "xCopy", "xVariable", "xOdinExpr", "xOdinExpr1", "xRoot", "xOperation",
-  "xOperation_1", "xPrmVals", "xPrmVals_1", "xPrmVal", "xFileType",
-  "xPrmType", "xWord", "xEPString", "WORDTKleaf", "HOSTWDleaf",
-  "OBJTIDleaf", OC_NULLPTR
+  "\"end of file\"", "error", "\"invalid token\"", "WORDTK",
+  "SCAN_HOSTWD", "SCAN_OBJTID", "EXCLPT", "SCOLON", "QUESMK", "PERCNT",
+  "LANGLE", "RANGLE", "COLON", "LPAREN", "RPAREN", "PLUS", "EQUALS",
+  "SLASH", "$accept", "xCommand", "xCommand_1", "xSingleCommand", "xQuery",
+  "xExecute", "xCopy", "xVariable", "xOdinExpr", "xOdinExpr1", "xRoot",
+  "xOperation", "xOperation_1", "xPrmVals", "xPrmVals_1", "xPrmVal",
+  "xFileType", "xPrmType", "xWord", "xEPString", "WORDTKleaf",
+  "SCAN_HOSTWDleaf", "SCAN_OBJTIDleaf", OC_NULLPTR
 };
 
 static const char *
@@ -1399,12 +1399,12 @@ ocreduce:
                      {Action(31,-1);}
     break;
 
-  case 59: /* HOSTWDleaf: HOSTWD  */
-                     {Action(30,-1);}
+  case 59: /* SCAN_HOSTWDleaf: SCAN_HOSTWD  */
+                               {Action(30,-1);}
     break;
 
-  case 60: /* OBJTIDleaf: OBJTID  */
-                     {Action(32,-1);}
+  case 60: /* SCAN_OBJTIDleaf: SCAN_OBJTID  */
+                               {Action(32,-1);}
     break;
 
 

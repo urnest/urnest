@@ -19,28 +19,23 @@ geoff@boulder.colorado.edu
 
 tp_Str		Author = "odin-build-users@lists.sourceforge.net";
 
-boolean		IsTTY;
+bool		IsTTY;
 
 void
-InterruptAction(GMC_ARG_VOID)
+InterruptAction()
 {
-   Do_Interrupt(TRUE);
+   Do_Interrupt(true);
    }/*InterruptAction*/
 
 
 void
-TopLevelCI(
-   GMC_ARG(boolean*, AbortPtr),
-   GMC_ARG(tp_Str, Str)
-   )
-   GMC_DCL(boolean*, AbortPtr)
-   GMC_DCL(tp_Str, Str)
+TopLevelCI(bool* AbortPtr,tp_Str Str)
 {
    tp_Nod Root;
 
    Root = OC_Parser(Str, (tp_FileName)NIL, (int *)NIL);
    if (Root == ERROR) {
-      *AbortPtr = TRUE;
+      *AbortPtr = true;
       return; }/*if*/;
    if (VerifyLevel >= 2 && IsTTY) {
       Test_All(); }/*if*/;
@@ -50,45 +45,37 @@ TopLevelCI(
 
 
 void
-Get_Commands(
-   GMC_ARG(boolean*, AbortPtr)
-   )
-   GMC_DCL(boolean*, AbortPtr)
+Get_Commands(bool* AbortPtr)
 {
-   static boolean In_Get_Commands = FALSE;
+   static bool In_Get_Commands = false;
 
    if (In_Get_Commands) {
       SystemError("Already reading commands.\n");
-      *AbortPtr = TRUE;
+      *AbortPtr = true;
       return; }/*if*/;
-   In_Get_Commands = TRUE;
+   In_Get_Commands = true;
    if (IsTTY) Print_Banner();
    IPC_Get_Commands(AbortPtr, (IsServer ? "=> " : "-> "));
    if (IsTTY) Writeln(StdOutFD, "");
-   In_Get_Commands = FALSE;
+   In_Get_Commands = false;
    }/*Get_Commands*/
 
 
 int
-c_main(
-   GMC_ARG(int, argc),
-   GMC_ARG(char**, argv)
-   )
-   GMC_DCL(int, argc)
-   GMC_DCL(char**, argv)
+c_main(int argc,char** argv)
 {
-   boolean Abort, NewFlag;
+   bool Abort, NewFlag;
    int i;
 
    Init_IO();
    Init_Err();
    Init_Env();
-   Init_Sigs(FALSE);
+   Init_Sigs(false);
    IPC_Init();
    IPC_Action = TopLevelCI;
 
    if (IsServer) {
-      Init_Sigs(TRUE);
+      Init_Sigs(true);
       Read_DrvGrf();
       Init_Info(&NewFlag);
       Init_FilHdrs();

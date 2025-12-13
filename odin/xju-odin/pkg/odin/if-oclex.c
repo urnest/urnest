@@ -24,14 +24,7 @@ extern int		*ParseLNPtr;
 
 
 tp_Nod
-OC_Parser(
-   GMC_ARG(tp_Str, Str),
-   GMC_ARG(tp_FileName, FileName),
-   GMC_ARG(int*, LNPtr)
-   )
-   GMC_DCL(tp_Str, Str)
-   GMC_DCL(tp_FileName, FileName)
-   GMC_DCL(int*, LNPtr)
+OC_Parser(tp_Str Str,tp_FileName FileName,int* LNPtr)
 {
    if (Str == ERROR) return ERROR;
    PrevParseStr = Str;
@@ -43,7 +36,7 @@ OC_Parser(
 
 
 int
-OC_Lex(GMC_ARG_VOID)
+OC_Lex()
 {
    IsCmdLex = TRUE;
    return Lex();
@@ -51,12 +44,7 @@ OC_Lex(GMC_ARG_VOID)
 
 
 void
-OC_Unparse(
-   GMC_ARG(tp_Str, Str),
-   GMC_ARG(tp_Nod, Nod)
-   )
-   GMC_DCL(tp_Str, Str)
-   GMC_DCL(tp_Nod, Nod)
+OC_Unparse(tp_Str Str,tp_Nod Nod)
 {
    tp_Nod Son;
    tp_Str SubStr;

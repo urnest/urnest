@@ -42,14 +42,14 @@ New_PrmFHdr(
       if (FreePrmFHdr == NIL) {
 	 PrmFHdr = (tp_PrmFHdr)malloc(sizeof(tps_PrmFHdr));
 	 num_PrmFHdrS += 1;
-	 PrmFHdr->InUse = FALSE;
+	 PrmFHdr->InUse = false;
       }else{
 	 PrmFHdr = FreePrmFHdr;
 	 FreePrmFHdr = FreePrmFHdr->Next; };}/*select*/;
 
    FORBIDDEN(PrmFHdr->InUse);
    num_PrmFHdrs += 1;
-   PrmFHdr->InUse = TRUE;
+   PrmFHdr->InUse = true;
    PrmFHdr->FilHdr = FilHdr;
    PrmFHdr->FilPrm = FilPrm;
    PrmFHdr->Next = NIL;
@@ -67,7 +67,7 @@ Rls_PrmFHdr(
    PrmFHdr->Next = FreePrmFHdr;
    FORBIDDEN(!PrmFHdr->InUse);
    FORBIDDEN(PrmFHdr->FilHdr != NIL);
-   PrmFHdr->InUse = FALSE;
+   PrmFHdr->InUse = false;
    num_PrmFHdrs -= 1;
    FreePrmFHdr = PrmFHdr;
    }/*Rls_PrmFHdr*/
@@ -94,7 +94,7 @@ Use_PrmFHdr(
    }/*Use_PrmFHdr*/
 
 
-boolean
+bool
 PrmFHdrs_InUse(GMC_ARG_VOID)
 {
    return (num_PrmFHdrs != 0);

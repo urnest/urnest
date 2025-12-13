@@ -7,10 +7,7 @@ extern "C"
 #endif
 
 int
-c_main(
-  GMC_ARG(int, argc),
-  GMC_ARG(char**, argv)
-  );
+c_main(int argc, char** argv);
 
 #endif
 

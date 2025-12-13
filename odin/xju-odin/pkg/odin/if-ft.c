@@ -13,16 +13,18 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/FilTyp.h"
-#include "inc/FKind_.h"
-#include "inc/FTClass_.h"
-#include "inc/SrcTyp.h"
-#include "inc/TClass_.h"
-#include "inc/Tool.h"
+#include <gmc/gmc.h>
+#include <odin/inc/Func.hh>
+#include <odin/inc/Type.hh>
+#include <odin/inc/FilTyp.h>
+#include <odin/inc/FKind_.h>
+#include <odin/inc/FTClass_.h>
+#include <odin/inc/SrcTyp.h>
+#include <odin/inc/TClass_.h>
+#include <odin/inc/Tool.h>
 
 
-boolean
+bool
 IsPntr_FKind(
    GMC_ARG(tp_FKind, FKind)
    )
@@ -35,7 +37,7 @@ IsPntr_FKind(
    }/*IsPntr_FKind*/
 
 
-boolean
+bool
 CanPntrHo_FKind(
    GMC_ARG(tp_FKind, FKind)
    )
@@ -46,7 +48,7 @@ CanPntrHo_FKind(
    }/*CanPntrHo_FKind*/
 
 
-boolean
+bool
 IsATgt_FKind(
    GMC_ARG(tp_FKind, FKind)
    )
@@ -57,7 +59,7 @@ IsATgt_FKind(
    }/*IsATgt_FKind*/
 
 
-boolean
+bool
 IsVTgt_FKind(
    GMC_ARG(tp_FKind, FKind)
    )
@@ -68,7 +70,7 @@ IsVTgt_FKind(
    }/*IsVTgt_FKind*/
 
 
-boolean
+bool
 IsATgtText_FKind(
    GMC_ARG(tp_FKind, FKind)
    )
@@ -79,7 +81,7 @@ IsATgtText_FKind(
    }/*IsATgt_FKind*/
 
 
-boolean
+bool
 IsVTgtText_FKind(
    GMC_ARG(tp_FKind, FKind)
    )
@@ -90,7 +92,7 @@ IsVTgtText_FKind(
    }/*IsVTgt_FKind*/
 
 
-boolean
+bool
 IsExternal_Tool(
    GMC_ARG(tp_Tool, Tool)
    )
@@ -101,7 +103,7 @@ IsExternal_Tool(
    }/*IsExternal_Tool*/
 
 
-boolean
+bool
 IsMap_Tool(
    GMC_ARG(tp_Tool, Tool)
    )
@@ -194,7 +196,7 @@ FilTyp_FTName(
    }/*FilTyp_FTName*/
 
 
-boolean
+bool
 IsCopy_FilTyp(
    GMC_ARG(tp_FilTyp, FilTyp)
    )
@@ -205,7 +207,7 @@ IsCopy_FilTyp(
    }/*IsCopy_FilTyp*/
 
 
-boolean
+bool
 IsGrouping_FilTyp(
    GMC_ARG(tp_FilTyp, FilTyp)
    )
@@ -216,7 +218,7 @@ IsGrouping_FilTyp(
    }/*IsGrouping_FilTyp*/
 
 
-boolean
+bool
 IsGroupingInput_FilTyp(
    GMC_ARG(tp_FilTyp, FilTyp)
    )
@@ -227,7 +229,7 @@ IsGroupingInput_FilTyp(
    }/*IsGroupingInput_FilTyp*/
 
 
-boolean
+bool
 IsSecOrd_FilTyp(
    GMC_ARG(tp_FilTyp, FilTyp)
    )
@@ -238,7 +240,7 @@ IsSecOrd_FilTyp(
    }/*IsSecOrd_FilTyp*/
 
 
-boolean
+bool
 IsRecurse_FilTyp(
    GMC_ARG(tp_FilTyp, FilTyp)
    )
@@ -250,7 +252,7 @@ IsRecurse_FilTyp(
    }/*IsRecurse_FilTyp*/
 
 
-boolean
+bool
 IsExec_FilTyp(
    GMC_ARG(tp_FilTyp, FilTyp)
    )
@@ -261,7 +263,7 @@ IsExec_FilTyp(
    }/*IsExec_FilTyp*/
 
 
-boolean
+bool
 IsVoid_FilTyp(
    GMC_ARG(tp_FilTyp, FilTyp)
    )
@@ -272,7 +274,7 @@ IsVoid_FilTyp(
    }/*IsVoid_FilTyp*/
 
 
-boolean
+bool
 IsAtmc_FilTyp(
    GMC_ARG(tp_FilTyp, FilTyp)
    )
@@ -285,7 +287,7 @@ IsAtmc_FilTyp(
    }/*IsAtmc_FilTyp*/
 
 
-boolean
+bool
 IsPntr_FilTyp(
    GMC_ARG(tp_FilTyp, FilTyp)
    )
@@ -296,7 +298,7 @@ IsPntr_FilTyp(
    }/*IsPntr_FilTyp*/
 
 
-boolean
+bool
 IsList_FilTyp(
    GMC_ARG(tp_FilTyp, FilTyp)
    )
@@ -310,7 +312,7 @@ IsList_FilTyp(
    }/*IsList_FilTyp*/
 
 
-boolean
+bool
 IsDrvDir_FilTyp(
    GMC_ARG(tp_FilTyp, FilTyp)
    )
@@ -321,7 +323,7 @@ IsDrvDir_FilTyp(
    }/*IsDrvDir_FilTyp*/
 
 
-boolean
+bool
 IsStruct_FilTyp(
    GMC_ARG(tp_FilTyp, FilTyp)
    )
@@ -332,7 +334,7 @@ IsStruct_FilTyp(
    }/*IsStruct_FilTyp*/
 
 
-boolean
+bool
 IsStructMem_FilTyp(
    GMC_ARG(tp_FilTyp, FilTyp)
    )
@@ -343,7 +345,7 @@ IsStructMem_FilTyp(
    }/*IsStructMem_FilTyp*/
 
 
-boolean
+bool
 IsGeneric_FilTyp(
    GMC_ARG(tp_FilTyp, FilTyp)
    )
@@ -353,7 +355,7 @@ IsGeneric_FilTyp(
    }/*IsGeneric_FilTyp*/
 
 
-boolean
+bool
 IsPipe_FilTyp(
    GMC_ARG(tp_FilTyp, FilTyp)
    )

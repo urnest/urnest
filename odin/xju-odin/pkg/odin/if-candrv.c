@@ -13,28 +13,24 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/FileName.h"
-#include "inc/DPType_.h"
-#include "inc/FKind_.h"
-#include "inc/Flag_.h"
-#include "inc/InpKind_.h"
-#include "inc/LogLevel_.h"
-#include "inc/NodTyp_.h"
-#include "inc/Str.h"
-#include "inc/Status_.h"
-
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
+#include <odin/inc/DPType_.h>
+#include <odin/inc/FKind_.h>
+#include <odin/inc/Flag_.h>
+#include <odin/inc/InpKind_.h>
+#include <odin/inc/LogLevel_.h>
+#include <odin/inc/NodTyp_.h>
+#include <odin/inc/Status_.h>
+#include <string.h>
 
 tp_DrvPth
-Get_DrvPth(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilTyp, ToFilTyp)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilTyp, ToFilTyp)
+Get_DrvPth(tp_FilHdr FilHdr,tp_FilTyp ToFilTyp)
 {
    tp_DrvPth DrvPth, GenericDrvPth;
-   boolean IsGeneric;
+   bool IsGeneric;
    tp_FilHdr GenericFilHdr, TmpGenericFilHdr;
 
    if (FilHdr == ERROR || ToFilTyp == ERROR) return ERROR;
@@ -48,7 +44,7 @@ Get_DrvPth(
       while (IsGeneric) {
 	 TmpGenericFilHdr = GenericFilHdr;
 	 GenericFilHdr = Do_DrvPth(GenericFilHdr, RootFilPrm, RootFilPrm, GenericDrvPth);
-	 IsGeneric = FALSE;
+	 IsGeneric = false;
 	 /*select*/{
 	    if (GenericFilHdr == TmpGenericFilHdr) {
 	       GenericDrvPth = NIL;
@@ -66,10 +62,7 @@ Get_DrvPth(
 
 
 tp_PrmTypLst
-DrvPth_PrmTypLst(
-   GMC_ARG(tp_DrvPth, DrvPth)
-   )
-   GMC_DCL(tp_DrvPth, DrvPth)
+DrvPth_PrmTypLst(tp_DrvPth DrvPth)
 {
    tp_DrvEdg DrvEdg;
 
@@ -83,10 +76,7 @@ DrvPth_PrmTypLst(
 
 
 tp_DrvPth
-Find_GroupingDrvPthElm(
-   GMC_ARG(tp_DrvPth, DrvPth)
-   )
-   GMC_DCL(tp_DrvPth, DrvPth)
+Find_GroupingDrvPthElm(tp_DrvPth DrvPth)
 {
    tp_DrvPth DrvPthElm, GroupingDrvPthElm;
 
@@ -103,16 +93,7 @@ Find_GroupingDrvPthElm(
 
 
 tp_FilHdr
-Do_DrvPth(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilPrm, InhFilPrm),
-   GMC_ARG(tp_FilPrm, PrecFilPrm),
-   GMC_ARG(tp_DrvPth, DrvPth)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilPrm, InhFilPrm)
-   GMC_DCL(tp_FilPrm, PrecFilPrm)
-   GMC_DCL(tp_DrvPth, DrvPth)
+Do_DrvPth(tp_FilHdr FilHdr,tp_FilPrm InhFilPrm,tp_FilPrm PrecFilPrm,tp_DrvPth DrvPth)
 {
    tp_DrvPth DrvPthElm, GroupingDrvPthElm;
    tp_FilTyp FilTyp;
@@ -120,7 +101,7 @@ Do_DrvPth(
    tp_FilPrm FilPrm, DrvFilPrm;
    tp_PrmTypLst PrmTypLst;
    tps_FileName PkgDirName;
-   boolean NoInput_Flag=FALSE;
+   bool NoInput_Flag=false;
 
    FORBIDDEN(DrvPth == ERROR);
    if (FilHdr == ERROR || InhFilPrm == ERROR || PrecFilPrm == ERROR) {
@@ -156,30 +137,21 @@ Do_DrvPth(
 	       Get_PkgDirName(PkgDirName,
 			      Tool_Package(FilTyp_Tool(FilTyp)));
 	       FilHdr = HostFN_FilHdr(PkgDirName);
-	       NoInput_Flag = FALSE; }/*if*/;
+	       NoInput_Flag = false; }/*if*/;
 	    FilHdr = Get_Drv(FilHdr, FKind, FilTyp, DrvFilPrm, DfltIdent);
 	    break;}/*case*/;
 	 case DPT_Eqv: {
 	    if (DrvPth_FilTyp(DrvPthElm) == NoInputFilTyp) {
 	       Ret_FilHdr(FilHdr);
 	       FilHdr = ERROR;
-	       NoInput_Flag = TRUE; }/*if*/; break;}/*case*/;
+	       NoInput_Flag = true; }/*if*/; break;}/*case*/;
 	 }/*switch*/; }/*for*/;
    return FilHdr;
    }/*Do_DrvPth*/
 
 
 tp_FilHdr
-Do_Deriv(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilPrm, InhFilPrm),
-   GMC_ARG(tp_FilPrm, PrecFilPrm),
-   GMC_ARG(tp_FilTyp, ToFilTyp)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilPrm, InhFilPrm)
-   GMC_DCL(tp_FilPrm, PrecFilPrm)
-   GMC_DCL(tp_FilTyp, ToFilTyp)
+Do_Deriv(tp_FilHdr FilHdr,tp_FilPrm InhFilPrm,tp_FilPrm PrecFilPrm,tp_FilTyp ToFilTyp)
 {
    tp_DrvPth DrvPth;
 
@@ -207,12 +179,7 @@ Do_Deriv(
 
 
 tp_FilHdr
-Do_Key(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Key, Key)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Key, Key)
+Do_Key(tp_FilHdr FilHdr,tp_Key Key)
 {
    tp_FilHdr DirFilHdr, DirSymFilHdr, SymDirFilHdr;
    tp_FilTyp FilTyp;
@@ -285,12 +252,7 @@ Do_Key(
 
 
 tp_FilHdr
-Str_FilHdr(
-   GMC_ARG(tp_Str, Str),
-   GMC_ARG(tp_PrmTyp, PrmTyp)
-   )
-   GMC_DCL(tp_Str, Str)
-   GMC_DCL(tp_PrmTyp, PrmTyp)
+Str_FilHdr(tp_Str Str,tp_PrmTyp PrmTyp)
 {
    if (strcmp(Str, "") == 0) {
       return Copy_FilHdr(NilStrFilHdr); }/*if*/;
@@ -300,12 +262,7 @@ Str_FilHdr(
 
 
 tp_FilHdr
-Do_VTgt(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Key, Key)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Key, Key)
+Do_VTgt(tp_FilHdr FilHdr,tp_Key Key)
 {
    if (FilHdr_FilTyp(FilHdr) == TargetsFilTyp) {
       return Get_KeyDrv(FilHdr, FK_VirTgtText, Key); }/*if*/;
@@ -318,12 +275,7 @@ Do_VTgt(
 
 
 void
-WriteDrvHelp(
-   GMC_ARG(tp_FilDsc, FilDsc),
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilDsc, FilDsc)
-   GMC_DCL(tp_FilHdr, FilHdr)
+WriteDrvHelp(tp_FilDsc FilDsc,tp_FilHdr FilHdr)
 {
    Writeln(FilDsc, "*?* Possible Derivations:");
    Clr_FilTypMarks();
@@ -333,14 +285,7 @@ WriteDrvHelp(
 
 
 void
-WritePrmHelp(
-   GMC_ARG(tp_FilDsc, FilDsc),
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilPrm, FilPrm)
-   )
-   GMC_DCL(tp_FilDsc, FilDsc)
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilPrm, FilPrm)
+WritePrmHelp(tp_FilDsc FilDsc,tp_FilHdr FilHdr,tp_FilPrm FilPrm)
 {
    tp_FilHdr ValFilHdr;
    tp_FilTyp FilTyp;
@@ -376,14 +321,7 @@ WritePrmHelp(
 
 
 void
-WriteNameDesc(
-   GMC_ARG(tp_FilDsc, FilDsc),
-   GMC_ARG(tp_Str, Name),
-   GMC_ARG(tp_Desc, Desc)
-   )
-   GMC_DCL(tp_FilDsc, FilDsc)
-   GMC_DCL(tp_Str, Name)
-   GMC_DCL(tp_Desc, Desc)
+WriteNameDesc(tp_FilDsc FilDsc,tp_Str Name,tp_Desc Desc)
 {
    tps_Str Msg;
 
@@ -396,10 +334,7 @@ WriteNameDesc(
 
 
 tp_FilHdr
-Get_BaseVTgtFilHdr(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+Get_BaseVTgtFilHdr(tp_FilHdr FilHdr)
 {
    FORBIDDEN(IsTargetsPtr(FilHdr));
    while (!IsSource(FilHdr)) {
@@ -413,12 +348,7 @@ Get_BaseVTgtFilHdr(
 
 
 static tp_LocHdr
-PrmValNod_LocHdr(
-   GMC_ARG(tp_Nod, Nod),
-   GMC_ARG(tp_PrmTyp, PrmTyp)
-   )
-   GMC_DCL(tp_Nod, Nod)
-   GMC_DCL(tp_PrmTyp, PrmTyp)
+PrmValNod_LocHdr(tp_Nod Nod,tp_PrmTyp PrmTyp)
 {
    tp_PrmFHdr PrmFHdr;
    tp_FilHdr FilHdr;
@@ -447,12 +377,7 @@ PrmValNod_LocHdr(
 
 
 static tp_FilPrm
-Append_PrmNod(
-   GMC_ARG(tp_FilPrm, FilPrm),
-   GMC_ARG(tp_Nod, PrmNod)
-   )
-   GMC_DCL(tp_FilPrm, FilPrm)
-   GMC_DCL(tp_Nod, PrmNod)
+Append_PrmNod(tp_FilPrm FilPrm,tp_Nod PrmNod)
 {
    tp_PrmTyp PrmTyp;
    tp_Nod PrmValsNod, PrmValNod;
@@ -500,14 +425,7 @@ done:;
 
 
 static tp_PrmFHdr
-Apply_OprNods(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilPrm, FilPrm),
-   GMC_ARG(tp_Nod, OprNod)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilPrm, FilPrm)
-   GMC_DCL(tp_Nod, OprNod)
+Apply_OprNods(tp_FilHdr FilHdr,tp_FilPrm FilPrm,tp_Nod OprNod)
 {
    tp_Nod ElmNod;
    tp_NodTyp NodTyp;
@@ -591,10 +509,7 @@ Apply_OprNods(
 
 
 tp_PrmFHdr
-Nod_PrmFHdr(
-   GMC_ARG(tp_Nod, Nod)
-   )
-   GMC_DCL(tp_Nod, Nod)
+Nod_PrmFHdr(tp_Nod Nod)
 {
    tp_FilHdr FilHdr;
    tp_Nod RootNod, OprNod;
@@ -623,7 +538,7 @@ Nod_PrmFHdr(
       case ARTFIL: {
 	 FilHdr = Copy_FilHdr(RootFilHdr);
 	 break; }/*case*/;
-      case OBJTID: {
+      case SCAN_OBJTID: {
 	 FilHdr = LocHdr_FilHdr
 	  ((tp_LocHdr)Str_PosInt(Sym_Str(Nod_Sym(RootNod))));
 	 break; }/*case*/;
@@ -658,14 +573,7 @@ Nod_PrmFHdr(
 
 
 tp_LocElm
-Make_ApplyLocElm(
-   GMC_ARG(tp_FilHdr, InFilHdr),
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FileName, OprFileName)
-   )
-   GMC_DCL(tp_FilHdr, InFilHdr)
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FileName, OprFileName)
+Make_ApplyLocElm(tp_FilHdr InFilHdr,tp_FilHdr FilHdr,tp_FileName OprFileName)
 {
    tps_Str StrBuf, StrSegBuf;
    tp_Str Str;
@@ -678,7 +586,7 @@ Make_ApplyLocElm(
    tp_LocElm LocElm;
 
    LocElm = NIL;
-   FilDsc = FileName_RFilDsc(OprFileName, FALSE);
+   FilDsc = FileName_RFilDsc(OprFileName, false);
    if (FilDsc == ERROR) {
       SystemError("Cannot read %s.\n", OprFileName);
       return LocElm; }/*if*/;
@@ -712,20 +620,7 @@ Make_ApplyLocElm(
 
 
 static void
-Get_Map(
-   GMC_ARG(tp_LocElm*, FirstLEPtr),
-   GMC_ARG(tp_LocElm*, LastLEPtr),
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilPrm, FilPrm),
-   GMC_ARG(tp_FilTyp, FilTyp),
-   GMC_ARG(tp_FilHdr, ListFilHdr)
-   )
-   GMC_DCL(tp_LocElm*, FirstLEPtr)
-   GMC_DCL(tp_LocElm*, LastLEPtr)
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilPrm, FilPrm)
-   GMC_DCL(tp_FilTyp, FilTyp)
-   GMC_DCL(tp_FilHdr, ListFilHdr)
+Get_Map(tp_LocElm* FirstLEPtr,tp_LocElm* LastLEPtr,tp_FilHdr FilHdr,tp_FilPrm FilPrm,tp_FilTyp FilTyp,tp_FilHdr ListFilHdr)
 {
    tp_FilHdr ElmFilHdr;
    tp_LocElm LocElm;
@@ -762,12 +657,7 @@ Get_Map(
 
 
 tp_LocElm
-Make_MapLocElm(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilHdr, ListFilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilHdr, ListFilHdr)
+Make_MapLocElm(tp_FilHdr FilHdr,tp_FilHdr ListFilHdr)
 {
    tp_LocElm FirstLE, LastLE;
 
@@ -784,18 +674,13 @@ Make_MapLocElm(
 
 
 void
-Local_Get_OdinFile(
-   GMC_ARG(tp_Str, OdinExpr),
-   GMC_ARG(boolean, NeedsData)
-   )
-   GMC_DCL(tp_Str, OdinExpr)
-   GMC_DCL(boolean, NeedsData)
+Local_Get_OdinFile(tp_Str OdinExpr,bool NeedsData)
 {
    tp_Nod Root;
    tp_PrmFHdr PrmFHdr;
    tp_FilHdr FilHdr;
    tp_FilPrm FilPrm;
-   boolean AllDone;
+   bool AllDone;
 
    Root = YY_Parser(OdinExpr, (tp_FileName)NIL, (int *)NIL);
    FORBIDDEN(Root == ERROR);
@@ -803,21 +688,21 @@ Local_Get_OdinFile(
    Ret_Nod(Root);
    Use_PrmFHdr(&FilHdr, &FilPrm, PrmFHdr);
    if (FilHdr == ERROR) {
-      LocalEnd_Get_OdinFile("", STAT_Unknown, FALSE);
+      LocalEnd_Get_OdinFile("", STAT_Unknown, false);
       return; }/*if*/;
    Set_Client_FilHdr(CurrentClient, FilHdr, NeedsData);
    Ret_FilHdr(FilHdr);
-   IsAny_ReadyServerAction = TRUE;
+   IsAny_ReadyServerAction = true;
    }/*Local_Get_OdinFile*/
 
 
 void
-End_Get_OdinFile(GMC_ARG_VOID)
+End_Get_OdinFile()
 {
    tp_FilHdr FilHdr;
    tps_FileName FileName;
    tp_Status Status;
-   boolean ExecFlag, NeedsData;
+   bool ExecFlag, NeedsData;
 
    FORBIDDEN(Client_ToDo(CurrentClient) != NIL);
    FORBIDDEN(Client_Job(CurrentClient) != NIL);
@@ -825,11 +710,11 @@ End_Get_OdinFile(GMC_ARG_VOID)
    FORBIDDEN(FilHdr == NIL);
    ExecFlag = IsAutoExec(FilHdr);
    NeedsData = ExecFlag || Client_NeedsData(CurrentClient);
-   Set_Client_FilHdr(CurrentClient, (tp_FilHdr)NIL, FALSE);
+   Set_Client_FilHdr(CurrentClient, (tp_FilHdr)NIL, false);
    (void)strcpy(FileName, "");
    Status = STAT_Unknown;
    if (Client_Interrupted(CurrentClient)) {
-      Set_Client_Interrupted(CurrentClient, FALSE);
+      Set_Client_Interrupted(CurrentClient, false);
       goto done; }/*if*/;
    FilHdr = Deref(FilHdr);
    if (FilHdr == ERROR) {

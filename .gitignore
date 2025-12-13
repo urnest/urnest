@@ -128,3 +128,9 @@ xju/linux/wtmp/monitor-logins
 xju/linux/ntpd/monitor-ntp-sync
 .mypy_cache
 autom4te.cache
+odin/xju-odin/pkg/config/config.hh
+odin/xju-odin/pkg/config/boot.sh
+odin/xju-odin/pkg/config/config.dg
+odin/xju-odin/pkg/config/version
+odin/xju-odin/config.log
+odin/xju-odin/config.status

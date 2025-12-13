@@ -1,4 +1,4 @@
-/*client*/ /*notice*/
+!!/*client*/ /*notice*/
 Add_BuildArg(FileName)
    /*in*/ /*str*/ tp_FileName FileName;
 {
@@ -86,7 +86,7 @@ Get_Banner(Str)
 
 /*server*/ /*notice*/
 Do_Interrupt(InterruptFlag)
-   /*in*/ /*int*/ boolean InterruptFlag;
+   /*in*/ /*int*/ bool InterruptFlag;
 {
    Local_Do_Interrupt(InterruptFlag);}
 
@@ -94,7 +94,7 @@ Do_Interrupt(InterruptFlag)
 /*server*/ /*notice*/
 Do_Alias(FileName, ForceFlag)
    /*in*/ /*str*/ tp_FileName FileName;
-   /*in*/ /*int*/ boolean ForceFlag;
+   /*in*/ /*int*/ bool ForceFlag;
 {
    Local_Do_Alias(FileName, ForceFlag);}
 
@@ -110,7 +110,7 @@ Get_Alias(OutFileName, FileName)
 /*server*/ /*notice*/
 Job_Done(JobID, Abort)
    /*in*/ /*int*/ tp_JobID JobID;
-   /*in*/ /*int*/ boolean Abort;
+   /*in*/ /*int*/ bool Abort;
 {
    Local_Job_Done(JobID, Abort);}
 
@@ -132,9 +132,9 @@ Test_All()
 Get_OdinFile(FileName, StatusPtr, ExecFlagPtr, OdinExpr, NeedsData)
    /*out*/ /*str*/ tp_FileName FileName;
    /*out*/ /*int*/ tp_Status *StatusPtr;
-   /*out*/ /*int*/ boolean *ExecFlagPtr;
+   /*out*/ /*int*/ bool *ExecFlagPtr;
    /*in*/ /*str*/ tp_Str OdinExpr;
-   /*in*/ /*int*/ boolean NeedsData;
+   /*in*/ /*int*/ bool NeedsData;
 {
    Local_Get_OdinFile(FileName, StatusPtr, ExecFlagPtr, OdinExpr, NeedsData);}
 

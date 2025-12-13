@@ -76,10 +76,7 @@ rl_ttyset(
 #include <sgtty.h>
 
 void
-rl_ttyset(
-  GMC_ARG(int, Reset)
-  )
-  GMC_DCL(int, Reset)
+rl_ttyset(int Reset)
 {
     static struct sgttyb	old_sgttyb;
     static struct tchars	old_tchars;
@@ -126,12 +123,7 @@ rl_ttyset(
 #endif	/* !defined(HAVE_TERMIOS_H) */
 
 void
-rl_add_slash(
-  GMC_ARG(char*, path),
-  GMC_ARG(char*, p)
-  )
-  GMC_DCL(char*, path)
-  GMC_DCL(char*, p)
+rl_add_slash(char* path,char* p)
 {
     struct stat	Sb;
 

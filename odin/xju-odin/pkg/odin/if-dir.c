@@ -27,10 +27,7 @@ geoff@boulder.colorado.edu
 #include "inc/SKind_.h"
 
 tp_FilDsc
-OpenDir(
-   GMC_ARG(tp_FileName, FileName)
-   )
-   GMC_DCL(tp_FileName, FileName)
+OpenDir(tp_FileName FileName)
 {
    tp_FilDsc FilDsc;
 
@@ -42,10 +39,7 @@ OpenDir(
 
 
 void
-CloseDir(
-   GMC_ARG(tp_FilDsc, FilDsc)
-   )
-   GMC_DCL(tp_FilDsc, FilDsc)
+CloseDir(tp_FilDsc FilDsc)
 {
 #ifdef HAVE_DIRENT_H
    int status;
@@ -62,14 +56,7 @@ CloseDir(
 
 
 void
-ReadDir(
-   GMC_ARG(tp_FileName, FileName),
-   GMC_ARG(boolean*, EndPtr),
-   GMC_ARG(tp_FilDsc, FilDsc)
-   )
-   GMC_DCL(tp_FileName, FileName)
-   GMC_DCL(boolean*, EndPtr)
-   GMC_DCL(tp_FilDsc, FilDsc)
+ReadDir(tp_FileName FileName,bool* EndPtr,tp_FilDsc FilDsc)
 {
 #ifdef HAVE_DIRENT_H
    struct dirent *dp;
@@ -80,10 +67,10 @@ ReadDir(
    size_t sz;
 
    FORBIDDEN(FilDsc == NIL);
-   *EndPtr = FALSE;
+   *EndPtr = false;
    dp = readdir((DIR *)FilDsc);
    if (dp == NULL) {
-      *EndPtr = TRUE;
+      *EndPtr = true;
       return; }/*if*/;
 #ifdef HAVE_DIRENT_H
    (void)strcpy(Str, dp->d_name);
@@ -102,14 +89,11 @@ ReadDir(
 
 
 void
-ClearDir(
-   GMC_ARG(tp_FileName, DirName)
-   )
-   GMC_DCL(tp_FileName, DirName)
+ClearDir(tp_FileName DirName)
 {
    tp_FilDsc FilDsc;
    tps_Str Str;
-   boolean End;
+   bool End;
    tps_FileName FileName;
    size_t sz;
    tp_SKind k;
@@ -127,7 +111,7 @@ ClearDir(
 	 exit(1); }/*if*/;
       Get_FileInfo(&k, &modTime, FileName);
       if (k==SK_Dir){
-        boolean abort;
+        bool abort;
         MakeReadWrite(&abort, FileName);
         if (abort) {
           (void)fprintf(stderr, "Warning: Could not make %s writable\n", FileName);

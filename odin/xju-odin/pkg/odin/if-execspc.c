@@ -1,4 +1,4 @@
-/*
+!/*
 Copyright (C) 1991 Geoffrey M. Clemm
 
 This file is part of the Odin system.
@@ -21,10 +21,7 @@ geoff@boulder.colorado.edu
 
 
 tp_Tool
-FilHdr_Tool(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_Tool(tp_FilHdr FilHdr)
 {
    tp_Tool Tool;
    tp_FilHdr BaseFilHdr;
@@ -72,18 +69,13 @@ FilHdr_Tool(
 
 
 void
-FilHdr_ExecSpc(
-   GMC_ARG(tp_ExecSpc, ExecSpc),
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_ExecSpc, ExecSpc)
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_ExecSpc(tp_ExecSpc ExecSpc,tp_FilHdr FilHdr)
 {
    tp_FilHdr InpFilHdr, BaseFilHdr;
    tp_FilPrm FilPrm;
    tp_FilInp FilInp;
    int IArg;
-   boolean IsDerefInput;
+   bool IsDerefInput;
 
    ExecSpc->FilHdr = Copy_FilHdr(FilHdr);
    ExecSpc->FilTyp = FilHdr_FilTyp(FilHdr);
@@ -120,7 +112,7 @@ FilHdr_ExecSpc(
       if (IArg >= 0) {
 	 InpFilHdr = FilInp_FilHdr(FilInp);
 	 if (IsDerefInput) {
-	    Deref_Pntrs(&InpFilHdr, &FilPrm, InpFilHdr, FALSE); }/*if*/;
+	    Deref_Pntrs(&InpFilHdr, &FilPrm, InpFilHdr, false); }/*if*/;
 	 FORBIDDEN(InpFilHdr == ERROR);
 	 Ret_FilHdr(ExecSpc->InpFilHdrs[IArg]);
 	 ExecSpc->InpFilHdrs[IArg] = InpFilHdr; }/*if*/; }/*for*/;
@@ -131,14 +123,7 @@ FilHdr_ExecSpc(
 
 
 void
-Get_OutFilHdrs(
-   GMC_ARG(tp_OutFilHdrs, OutFilHdrs),
-   GMC_ARG(int*, NumOutsPtr),
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_OutFilHdrs, OutFilHdrs)
-   GMC_DCL(int*, NumOutsPtr)
-   GMC_DCL(tp_FilHdr, FilHdr)
+Get_OutFilHdrs(tp_OutFilHdrs OutFilHdrs,int* NumOutsPtr,tp_FilHdr FilHdr)
 {
    tps_OutTyps OutTyps;
    int i;
@@ -158,10 +143,7 @@ Get_OutFilHdrs(
 
 
 void
-Ret_ExecSpc(
-   GMC_ARG(tp_ExecSpc, ExecSpc)
-   )
-   GMC_DCL(tp_ExecSpc, ExecSpc)
+Ret_ExecSpc(tp_ExecSpc ExecSpc)
 {
    int i;
 

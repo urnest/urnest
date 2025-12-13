@@ -33,7 +33,7 @@ New_DrvSpc(GMC_ARG_VOID)
       if (FreeDrvSpc == NIL) {
 	 DrvSpc = (tp_DrvSpc)malloc(sizeof(tps_DrvSpc));
 	 num_DrvSpcS += 1;
-	 DrvSpc->InUse = FALSE;
+	 DrvSpc->InUse = false;
       }else{
 	 DrvSpc = FreeDrvSpc;
 	 FreeDrvSpc = FreeDrvSpc->Next; };}/*select*/;
@@ -44,7 +44,7 @@ New_DrvSpc(GMC_ARG_VOID)
    DrvSpc->FilHdr = NIL;
    DrvSpc->Next = NIL;
    FORBIDDEN(DrvSpc->InUse);
-   DrvSpc->InUse = TRUE;
+   DrvSpc->InUse = true;
    return DrvSpc;
    }/*New_DrvSpc*/
 
@@ -62,7 +62,7 @@ Ret_DrvSpc(
    LastDrvSpc = DrvSpc;
    for (DrvSpcElm = DrvSpc; DrvSpcElm != NIL; DrvSpcElm = DrvSpcElm->Next) {
       FORBIDDEN(!DrvSpcElm->InUse);
-      DrvSpcElm->InUse = FALSE;
+      DrvSpcElm->InUse = false;
       Ret_FilHdr(DrvSpcElm->FilHdr);
       LastDrvSpc = DrvSpcElm; }/*for*/;
 
@@ -184,7 +184,7 @@ FilHdr_DrvSpc(
    }/*FilHdr_DrvSpc*/
 
 
-static boolean
+static bool
 CheckCompact(
    GMC_ARG(tp_DrvSpc, DrvSpc),
    GMC_ARG(tp_DrvSpc, NextDrvSpc),
@@ -214,9 +214,9 @@ CheckCompact(
 	 FORBIDDEN(DrvSpcElm == NIL);
 	 FORBIDDEN(DrvSpcElm->Key != NIL && NextDrvSpc != NIL);
 	 if (DrvPth_FilTyp(DrvPthElm) != DrvSpcElm->FilTyp) {
-	    return FALSE; }/*if*/;
+	    return false; }/*if*/;
 	 if (DrvPth_FKind(DrvPthElm) != DrvSpcElm->FKind) {
-	    return FALSE; }/*if*/;
+	    return false; }/*if*/;
 	 PrmTypLst = DrvPth_PrmTypLst(DrvPthElm);
 	 NewFilPrm = FilPrm;
 	 /* if is Grouping, should strip inhfilprm, but don't know it here */
@@ -224,13 +224,13 @@ CheckCompact(
 	       || DrvPthElm == GroupingDrvPthElm)) {
 	    NewFilPrm = Strip_FilPrm(FilPrm, PrmTypLst); }/*if*/;
 	 if (!Equal_FilPrm(DrvSpcElm->FilPrm, NewFilPrm)) {
-	    return FALSE; }/*if*/;
+	    return false; }/*if*/;
 	 DrvSpcElm = DrvSpcElm->Next; }/*if*/; }/*for*/;
    return (NextDrvSpc == NIL);
    }/*CheckCompact*/
 
 
-static boolean
+static bool
 CanCompact(
    GMC_ARG(tp_FilHdr, FilHdr),
    GMC_ARG(tp_DrvSpc, DrvSpc),
@@ -243,16 +243,16 @@ CanCompact(
    tp_DrvPth DrvPth;
    tp_FilPrm FilPrm;
    tp_DrvSpc DrvSpcElm;
-   boolean Can;
+   bool Can;
 
    FORBIDDEN(FilHdr == ERROR || DrvSpc == ERROR);
 
    if (FilHdr_FilTyp(FilHdr) == NextDrvSpc->FilTyp) {
-      return FALSE; }/*if*/;
+      return false; }/*if*/;
 
    DrvPth = Get_DrvPth(FilHdr, NextDrvSpc->FilTyp);
    if (DrvPth == ERROR) {
-      return FALSE; }/*if*/;
+      return false; }/*if*/;
 
    FilPrm = RootFilPrm;
    for (DrvSpcElm = DrvSpc; DrvSpcElm != NIL; DrvSpcElm = DrvSpcElm->Next) {
@@ -296,10 +296,10 @@ Print_FilHdr(
    TmpFilHdr = FilHdr_SrcFilHdr(Copy_FilHdr(FilHdr));
    /*select*/{
       if (FilDsc != NIL) {
-	 FilHdr_HostFN(StrBuf, TmpFilHdr, TRUE);
+	 FilHdr_HostFN(StrBuf, TmpFilHdr, true);
 	 Write(FilDsc, StrBuf);
       }else{
-	 FilHdr_HostFN(Str, TmpFilHdr, TRUE); };}/*select*/;
+	 FilHdr_HostFN(Str, TmpFilHdr, true); };}/*select*/;
 
    DrvSpc = NIL;
    RestDrvSpc = FilHdr_DrvSpc(FilHdr);
@@ -369,7 +369,7 @@ VerboseSPrint_FilHdr(
    FORBIDDEN(OdinExpr == ERROR || FilHdr == ERROR);
 
    SrcFilHdr = FilHdr_SrcFilHdr(Copy_FilHdr(FilHdr));
-   FilHdr_HostFN(OdinExpr, SrcFilHdr, TRUE);
+   FilHdr_HostFN(OdinExpr, SrcFilHdr, true);
    Ret_FilHdr(SrcFilHdr);
    HeadDrvSpc = FilHdr_DrvSpc(FilHdr);
    for (DrvSpc=HeadDrvSpc; DrvSpc!=NIL; DrvSpc=DrvSpc->Next) {

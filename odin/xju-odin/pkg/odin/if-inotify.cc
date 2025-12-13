@@ -1,10 +1,10 @@
 extern "C"
 {
-#include "inc/GMC.h"
-#include "inc/System.hh"
-#include "inc/Type.hh"
-#include "inc/Func.hh"
-#include "inc/Var.hh"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
+#include <unistd.h>
 }
 
 #include <sys/inotify.h>

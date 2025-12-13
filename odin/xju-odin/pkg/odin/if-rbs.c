@@ -1,4 +1,4 @@
-/*
+!/*
 Copyright (C) 1991 Geoffrey M. Clemm
 
 This file is part of the Odin system.
@@ -157,18 +157,18 @@ RBS_Done(
 
 static void
 RBS_Write_Int(
-   GMC_ARG(boolean*, AbortPtr),
+   GMC_ARG(bool*, AbortPtr),
    GMC_ARG(tp_Host, Host),
    GMC_ARG(int, Int)
    )
-   GMC_DCL(boolean*, AbortPtr)
+   GMC_DCL(bool*, AbortPtr)
    GMC_DCL(tp_Host, Host)
    GMC_DCL(int, Int)
 {
    int cc;
 
    if (Host->FD < 0) {
-      *AbortPtr = TRUE;
+      *AbortPtr = true;
       return; }/*if*/;
    cc = write(Host->FD, (char *)&Int, sizeof(Int));
    *AbortPtr = (cc != sizeof(Int));
@@ -179,18 +179,18 @@ RBS_Write_Int(
 
 static void
 RBS_Read_Int(
-   GMC_ARG(boolean*, AbortPtr),
+   GMC_ARG(bool*, AbortPtr),
    GMC_ARG(tp_Host, Host),
    GMC_ARG(int*, IntPtr)
    )
-   GMC_DCL(boolean*, AbortPtr)
+   GMC_DCL(bool*, AbortPtr)
    GMC_DCL(tp_Host, Host)
    GMC_DCL(int*, IntPtr)
 {
    int cc;
 
    if (Host->FD < 0) {
-      *AbortPtr = TRUE;
+      *AbortPtr = true;
       return; }/*if*/;
    cc = IPC_Read(Host->FD, (char *)IntPtr, sizeof(*IntPtr));
    *AbortPtr = (cc != sizeof(*IntPtr));
@@ -201,11 +201,11 @@ RBS_Read_Int(
 
 static void
 RBS_Write_Str(
-   GMC_ARG(boolean*, AbortPtr),
+   GMC_ARG(bool*, AbortPtr),
    GMC_ARG(tp_Host, Host),
    GMC_ARG(const char*, Str)
    )
-   GMC_DCL(boolean*, AbortPtr)
+   GMC_DCL(bool*, AbortPtr)
    GMC_DCL(tp_Host, Host)
    GMC_DCL(char*, Str)
 {
@@ -225,11 +225,11 @@ RBS_Write_Str(
 
 static void
 RBS_Read_Str(
-   GMC_ARG(boolean*, AbortPtr),
+   GMC_ARG(bool*, AbortPtr),
    GMC_ARG(tp_Host, Host),
    GMC_ARG(char*, Str)
    )
-   GMC_DCL(boolean*, AbortPtr)
+   GMC_DCL(bool*, AbortPtr)
    GMC_DCL(tp_Host, Host)
    GMC_DCL(char*, Str)
 {
@@ -253,7 +253,7 @@ RBS_Get_Msg(
    )
    GMC_DCL(tp_Host, Host)
 {
-   boolean RBS_Abort, Abort;
+   bool RBS_Abort, Abort;
    int JobID;
 
    RBS_Read_Int(&RBS_Abort, Host, &JobID);
@@ -266,11 +266,11 @@ RBS_Get_Msg(
 
 static void
 RBS_Write_VarDef(
-   GMC_ARG(boolean*, RBS_AbortPtr),
+   GMC_ARG(bool*, RBS_AbortPtr),
    GMC_ARG(tp_Host, Host),
    GMC_ARG(tp_Str, VarDef)
    )
-   GMC_DCL(boolean*, RBS_AbortPtr)
+   GMC_DCL(bool*, RBS_AbortPtr)
    GMC_DCL(tp_Host, Host)
    GMC_DCL(tp_Str, VarDef)
 {
@@ -288,7 +288,7 @@ Init_RBS_Env(
 {
    extern char **environ;
    char **env;
-   boolean Abort;
+   bool Abort;
 
    for (env = environ; *env != 0; env += 1) {
       RBS_Write_VarDef(&Abort, Host, *env);
@@ -317,7 +317,7 @@ RBS_Do_Build(
    tps_Str RBS_CmdPath, PortStr;
    char LocalHostName[MAXHOSTNAMELEN];
    struct sockaddr Addr;
-   boolean RBS_Abort;
+   bool RBS_Abort;
 
    if (RBS_Port < 0) Init_RBS();
    if (Host->FD < 0) {
@@ -372,7 +372,7 @@ RBS_Abort_Build(
    GMC_DCL(tp_Host, Host)
    GMC_DCL(int, JobID)
 {
-   boolean RBS_Abort;
+   bool RBS_Abort;
 
    RBS_Write_Int(&RBS_Abort, Host, (int)4);
    if (RBS_Abort) return;
@@ -387,7 +387,7 @@ RBS_VarDef(
    GMC_DCL(tp_Str, VarDef)
 {
    tp_Host Host;
-   boolean RBS_Abort;
+   bool RBS_Abort;
 
    for (Host=FirstHost; Host!=NIL; Host=Host->Next) {
       if (Host->FD > 0) {

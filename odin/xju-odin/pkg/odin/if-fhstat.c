@@ -21,11 +21,8 @@ geoff@boulder.colorado.edu
 #include "inc/Status_.h"
 
 
-boolean
-Is_PendingReadyOrBusy_Status(
-   GMC_ARG(tp_Status, Status)
-   )
-   GMC_DCL(tp_Status, Status)
+bool
+Is_PendingReadyOrBusy_Status(tp_Status Status)
 {
    return (Status == STAT_Pending || Status == STAT_Ready
 	   || Status == STAT_Busy);
@@ -33,10 +30,7 @@ Is_PendingReadyOrBusy_Status(
 
 
 void
-Clr_ErrStatus(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+Clr_ErrStatus(tp_FilHdr FilHdr)
 {
    tps_FileName FileName;
 
@@ -56,12 +50,7 @@ Clr_ErrStatus(
 
 
 void
-Add_ErrStatus(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Status, Status)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Status, Status)
+Add_ErrStatus(tp_FilHdr FilHdr,tp_Status Status)
 {
    FORBIDDEN(FilHdr == ERROR);
    FORBIDDEN(IsSource(FilHdr));
@@ -86,26 +75,18 @@ Add_ErrStatus(
    }/*Add_ErrStatus*/
 
 
-boolean
-FilHdr_HasErrStatus(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Status, Status)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Status, Status)
+bool
+FilHdr_HasErrStatus(tp_FilHdr FilHdr,tp_Status Status)
 {
    FORBIDDEN(FilHdr == ERROR);
    if (IsSource(FilHdr)) {
-      return FALSE; }/*if*/;
+      return false; }/*if*/;
    return ((FilHdr->HdrInf.ErrStatusWord & (1<<Status)) != 0);
    }/*FilHdr_HasErrStatus*/
 
 
 tp_Status
-FilHdr_MinErrStatus(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_MinErrStatus(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    if (FilHdr_HasErrStatus(FilHdr, STAT_NoFile)) {
@@ -121,17 +102,10 @@ FilHdr_MinErrStatus(
 
 
 void
-Add_StatusFile(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Status, Status),
-   GMC_ARG(tp_FileName, FileName)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Status, Status)
-   GMC_DCL(tp_FileName, FileName)
+Add_StatusFile(tp_FilHdr FilHdr,tp_Status Status,tp_FileName FileName)
 {
    tps_FileName ErrFileName;
-   boolean Abort;
+   bool Abort;
 
    FORBIDDEN(FilHdr == ERROR || FileName == ERROR);
    Add_ErrStatus(FilHdr, Status);
@@ -156,19 +130,14 @@ Add_StatusFile(
 	 if (IsIncremental_MsgLevel(Client_ErrLevel(CurrentClient))) {
 	    FileErrMessage(ErrFileName);
 	    if (!Client_KeepGoing(CurrentClient)) {
-	       Local_Do_Interrupt(FALSE); }/*if*/; }/*if*/; break;}/*case*/;
+	       Local_Do_Interrupt(false); }/*if*/; }/*if*/; break;}/*case*/;
       default: {
 	 FATALERROR("bad status"); };}/*switch*/;
    }/*Add_StatusFile*/
 
 
 void
-Set_DepStatus(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Status, Status)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Status, Status)
+Set_DepStatus(tp_FilHdr FilHdr,tp_Status Status)
 {
    FORBIDDEN(Status == ERROR || FilHdr == ERROR);
    FilHdr->DepStatus = Status;
@@ -176,10 +145,7 @@ Set_DepStatus(
 
 
 tp_Status
-FilHdr_DepStatus(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_DepStatus(tp_FilHdr FilHdr)
 {
    if (FilHdr == ERROR) return ERROR;
    return FilHdr->DepStatus;
@@ -187,12 +153,7 @@ FilHdr_DepStatus(
 
 
 void
-Set_DepModDate(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Date, ModDate)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Date, ModDate)
+Set_DepModDate(tp_FilHdr FilHdr,tp_Date ModDate)
 {
    FORBIDDEN(FilHdr == ERROR);
    FilHdr->DepModDate = ModDate;
@@ -200,10 +161,7 @@ Set_DepModDate(
 
 
 tp_Date
-FilHdr_DepModDate(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_DepModDate(tp_FilHdr FilHdr)
 {
    if (FilHdr == ERROR) return ERROR;
    return FilHdr->DepModDate;
@@ -211,12 +169,7 @@ FilHdr_DepModDate(
 
 
 void
-Set_Status(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Status, Status)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Status, Status)
+Set_Status(tp_FilHdr FilHdr,tp_Status Status)
 {
    FORBIDDEN(Status == ERROR || FilHdr == ERROR);
 
@@ -245,10 +198,7 @@ Set_Status(
 
 
 tp_Status
-FilHdr_Status(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_Status(tp_FilHdr FilHdr)
 {
    if (FilHdr == ERROR) return ERROR;
    return FilHdr->HdrInf.Status;
@@ -256,12 +206,7 @@ FilHdr_Status(
 
 
 void
-Set_ElmNameStatus(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Status, Status)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Status, Status)
+Set_ElmNameStatus(tp_FilHdr FilHdr,tp_Status Status)
 {
    FORBIDDEN(Status == ERROR || FilHdr == ERROR);
 
@@ -284,10 +229,7 @@ Set_ElmNameStatus(
 
 
 tp_Status
-FilHdr_ElmNameStatus(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_ElmNameStatus(tp_FilHdr FilHdr)
 {
    tp_Status Status;
 
@@ -300,12 +242,7 @@ FilHdr_ElmNameStatus(
 
 
 void
-Set_ElmStatus(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Status, Status)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Status, Status)
+Set_ElmStatus(tp_FilHdr FilHdr,tp_Status Status)
 {
    FORBIDDEN(Status == ERROR || FilHdr == ERROR);
 
@@ -329,10 +266,7 @@ Set_ElmStatus(
 
 
 tp_Status
-FilHdr_ElmStatus(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_ElmStatus(tp_FilHdr FilHdr)
 {
    tp_Status Status;
 
@@ -345,12 +279,7 @@ FilHdr_ElmStatus(
 
 
 void
-Set_TgtValStatus(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Status, Status)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Status, Status)
+Set_TgtValStatus(tp_FilHdr FilHdr,tp_Status Status)
 {
    FORBIDDEN(Status == ERROR || FilHdr == ERROR);
    FORBIDDEN(!IsSource(FilHdr));
@@ -370,10 +299,7 @@ Set_TgtValStatus(
 
 
 tp_Status
-FilHdr_TgtValStatus(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_TgtValStatus(tp_FilHdr FilHdr)
 {
    if (FilHdr == ERROR) return ERROR;
    if (!IsSource(FilHdr)) {
@@ -383,10 +309,7 @@ FilHdr_TgtValStatus(
 
 
 tp_Status
-FilHdr_TgtValMinStatus(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_TgtValMinStatus(tp_FilHdr FilHdr)
 {
    tp_Status Status, TgtValStatus;
 
@@ -398,12 +321,7 @@ FilHdr_TgtValMinStatus(
 
 
 tp_Status
-FilHdr_MinStatus(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_InpKind, InpKind)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_InpKind, InpKind)
+FilHdr_MinStatus(tp_FilHdr FilHdr,tp_InpKind InpKind)
 {
    tp_Status Status;
 
@@ -424,10 +342,7 @@ FilHdr_MinStatus(
 
 
 void
-Set_ModDate(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+Set_ModDate(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    CurrentDate += 1;
@@ -439,10 +354,7 @@ Set_ModDate(
 
 
 tp_Date
-FilHdr_ModDate(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_ModDate(tp_FilHdr FilHdr)
 {
    if (FilHdr == ERROR) return ERROR;
    return FilHdr->HdrInf.ModDate;
@@ -450,12 +362,7 @@ FilHdr_ModDate(
 
 
 void
-Set_ConfirmDate(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Date, Date)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Date, Date)
+Set_ConfirmDate(tp_FilHdr FilHdr,tp_Date Date)
 {
    FORBIDDEN(FilHdr == ERROR);
    if (FilHdr->HdrInf.ConfirmDate < Date) {
@@ -465,10 +372,7 @@ Set_ConfirmDate(
 
 
 void
-Clr_ConfirmDate(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+Clr_ConfirmDate(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    if (FilHdr->HdrInf.ConfirmDate != 0) {
@@ -478,10 +382,7 @@ Clr_ConfirmDate(
 
 
 tp_Date
-FilHdr_ConfirmDate(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_ConfirmDate(tp_FilHdr FilHdr)
 {
    if (FilHdr == ERROR) return ERROR;
    return FilHdr->HdrInf.ConfirmDate;
@@ -489,10 +390,7 @@ FilHdr_ConfirmDate(
 
 
 void
-Set_ElmNameConfirmDate(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+Set_ElmNameConfirmDate(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    if (FilHdr->HdrInf.ElmNameConfirmDate < FilHdr->HdrInf.ElmNameModDate) {
@@ -502,10 +400,7 @@ Set_ElmNameConfirmDate(
 
 
 void
-Set_ElmConfirmDate(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+Set_ElmConfirmDate(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    if (FilHdr->HdrInf.ElmConfirmDate < FilHdr->HdrInf.ElmModDate) {
@@ -515,12 +410,7 @@ Set_ElmConfirmDate(
 
 
 void
-Set_ElmModDate(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Date, ElmModDate)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Date, ElmModDate)
+Set_ElmModDate(tp_FilHdr FilHdr,tp_Date ElmModDate)
 {
    FORBIDDEN(ElmModDate == ERROR || FilHdr == ERROR);
    if (ElmModDate > FilHdr->HdrInf.ElmModDate) {
@@ -530,10 +420,7 @@ Set_ElmModDate(
 
 
 tp_Date
-FilHdr_ElmModDate(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_ElmModDate(tp_FilHdr FilHdr)
 {
    if (FilHdr == ERROR) return ERROR;
    return FilHdr->HdrInf.ElmModDate;
@@ -541,12 +428,7 @@ FilHdr_ElmModDate(
 
 
 void
-Set_ElmNameModDate(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Date, ElmNameModDate)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Date, ElmNameModDate)
+Set_ElmNameModDate(tp_FilHdr FilHdr,tp_Date ElmNameModDate)
 {
    FORBIDDEN(ElmNameModDate == ERROR || FilHdr == ERROR);
    if (ElmNameModDate > FilHdr->HdrInf.ElmNameModDate) {
@@ -556,10 +438,7 @@ Set_ElmNameModDate(
 
 
 tp_Date
-FilHdr_ElmNameModDate(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_ElmNameModDate(tp_FilHdr FilHdr)
 {
    if (FilHdr == ERROR) return ERROR;
    return FilHdr->HdrInf.ElmNameModDate;
@@ -567,12 +446,7 @@ FilHdr_ElmNameModDate(
 
 
 void
-Set_Flag(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Flag, Flag)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Flag, Flag)
+Set_Flag(tp_FilHdr FilHdr,tp_Flag Flag)
 {
    FORBIDDEN(FilHdr == ERROR);
    FORBIDDEN((FilHdr->Flag & 1<<Flag) != 0);
@@ -581,12 +455,7 @@ Set_Flag(
 
 
 void
-Clr_Flag(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Flag, Flag)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Flag, Flag)
+Clr_Flag(tp_FilHdr FilHdr,tp_Flag Flag)
 {
    FORBIDDEN(FilHdr == ERROR);
    FORBIDDEN((FilHdr->Flag & (1<<Flag)) == 0);
@@ -594,13 +463,8 @@ Clr_Flag(
    }/*Clr_Flag*/
 
 
-boolean
-FilHdr_Flag(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Flag, Flag)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Flag, Flag)
+bool
+FilHdr_Flag(tp_FilHdr FilHdr,tp_Flag Flag)
 {
    if (FilHdr == ERROR) return ERROR;
    return ((FilHdr->Flag & (1<<Flag)) != 0);
@@ -608,12 +472,7 @@ FilHdr_Flag(
 
 
 void
-Set_AnyOKDepth(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(int, Depth)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(int, Depth)
+Set_AnyOKDepth(tp_FilHdr FilHdr,int Depth)
 {
    FORBIDDEN(FilHdr == ERROR);
    FORBIDDEN(FilHdr->AnyOKDepth == Depth);
@@ -622,10 +481,7 @@ Set_AnyOKDepth(
 
 
 int
-FilHdr_AnyOKDepth(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_AnyOKDepth(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return FilHdr->AnyOKDepth;
@@ -633,12 +489,7 @@ FilHdr_AnyOKDepth(
 
 
 void
-Set_ElmDepth(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(int, Depth)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(int, Depth)
+Set_ElmDepth(tp_FilHdr FilHdr,int Depth)
 {
    FORBIDDEN(FilHdr == ERROR);
    FORBIDDEN(FilHdr->ElmDepth == Depth);
@@ -647,10 +498,7 @@ Set_ElmDepth(
 
 
 int
-FilHdr_ElmDepth(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_ElmDepth(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return FilHdr->ElmDepth;
@@ -658,12 +506,7 @@ FilHdr_ElmDepth(
 
 
 void
-Set_ElmTag(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(int, ElmTag)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(int, ElmTag)
+Set_ElmTag(tp_FilHdr FilHdr,int ElmTag)
 {
    FORBIDDEN(FilHdr == ERROR);
    FORBIDDEN(FilHdr->ElmTag == ElmTag);
@@ -672,10 +515,7 @@ Set_ElmTag(
 
 
 int
-FilHdr_ElmTag(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_ElmTag(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return FilHdr->ElmTag;
@@ -683,12 +523,7 @@ FilHdr_ElmTag(
 
 
 void
-Set_SCC(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilHdr, SCC)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilHdr, SCC)
+Set_SCC(tp_FilHdr FilHdr,tp_FilHdr SCC)
 {
    FORBIDDEN(FilHdr == ERROR);
    FORBIDDEN(FilHdr->SCC == SCC);
@@ -698,10 +533,7 @@ Set_SCC(
 
 
 tp_FilHdr
-FilHdr_SCC(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_SCC(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    FORBIDDEN(FilHdr->SCC == NIL);
@@ -714,12 +546,7 @@ FilHdr_SCC(
  * vs. Dependent on something that has been modified and must be rescanned */
 
 void
-Set_ListPndFlag(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(boolean, PndFlag)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(boolean, PndFlag)
+Set_ListPndFlag(tp_FilHdr FilHdr,bool PndFlag)
 {
    tp_FilElm FilElm;
    tp_FilHdr ElmFilHdr;
@@ -738,12 +565,7 @@ Set_ListPndFlag(
 
 
 void
-Set_PndFlag(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(boolean, PndFlag)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(boolean, PndFlag)
+Set_PndFlag(tp_FilHdr FilHdr,bool PndFlag)
 {
    FORBIDDEN(FilHdr == ERROR);
    Do_Log(PndFlag?"set pending flag of":"clear pending flag of", FilHdr, LOGLEVEL_Process);
@@ -751,11 +573,8 @@ Set_PndFlag(
    }/*Set_PndFlag*/
 
 
-boolean
-FilHdr_PndFlag(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+FilHdr_PndFlag(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return FilHdr->PndFlag;
@@ -763,25 +582,17 @@ FilHdr_PndFlag(
 
 
 void
-Set_ElmNamePndFlag(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(boolean, ElmNamePndFlag)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(boolean, ElmNamePndFlag)
+Set_ElmNamePndFlag(tp_FilHdr FilHdr,bool ElmNamePndFlag)
 {
    FORBIDDEN(FilHdr == ERROR);
-   if (ElmNamePndFlag) Set_ElmPndFlag(FilHdr, TRUE);
+   if (ElmNamePndFlag) Set_ElmPndFlag(FilHdr, true);
    Do_Log(ElmNamePndFlag?"set elem name pending flag of":"clear elem name pending flag of", FilHdr, LOGLEVEL_Process);
    FilHdr->ElmNamePndFlag = ElmNamePndFlag;
    }/*Set_ElmNamePndFlag*/
 
 
-boolean
-FilHdr_ElmNamePndFlag(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+FilHdr_ElmNamePndFlag(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return FilHdr->ElmNamePndFlag;
@@ -789,12 +600,7 @@ FilHdr_ElmNamePndFlag(
 
 
 void
-Set_ElmPndFlag(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(boolean, ElmPndFlag)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(boolean, ElmPndFlag)
+Set_ElmPndFlag(tp_FilHdr FilHdr,bool ElmPndFlag)
 {
    FORBIDDEN(FilHdr == ERROR);
    FORBIDDEN(IsSource(FilHdr));
@@ -803,26 +609,18 @@ Set_ElmPndFlag(
    }/*Set_ElmPndFlag*/
 
 
-boolean
-FilHdr_ElmPndFlag(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+FilHdr_ElmPndFlag(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    if (IsSource(FilHdr)) {
-      return FALSE; }/*if*/;
+      return false; }/*if*/;
    return FilHdr->ElmPndFlag;
    }/*FilHdr_ElmPndFlag*/
 
 
 void
-Set_TgtValPndFlag(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(boolean, TgtValPndFlag)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(boolean, TgtValPndFlag)
+Set_TgtValPndFlag(tp_FilHdr FilHdr,bool TgtValPndFlag)
 {
    FORBIDDEN(FilHdr == ERROR);
    FORBIDDEN(!IsSource(FilHdr));
@@ -831,24 +629,18 @@ Set_TgtValPndFlag(
    }/*Set_TgtValPndFlag*/
 
 
-boolean
-FilHdr_TgtValPndFlag(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+FilHdr_TgtValPndFlag(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    if (!IsSource(FilHdr)) {
-      return FALSE; }/*if*/;
+      return false; }/*if*/;
    return FilHdr->ElmPndFlag;
    }/*FilHdr_TgtValPndFlag*/
 
 
 tp_LocInp
-FilHdr_LocInp(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_LocInp(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return FilHdr->HdrInf.LocInp;
@@ -856,12 +648,7 @@ FilHdr_LocInp(
 
 
 void
-Set_LocElm(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_LocElm, LocElm)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_LocElm, LocElm)
+Set_LocElm(tp_FilHdr FilHdr,tp_LocElm LocElm)
 {
 
    FORBIDDEN(FilHdr == ERROR);
@@ -878,10 +665,7 @@ Set_LocElm(
 
 
 tp_LocElm
-FilHdr_LocElm(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_LocElm(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return FilHdr->HdrInf.LocElm;
@@ -889,10 +673,7 @@ FilHdr_LocElm(
 
 
 void
-Set_OldLocElm(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+Set_OldLocElm(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    if (FilHdr->HdrInf.OldLocElm == FilHdr->HdrInf.LocElm) {
@@ -904,10 +685,7 @@ Set_OldLocElm(
 
 
 tp_LocElm
-FilHdr_OldLocElm(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_OldLocElm(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return FilHdr->HdrInf.OldLocElm;
@@ -915,12 +693,7 @@ FilHdr_OldLocElm(
 
 
 void
-Set_TgtValLocElm(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_LocElm, LocElm)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_LocElm, LocElm)
+Set_TgtValLocElm(tp_FilHdr FilHdr,tp_LocElm LocElm)
 {
    FORBIDDEN(FilHdr == ERROR);
    FORBIDDEN(!IsSource(FilHdr));
@@ -933,10 +706,7 @@ Set_TgtValLocElm(
 
 
 void
-Set_DfltTgtValLocElm(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+Set_DfltTgtValLocElm(tp_FilHdr FilHdr)
 {
    tp_FilHdr TgtValFilHdr;
 
@@ -950,21 +720,15 @@ Set_DfltTgtValLocElm(
 
 
 tp_LocElm
-FilHdr_TgtValLocElm(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_TgtValLocElm(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return FilHdr->HdrInf.TgtValLocElm;
    }/*FilHdr_TgtValLocElm*/
 
 
-boolean
-FilHdr_ActTgtInstalled(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+FilHdr_ActTgtInstalled(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return (FilHdr->HdrInf.OrigLocHdr != 0);
@@ -972,12 +736,7 @@ FilHdr_ActTgtInstalled(
 
 
 void
-Set_ActTgtInstalled(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(boolean, Flag)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(boolean, Flag)
+Set_ActTgtInstalled(tp_FilHdr FilHdr,bool Flag)
 {
    tp_LocHdr LocHdr;
 
@@ -990,12 +749,7 @@ Set_ActTgtInstalled(
 
 
 void
-Set_InpLink(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_LocInp, LocInp)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_LocInp, LocInp)
+Set_InpLink(tp_FilHdr FilHdr,tp_LocInp LocInp)
 {
    FORBIDDEN(FilHdr == ERROR);
    if (LocInp != FilHdr->HdrInf.InpLink) {
@@ -1005,10 +759,7 @@ Set_InpLink(
 
 
 tp_LocInp
-FilHdr_InpLink(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_InpLink(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return FilHdr->HdrInf.InpLink;
@@ -1016,12 +767,7 @@ FilHdr_InpLink(
 
 
 void
-Set_ElmLink(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_LocElm, LocElm)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_LocElm, LocElm)
+Set_ElmLink(tp_FilHdr FilHdr,tp_LocElm LocElm)
 {
    FORBIDDEN(FilHdr == ERROR);
    if (LocElm != FilHdr->HdrInf.ElmLink) {
@@ -1031,10 +777,7 @@ Set_ElmLink(
 
 
 tp_LocElm
-FilHdr_ElmLink(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_ElmLink(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return FilHdr->HdrInf.ElmLink;
@@ -1042,10 +785,7 @@ FilHdr_ElmLink(
 
 
 int
-FilHdr_Size(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_Size(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    if (FilHdr->HdrInf.Size == -1) {
@@ -1055,12 +795,7 @@ FilHdr_Size(
 
 
 void
-Set_Size(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(int, Size)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(int, Size)
+Set_Size(tp_FilHdr FilHdr,int Size)
 {
    int OldSize;
 
@@ -1073,33 +808,22 @@ Set_Size(
    }/*Set_Size*/
 
 
-boolean
-Data_Exists(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+Data_Exists(tp_FilHdr FilHdr)
 {
    return (FilHdr->HdrInf.Size != -1);
    }/*Data_Exists*/
 
 
 void
-Local_Get_CurSize(
-   GMC_ARG(int*, SizePtr)
-   )
-   GMC_DCL(int*, SizePtr)
+Local_Get_CurSize(int* SizePtr)
 {
    *SizePtr = CurSize;
    }/*Local_Get_CurSize*/
 
 
 void
-Set_OrigLocHdr(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_LocHdr, LocHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_LocHdr, LocHdr)
+Set_OrigLocHdr(tp_FilHdr FilHdr,tp_LocHdr LocHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    FORBIDDEN(!IsSource(FilHdr));
@@ -1111,10 +835,7 @@ Set_OrigLocHdr(
 
 
 tp_LocHdr
-FilHdr_OrigLocHdr(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_OrigLocHdr(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return FilHdr->HdrInf.OrigLocHdr;
@@ -1122,12 +843,7 @@ FilHdr_OrigLocHdr(
 
 
 void
-Set_OrigModDate(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Date, ModDate)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Date, ModDate)
+Set_OrigModDate(tp_FilHdr FilHdr,tp_Date ModDate)
 {
    FORBIDDEN(FilHdr == ERROR || ModDate == ERROR);
    if (FilHdr->HdrInf.OrigModDate != ModDate) {
@@ -1137,10 +853,7 @@ Set_OrigModDate(
 
 
 tp_Date
-FilHdr_OrigModDate(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_OrigModDate(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return FilHdr->HdrInf.OrigModDate;

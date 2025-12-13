@@ -69,7 +69,7 @@ YY_Lex()
    if (ParseStr == ERROR) {
       return TOK_EOF; }/*if*/;
    PrevParseStr = ParseStr;
-   while (TRUE) {
+   while (true) {
       Chr = *ParseStr;
       while (Chr == 0) {
 	 LineNum += 1;
@@ -132,7 +132,7 @@ YY_Lex()
    }/*YY_Lex*/
 
 
-/*private*/ boolean
+/*private*/ bool
 YY_IsWordChr(Chr)
    char Chr;
 {
@@ -140,10 +140,10 @@ YY_IsWordChr(Chr)
       case '\0': case ' ': case '\t':
       case '{': case '}': case '(': case ')':
       case '*': case ',': case ';': case '/': {
-	 return FALSE;
+	 return false;
 	 break;}/*case*/;
       default: {
-	 return TRUE; };}/*switch*/;
+	 return true; };}/*switch*/;
 /* NOTREACHED */
    }/*YY_IsWordChr*/
 

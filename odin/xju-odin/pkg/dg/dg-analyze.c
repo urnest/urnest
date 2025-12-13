@@ -15,24 +15,25 @@ See the GNU General Public License for more details.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/CastEdg.h"
-#include "inc/DPType_.h"
-#include "inc/DrvEdg.h"
-#include "inc/EqvEdg.h"
-#include "inc/FilTyp.h"
-#include "inc/FKind_.h"
-#include "inc/FTClass_.h"
-#include "inc/InpSpc.h"
-#include "inc/InpEdg.h"
-#include "inc/InpKind_.h"
-#include "inc/ISKind_.h"
-#include "inc/MemEdg.h"
-#include "inc/PrmTyp.h"
-#include "inc/Str.h"
-#include "inc/TClass_.h"
-#include "inc/Tool.h"
-#include "inc/tc-map-prm-info.h"
+#include <gmc/gmc.h>
+#include <dg/inc/Type.hh>
+#include <gmc/nod.h>
+#include <dg/inc/CastEdg.h>
+#include <dg/inc/DPType_.h>
+#include <dg/inc/DrvEdg.h>
+#include <dg/inc/EqvEdg.h>
+#include <dg/inc/FilTyp.h>
+#include <dg/inc/FKind_.h>
+#include <dg/inc/FTClass_.h>
+#include <dg/inc/InpSpc.h>
+#include <dg/inc/InpEdg.h>
+#include <dg/inc/InpKind_.h>
+#include <dg/inc/ISKind_.h>
+#include <dg/inc/MemEdg.h>
+#include <dg/inc/PrmTyp.h>
+#include <dg/inc/TClass_.h>
+#include <dg/inc/Tool.h>
+#include <dg/inc/tc-map-prm-info.h>
 
 extern tp_Tool		ToolS;
 

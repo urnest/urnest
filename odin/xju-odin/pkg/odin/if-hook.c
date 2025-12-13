@@ -20,14 +20,7 @@ geoff@boulder.colorado.edu
 
 
 static void
-Find_HookClose(
-   GMC_ARG(boolean*, AbortPtr),
-   GMC_ARG(tp_FilDsc, OutFD),
-   GMC_ARG(tp_FilDsc, InFD)
-   )
-   GMC_DCL(boolean*, AbortPtr)
-   GMC_DCL(tp_FilDsc, OutFD)
-   GMC_DCL(tp_FilDsc, InFD)
+Find_HookClose(bool* AbortPtr,tp_FilDsc OutFD,tp_FilDsc InFD)
 {
    int i;
 
@@ -46,7 +39,7 @@ Find_HookClose(
 	 }else if ((char)i == '|') {
 	    i = Readch(InFD);
 	    if ((char)i == ')') {
-	       *AbortPtr = FALSE;
+	       *AbortPtr = false;
 	       return; }/*if*/;
 	    if (OutFD != NIL) {
 	       Writech(OutFD, '|'); Writech(OutFD, (char)i); }/*if*/;
@@ -57,22 +50,17 @@ Find_HookClose(
 	 }else{
 	    if (OutFD != NIL) Writech(OutFD, (char)i);
 	    };}/*select*/; }/*while*/;
-   *AbortPtr = TRUE;
+   *AbortPtr = true;
    }/*Find_HookClose*/
 
 
 static tp_DrvPth
-Get_HookDrvPth(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilTyp, FilTyp)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilTyp, FilTyp)
+Get_HookDrvPth(tp_FilHdr FilHdr,tp_FilTyp FilTyp)
 {
    tp_DrvPth DrvPth, TmpDP;
-   boolean HasDrv;
+   bool HasDrv;
 
-   HasDrv = FALSE;
+   HasDrv = false;
    DrvPth = Get_DrvPth(FilHdr, FilTyp);
    for (TmpDP = DrvPth; TmpDP != ERROR; TmpDP = DrvPth_Next(TmpDP)) {
       switch (DrvPth_DPType(TmpDP)) {
@@ -86,7 +74,7 @@ Get_HookDrvPth(
 	    if (HasDrv) {
 	       Ret_DrvPth(DrvPth);
 	       return ERROR; }/*if*/;
-	    HasDrv = TRUE;
+	    HasDrv = true;
 	    break; }/*case*/;
 	 default: {
 	    FATALERROR("Unknown DPType"); };}/*switch*/; }/*for*/;
@@ -95,20 +83,7 @@ Get_HookDrvPth(
 
 
 static void
-Get_Hook(
-   GMC_ARG(tp_FilHdr*, FilHdrPtr),
-   GMC_ARG(tp_FilDsc, OutFD),
-   GMC_ARG(tp_FilHdr, HookValsFilHdr),
-   GMC_ARG(tp_FilDsc, InFD),
-   GMC_ARG(tp_FilPrm, FilPrm),
-   GMC_ARG(int, HookNum)
-   )
-   GMC_DCL(tp_FilHdr*, FilHdrPtr)
-   GMC_DCL(tp_FilDsc, OutFD)
-   GMC_DCL(tp_FilHdr, HookValsFilHdr)
-   GMC_DCL(tp_FilDsc, InFD)
-   GMC_DCL(tp_FilPrm, FilPrm)
-   GMC_DCL(int, HookNum)
+Get_Hook(tp_FilHdr* FilHdrPtr,tp_FilDsc OutFD,tp_FilHdr HookValsFilHdr,tp_FilDsc InFD,tp_FilPrm FilPrm,int HookNum)
 {
    int i, iStr;
    tps_Str StrBuf;
@@ -117,7 +92,7 @@ Get_Hook(
    tp_FilTyp HookFilTyp;
    tp_DrvPth DrvPth;
    tp_FilPrm HookFilPrm;
-   boolean Abort;
+   bool Abort;
 
    *FilHdrPtr = ERROR;
    i = Readch(InFD);
@@ -183,18 +158,7 @@ Get_Hook(
 
 
 void
-NestedHooks(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilHdr, HookValsFilHdr),
-   GMC_ARG(tp_FilDsc, OutFD),
-   GMC_ARG(tp_FilDsc, InFD),
-   GMC_ARG(tp_FilPrm, FilPrm)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilHdr, HookValsFilHdr)
-   GMC_DCL(tp_FilDsc, OutFD)
-   GMC_DCL(tp_FilDsc, InFD)
-   GMC_DCL(tp_FilPrm, FilPrm)
+NestedHooks(tp_FilHdr FilHdr,tp_FilHdr HookValsFilHdr,tp_FilDsc OutFD,tp_FilDsc InFD,tp_FilPrm FilPrm)
 {
    int i, HookNum;
    tp_LocElm FirstLE, LastLE, LocElm;
@@ -232,14 +196,7 @@ NestedHooks(
 
 
 void
-ExpandHooks(
-   GMC_ARG(tp_FilDsc, OutFD),
-   GMC_ARG(tp_FilDsc, InFD),
-   GMC_ARG(tp_FilHdr, HooksFilHdr)
-   )
-   GMC_DCL(tp_FilDsc, OutFD)
-   GMC_DCL(tp_FilDsc, InFD)
-   GMC_DCL(tp_FilHdr, HooksFilHdr)
+ExpandHooks(tp_FilDsc OutFD,tp_FilDsc InFD,tp_FilHdr HooksFilHdr)
 {
    int i;
    tp_LocElm LocElm;
@@ -247,7 +204,7 @@ ExpandHooks(
    tps_FileName FileName;
    tp_FilHdr HookFilHdr;
    tp_FilDsc HookFD;
-   boolean Abort;
+   bool Abort;
 
    i = Readch(InFD);
    LocElm = FilHdr_LocElm(HooksFilHdr);
@@ -264,7 +221,7 @@ ExpandHooks(
 		  Ret_FilElm(FilElm);
 		  FilHdr_DataFileName(FileName, HookFilHdr);
 		  Ret_FilHdr(HookFilHdr);
-		  HookFD = FileName_RFilDsc(FileName, TRUE);
+		  HookFD = FileName_RFilDsc(FileName, true);
 		  FileCopy(OutFD, HookFD);
 		  Close(HookFD);
 		  Find_HookClose(&Abort, (tp_FilDsc)NIL, InFD);

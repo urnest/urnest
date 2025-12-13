@@ -4,8 +4,8 @@
 #define EOFTOK 0
 #define ERRTOK 1
 #define WORDTK 2
-#define HOSTWD 3
-#define OBJTID 4
+#define SCAN_HOSTWD 3
+#define SCAN_OBJTID 4
 #define EXCLPT 5
 #define SCOLON 6
 #define QUESMK 7

@@ -1,4 +1,4 @@
-/*
+!!/*
 Copyright (C) 1991 Geoffrey M. Clemm
 
 This file is part of the Odin system.
@@ -66,7 +66,7 @@ New_FilPVal(GMC_ARG_VOID)
    }/*New_FilPVal*/
 
 
-boolean
+bool
 IsRootFilPVal(
    GMC_ARG(tp_FilPVal, FilPVal)
    )

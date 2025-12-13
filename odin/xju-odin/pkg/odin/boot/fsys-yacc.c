@@ -68,7 +68,7 @@
 
 /* First part of user prologue.  */
 
-#include "inc/GMC.h"
+#include "gmc/nod.h"
 extern int num_ParseErrors;
 tp_Nod YY_Parse() {tp_Nod Nod;
 num_ParseErrors = 0; Init_Lex(); Init_ConstructTree();
@@ -122,8 +122,8 @@ extern int yydebug;
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
     WORDTK = 2,                    /* WORDTK  */
-    HOSTWD = 3,                    /* HOSTWD  */
-    OBJTID = 4,                    /* OBJTID  */
+    SCAN_HOSTWD = 3,               /* SCAN_HOSTWD  */
+    SCAN_OBJTID = 4,               /* SCAN_OBJTID  */
     EXCLPT = 5,                    /* EXCLPT  */
     SCOLON = 6,                    /* SCOLON  */
     QUESMK = 7,                    /* QUESMK  */
@@ -145,8 +145,8 @@ extern int yydebug;
 #define YYerror 256
 #define YYUNDEF 257
 #define WORDTK 2
-#define HOSTWD 3
-#define OBJTID 4
+#define SCAN_HOSTWD 3
+#define SCAN_OBJTID 4
 #define EXCLPT 5
 #define SCOLON 6
 #define QUESMK 7
@@ -183,8 +183,8 @@ enum yysymbol_kind_t
   YYSYMBOL_YYerror = 1,                    /* error  */
   YYSYMBOL_YYUNDEF = 2,                    /* "invalid token"  */
   YYSYMBOL_WORDTK = 3,                     /* WORDTK  */
-  YYSYMBOL_HOSTWD = 4,                     /* HOSTWD  */
-  YYSYMBOL_OBJTID = 5,                     /* OBJTID  */
+  YYSYMBOL_SCAN_HOSTWD = 4,                /* SCAN_HOSTWD  */
+  YYSYMBOL_SCAN_OBJTID = 5,                /* SCAN_OBJTID  */
   YYSYMBOL_EXCLPT = 6,                     /* EXCLPT  */
   YYSYMBOL_SCOLON = 7,                     /* SCOLON  */
   YYSYMBOL_QUESMK = 8,                     /* QUESMK  */
@@ -219,7 +219,7 @@ enum yysymbol_kind_t
   YYSYMBOL_xFileType = 37,                 /* xFileType  */
   YYSYMBOL_xPrmType = 38,                  /* xPrmType  */
   YYSYMBOL_WORDTKleaf = 39,                /* WORDTKleaf  */
-  YYSYMBOL_OBJTIDleaf = 40                 /* OBJTIDleaf  */
+  YYSYMBOL_SCAN_OBJTIDleaf = 40            /* SCAN_OBJTIDleaf  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -626,14 +626,14 @@ static const char *yysymbol_name (yysymbol_kind_t yysymbol) YY_ATTRIBUTE_UNUSED;
    First, the terminals, then, starting at YYNTOKENS, nonterminals.  */
 static const char *const yytname[] =
 {
-  "\"end of file\"", "error", "\"invalid token\"", "WORDTK", "HOSTWD",
-  "OBJTID", "EXCLPT", "SCOLON", "QUESMK", "PERCNT", "LANGLE", "RANGLE",
-  "COLON", "LPAREN", "RPAREN", "PLUS", "EQUALS", "SLASH", "$accept",
-  "xParser", "xParser_1", "xDefinition", "xDefHeader", "xDefHeader_1",
-  "xExecDef", "xValue", "xValue_2", "xValue_1", "xOdinExprNull",
-  "xOdinExpr", "xOdinExpr1", "xRoot", "xOperation", "xOperation_1",
-  "xPrmVals", "xPrmVals_1", "xPrmVal", "xFileType", "xPrmType",
-  "WORDTKleaf", "OBJTIDleaf", YY_NULLPTR
+  "\"end of file\"", "error", "\"invalid token\"", "WORDTK",
+  "SCAN_HOSTWD", "SCAN_OBJTID", "EXCLPT", "SCOLON", "QUESMK", "PERCNT",
+  "LANGLE", "RANGLE", "COLON", "LPAREN", "RPAREN", "PLUS", "EQUALS",
+  "SLASH", "$accept", "xParser", "xParser_1", "xDefinition", "xDefHeader",
+  "xDefHeader_1", "xExecDef", "xValue", "xValue_2", "xValue_1",
+  "xOdinExprNull", "xOdinExpr", "xOdinExpr1", "xRoot", "xOperation",
+  "xOperation_1", "xPrmVals", "xPrmVals_1", "xPrmVal", "xFileType",
+  "xPrmType", "WORDTKleaf", "SCAN_OBJTIDleaf", YY_NULLPTR
 };
 
 static const char *
@@ -1355,8 +1355,8 @@ yyreduce:
                      {Action(23,-1);}
     break;
 
-  case 51: /* OBJTIDleaf: OBJTID  */
-                     {Action(24,-1);}
+  case 51: /* SCAN_OBJTIDleaf: SCAN_OBJTID  */
+                               {Action(24,-1);}
     break;
 
 

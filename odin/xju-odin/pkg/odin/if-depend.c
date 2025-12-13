@@ -13,7 +13,7 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
+#include <gmc/gmc.h>
 #include "inc/FileName.h"
 #include "inc/Flag_.h"
 #include "inc/InpKind_.h"
@@ -21,48 +21,39 @@ geoff@boulder.colorado.edu
 #include "inc/Str.h"
 
 
-static void Get_ElmReport(GMC_P1(tp_FilDsc) GMC_PN(tp_FilHdr) GMC_PN(boolean) GMC_PN(tp_Status));
+static void Get_ElmReport(GMC_P1(tp_FilDsc) GMC_PN(tp_FilHdr) GMC_PN(bool) GMC_PN(tp_Status));
 
 
 static void
-Do_Report(
-   GMC_ARG(tp_FilDsc, ReportFD),
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Status, Status),
-   GMC_ARG(tp_Status, ReportStatus)
-   )
-   GMC_DCL(tp_FilDsc, ReportFD)
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Status, Status)
-   GMC_DCL(tp_Status, ReportStatus)
+Do_Report(tp_FilDsc ReportFD,tp_FilHdr FilHdr,tp_Status Status,tp_Status ReportStatus)
 {
-   boolean MsgFlag;
+   bool MsgFlag;
    tps_FileName WarningFileName, ErrorFileName;
    tp_FilDsc FilDsc;
 
    if (Status == STAT_SysAbort) {
       return; }/*if*/;
 
-   MsgFlag = FALSE;
+   MsgFlag = false;
    if (ReportStatus >= STAT_TgtValError
        && FilHdr_HasErrStatus(FilHdr, STAT_Error)) {
-      MsgFlag = TRUE;
+      MsgFlag = true;
       Write(ReportFD, "--- <");
       Print_FilHdr(ReportFD, (tp_Str)NIL, FilHdr);
       Writeln(ReportFD, "> generated errors ---");
       FilHdr_ErrorFileName(ErrorFileName, FilHdr);
-      FilDsc = FileName_RFilDsc(ErrorFileName, TRUE);
+      FilDsc = FileName_RFilDsc(ErrorFileName, true);
       FileCopy(ReportFD, FilDsc);
       Close(FilDsc); }/*if*/;
 
    if (ReportStatus >= STAT_Warning
        && FilHdr_HasErrStatus(FilHdr, STAT_Warning)) {
-      MsgFlag = TRUE;
+      MsgFlag = true;
       Write(ReportFD, "--- <");
       Print_FilHdr(ReportFD, (tp_Str)NIL, FilHdr);
       Writeln(ReportFD, "> generated warnings ---");
       FilHdr_WarningFileName(WarningFileName, FilHdr);
-      FilDsc = FileName_RFilDsc(WarningFileName, TRUE);
+      FilDsc = FileName_RFilDsc(WarningFileName, true);
       FileCopy(ReportFD, FilDsc);
       Close(FilDsc);
       return; }/*if*/;
@@ -111,55 +102,37 @@ Do_Report(
 
 
 static void
-Set_ElmVisit(
-   GMC_ARG(boolean*, DoneFlagPtr),
-   GMC_ARG(boolean*, DataFlagPtr),
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_InpKind, InpKind)
-   )
-   GMC_DCL(boolean*, DoneFlagPtr)
-   GMC_DCL(boolean*, DataFlagPtr)
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_InpKind, InpKind)
+Set_ElmVisit(bool* DoneFlagPtr,bool* DataFlagPtr,tp_FilHdr FilHdr,tp_InpKind InpKind)
 {
-   *DoneFlagPtr = FALSE;
+   *DoneFlagPtr = false;
    *DataFlagPtr = NeedsElmData(FilHdr, InpKind);
    if (!(*DataFlagPtr || NeedsElmNameData(FilHdr, InpKind))) {
-      *DoneFlagPtr = TRUE;
+      *DoneFlagPtr = true;
       return; }/*if*/;
    /*select*/{
       if (*DataFlagPtr) {
 	 if (FilHdr_Flag(FilHdr, FLAG_ElmVisit)) {
-	    *DoneFlagPtr = TRUE;
+	    *DoneFlagPtr = true;
 	    return; }/*if*/;
 	 Set_Flag(FilHdr, FLAG_ElmVisit);
 	 if (!FilHdr_Flag(FilHdr, FLAG_ElmNameVisit)) {
 	    Set_Flag(FilHdr, FLAG_ElmNameVisit); }/*if*/;
       }else{
 	 if (FilHdr_Flag(FilHdr, FLAG_ElmNameVisit)) {
-	    *DoneFlagPtr = TRUE;
+	    *DoneFlagPtr = true;
 	    return; }/*if*/;
 	 Set_Flag(FilHdr, FLAG_ElmNameVisit); };}/*select*/;
    }/*Set_ElmVisit*/
 
 
 static void
-Get_Report(
-   GMC_ARG(tp_FilDsc, ReportFD),
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_InpKind, InpKind),
-   GMC_ARG(tp_Status, ReportStatus)
-   )
-   GMC_DCL(tp_FilDsc, ReportFD)
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_InpKind, InpKind)
-   GMC_DCL(tp_Status, ReportStatus)
+Get_Report(tp_FilDsc ReportFD,tp_FilHdr FilHdr,tp_InpKind InpKind,tp_Status ReportStatus)
 {
    tp_Status Status, InpStatus;
    tp_FilHdr TgtValFilHdr;
    tp_FilInp FilInp;
    tp_FilHdr InpFilHdr;
-   boolean DataFlag, DoneFlag;
+   bool DataFlag, DoneFlag;
 
    FORBIDDEN(FilHdr == ERROR);
 
@@ -206,31 +179,22 @@ Get_Report(
 	 if (FilHdr_ElmStatus(FilHdr) == STAT_ElmCircular) {
 	    Do_Report(ReportFD, FilHdr, STAT_ElmCircular, ReportStatus); }/*if*/;
 	 if (FilHdr_ElmStatus(FilHdr) <= ReportStatus) {
-	    Get_ElmReport(ReportFD, FilHdr, TRUE, ReportStatus); }/*if*/;
+	    Get_ElmReport(ReportFD, FilHdr, true, ReportStatus); }/*if*/;
       }else{
 	 if (FilHdr_ElmNameStatus(FilHdr) == STAT_ElmCircular) {
 	    Do_Report(ReportFD, FilHdr, STAT_ElmCircular, ReportStatus);
 	    }/*if*/;
 	 if (FilHdr_ElmNameStatus(FilHdr) <= ReportStatus) {
-	    Get_ElmReport(ReportFD, FilHdr, FALSE, ReportStatus);
+	    Get_ElmReport(ReportFD, FilHdr, false, ReportStatus);
 	    }/*if*/; };}/*select*/;
 
    }/*Get_Report*/
 
 
 static void
-Get_ElmReport(
-   GMC_ARG(tp_FilDsc, ReportFD),
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(boolean, DataFlag),
-   GMC_ARG(tp_Status, ReportStatus)
-   )
-   GMC_DCL(tp_FilDsc, ReportFD)
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(boolean, DataFlag)
-   GMC_DCL(tp_Status, ReportStatus)
+Get_ElmReport(tp_FilDsc ReportFD,tp_FilHdr FilHdr,bool DataFlag,tp_Status ReportStatus)
 {
-   boolean ViewSpecFlag;
+   bool ViewSpecFlag;
    tp_FilElm FilElm;
    tp_FilHdr ElmFilHdr, TgtValFilHdr;
    tp_InpKind InpKind;
@@ -262,10 +226,7 @@ Get_ElmReport(
 
 
 static void
-Clr_VisitFlags(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+Clr_VisitFlags(tp_FilHdr FilHdr)
 {
    tp_FilInp FilInp;
    tp_FilElm FilElm;
@@ -303,14 +264,7 @@ Clr_VisitFlags(
 
 
 void
-WriteReport(
-   GMC_ARG(tp_FilDsc, StatusFD),
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Status, ReportStatus)
-   )
-   GMC_DCL(tp_FilDsc, StatusFD)
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Status, ReportStatus)
+WriteReport(tp_FilDsc StatusFD,tp_FilHdr FilHdr,tp_Status ReportStatus)
 {
    if (FilHdr_MinStatus(FilHdr, IK_Trans) > ReportStatus) {
       return; }/*if*/;
@@ -333,24 +287,13 @@ WriteReport(
 
 
 static void
-GetDepend1(
-   GMC_ARG(tp_LocElm*, FirstLEPtr),
-   GMC_ARG(tp_LocElm*, LastLEPtr),
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_InpKind, InpKind),
-   GMC_ARG(tp_FilHdr, ListFilHdr)
-   )
-   GMC_DCL(tp_LocElm*, FirstLEPtr)
-   GMC_DCL(tp_LocElm*, LastLEPtr)
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_InpKind, InpKind)
-   GMC_DCL(tp_FilHdr, ListFilHdr)
+GetDepend1(tp_LocElm* FirstLEPtr,tp_LocElm* LastLEPtr,tp_FilHdr FilHdr,tp_InpKind InpKind,tp_FilHdr ListFilHdr)
 {
    tp_LocElm LocElm;
    tp_FilInp FilInp;
    tp_FilElm FilElm;
    tp_FilHdr InpFilHdr, ElmFilHdr, TgtValFilHdr;
-   boolean DoneFlag, DataFlag, ViewSpecFlag;
+   bool DoneFlag, DataFlag, ViewSpecFlag;
 
    FORBIDDEN(FilHdr == ERROR);
 
@@ -398,16 +341,7 @@ GetDepend1(
 
 
 void
-GetDepend(
-   GMC_ARG(tp_LocElm*, FirstLEPtr),
-   GMC_ARG(tp_LocElm*, LastLEPtr),
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilHdr, ListFilHdr)
-   )
-   GMC_DCL(tp_LocElm*, FirstLEPtr)
-   GMC_DCL(tp_LocElm*, LastLEPtr)
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilHdr, ListFilHdr)
+GetDepend(tp_LocElm* FirstLEPtr,tp_LocElm* LastLEPtr,tp_FilHdr FilHdr,tp_FilHdr ListFilHdr)
 {
    GetDepend1(FirstLEPtr, LastLEPtr, FilHdr, IK_Trans, ListFilHdr);
    Clr_VisitFlags(FilHdr);
@@ -415,28 +349,17 @@ GetDepend(
 
 
 static void
-Get_DPath1(
-   GMC_ARG(boolean*, FoundPtr),
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_InpKind, InpKind),
-   GMC_ARG(tp_FilHdr, DepFilHdr),
-   GMC_ARG(boolean, First)
-   )
-   GMC_DCL(boolean*, FoundPtr)
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_InpKind, InpKind)
-   GMC_DCL(tp_FilHdr, DepFilHdr)
-   GMC_DCL(boolean, First)
+Get_DPath1(bool* FoundPtr,tp_FilHdr FilHdr,tp_InpKind InpKind,tp_FilHdr DepFilHdr,bool First)
 {
    tp_Str Message;
    tp_FilInp FilInp;
    tp_FilHdr InpFilHdr, ElmFilHdr, TgtValFilHdr;
-   boolean DoneFlag, DataFlag, ViewSpecFlag;
+   bool DoneFlag, DataFlag, ViewSpecFlag;
    tp_FilElm FilElm;
 
    FORBIDDEN(FilHdr == ERROR);
 
-   *FoundPtr = FALSE;
+   *FoundPtr = false;
    Message = NIL;
 
    if (!NeedsData(FilHdr, InpKind)) {
@@ -445,13 +368,13 @@ Get_DPath1(
    /*select*/{
       if (FilHdr_Flag(FilHdr, FLAG_Visit)) {
 	 if (FilHdr == DepFilHdr) {
-	    *FoundPtr = TRUE;
+	    *FoundPtr = true;
 	    goto found; }/*if*/;
       }else{
 	 Set_Flag(FilHdr, FLAG_Visit);
 
 	 if (FilHdr == DepFilHdr && !First) {
-	    *FoundPtr = TRUE;
+	    *FoundPtr = true;
 	    goto found; }/*if*/;
 
 	 if (IsSource(FilHdr)) {
@@ -459,7 +382,7 @@ Get_DPath1(
 	    if (TgtValFilHdr != NIL) {
 	       if (!IsDfltTgtVal(TgtValFilHdr)) {
 		  Get_DPath1(FoundPtr, TgtValFilHdr, IK_Simple, DepFilHdr,
-			     FALSE); }/*if*/;
+			     false); }/*if*/;
 	       Ret_FilHdr(TgtValFilHdr);
 	       if (*FoundPtr) {
 		  Message = "   is the bound value of:";
@@ -471,7 +394,7 @@ Get_DPath1(
 	      FilInp = FilInp_NextFilInp(FilInp)) {
 	    InpFilHdr = FilInp_FilHdr(FilInp);
 	    Get_DPath1(FoundPtr, InpFilHdr,
-		       FilInp_InpKind(FilInp), DepFilHdr, FALSE);
+		       FilInp_InpKind(FilInp), DepFilHdr, false);
 	    Ret_FilHdr(InpFilHdr);
 	    if (*FoundPtr) {
 	       Ret_FilInp(FilInp);
@@ -491,7 +414,7 @@ Get_DPath1(
 	  && !(ViewSpecFlag && FilHdr_ElmStatus(ElmFilHdr) == STAT_NoFile
 		&& FilHdr_TgtValStatus(ElmFilHdr) == STAT_OK)) {
 	 Get_DPath1(FoundPtr, ElmFilHdr, (DataFlag ? IK_Trans : IK_TransName),
-		    DepFilHdr, FALSE); }/*if*/;
+		    DepFilHdr, false); }/*if*/;
       if (ViewSpecFlag && FilHdr_ElmStatus(ElmFilHdr) != STAT_NoFile) {
 	 FilElm = FilElm_NextStrFilElm(FilElm); }/*if*/;
       Ret_FilHdr(ElmFilHdr);
@@ -508,16 +431,13 @@ found:;
 
 
 void
-Local_Get_DPath(
-   GMC_ARG(tp_Str, OdinExpr)
-   )
-   GMC_DCL(tp_Str, OdinExpr)
+Local_Get_DPath(tp_Str OdinExpr)
 {
    tp_Nod Root;
    tp_PrmFHdr PrmFHdr;
    tp_FilHdr FilHdr, DepFilHdr;
    tp_FilPrm FilPrm;
-   boolean Found;
+   bool Found;
 
    Root = YY_Parser(OdinExpr, (tp_FileName)NIL, (int *)NIL);
    if (Root == ERROR) {
@@ -534,7 +454,7 @@ Local_Get_DPath(
       Ret_FilHdr(FilHdr);
       return; }/*if*/;
 
-   Get_DPath1(&Found, FilHdr, IK_Trans, DepFilHdr, TRUE);
+   Get_DPath1(&Found, FilHdr, IK_Trans, DepFilHdr, true);
    Clr_VisitFlags(FilHdr);
    Ret_FilHdr(FilHdr); Ret_FilHdr(DepFilHdr);
    }/*Local_Get_DPath*/

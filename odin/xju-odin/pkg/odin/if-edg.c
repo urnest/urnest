@@ -13,20 +13,19 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/CastEdg.h"
-#include "inc/DrvEdg.h"
-#include "inc/EqvEdg.h"
-#include "inc/MemEdg.h"
-#include "inc/InpEdg.h"
-#include "inc/InpKind_.h"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/CastEdg.h>
+#include <odin/inc/DrvEdg.h>
+#include <odin/inc/EqvEdg.h>
+#include <odin/inc/MemEdg.h>
+#include <odin/inc/InpEdg.h>
+#include <odin/inc/InpKind_.h>
 
 
 tp_PrmTypLst
-DrvEdg_PrmTypLst(
-   GMC_ARG(tp_DrvEdg, DrvEdg)
-   )
-   GMC_DCL(tp_DrvEdg, DrvEdg)
+DrvEdg_PrmTypLst(tp_DrvEdg DrvEdg)
 {
    FORBIDDEN(DrvEdg == ERROR);
    return DrvEdg->PrmTypLst;
@@ -34,10 +33,7 @@ DrvEdg_PrmTypLst(
 
 
 tp_InpSpc
-InpEdg_InpSpc(
-   GMC_ARG(tp_InpEdg, InpEdg)
-   )
-   GMC_DCL(tp_InpEdg, InpEdg)
+InpEdg_InpSpc(tp_InpEdg InpEdg)
 {
    FORBIDDEN(InpEdg == ERROR);
    return InpEdg->InpSpc;
@@ -45,21 +41,15 @@ InpEdg_InpSpc(
 
 
 tp_InpKind
-InpEdg_InpKind(
-   GMC_ARG(tp_InpEdg, InpEdg)
-   )
-   GMC_DCL(tp_InpEdg, InpEdg)
+InpEdg_InpKind(tp_InpEdg InpEdg)
 {
    FORBIDDEN(InpEdg == ERROR);
    return InpEdg->InpKind;
    }/*InpEdg_InpKind*/
 
 
-boolean
-InpEdg_IsUserArg(
-   GMC_ARG(tp_InpEdg, InpEdg)
-   )
-   GMC_DCL(tp_InpEdg, InpEdg)
+bool
+InpEdg_IsUserArg(tp_InpEdg InpEdg)
 {
    FORBIDDEN(InpEdg == ERROR);
    return InpEdg->IsUserArg;
@@ -67,10 +57,7 @@ InpEdg_IsUserArg(
 
 
 tp_InpEdg
-InpEdg_Next(
-   GMC_ARG(tp_InpEdg, InpEdg)
-   )
-   GMC_DCL(tp_InpEdg, InpEdg)
+InpEdg_Next(tp_InpEdg InpEdg)
 {
    FORBIDDEN(InpEdg == ERROR);
    return InpEdg->Next;
@@ -78,85 +65,57 @@ InpEdg_Next(
 
 
 tp_FilTyp
-EqvEdg_FilTyp(
-   GMC_ARG(tp_EqvEdg, EqvEdg)
-   )
-   GMC_DCL(tp_EqvEdg, EqvEdg)
+EqvEdg_FilTyp(tp_EqvEdg EqvEdg)
 {
    return EqvEdg->FilTyp;
    }/*EqvEdg_FilTyp*/
 
 
 tp_FilTyp
-MemEdg_FilTyp(
-   GMC_ARG(tp_MemEdg, MemEdg)
-   )
-   GMC_DCL(tp_MemEdg, MemEdg)
+MemEdg_FilTyp(tp_MemEdg MemEdg)
 {
    return MemEdg->FilTyp;
    }/*MemEdg_FilTyp*/
 
 
-static boolean
-InpKind_IsName(
-   GMC_ARG(tp_InpKind, InpKind)
-   )
-   GMC_DCL(tp_InpKind, InpKind)
+static bool
+InpKind_IsName(tp_InpKind InpKind)
 {
    return (InpKind == IK_Name);
    }/*InpKind_IsName*/
 
 
-static boolean
-InpKind_IsTransName(
-   GMC_ARG(tp_InpKind, InpKind)
-   )
-   GMC_DCL(tp_InpKind, InpKind)
+static bool
+InpKind_IsTransName(tp_InpKind InpKind)
 {
    return (InpKind == IK_TransName);
    }/*InpKind_IsTransName*/
 
 
-static boolean
-InpKind_IsTrans(
-   GMC_ARG(tp_InpKind, InpKind)
-   )
-   GMC_DCL(tp_InpKind, InpKind)
+static bool
+InpKind_IsTrans(tp_InpKind InpKind)
 {
    return (InpKind == IK_Trans || InpKind == IK_AnyOK);
    }/*InpKind_IsTrans*/
 
 
-boolean
-InpKind_IsAnyOK(
-   GMC_ARG(tp_InpKind, InpKind)
-   )
-   GMC_DCL(tp_InpKind, InpKind)
+bool
+InpKind_IsAnyOK(tp_InpKind InpKind)
 {
    return (InpKind == IK_AnyOK);
    }/*InpKind_IsAnyOK*/
 
 
-boolean
-NeedsData(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_InpKind, InpKind)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_InpKind, InpKind)
+bool
+NeedsData(tp_FilHdr FilHdr,tp_InpKind InpKind)
 {
    return !(InpKind_IsName(InpKind)
 	    || (InpKind_IsTransName(InpKind) && !IsRef(FilHdr)));
    }/*NeedsData*/
 
 
-boolean
-NeedsElmData(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_InpKind, InpKind)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_InpKind, InpKind)
+bool
+NeedsElmData(tp_FilHdr FilHdr,tp_InpKind InpKind)
 {
    return ((InpKind_IsTrans(InpKind) && IsList(FilHdr))
 	   || (InpKind != IK_Pntr && InpKind != IK_TransName
@@ -164,29 +123,21 @@ NeedsElmData(
    }/*NeedsElmData*/
 
 
-boolean
-NeedsElmNameData(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_InpKind, InpKind)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_InpKind, InpKind)
+bool
+NeedsElmNameData(tp_FilHdr FilHdr,tp_InpKind InpKind)
 {
    return (InpKind_IsTransName(InpKind) && IsRef(FilHdr));
    }/*NeedsElmNameData*/
 
 
 int
-NumInputs(
-   GMC_ARG(tp_FilTyp, FilTyp)
-   )
-   GMC_DCL(tp_FilTyp, FilTyp)
+NumInputs(tp_FilTyp FilTyp)
 {
    int i;
    tp_InpEdg InpEdg;
-   boolean IsUserArg;
+   bool IsUserArg;
 
-   IsUserArg = TRUE;
+   IsUserArg = true;
    i = 0;
    for (InpEdg = Tool_InpEdg(FilTyp_Tool(FilTyp));
 	InpEdg != NIL;
@@ -196,20 +147,13 @@ NumInputs(
 	    FORBIDDEN(!IsUserArg);
 	    i++;
 	 }else{
-	    IsUserArg = FALSE; };}/*select*/; }/*while*/;
+	    IsUserArg = false; };}/*select*/; }/*while*/;
    return i;
    }/*NumInputs*/
 
 
 void
-GetOutTyps(
-   GMC_ARG(tp_FilTyp, FilTyp),
-   GMC_ARG(tp_OutTyps, OutTyps),
-   GMC_ARG(int*, NumOutputsPtr)
-   )
-   GMC_DCL(tp_FilTyp, FilTyp)
-   GMC_DCL(tp_OutTyps, OutTyps)
-   GMC_DCL(int*, NumOutputsPtr)
+GetOutTyps(tp_FilTyp FilTyp,tp_OutTyps OutTyps,int* NumOutputsPtr)
 {
    int i;
    tp_MemEdg MemEdg;
@@ -228,14 +172,7 @@ GetOutTyps(
 
 
 void
-SetEqvEdg_Marks(
-   GMC_ARG(tp_EqvEdg, EqvEdg),
-   GMC_ARG(boolean, CastFlag),
-   GMC_ARG(boolean, PrmTypFlag)
-   )
-   GMC_DCL(tp_EqvEdg, EqvEdg)
-   GMC_DCL(boolean, CastFlag)
-   GMC_DCL(boolean, PrmTypFlag)
+SetEqvEdg_Marks(tp_EqvEdg EqvEdg,bool CastFlag,bool PrmTypFlag)
 {
    tp_EqvEdg TmpEE;
 
@@ -246,28 +183,18 @@ SetEqvEdg_Marks(
 
 
 void
-SetCastEdg_Marks(
-   GMC_ARG(tp_CastEdg, CastEdg),
-   GMC_ARG(boolean, PrmTypFlag)
-   )
-   GMC_DCL(tp_CastEdg, CastEdg)
-   GMC_DCL(boolean, PrmTypFlag)
+SetCastEdg_Marks(tp_CastEdg CastEdg,bool PrmTypFlag)
 {
    tp_CastEdg TmpCE;
 
    for (TmpCE = CastEdg; TmpCE != NIL; TmpCE = TmpCE->Next) {
       if (!PrmTypFlag) SetFilTyp_Mark(TmpCE->FilTyp);
-      SetFilTyp_Marks(TmpCE->FilTyp, TRUE, PrmTypFlag); }/*for*/;
+      SetFilTyp_Marks(TmpCE->FilTyp, true, PrmTypFlag); }/*for*/;
    }/*SetCastEdg_Marks*/
 
 
 void
-SetDrvEdg_Marks(
-   GMC_ARG(tp_DrvEdg, DrvEdg),
-   GMC_ARG(boolean, PrmTypFlag)
-   )
-   GMC_DCL(tp_DrvEdg, DrvEdg)
-   GMC_DCL(boolean, PrmTypFlag)
+SetDrvEdg_Marks(tp_DrvEdg DrvEdg,bool PrmTypFlag)
 {
    tp_DrvEdg TmpDE;
 
@@ -277,7 +204,7 @@ SetDrvEdg_Marks(
 	    SetPrmTypLst_Marks(TmpDE->PrmTypLst);
 	 }else{
 	    SetFilTyp_Mark(TmpDE->FilTyp); };}/*select*/;
-      SetFilTyp_Marks(TmpDE->FilTyp, FALSE, PrmTypFlag); }/*for*/;
+      SetFilTyp_Marks(TmpDE->FilTyp, false, PrmTypFlag); }/*for*/;
    }/*SetDrvEdg_Marks*/
 
 

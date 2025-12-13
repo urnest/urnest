@@ -23,17 +23,14 @@ geoff@boulder.colorado.edu
 
 
 void
-Exec(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+Exec(tp_FilHdr FilHdr)
 {
    tp_FilHdr OrigFilHdr, DestFilHdr, OrigElmFH, DestElmFH, TgtValFilHdr;
    tps_ExecSpc _ExecSpc; tp_ExecSpc ExecSpc = &_ExecSpc;
    tp_Job Job;
    int i;
    tps_FileName FileName;
-   boolean Abort;
+   bool Abort;
 
    FORBIDDEN(FilHdr_Status(FilHdr) != STAT_Ready);
    Set_ListStatus(FilHdr, STAT_Busy);
@@ -41,14 +38,14 @@ Exec(
    if (IsCopy(FilHdr)) {
       DestFilHdr = Get_Copy_DestFilHdr(Copy_FilHdr(FilHdr));
       if (DestFilHdr != NIL) {
-	 Abort = FALSE;
+	 Abort = false;
 	 OrigFilHdr = FilHdr_Father(Copy_FilHdr(FilHdr));
 	 if (IsBound(DestFilHdr)) {
 	    TgtValFilHdr = FilHdr_TgtValFilHdr(Copy_FilHdr(DestFilHdr));
 	    if (TgtValFilHdr != FilHdr) {
 	       Do_Log("Cannot copy into a file target", DestFilHdr,
 		      LOGLEVEL_Abort);
-	       Abort = TRUE; }/*if*/;
+	       Abort = true; }/*if*/;
 	    Ret_FilHdr(TgtValFilHdr); }/*if*/;
 	 if (!Abort) {
 	    DestElmFH = Deref_SymLink(Copy_FilHdr(DestFilHdr));
@@ -56,7 +53,7 @@ Exec(
 	    if (FilHdr_Status(DestElmFH) == STAT_Busy) {
 	       Do_Log("Aborted", FilHdr, LOGLEVEL_Abort);
 	       Do_Log("Currently copying to", DestFilHdr, LOGLEVEL_Abort);
-	       Abort = TRUE; }/*if*/;
+	       Abort = true; }/*if*/;
 	    if (!Abort) {
 	       Set_Status(DestElmFH, STAT_Ready);
 	       Set_OrigLocHdr(DestElmFH, FilHdr_LocHdr(OrigElmFH));
@@ -68,7 +65,7 @@ Exec(
 	 Ret_FilHdr(OrigFilHdr); Ret_FilHdr(DestFilHdr);
 	 if (Abort) {
 	    Set_ListStatus(FilHdr, STAT_Unknown);
-	    Local_Do_Interrupt(FALSE);
+	    Local_Do_Interrupt(false);
 	    return; }/*if*/; }/*if*/; }/*if*/;
    FilHdr_ExecSpc(ExecSpc, FilHdr);
    Job = Add_Job(FilHdr);
@@ -85,12 +82,7 @@ Exec(
 
 
 static tp_Status
-Get_ExecStatus(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Job, Job)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Job, Job)
+Get_ExecStatus(tp_FilHdr FilHdr,tp_Job Job)
 {
    tp_Status Status;
 
@@ -114,12 +106,7 @@ Get_ExecStatus(
 
 
 void
-Local_Job_Done(
-   GMC_ARG(tp_JobID, JobID),
-   GMC_ARG(boolean, Abort)
-   )
-   GMC_DCL(tp_JobID, JobID)
-   GMC_DCL(boolean, Abort)
+Local_Job_Done(tp_JobID JobID,bool Abort)
 {
    tps_OutFilHdrs OutFilHdrs;
    tp_Job Job;
@@ -129,7 +116,7 @@ Local_Job_Done(
    tp_Date DepModDate, OrigModDate;
    tps_FileName WorkDirName;
 
-   IsAny_ReadyServerAction = TRUE;
+   IsAny_ReadyServerAction = true;
    Job = Get_Job(JobID);
    FilHdr = Job_FilHdr(Job);
    Get_OutFilHdrs(OutFilHdrs, &NumOuts, FilHdr);
@@ -151,7 +138,7 @@ Local_Job_Done(
 	    ClearDir(WorkDirName);
 	    RemoveDir(WorkDirName); }/*if*/; }/*for*/;
       Set_Status(FilHdr, STAT_Unknown);
-      Local_Do_Interrupt(FALSE);
+      Local_Do_Interrupt(false);
       goto done; }/*if*/;
 
    Clr_ErrStatus(FilHdr);
@@ -163,7 +150,7 @@ Local_Job_Done(
    Status = Get_ExecStatus(FilHdr, Job);
    if (Status > DepStatus) Status = DepStatus;
 
-   Do_Update(FilHdr, OutFilHdrs, NumOuts, Job, Status, DepModDate, FALSE);
+   Do_Update(FilHdr, OutFilHdrs, NumOuts, Job, Status, DepModDate, false);
 
    if (Job->Canceled) {
       Set_ListStatus(FilHdr, STAT_Unknown);
@@ -178,7 +165,7 @@ Local_Job_Done(
 	 OrigModDate = FilHdr_DepModDate(DestElmFH);
 	 Set_Status(DestElmFH, STAT_Unknown);
 	 Set_Status(DestFilHdr, STAT_Unknown);
-	 Update_SrcFilHdr(DestFilHdr, FALSE);
+	 Update_SrcFilHdr(DestFilHdr, false);
 	 Set_OrigModDate(DestElmFH, OrigModDate);
 	 Ret_FilHdr(DestElmFH); Ret_FilHdr(DestFilHdr); }/*if*/; }/*if*/;
 

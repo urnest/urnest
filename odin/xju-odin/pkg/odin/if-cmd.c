@@ -13,12 +13,13 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/FileName.h"
-#include "inc/LogLevel_.h"
-#include "inc/OC_NodTyp_.h"
-#include "inc/Status_.h"
-#include "inc/Str.h"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/LogLevel_.h>
+#include <odin/inc/OC_NodTyp_.h>
+#include <odin/inc/Status_.h>
+#include <odin/inc/Var.hh>
 
 
 static int CommandNesting = 0;
@@ -26,23 +27,14 @@ static int MaxCommandNesting = 100;
 
 
 static void
-Execute(
-   GMC_ARG(boolean*, AbortPtr),
-   GMC_ARG(tp_FileName, FileName),
-   GMC_ARG(tp_Str, OdinExpr),
-   GMC_ARG(boolean, Interactive)
-   )
-   GMC_DCL(boolean*, AbortPtr)
-   GMC_DCL(tp_FileName, FileName)
-   GMC_DCL(tp_Str, OdinExpr)
-   GMC_DCL(boolean, Interactive)
+Execute(bool* AbortPtr,tp_FileName FileName,tp_Str OdinExpr,bool Interactive)
 {
    tp_FilDsc InFD;
    tp_Nod Nod;
    tps_Str StrBuf, DirName;
    tp_Str Str;
    int LineNum;
-   boolean Abort;
+   bool Abort;
 
    if (IsExecutable(FileName)) {
       SystemExecCmdWait(AbortPtr, FileName, Interactive);
@@ -51,10 +43,10 @@ Execute(
 	 }/*if*/;
       return; }/*if*/;
 
-   InFD = FileName_RFilDsc(FileName, FALSE);
+   InFD = FileName_RFilDsc(FileName, false);
    if (InFD == ERROR) {
       SystemError("\"%s\": cannot read.\n", FileName);
-      *AbortPtr = TRUE;
+      *AbortPtr = true;
       return; }/*if*/;
    LineNum = 0;
 
@@ -77,9 +69,9 @@ Execute(
 	 WriteLine(StdOutFD, Str); }/*if*/;
       Nod = OC_Parser(Str, FileName, &LineNum);
       if (Nod == ERROR) {
-	 *AbortPtr = TRUE;
+	 *AbortPtr = true;
 	 goto done; }/*if*/;
-      CommandInterpreter(AbortPtr, Nod, FALSE);
+      CommandInterpreter(AbortPtr, Nod, false);
       Ret_Nod(Nod);
       if (*AbortPtr) {
 	 goto done; }/*if*/;
@@ -89,56 +81,40 @@ Execute(
 
 done:;
    if (Signalled) {
-      *AbortPtr = TRUE; }/*if*/;
+      *AbortPtr = true; }/*if*/;
    Pop_Context(DirName);
 
    ChangeDir(&Abort, DirName);
    if (Abort) {
       SystemError("\"%s\": cd failed.\n", DirName);
-      *AbortPtr = TRUE; }/*if*/;
+      *AbortPtr = true; }/*if*/;
    Close(InFD);
    }/*Execute*/
 
 
-static boolean
-IsStatus_MsgLevel(
-   GMC_ARG(int, Level)
-   )
-   GMC_DCL(int, Level)
+static bool
+IsStatus_MsgLevel(int Level)
 {
    return (Level > 0);
    }/*IsStatus_MsgLevel*/
 
 
-boolean
-IsIncremental_MsgLevel(
-   GMC_ARG(int, Level)
-   )
-   GMC_DCL(int, Level)
+bool
+IsIncremental_MsgLevel(int Level)
 {
    return (Level == 2 || Level == 4);
    }/*IsIncremental_MsgLevel*/
 
 
-static boolean
-IsSummary_MsgLevel(
-   GMC_ARG(int, Level)
-   )
-   GMC_DCL(int, Level)
+static bool
+IsSummary_MsgLevel(int Level)
 {
    return (Level > 2);
    }/*IsSummary_MsgLevel*/
 
 
 static void
-Report_Status(
-   GMC_ARG(tp_Str, OdinExpr),
-   GMC_ARG(tp_Status, Status),
-   GMC_ARG(tp_Status, ElmStatus)
-   )
-   GMC_DCL(tp_Str, OdinExpr)
-   GMC_DCL(tp_Status, Status)
-   GMC_DCL(tp_Status, ElmStatus)
+Report_Status(tp_Str OdinExpr,tp_Status Status,tp_Status ElmStatus)
 {
    tp_Str Message;
 
@@ -193,20 +169,13 @@ Report_Status(
 
 
 static void
-ShowStatus(
-   GMC_ARG(tp_Str, OdinExpr),
-   GMC_ARG(tp_Status, Status),
-   GMC_ARG(tp_Status, ElmStatus)
-   )
-   GMC_DCL(tp_Str, OdinExpr)
-   GMC_DCL(tp_Status, Status)
-   GMC_DCL(tp_Status, ElmStatus)
+ShowStatus(tp_Str OdinExpr,tp_Status Status,tp_Status ElmStatus)
 {
    tp_Str DerivStr;
    tp_Status RepStatus;
    tps_FileName FileName;
    tp_FilDsc FilDsc;
-   boolean ExecFlag;
+   bool ExecFlag;
 
    if (Status == STAT_Unknown) {
       return; }/*if*/;
@@ -220,10 +189,10 @@ ShowStatus(
 	 DerivStr = 0; };}/*select*/;
    if (DerivStr != 0) {
       (void)strcat(OdinExpr, DerivStr);
-      Get_OdinFile(FileName, &RepStatus, &ExecFlag, OdinExpr, TRUE);
+      Get_OdinFile(FileName, &RepStatus, &ExecFlag, OdinExpr, true);
       if (RepStatus == STAT_OK) {
 	 FORBIDDEN(FileName[0] == 0);
-	 FilDsc = FileName_RFilDsc(FileName, FALSE);
+	 FilDsc = FileName_RFilDsc(FileName, false);
 	 /*select*/{
 	    if (FilDsc == ERROR) {
 	       SystemError("\"%s\": could not read error file.\n", FileName);
@@ -237,55 +206,45 @@ ShowStatus(
 
 
 static void
-Do_ShowStatus(
-   GMC_ARG(boolean*, AbortPtr),
-   GMC_ARG(tp_Nod, Root)
-   )
-   GMC_DCL(boolean*, AbortPtr)
-   GMC_DCL(tp_Nod, Root)
+Do_ShowStatus(bool* AbortPtr,tp_Nod Root)
 {
    tps_Str OdinExpr;
    tp_Status Status;
    tps_FileName FileName;
-   boolean ExecFlag, Abort;
+   bool ExecFlag, Abort;
 
    OC_Unparse(OdinExpr, Root);
-   Get_OdinFile(FileName, &Status, &ExecFlag, OdinExpr, FALSE);
+   Get_OdinFile(FileName, &Status, &ExecFlag, OdinExpr, false);
    *AbortPtr = (Status <= STAT_TgtValError);
    if (ExecFlag && !*AbortPtr) {
       if (LogLevel >= LOGLEVEL_OdinCommand) {
 	 Write(StdOutFD, "<> ");
 	 Write(StdOutFD, OdinExpr);
 	 Writeln(StdOutFD, " !"); }/*if*/;
-      Execute(&Abort, FileName, OdinExpr, FALSE);
+      Execute(&Abort, FileName, OdinExpr, false);
       if (Abort) {
-	 *AbortPtr = TRUE; }/*if*/; }/*if*/;
+	 *AbortPtr = true; }/*if*/; }/*if*/;
    ShowStatus(OdinExpr, Status, STAT_OK);
    }/*Do_ShowStatus*/
 
 
 static void
-Display(
-   GMC_ARG(boolean*, AbortPtr),
-   GMC_ARG(tp_Nod, Root)
-   )
-   GMC_DCL(boolean*, AbortPtr)
-   GMC_DCL(tp_Nod, Root)
+Display(bool* AbortPtr,tp_Nod Root)
 {
    tps_Str OdinExpr;
    tp_Status Status;
    tps_FileName FileName;
    tp_FilDsc InFD;
-   boolean ExecFlag;
+   bool ExecFlag;
 
    OC_Unparse(OdinExpr, Nod_Son(1, Root));
-   Get_OdinFile(FileName, &Status, &ExecFlag, OdinExpr, TRUE);
+   Get_OdinFile(FileName, &Status, &ExecFlag, OdinExpr, true);
    *AbortPtr = (Status < STAT_TgtValError);
    if (*AbortPtr) {
       goto done; }/*if*/;
    if (strcmp(FileName, "") == 0) {
       SystemError("No file value associated with: %s\n", OdinExpr);
-      *AbortPtr = TRUE;
+      *AbortPtr = true;
       goto done; }/*if*/;
    if (!Exists(FileName)) {
       goto done; }/*if*/;
@@ -301,77 +260,63 @@ Display(
       }
       strcpy(FileName,OdinfileName);
    }/*if*/;
-   InFD = FileName_RFilDsc(FileName, FALSE);
+   InFD = FileName_RFilDsc(FileName, false);
    if (InFD == ERROR) {
       if (Exists(FileName)) {
 	 SystemError("\"%s\": cannot read.\n", OdinExpr);
-	 *AbortPtr = TRUE; }/*if*/;
+	 *AbortPtr = true; }/*if*/;
       goto done; }/*if*/;
    Unblock_Signals();
    FileCopy(StdOutFD, InFD);
    Block_Signals();
    Close(InFD);
    if (Signalled) {
-      *AbortPtr = TRUE; }/*if*/;
+      *AbortPtr = true; }/*if*/;
 done:;
    ShowStatus(OdinExpr, Status, STAT_OK);
    }/*Display*/
 
 
 static void
-Copy(
-   GMC_ARG(boolean*, AbortPtr),
-   GMC_ARG(tp_Nod, FromNod),
-   GMC_ARG(tp_Nod, ToNod)
-   )
-   GMC_DCL(boolean*, AbortPtr)
-   GMC_DCL(tp_Nod, FromNod)
-   GMC_DCL(tp_Nod, ToNod)
+Copy(bool* AbortPtr,tp_Nod FromNod,tp_Nod ToNod)
 {
    tps_Str OdinExpr;
    tps_FileName FileName;
    tp_Status Status;
-   boolean ExecFlag;
+   bool ExecFlag;
 
-   *AbortPtr = FALSE;
+   *AbortPtr = false;
    OC_Unparse(OdinExpr, FromNod);
    (void)strcat(OdinExpr, "+copy_dest_desc=(");
    OC_Unparse(Tail(OdinExpr), ToNod);
    (void)strcat(OdinExpr, "):copy_cmd");
-   Get_OdinFile(FileName, &Status, &ExecFlag, OdinExpr, FALSE);
+   Get_OdinFile(FileName, &Status, &ExecFlag, OdinExpr, false);
    *AbortPtr = (Status < STAT_TgtValError);
    ShowStatus(OdinExpr, Status, STAT_OK);
    }/*Copy*/
 
 
 static void
-Edit(
-   GMC_ARG(boolean*, AbortPtr),
-   GMC_ARG(tp_Nod, Root),
-   GMC_ARG(boolean, Interactive)
-   )
-   GMC_DCL(boolean*, AbortPtr)
-   GMC_DCL(tp_Nod, Root)
-   GMC_DCL(boolean, Interactive)
+Edit(bool* AbortPtr,tp_Nod Root,bool Interactive)
 {
    tps_FileName FileName;
    tp_Status Status;
    tp_Str Editor;
    tps_Str CmdStr, OdinExpr;
-   boolean ExecFlag;
+   bool ExecFlag;
 
    Editor = GetEnv("EDITOR");
    if (Editor == NIL) Editor = "vi";
 
    OC_Unparse(OdinExpr, Nod_Son(1, Root));
-   Get_OdinFile(FileName, &Status, &ExecFlag, OdinExpr, TRUE);
+   Get_OdinFile(FileName, &Status, &ExecFlag, OdinExpr, true);
    *AbortPtr = (Status < STAT_NoFile);
    if (*AbortPtr) {
       ShowStatus(OdinExpr, Status, STAT_OK);
       return; }/*if*/;
    if (strcmp(FileName, "") == 0) {
       SystemError("No file value associated with: %s\n", OdinExpr);
-      *AbortPtr = TRUE;
+      *AbortPtr = true;
       return; }/*if*/;
 
    (void)strcpy(CmdStr, Editor);
@@ -379,27 +324,20 @@ Edit(
    (void)strcat(CmdStr, FileName);
    SystemExecCmdWait(AbortPtr, CmdStr, Interactive);
    Test(OdinExpr);
-   Get_OdinFile(FileName, &Status, &ExecFlag, OdinExpr, TRUE);
+   Get_OdinFile(FileName, &Status, &ExecFlag, OdinExpr, true);
    ShowStatus(OdinExpr, Status, STAT_OK);
    }/*Edit*/
 
 
 static void
-Do_Execute(
-   GMC_ARG(boolean*, AbortPtr),
-   GMC_ARG(tp_Nod, Root),
-   GMC_ARG(boolean, Interactive)
-   )
-   GMC_DCL(boolean*, AbortPtr)
-   GMC_DCL(tp_Nod, Root)
-   GMC_DCL(boolean, Interactive)
+Do_Execute(bool* AbortPtr,tp_Nod Root,bool Interactive)
 {
    tp_Nod TgtNod, CmdNod;
    tps_FileName FileName;
    tp_Status Status;
    tp_Str Cmd;
    tps_Str CmdStr, OdinExpr;
-   boolean ExecFlag;
+   bool ExecFlag;
 
    CmdNod = Nod_Son(1, Root);
    if (CmdNod == NIL) {
@@ -411,17 +349,17 @@ Do_Execute(
       TgtNod = CmdNod;
       CmdNod = Nod_Brother(CmdNod);
       OC_Unparse(OdinExpr, TgtNod);
-      Get_OdinFile(FileName, &Status, &ExecFlag, OdinExpr, TRUE);
+      Get_OdinFile(FileName, &Status, &ExecFlag, OdinExpr, true);
       *AbortPtr = (Status < STAT_NoFile);
       if (*AbortPtr) {
 	 goto done; }/*if*/;
       if (strcmp(FileName, "") == 0) {
 	 SystemError("No file value associated with: %s\n", OdinExpr);
-	 *AbortPtr = TRUE;
+	 *AbortPtr = true;
 	 goto done; }/*if*/;
       if (CmdNod == NIL) {
 	 if (Status <= STAT_Error) {
-	    *AbortPtr = TRUE;
+	    *AbortPtr = true;
 	    goto done; }/*if*/;
 	 Execute(AbortPtr, FileName, OdinExpr, Interactive);
 	 goto done; }/*if*/; }/*if*/;
@@ -434,7 +372,7 @@ Do_Execute(
       (void)strcat(CmdStr, FileName); }/*if*/;
    SystemExecCmdWait(AbortPtr, CmdStr, Interactive);
    if (Signalled) {
-      *AbortPtr = TRUE; }/*if*/;
+      *AbortPtr = true; }/*if*/;
    if (TgtNod == NIL) {
       return; }/*if*/;
    Test(OdinExpr);
@@ -445,26 +383,21 @@ done:;
 
 
 void
-UtilityHelp(GMC_ARG_VOID)
+UtilityHelp()
 {
    Writeln(StdOutFD, "*?* test redo inputs outputs elements elements-of alias");
    }/*UtilityHelp*/
 
 
 static void
-Utility(
-   GMC_ARG(boolean*, AbortPtr),
-   GMC_ARG(tp_Nod, Root)
-   )
-   GMC_DCL(boolean*, AbortPtr)
-   GMC_DCL(tp_Nod, Root)
+Utility(bool* AbortPtr,tp_Nod Root)
 {
    int OdinFileID;
    tp_Str Cmd;
    tps_Str OdinExpr;
    tp_Status Status, ElmStatus;
 
-   *AbortPtr = FALSE;
+   *AbortPtr = false;
    if (Nod_NumSons(Root) == 1) {
       Cmd = Sym_Str(Nod_Sym(Nod_Son(1, Root)));
       /*select*/{
@@ -474,7 +407,7 @@ Utility(
 	    Exit(0);
 	 }else{
 	    SystemError("Unknown default utility <%s>.\n", Cmd);
-	    *AbortPtr = TRUE; };}/*select*/;
+	    *AbortPtr = true; };}/*select*/;
       return; }/*if*/;
    Cmd = Sym_Str(Nod_Sym(Nod_Son(2, Root)));
    OC_Unparse(OdinExpr, Nod_Son(1, Root));
@@ -483,13 +416,13 @@ Utility(
 	 OdinFileID = Str_PosInt(OdinExpr);
 	 if (OdinFileID <= 0) {
 	    SystemError("<%s> seen where a number was expected.\n", OdinExpr);
-	    *AbortPtr = TRUE;
+	    *AbortPtr = true;
 	    return; }/*if*/;
 	 ID_OdinExpr(OdinExpr, OdinFileID);
       }else{
 	 OdinExpr_ID(&OdinFileID, OdinExpr);
 	 if (OdinFileID == 0) {
-	    *AbortPtr = TRUE;
+	    *AbortPtr = true;
 	    return; }/*if*/; };}/*select*/;
    ;/*select*/{
       if (strcmp(Cmd, "name") == 0 || strcmp(Cmd, "NA") == 0) {
@@ -515,10 +448,10 @@ Utility(
       }else if (strcmp(Cmd, "test") == 0 || strcmp(Cmd, "TE") == 0) {
 	 Test(OdinExpr);
       }else if (strcmp(Cmd, "alias") == 0) {
-	 Do_Alias(OdinExpr, TRUE);
+	 Do_Alias(OdinExpr, true);
       }else{
 	 SystemError("Unknown utility <%s>.\n", Cmd);
-	 *AbortPtr = TRUE;
+	 *AbortPtr = true;
 	 return; };}/*select*/;
    Get_Status(&Status, &ElmStatus, OdinFileID);
    Report_Status(OdinExpr, Status, ElmStatus);
@@ -526,19 +459,14 @@ Utility(
 
 
 void
-UtilityDefaultHelp(GMC_ARG_VOID)
+UtilityDefaultHelp()
 {
    Writeln(StdOutFD, "*?* test\n");
    }/*UtilityDefaultHelp*/
 
 
 static void
-Do_SetVar(
-   GMC_ARG(boolean*, AbortPtr),
-   GMC_ARG(tp_Nod, Root)
-   )
-   GMC_DCL(boolean*, AbortPtr)
-   GMC_DCL(tp_Nod, Root)
+Do_SetVar(bool* AbortPtr,tp_Nod Root)
 {
    tp_Str VarStr, ValStr;
    tp_Nod ValNod;
@@ -556,7 +484,7 @@ Do_SetVar(
 
 
 void
-Print_Banner(GMC_ARG_VOID)
+Print_Banner()
 {
    tps_Str Banner;
 
@@ -566,18 +494,11 @@ Print_Banner(GMC_ARG_VOID)
 
 
 static void
-Do_Command(
-   GMC_ARG(boolean*, AbortPtr),
-   GMC_ARG(tp_Nod, Root),
-   GMC_ARG(boolean, Interactive)
-   )
-   GMC_DCL(boolean*, AbortPtr)
-   GMC_DCL(tp_Nod, Root)
-   GMC_DCL(boolean, Interactive)
+Do_Command(bool* AbortPtr,tp_Nod Root,bool Interactive)
 {
    tp_Nod Nod;
 
-   *AbortPtr = FALSE;
+   *AbortPtr = false;
    switch (Nod_NodTyp(Root)) {
       case NULLCD: {
 	 break;}/*case*/;
@@ -620,17 +541,10 @@ Do_Command(
 
 
 void
-CommandInterpreter(
-   GMC_ARG(boolean*, AbortPtr),
-   GMC_ARG(tp_Nod, Root),
-   GMC_ARG(boolean, Interactive)
-   )
-   GMC_DCL(boolean*, AbortPtr)
-   GMC_DCL(tp_Nod, Root)
-   GMC_DCL(boolean, Interactive)
+CommandInterpreter(bool* AbortPtr,tp_Nod Root,bool Interactive)
 {
    tp_Nod Nod;
-   boolean IsHelp, IsHandled;
+   bool IsHelp, IsHandled;
 
    FORBIDDEN(Root == ERROR);
 
@@ -649,7 +563,7 @@ CommandInterpreter(
    if (CommandNesting > MaxCommandNesting) {
       SystemError("Maximum CommandNesting (%d) exceeded.\n",
 		  MaxCommandNesting);
-      *AbortPtr = TRUE;
+      *AbortPtr = true;
       return; }/*if*/;
    CommandNesting += 1;
    Do_Command(AbortPtr, Nod, Interactive);

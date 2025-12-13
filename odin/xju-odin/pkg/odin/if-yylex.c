@@ -25,14 +25,7 @@ extern int		*ParseLNPtr;
 
 
 tp_Nod
-YY_Parser(
-   GMC_ARG(const char*, Str),
-   GMC_ARG(tp_FileName, FileName),
-   GMC_ARG(int*, LNPtr)
-   )
-   GMC_DCL(char*, Str)
-   GMC_DCL(tp_FileName, FileName)
-   GMC_DCL(int*, LNPtr)
+YY_Parser(const char* Str,tp_FileName FileName,int* LNPtr)
 {
    tps_Str StrBuf;
 
@@ -47,24 +40,19 @@ YY_Parser(
 
 
 int
-YY_Lex(GMC_ARG_VOID)
+YY_Lex()
 {
-   IsCmdLex = FALSE;
+   IsCmdLex = false;
    return Lex();
    }/*YY_Lex*/
 
 
 void
-YY_Unparse(
-   GMC_ARG(tp_Str, Str),
-   GMC_ARG(tp_Nod, Nod)
-   )
-   GMC_DCL(tp_Str, Str)
-   GMC_DCL(tp_Nod, Nod)
+YY_Unparse(tp_Str Str,tp_Nod Nod)
 {
    tp_Nod Son;
    tp_Str SubStr;
-   boolean First;
+   bool First;
 
    switch (Nod_NodTyp(Nod)) {
       case DRVFIL: {
@@ -116,13 +104,13 @@ YY_Unparse(
 	 break; }/*case*/;
       case PRMVLS: {
 	 (void)strcpy(Str, "");
-	 First = TRUE;
+	 First = true;
 	 for (Son = Nod_Son(1, Nod); Son != NIL; Son = Nod_Brother(Son)) {
 	    if (!First) (void)strcpy(Tail(Str), " ");
 	    if (Nod_NodTyp(Son) == DRVFIL) (void)strcat(Str, "(");
 	    YY_Unparse(Tail(Str), Son);
 	    if (Nod_NodTyp(Son) == DRVFIL) (void)strcat(Str, ")");
-	    First = FALSE; }/*for*/;
+	    First = false; }/*for*/;
 	 break; }/*case*/;
       case DRVOPR: {
 	 (void)strcpy(Str, ":");

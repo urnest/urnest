@@ -1,4 +1,4 @@
-#ifndef TPS_DRVSPC
+!!#ifndef TPS_DRVSPC
 #define TPS_DRVSPC
 
 typedef struct _tps_DrvSpc {
@@ -8,7 +8,7 @@ typedef struct _tps_DrvSpc {
    tp_Key Key;
    tp_FilHdr FilHdr;
    tp_DrvSpc Next;
-   boolean InUse;
+   bool InUse;
    }				tps_DrvSpc;
 
 #endif

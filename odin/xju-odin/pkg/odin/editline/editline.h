@@ -1,8 +1,12 @@
 /*  
 **  Internal header file for editline library.
 */
+#ifndef ODIN_EDITLINE_EDITLINE_H
+#define ODIN_EDITLINE_EDITLINE_H
 
-#include "../inc/GMC.h"
+#include <gmc/gmc.h>
+#include <stdlib.h>
+
 #define ANSI_ARROWS
 #define HIDE
 #define SYS_UNIX
@@ -78,3 +82,4 @@ extern int	rl_list_possib();
 extern void	rl_ttyset();
 extern void	rl_add_slash();
 
+#endif

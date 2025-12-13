@@ -13,12 +13,18 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/Build.h"
-#include "inc/LogLevel_.h"
-#include "inc/OC_NodTyp_.h"
-#include "inc/Str.h"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Var.hh>
+#include <odin/inc/Func.hh>
+
+#include <odin/inc/Build.h>
+#include <odin/inc/LogLevel_.h>
+#include <odin/inc/OC_NodTyp_.h>
 #include <sys/time.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 static tp_Build	FirstBuild = NIL;
 int		MaxBuilds;
@@ -32,10 +38,7 @@ static char	*BuildArgV[MAX_BUILDARGV];
 
 
 static tp_Build
-BuildID_Build(
-   GMC_ARG(tp_BuildID, BuildID)
-   )
-   GMC_DCL(tp_BuildID, BuildID)
+BuildID_Build(tp_BuildID BuildID)
 {
    tp_Build Build;
 
@@ -47,10 +50,7 @@ BuildID_Build(
 
 
 tp_Build
-JobID_Build(
-   GMC_ARG(tp_JobID, JobID)
-   )
-   GMC_DCL(tp_JobID, JobID)
+JobID_Build(tp_JobID JobID)
 {
    tp_Build Build;
 
@@ -62,10 +62,7 @@ JobID_Build(
 
 
 void
-Extend_Builds(
-   GMC_ARG(int, NumBuilds)
-   )
-   GMC_DCL(int, NumBuilds)
+Extend_Builds(int NumBuilds)
 {
    int i;
    tp_Build PrevBuild, Build;
@@ -89,20 +86,15 @@ Extend_Builds(
 
 
 void
-Set_BuildHosts(
-   GMC_ARG(boolean*, AbortPtr),
-   GMC_ARG(tp_Str, Str)
-   )
-   GMC_DCL(boolean*, AbortPtr)
-   GMC_DCL(tp_Str, Str)
+Set_BuildHosts(bool* AbortPtr, tp_Str Str)
 {
    tp_Nod Nod, Son, HostNod;
    tp_Build Build;
-   boolean IsHelp, IsHandled;
+   bool IsHelp, IsHandled;
 
    Nod = OC_Parser(Str, (tp_FileName)NIL, (int *)NIL);
    if (Nod == ERROR) {
-      *AbortPtr = TRUE;
+      *AbortPtr = true;
       return; }/*if*/;
    Do_Help(AbortPtr, &IsHelp, &IsHandled, Nod);
    if (*AbortPtr) {
@@ -130,21 +122,18 @@ Set_BuildHosts(
 
 
 void
-Write_BuildHosts(
-   GMC_ARG(tp_FilDsc, FilDsc)
-   )
-   GMC_DCL(tp_FilDsc, FilDsc)
+Write_BuildHosts(tp_FilDsc FilDsc)
 {
-   boolean IsFirst;
+   bool IsFirst;
    tp_Build Build;
    int i;
 
-   IsFirst = TRUE;
+   IsFirst = true;
    Build = FirstBuild;
    for (i = 0; i < MaxBuilds; i++) {
       FORBIDDEN(Build == NIL);
       if (!IsFirst) Write(FilDsc, " : ");
-      IsFirst = FALSE;
+      IsFirst = false;
       Write(FilDsc, Build->Host == NIL ? "LOCAL" : Host_HostName(Build->Host));
       Build = Build->Next; }/*for*/;
    Writeln(FilDsc, "");
@@ -152,10 +141,7 @@ Write_BuildHosts(
 
 
 void
-Local_Add_BuildArg(
-   GMC_ARG(tp_FileName, Arg)
-   )
-   GMC_DCL(tp_FileName, Arg)
+Local_Add_BuildArg(tp_FileName Arg)
 {
    FORBIDDEN((Num_BuildArgV+2) > MAX_BUILDARGV);
    if (BuildArgV[Num_BuildArgV] != NIL) free(BuildArgV[Num_BuildArgV]);
@@ -165,19 +151,12 @@ Local_Add_BuildArg(
 
 
 void
-Local_Do_Build(
-   GMC_ARG(tp_JobID, JobID),
-   GMC_ARG(tp_FileName, JobDirName),
-   GMC_ARG(tp_FileName, LogFileName)
-   )
-   GMC_DCL(tp_JobID, JobID)
-   GMC_DCL(tp_FileName, JobDirName)
-   GMC_DCL(tp_FileName, LogFileName)
+Local_Do_Build(tp_JobID JobID,tp_FileName JobDirName, tp_FileName LogFileName)
 {
    tp_Build Build;
    int i;
    tps_Str OldCWD;
-   boolean Abort;
+   bool Abort;
    tp_FileName FileName;
    struct timeval now;
 
@@ -220,10 +199,7 @@ Local_Do_Build(
 
 
 void
-Local_Abort_Build(
-   GMC_ARG(tp_JobID, JobID)
-   )
-   GMC_DCL(tp_JobID, JobID)
+Local_Abort_Build(tp_JobID JobID)
 {
    tp_Build Build;
 
@@ -239,51 +215,39 @@ Local_Abort_Build(
    }/*Local_Abort_Build*/
 
 
-static boolean
-Is_ActiveBuild(GMC_ARG_VOID)
+static bool
+Is_ActiveBuild()
 {
    tp_Build Build;
 
    for (Build=FirstBuild; Build!=NIL; Build=Build->Next) {
       if (Build->BuildID != 0) {
-	 return TRUE; }/*if*/; }/*for*/;
-   return FALSE;
+	 return true; }/*if*/; }/*for*/;
+   return false;
    }/*Is_ActiveBuild*/
 
 
 void
-SystemExecCmdWait(
-   GMC_ARG(boolean*, AbortPtr),
-   GMC_ARG(const char*, Cmd),
-   GMC_ARG(boolean, Interactive)
-   )
-   GMC_DCL(boolean*, AbortPtr)
-   GMC_DCL(char*, Cmd)
-   GMC_DCL(boolean, Interactive)
+SystemExecCmdWait(bool* AbortPtr,const char* Cmd,bool Interactive)
 {
    FORBIDDEN(ChildWaitPID != 0);
    ChildWaitPID = SystemExecCmd(Cmd, Interactive);
    if (ChildWaitPID <= 0) {
       ChildWaitPID = 0;
-      *AbortPtr = TRUE;
+      *AbortPtr = true;
       return; }/*if*/;
    IPC_Get_Commands(AbortPtr, (char *)NIL);
    }/*SystemExecCmdWait*/
 
 
 void
-ChildAction(
-   GMC_ARG(boolean*, AbortPtr),
-   GMC_ARG(boolean*, DonePtr)
-   )
-   GMC_DCL(boolean*, AbortPtr)
-   GMC_DCL(boolean*, DonePtr)
+ChildAction(bool* AbortPtr,bool* DonePtr)
 {
    tp_BuildID BuildID;
-   boolean Abort;
+   bool Abort;
 
-   *AbortPtr = FALSE;
-   *DonePtr = FALSE;
+   *AbortPtr = false;
+   *DonePtr = false;
    while (Is_ActiveBuild() || ChildWaitPID != 0) {
       SystemWait(&BuildID, &Abort);
       if (BuildID == 0) {
@@ -292,7 +256,7 @@ ChildAction(
 	 if (BuildID == ChildWaitPID) {
 	    ChildWaitPID = 0;
 	    *AbortPtr = Abort;
-	    *DonePtr = TRUE;
+	    *DonePtr = true;
 	 }else if (IsServerPId(BuildID)) {
 	    DeadServerExit();
 	 }else if (PId_Host(BuildID) != NIL) {
@@ -304,26 +268,18 @@ ChildAction(
 
 
 void
-Cancel_Builds(
-   GMC_ARG(tp_Host, Host)
-   )
-   GMC_DCL(tp_Host, Host)
+Cancel_Builds(tp_Host Host)
 {
    tp_Build Build;
 
    for (Build=FirstBuild; Build!=NIL; Build=Build->Next) {
       if (Build->Host == Host && Build->JobID != 0) {
-	 Build_Done(Build, TRUE); }/*if*/; }/*for*/;
+	 Build_Done(Build, true); }/*if*/; }/*for*/;
    }/*Cancel_Builds*/
 
 
 void
-Build_Done(
-   GMC_ARG(tp_Build, Build),
-   GMC_ARG(boolean, Abort)
-   )
-   GMC_DCL(tp_Build, Build)
-   GMC_DCL(boolean, Abort)
+Build_Done(tp_Build Build,bool Abort)
 {
    tps_Str LogFileName;
    tp_FilDsc LogFD;
@@ -331,7 +287,7 @@ Build_Done(
    FORBIDDEN(Build == NIL || Build->JobID == 0);
    if (MaxBuilds > 1 || Build->Host != NIL) {
       JobID_LogFileName(LogFileName, Build->JobID);
-      LogFD = FileName_RFilDsc(LogFileName, TRUE);
+      LogFD = FileName_RFilDsc(LogFileName, true);
       FileCopy(StdOutFD, LogFD);
       Flush(StdOutFD);
       Close(LogFD); }/*if*/;
@@ -342,12 +298,9 @@ Build_Done(
 
 
 void
-Local_Do_MakeReadOnly(
-   GMC_ARG(tp_FileName, FileName)
-   )
-   GMC_DCL(tp_FileName, FileName)
+Local_Do_MakeReadOnly(tp_FileName FileName)
 {
-   boolean Abort;
+   bool Abort;
 
    MakeReadOnly(&Abort, FileName);
    if (Abort) {

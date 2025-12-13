@@ -21,16 +21,11 @@ geoff@boulder.colorado.edu
 
 
 void
-FilHdr_DataFileName(
-   GMC_ARG(tp_FileName, FileName),
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FileName, FileName)
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_DataFileName(tp_FileName FileName,tp_FilHdr FilHdr)
 {
    tps_Str StrBuf;
    tp_Str ExtName;
-   boolean New_Flag, Abort;
+   bool New_Flag, Abort;
    int Num, i;
    tps_FileName tmp;
    size_t sz;
@@ -38,7 +33,7 @@ FilHdr_DataFileName(
    FORBIDDEN(FileName == ERROR || FilHdr == ERROR);
    /*select*/{
       if (IsSource(FilHdr)) {
-	 FilHdr_HostFN(FileName, FilHdr, FALSE);
+	 FilHdr_HostFN(FileName, FilHdr, false);
       }else if (IsStr(FilHdr)) {
 	 (void)strcpy(StrBuf, FilHdr_Ident(FilHdr));
 	 sz = snprintf(FileName, MAX_FileName, "%s", StrBuf);
@@ -47,12 +42,12 @@ FilHdr_DataFileName(
 			MAX_FileName, StrBuf);
 	    exit(1); }/*if*/;
       }else{
-	 New_Flag = FALSE;
+	 New_Flag = false;
 	 if (FilHdr->HdrInf.DataNum == 0) {
 	    DataNum += 1;
 	    FilHdr->HdrInf.DataNum = DataNum;
             SetModified(FilHdr);
-	    New_Flag = TRUE; }/*if*/;
+	    New_Flag = true; }/*if*/;
 	 (void)strcpy(FileName, CacheDirName);
 	 Num = (FilHdr->HdrInf.DataNum-1) / 34;
 	 if (Num > 0) {
@@ -84,7 +79,7 @@ FilHdr_DataFileName(
 		              MAX_FileName, tmp, Num, ExtName);
 		  exit(1); }/*if*/;
 	    }else{
-	       ExtName = FilHdr_Label(StrBuf, FilHdr, TRUE);
+	       ExtName = FilHdr_Label(StrBuf, FilHdr, true);
 	       sz = snprintf(FileName, MAX_FileName, "%s/%s", tmp, ExtName);
 	       if (sz >= MAX_FileName) {
 	          (void)fprintf(stderr, "File name too long (MAX_FileName=%d): %s/%s\n",
@@ -95,12 +90,7 @@ FilHdr_DataFileName(
 
 
 void
-FilHdr_ErrorFileName(
-   GMC_ARG(tp_FileName, FileName),
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FileName, FileName)
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_ErrorFileName(tp_FileName FileName,tp_FilHdr FilHdr)
 {
    tps_FileName buf;
    size_t sz;
@@ -117,12 +107,7 @@ FilHdr_ErrorFileName(
 
 
 void
-FilHdr_WarningFileName(
-   GMC_ARG(tp_FileName, FileName),
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FileName, FileName)
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_WarningFileName(tp_FileName FileName,tp_FilHdr FilHdr)
 {
    tps_FileName buf;
    size_t sz;
@@ -139,16 +124,7 @@ FilHdr_WarningFileName(
 
 
 static void
-FilHdr_HostFN1(
-   GMC_ARG(tp_FileName, FileName),
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(boolean, QuoteFlag),
-   GMC_ARG(boolean, AliasFlag)
-   )
-   GMC_DCL(tp_FileName, FileName)
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(boolean, QuoteFlag)
-   GMC_DCL(boolean, AliasFlag)
+FilHdr_HostFN1(tp_FileName FileName,tp_FilHdr FilHdr,bool QuoteFlag,bool AliasFlag)
 {
    int i, j, middle;
    tp_FilHdr RestFilHdr;
@@ -189,12 +165,7 @@ FilHdr_HostFN1(
 
 
 void
-Local_Do_Alias(
-   GMC_ARG(tp_FileName, FileName),
-   GMC_ARG(boolean, ForceFlag)
-   )
-   GMC_DCL(tp_FileName, FileName)
-   GMC_DCL(boolean, ForceFlag)
+Local_Do_Alias(tp_FileName FileName,bool ForceFlag)
 {
    tp_FilHdr FilHdr, SymLinkFilHdr;
 
@@ -205,7 +176,7 @@ Local_Do_Alias(
       Ret_FilHdr(FilHdr);
       return; }/*if*/;
    if (!IsSrcUpToDate(FilHdr)) {
-      Update_SrcFilHdr(FilHdr, FALSE); }/*if*/;
+      Update_SrcFilHdr(FilHdr, false); }/*if*/;
    while (FilHdr != RootFilHdr) {
       if (ForceFlag) Set_AliasLocHdr(FilHdr, (tp_LocHdr)NIL);
       if (IsSymLink(FilHdr)) {
@@ -219,12 +190,7 @@ Local_Do_Alias(
 
 
 void
-Local_Get_Alias(
-   GMC_ARG(tp_FileName, OutFileName),
-   GMC_ARG(tp_FileName, FileName)
-   )
-   GMC_DCL(tp_FileName, OutFileName)
-   GMC_DCL(tp_FileName, FileName)
+Local_Get_Alias(tp_FileName OutFileName,tp_FileName FileName)
 {
    tp_FilHdr FilHdr;
 
@@ -235,33 +201,23 @@ Local_Get_Alias(
       (void)strcpy(OutFileName, FileName);
       Ret_FilHdr(FilHdr);
       return; }/*if*/;
-   FilHdr_HostFN1(OutFileName, FilHdr, FALSE, TRUE);
+   FilHdr_HostFN1(OutFileName, FilHdr, false, true);
    Ret_FilHdr(FilHdr);
    }/*Local_Get_Alias*/
 
 
 void
-FilHdr_HostFN(
-   GMC_ARG(tp_FileName, FileName),
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(boolean, QuoteFlag)
-   )
-   GMC_DCL(tp_FileName, FileName)
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(boolean, QuoteFlag)
+FilHdr_HostFN(tp_FileName FileName,tp_FilHdr FilHdr,bool QuoteFlag)
 {
    if (QuoteFlag && FilHdr == EmptyFilHdr) {
       (void)strcpy(FileName, "()");
       return; }/*if*/;
-   FilHdr_HostFN1(FileName, FilHdr, QuoteFlag, FALSE);
+   FilHdr_HostFN1(FileName, FilHdr, QuoteFlag, false);
    }/*FilHdr_HostFN*/
 
 
 tp_FilHdr
-HostFN_FilHdr(
-   GMC_ARG(tp_FileName, FileName)
-   )
-   GMC_DCL(tp_FileName, FileName)
+HostFN_FilHdr(tp_FileName FileName)
 {
    tps_Str Key;
    tp_FilHdr FilHdr;
@@ -279,12 +235,7 @@ HostFN_FilHdr(
 
 
 tp_FilHdr
-Do_Keys(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Key, Key)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Key, Key)
+Do_Keys(tp_FilHdr FilHdr,tp_Key Key)
 {
    tps_Str SubKey;
    int i, j;
@@ -300,10 +251,7 @@ Do_Keys(
 
 
 tp_FilHdr
-CacheFileName_FilHdr(
-   GMC_ARG(tp_FileName, CacheFileName)
-   )
-   GMC_DCL(tp_FileName, CacheFileName)
+CacheFileName_FilHdr(tp_FileName CacheFileName)
 {
    tp_FilHdr FilHdr;
 
@@ -315,10 +263,7 @@ CacheFileName_FilHdr(
 
 
 tp_FilHdr
-DataFileName_FilHdr(
-   GMC_ARG(tp_FileName, DataFileName)
-   )
-   GMC_DCL(tp_FileName, DataFileName)
+DataFileName_FilHdr(tp_FileName DataFileName)
 {
    if (DataFileName == ERROR) return ERROR;
    if (strncmp(CacheDirName, DataFileName, strlen(CacheDirName)) == 0) {

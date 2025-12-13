@@ -13,25 +13,21 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/FileName.h"
-#include "inc/InpKind_.h"
-#include "inc/LogLevel_.h"
-#include "inc/ModKind_.h"
-#include "inc/Status_.h"
-#include "inc/Str.h"
-#include "inc/TClass_.h"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/InpKind_.h>
+#include <odin/inc/LogLevel_.h>
+#include <odin/inc/ModKind_.h>
+#include <odin/inc/Status_.h>
+#include <odin/inc/TClass_.h>
 
 
-static boolean
+static bool
 IsSignificant(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_ModKind, ModKind),
-   GMC_ARG(tp_InpKind, InpKind)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_ModKind, ModKind)
-   GMC_DCL(tp_InpKind, InpKind)
+   tp_FilHdr FilHdr,
+   tp_ModKind ModKind,
+   tp_InpKind InpKind)
 {
    return (NeedsData(FilHdr, InpKind)
 	   && (ModKind == MODKIND_Input
@@ -42,16 +38,7 @@ IsSignificant(
 
 
 static void
-Broadcast_ElmMod(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilHdr, ListFilHdr),
-   GMC_ARG(tp_ModKind, ModKind),
-   GMC_ARG(tp_Status, Status)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilHdr, ListFilHdr)
-   GMC_DCL(tp_ModKind, ModKind)
-   GMC_DCL(tp_Status, Status)
+Broadcast_ElmMod(tp_FilHdr FilHdr,tp_FilHdr ListFilHdr,tp_ModKind ModKind,tp_Status Status)
 {
    tp_ModKind ElmModKind;
 
@@ -67,7 +54,7 @@ Broadcast_ElmMod(
 
       if (Status == STAT_Pending) {
 	 if (!FilHdr_TgtValPndFlag(ListFilHdr)) {
-	    Set_TgtValPndFlag(ListFilHdr, TRUE);
+	    Set_TgtValPndFlag(ListFilHdr, true);
 	    Do_Log("Pending TgtVal status of", ListFilHdr, LOGLEVEL_Status);
 	    Broadcast_Mod(ListFilHdr, MODKIND_Input, Status); }/*if*/;
 	 return; }/*if*/;
@@ -89,7 +76,7 @@ Broadcast_ElmMod(
       case MODKIND_ElmName: {
 	 if (Status == STAT_Pending) {
 	    if (!FilHdr_ElmNamePndFlag(ListFilHdr)) {
-	       Set_ElmNamePndFlag(ListFilHdr, TRUE);
+	       Set_ElmNamePndFlag(ListFilHdr, true);
 	       Do_Log("Pending element-name status of", ListFilHdr, LOGLEVEL_Status);
 	       Broadcast_Mod(ListFilHdr, ElmModKind, Status); }/*if*/;
 	    return; }/*if*/;
@@ -103,7 +90,7 @@ Broadcast_ElmMod(
       case MODKIND_Elm: {
 	 if (Status == STAT_Pending) {
 	    if (!FilHdr_ElmPndFlag(ListFilHdr)) {
-	       Set_ElmPndFlag(ListFilHdr, TRUE);
+	       Set_ElmPndFlag(ListFilHdr, true);
 	       Do_Log("Pending element status of", ListFilHdr, LOGLEVEL_Status);
 	       Broadcast_Mod(ListFilHdr, ElmModKind, Status); }/*if*/;
 	    return; }/*if*/;
@@ -120,12 +107,7 @@ Broadcast_ElmMod(
 
 
 void
-Broadcast(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Status, Status)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Status, Status)
+Broadcast(tp_FilHdr FilHdr,tp_Status Status)
 {
    tp_FilHdr TgtValFilHdr;
 
@@ -139,14 +121,7 @@ Broadcast(
 
 
 void
-Broadcast_Mod(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_ModKind, ModKind),
-   GMC_ARG(tp_Status, Status)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_ModKind, ModKind)
-   GMC_DCL(tp_Status, Status)
+Broadcast_Mod(tp_FilHdr FilHdr,tp_ModKind ModKind,tp_Status Status)
 {
    tp_FilHdr OutFilHdr, ListFilHdr;
    tp_LocInp LocInpLink, FirstInpLink;
@@ -170,7 +145,7 @@ Broadcast_Mod(
 	       break; }/*case*/;
 	    case STAT_Pending: {
 	       if (!FilHdr_PndFlag(OutFilHdr)) {
-		  Set_PndFlag(OutFilHdr, TRUE);
+		  Set_PndFlag(OutFilHdr, true);
 		  Do_Log("Setting pnd flag of", OutFilHdr, LOGLEVEL_Status);
 		  Broadcast_Mod(OutFilHdr, MODKIND_Input, Status); }/*if*/;
 	       break; }/*case*/;

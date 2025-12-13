@@ -13,9 +13,9 @@ typedef struct _tps_FilTyp {
    tp_CastEdg CastEdg;
    tp_DrvEdg DrvEdg;
    tp_PrmTypLst MapPrmTypLst;
-   boolean IsCopy, IsGrouping, IsGroupingInput;
-   boolean Reach;
-   boolean Mark;
+   bool IsCopy, IsGrouping, IsGroupingInput;
+   bool Reach;
+   bool Mark;
    tp_Pos Pos;
    int IFilTyp;
    }				tps_FilTyp;

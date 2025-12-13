@@ -29,3 +29,6 @@ stub-out.c == () +cmd=(%xju-ipcgen) (../if-stub.c) 'IN.c' 'OUT.c' :output/OUT.c
 
 %cxx-opts == <<
 +(../../../../..%cxx-opts)
+
+%c-opts==<<
++(..%c-opts)

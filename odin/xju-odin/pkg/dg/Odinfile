@@ -1,10 +1,10 @@
-%exe == %dg.cxx.sm+inc_sp=(.) +ignore=\\.hh\$ :exe
+%exe == %dg.cxx.sm+(%c-opts) +ignore=\\.hh\$ :exe
 
 %install! == <<
    %exe > $THORPKGS/dg/dg.exe
 
 %lint! == <<
-   %dg-lint.c.sm +debug +ignore=\\.hh\$ :lint >
+   %dg-lint.c.sm +(%c-opts) +debug +ignore=\\.hh\$ :lint >
 
 %etags! == !<<
 #!/bin/sh
@@ -35,6 +35,10 @@ dg-yacc.c == drvgrf.ygi :c \
 
 version == \
    inc/DG_Version.h +cmd='sed \'s/^.*VERSION_STR "\\(.*\\)"/\\1/\'' :stdout
+
+%c-opts==<<
++inc_sp=(.)
++inc_sp=(..)
 
 
 %test-tc-map-prm-info.result==()+cmd=(%test-tc-map-prm-info):stdout

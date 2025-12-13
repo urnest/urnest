@@ -26,46 +26,37 @@ geoff@boulder.colorado.edu
 tp_Date		PendingDate = 0;
 
 
-boolean
-IsSource_FKind(
-   GMC_ARG(tp_FKind, FKind)
-   )
-   GMC_DCL(tp_FKind, FKind)
+bool
+IsSource_FKind(tp_FKind FKind)
 {
    switch (FKind) {
       case FK_SrcReg: case FK_SrcDir: case FK_SymLinkReg: case FK_SymLinkDir:
       case FK_BoundSrc: case FK_BoundSymLink: {
-	 return TRUE; }/*case*/;
+	 return true; }/*case*/;
       case FK_User: case FK_Instance: case FK_Str:
       case FK_DrvDirElm: case FK_VirDirElm:
       case FK_PntrHo: case FK_InpPntr: case FK_PntrElm:
       case FK_ActTgtText: case FK_VirTgtText:
       case FK_ActTgtExText: case FK_VirTgtExText:
       case FK_VirTgt: case FK_VirCmdTgt: case FK_ActTgt: case FK_ActCmdTgt: {
-	 return FALSE; }/*case*/;
+	 return false; }/*case*/;
       default: {
 	 FATALERROR("unknown FKind"); };}/*switch*/;
    /* NOTREACHED */
-   return FALSE;
+   return false;
    }/*IsSource_FKind*/
 
 
-boolean
-IsSource(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsSource(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return IsSource_FKind(FilHdr->HdrInf.FKind);
    }/*IsSource*/
 
 
-boolean
-IsSymLink(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsSymLink(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return (FilHdr->HdrInf.FKind == FK_SymLinkReg
@@ -74,11 +65,8 @@ IsSymLink(
    }/*IsSymLink*/
 
 
-boolean
-IsDir(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsDir(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return (FilHdr->HdrInf.FKind == FK_SrcDir
@@ -86,22 +74,16 @@ IsDir(
    }/*IsDir*/
 
 
-boolean
-IsStr(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsStr(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return (FilHdr->HdrInf.FKind == FK_Str);
    }/*IsStr*/
 
 
-boolean
-IsBound(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsBound(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return (FilHdr->HdrInf.FKind == FK_BoundSrc
@@ -109,55 +91,40 @@ IsBound(
    }/*IsBound*/
 
 
-boolean
-IsATgt(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsATgt(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return IsATgt_FKind(FilHdr->HdrInf.FKind);
    }/*IsATgt*/
 
 
-boolean
-IsVTgt(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsVTgt(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return IsVTgt_FKind(FilHdr->HdrInf.FKind);
    }/*IsVTgt*/
 
 
-boolean
-IsVTgtText(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsVTgtText(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return IsVTgtText_FKind(FilHdr->HdrInf.FKind);
    }/*IsVTgtText*/
 
 
-boolean
-IsDfltTgtVal(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsDfltTgtVal(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return (FilHdr->FilTyp == ActTargetsFilTyp);
    }/*IsDfltTgtVal*/
 
 
-boolean
-IsPntr(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsPntr(tp_FilHdr FilHdr)
 {
    tp_FKind FKind;
 
@@ -168,11 +135,8 @@ IsPntr(
    }/*IsPntr*/
 
 
-boolean
-IsGeneric(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsGeneric(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return (FilHdr->HdrInf.FKind == FK_User
@@ -180,11 +144,8 @@ IsGeneric(
    }/*IsGeneric*/
 
 
-boolean
-IsPipe(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsPipe(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return (FilHdr->HdrInf.FKind == FK_User
@@ -192,22 +153,16 @@ IsPipe(
    }/*IsPipe*/
 
 
-boolean
-IsInstance(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsInstance(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return (FilHdr->HdrInf.FKind == FK_Instance);
    }/*IsInstance*/
 
 
-boolean
-IsAtmc(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsAtmc(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    switch (FilHdr->HdrInf.FKind) {
@@ -216,24 +171,21 @@ IsAtmc(
       case FK_DrvDirElm: case FK_Instance:
       case FK_ActTgtText: case FK_VirTgtText:
       case FK_ActTgtExText: case FK_VirTgtExText: {
-	 return TRUE; }/*case*/;
+	 return true; }/*case*/;
       case FK_User: case FK_Str: {
 	 return IsAtmc_FilTyp(FilHdr->FilTyp); }/*case*/;
       case FK_ActTgt: case FK_ActCmdTgt: case FK_VirTgt: case FK_VirCmdTgt:
       case FK_PntrHo: case FK_PntrElm: case FK_InpPntr: case FK_VirDirElm: {
-	 return FALSE; }/*case*/;
+	 return false; }/*case*/;
       default: {
 	 FATALERROR("Unexpected FKind"); };}/*switch*/;
    /*NOTREACHED*/
-   return FALSE;
+   return false;
    }/*IsAtmc*/
 
 
-boolean
-IsList(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsList(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return (FilHdr->HdrInf.FKind == FK_User
@@ -241,11 +193,8 @@ IsList(
    }/*IsList*/
 
 
-boolean
-IsViewSpec(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsViewSpec(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return (FilHdr->HdrInf.FKind == FK_User
@@ -253,128 +202,98 @@ IsViewSpec(
    }/*IsViewSpec*/
 
 
-boolean
-IsStruct(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsStruct(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    if (FilHdr->HdrInf.FKind != FK_User) {
-      return FALSE; }/*if*/;
+      return false; }/*if*/;
    return IsStruct_FilTyp(FilHdr->FilTyp);
    }/*IsStruct*/
 
 
-boolean
-IsStructMem(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsStructMem(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    if (FilHdr->HdrInf.FKind != FK_User) {
-      return FALSE; }/*if*/;
+      return false; }/*if*/;
    return IsStructMem_FilTyp(FilHdr->FilTyp);
    }/*IsStructMem*/
 
 
-boolean
-IsVoid(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsVoid(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return (IsStr(FilHdr) || IsVoid_FilTyp(FilHdr->FilTyp));
    }/*IsVoid*/
 
 
-boolean
-IsTargetsPtr(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsTargetsPtr(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    if (FilHdr->HdrInf.FKind != FK_User) {
-      return FALSE; }/*if*/;
+      return false; }/*if*/;
    return (FilHdr->FilTyp == TargetsPtrFilTyp);
    }/*IsTargetsPtr*/
 
 
-boolean
-IsTargets(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsTargets(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    if (FilHdr->HdrInf.FKind != FK_User) {
-      return FALSE; }/*if*/;
+      return false; }/*if*/;
    return (FilHdr->FilTyp == TargetsFilTyp);
    }/*IsTargets*/
 
 
-boolean
-IsDrvDir(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsDrvDir(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    if (FilHdr->HdrInf.FKind != FK_User) {
-      return FALSE; }/*if*/;
+      return false; }/*if*/;
    return IsDrvDir_FilTyp(FilHdr->FilTyp);
    }/*IsDrvDir*/
 
 
-boolean
-IsDrvDirElm(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsDrvDirElm(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return (FilHdr->HdrInf.FKind == FK_DrvDirElm);
    }/*IsDrvDirElm*/
 
 
-boolean
-IsVirDir(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsVirDir(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    if (FilHdr->HdrInf.FKind != FK_User) {
-      return FALSE; }/*if*/;
+      return false; }/*if*/;
    return (FilHdr->FilTyp == VirDirFilTyp);
    }/*IsVirDir*/
 
 
-boolean
-IsKeyList(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsKeyList(tp_FilHdr FilHdr)
 {
    tp_FilTyp FilTyp;
 
    FORBIDDEN(FilHdr == ERROR);
    if (FilHdr->HdrInf.FKind != FK_User) {
-      return FALSE; }/*if*/;
+      return false; }/*if*/;
    FilTyp = FilHdr->FilTyp;
    return ((IsDrvDir_FilTyp(FilTyp) && FilTyp != VirDirFilTyp)
 	   || FilTyp == ActTargetsFilTyp || FilTyp == VirTargetsFilTyp);
    }/*IsKeyList*/
 
 
-boolean
-IsKeyListElm(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsKeyListElm(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return (FilHdr->HdrInf.FKind == FK_DrvDirElm
@@ -384,34 +303,28 @@ IsKeyListElm(
    }/*IsKeyListElm*/
 
 
-boolean
-IsCopy(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsCopy(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    if (FilHdr->HdrInf.FKind != FK_User) {
-      return FALSE; }/*if*/;
+      return false; }/*if*/;
    return IsCopy_FilTyp(FilHdr->FilTyp);
    }/*IsCopy*/
 
 
-boolean
-IsAutoExec(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsAutoExec(tp_FilHdr FilHdr)
 {
    tp_FilHdr TgtValFilHdr;
-   boolean Flag;
+   bool Flag;
 
    if (IsExec_FilTyp(FilHdr->FilTyp)
        || FilHdr->HdrInf.FKind == FK_ActCmdTgt
        || FilHdr->HdrInf.FKind == FK_VirCmdTgt) {
-      return TRUE; }/*if*/;
+      return true; }/*if*/;
    if (!IsBound(FilHdr)) {
-      return FALSE; }/*if*/;
+      return false; }/*if*/;
    TgtValFilHdr = FilHdr_Father(FilHdr_TgtValFilHdr(Copy_FilHdr(FilHdr)));
    FORBIDDEN(TgtValFilHdr == NIL);
    Flag = IsAutoExec(TgtValFilHdr);
@@ -420,11 +333,8 @@ IsAutoExec(
    }/*IsAutoExec*/
 
 
-boolean
-HasKey_FKind(
-   GMC_ARG(tp_FKind, FKind)
-   )
-   GMC_DCL(tp_FKind, FKind)
+bool
+HasKey_FKind(tp_FKind FKind)
 {
    FORBIDDEN(FKind == ERROR);
    return (FKind == FK_DrvDirElm || FKind == FK_VirDirElm
@@ -434,11 +344,8 @@ HasKey_FKind(
    }/*HasKey_FKind*/
 
 
-boolean
-IsRef(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsRef(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return (IsList(FilHdr) || IsPntr(FilHdr));
@@ -446,10 +353,7 @@ IsRef(
 
 
 tp_LocHdr
-FilHdr_LocHdr(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_LocHdr(tp_FilHdr FilHdr)
 {
    if (FilHdr == ERROR) return ERROR;
    return FilHdr->LocHdr;
@@ -457,10 +361,7 @@ FilHdr_LocHdr(
 
 
 tp_LocHdr
-FilHdr_AliasLocHdr(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_AliasLocHdr(tp_FilHdr FilHdr)
 {
    if (FilHdr == ERROR) return ERROR;
    return FilHdr->HdrInf.AliasLocHdr;
@@ -468,12 +369,7 @@ FilHdr_AliasLocHdr(
 
 
 void
-Set_AliasLocHdr(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_LocHdr, LocHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_LocHdr, LocHdr)
+Set_AliasLocHdr(tp_FilHdr FilHdr,tp_LocHdr LocHdr)
 {
 
    FORBIDDEN(FilHdr == ERROR);
@@ -485,10 +381,7 @@ Set_AliasLocHdr(
 
 
 tp_FilHdr
-FilHdr_AliasFilHdr(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_AliasFilHdr(tp_FilHdr FilHdr)
 {
    tp_FilHdr AliasFilHdr;
 
@@ -502,10 +395,7 @@ FilHdr_AliasFilHdr(
 
 
 tp_FKind
-FilHdr_FKind(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_FKind(tp_FilHdr FilHdr)
 {
    if (FilHdr == ERROR) return ERROR;
    return FilHdr->HdrInf.FKind;
@@ -513,12 +403,7 @@ FilHdr_FKind(
 
 
 void
-Set_FKind(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FKind, FKind)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FKind, FKind)
+Set_FKind(tp_FilHdr FilHdr,tp_FKind FKind)
 {
    FORBIDDEN(FilHdr == ERROR || FKind == ERROR);
    if (FilHdr->HdrInf.FKind != FKind) {
@@ -528,10 +413,7 @@ Set_FKind(
 
 
 tp_FilTyp
-FilHdr_FilTyp(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_FilTyp(tp_FilHdr FilHdr)
 {
    if (FilHdr == ERROR) return ERROR;
    return FilHdr->FilTyp;
@@ -539,10 +421,7 @@ FilHdr_FilTyp(
 
 
 tp_FilPrm
-FilHdr_FilPrm(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_FilPrm(tp_FilHdr FilHdr)
 {
    if (FilHdr == ERROR) return ERROR;
    FORBIDDEN(FilHdr->FilPrm == NIL);
@@ -551,10 +430,7 @@ FilHdr_FilPrm(
 
 
 tp_Ident
-FilHdr_Ident(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_Ident(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    return FilHdr->Ident;
@@ -572,15 +448,10 @@ FilHdr_Ident(
  *   a soft-link?)
  */
 void
-Update_SrcParentDirFilHdr(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(boolean, InitOnly)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(boolean, InitOnly)
+Update_SrcParentDirFilHdr(tp_FilHdr FilHdr,bool InitOnly)
 {
    tp_Date OldModDate;
-   boolean Changed;
+   bool Changed;
    tp_SKind SKind;
    tp_FKind FKind;
    tp_HdrInf HdrInf;
@@ -606,13 +477,13 @@ Update_SrcParentDirFilHdr(
    Set_Flag(FilHdr, FLAG_SymLink);
 
    OldModDate = HdrInf->ModDate;
-   IsAny_ReadyServerAction = TRUE;
+   IsAny_ReadyServerAction = true;
 
    DirFilHdr = FilHdr_Father(Copy_FilHdr(FilHdr));
    if (!IsSrcUpToDate(DirFilHdr)) {
       Update_SrcParentDirFilHdr(DirFilHdr, InitOnly); }/*if*/;
 
-   Changed = FALSE;
+   Changed = false;
    SymLinkFH = NIL;
    /*select*/{
       if (IsSymLink(DirFilHdr)) {
@@ -623,7 +494,7 @@ Update_SrcParentDirFilHdr(
 	 FilHdr_DataFileName(FileName, FilHdr);
 	 Get_FileInfo(&SKind, &SysModTime, FileName);
 	 if (HdrInf->SysModTime != SysModTime || HdrInf->ModDate == 0) {
-	    Changed = TRUE; }/*if*/;
+	    Changed = true; }/*if*/;
 	 switch (SKind) {
 	    case SK_NoFile: case SK_Reg: case SK_Exec: case SK_Special: {
 	       FKind = (IsBound(FilHdr) ? FK_BoundSrc : FK_SrcReg);
@@ -659,14 +530,14 @@ Update_SrcParentDirFilHdr(
 	 Update_SrcFilHdr(SymLinkFH, InitOnly); }/*if*/;
       SymLinkFH = Deref_SymLink(SymLinkFH);
       if (HdrInf->ModDate < SymLinkFH->HdrInf.ModDate) {
-	 Changed = TRUE; }/*if*/;
+	 Changed = true; }/*if*/;
 
       FilElm = LocElm_FilElm(HdrInf->LocElm);
       SymLocHdr = FilElm_LocHdr(FilElm);
       Ret_FilElm(FilElm);
       if (SymLocHdr != SymLinkFH->LocHdr) {
 	 Set_LocElm(FilHdr, Make_LocElm(SymLinkFH, RootFilPrm, FilHdr));
-	 Changed = TRUE; }/*if*/;
+	 Changed = true; }/*if*/;
 
       if (HdrInf->AliasLocHdr != NIL) {
 	 if (SymLinkFH->HdrInf.AliasLocHdr == NIL) {
@@ -713,15 +584,10 @@ Update_SrcParentDirFilHdr(
 
 
 void
-Update_SrcFilHdr(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(boolean, InitOnly)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(boolean, InitOnly)
+Update_SrcFilHdr(tp_FilHdr FilHdr,bool InitOnly)
 {
    tp_Date OldModDate;
-   boolean Changed;
+   bool Changed;
    tp_SKind SKind;
    tp_FKind FKind;
    tp_HdrInf HdrInf;
@@ -747,13 +613,13 @@ Update_SrcFilHdr(
    Set_Flag(FilHdr, FLAG_SymLink);
 
    OldModDate = HdrInf->ModDate;
-   IsAny_ReadyServerAction = TRUE;
+   IsAny_ReadyServerAction = true;
 
    DirFilHdr = FilHdr_Father(Copy_FilHdr(FilHdr));
    if (!IsSrcUpToDate(DirFilHdr)) {
       Update_SrcParentDirFilHdr(DirFilHdr, InitOnly); }/*if*/;
 
-   Changed = FALSE;
+   Changed = false;
    SymLinkFH = NIL;
    /*select*/{
       if (IsSymLink(DirFilHdr)) {
@@ -764,7 +630,7 @@ Update_SrcFilHdr(
 	 FilHdr_DataFileName(FileName, FilHdr);
 	 Get_FileInfo(&SKind, &SysModTime, FileName);
 	 if (HdrInf->SysModTime != SysModTime || HdrInf->ModDate == 0) {
-	    Changed = TRUE; }/*if*/;
+	    Changed = true; }/*if*/;
 	 switch (SKind) {
 	    case SK_NoFile: case SK_Reg: case SK_Exec: case SK_Special: {
 	       FKind = (IsBound(FilHdr) ? FK_BoundSrc : FK_SrcReg);
@@ -808,14 +674,14 @@ Update_SrcFilHdr(
 	 Update_SrcFilHdr(SymLinkFH, InitOnly); }/*if*/;
       SymLinkFH = Deref_SymLink(SymLinkFH);
       if (HdrInf->ModDate < SymLinkFH->HdrInf.ModDate) {
-	 Changed = TRUE; }/*if*/;
+	 Changed = true; }/*if*/;
 
       FilElm = LocElm_FilElm(HdrInf->LocElm);
       SymLocHdr = FilElm_LocHdr(FilElm);
       Ret_FilElm(FilElm);
       if (SymLocHdr != SymLinkFH->LocHdr) {
 	 Set_LocElm(FilHdr, Make_LocElm(SymLinkFH, RootFilPrm, FilHdr));
-	 Changed = TRUE; }/*if*/;
+	 Changed = true; }/*if*/;
 
       if (HdrInf->AliasLocHdr != NIL) {
 	 if (SymLinkFH->HdrInf.AliasLocHdr == NIL) {
@@ -876,36 +742,26 @@ FilHdr_Error(
    }/*FilHdr_Error*/
 
 
-boolean
-IsAllDone(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_InpKind, InpKind)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_InpKind, InpKind)
+bool
+IsAllDone(tp_FilHdr FilHdr,tp_InpKind InpKind)
 {
    return (IsAllUpToDate(FilHdr, InpKind) &&
            !Is_PendingReadyOrBusy_Status(FilHdr_MinStatus(FilHdr, InpKind)));
    }/*IsAllDone*/
 
 
-boolean
-IsAllUpToDate(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_InpKind, InpKind)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_InpKind, InpKind)
+bool
+IsAllUpToDate(tp_FilHdr FilHdr,tp_InpKind InpKind)
 {
    if (!IsUpToDate(FilHdr)) {
-      return FALSE; }/*if*/;
+      return false; }/*if*/;
    if (!IsTgtValUpToDate(FilHdr)) {
-      return FALSE; }/*if*/;
+      return false; }/*if*/;
    if (NeedsElmData(FilHdr, InpKind)) {
       return IsElmUpToDate(FilHdr); }/*if*/;
    if (NeedsElmNameData(FilHdr, InpKind)) {
       return IsElmNameUpToDate(FilHdr); }/*if*/;
-   return TRUE;
+   return true;
    }/*IsAllUpToDate*/
 
 
@@ -917,73 +773,61 @@ void SPrint_VerifyDate(tp_Str To,
   sprintf(To, "%s%d%s", Leader, FilHdr->HdrInf.VerifyDate, Trailer);
 }
 
-boolean
-IsSrcUpToDate(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsSrcUpToDate(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    if (FilHdr->HdrInf.VerifyDate < VerifyDate) {
-      return FALSE; }/*if*/;
+      return false; }/*if*/;
    return (FilHdr->HdrInf.Status > STAT_Unknown);
    }/*IsSrcUpToDate*/
 
 
-boolean
-IsUpToDate(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsUpToDate(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    if (FilHdr->HdrInf.VerifyDate < VerifyDate) {
-      return FALSE; }/*if*/;
+      return false; }/*if*/;
    if (!IsTgtValUpToDate(FilHdr) ||
        ((Is_PendingReadyOrBusy_Status(FilHdr->HdrInf.Status) ||
          FilHdr->PndFlag)
         && FilHdr->HdrInf.VerifyDate < PendingDate)) {
-      return FALSE; }/*if*/;
+      return false; }/*if*/;
    return (FilHdr->HdrInf.Status > STAT_Unknown);
    }/*IsUpToDate*/
 
 
-boolean
-IsElmNameUpToDate(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsElmNameUpToDate(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    FORBIDDEN(!IsRef(FilHdr));
    if (FilHdr->HdrInf.Status <= STAT_Error) {
-      return TRUE; }/*if*/;
+      return true; }/*if*/;
    if (FilHdr->HdrInf.ElmNameVerifyDate < VerifyDate) {
-      return FALSE; }/*if*/;
+      return false; }/*if*/;
    if ((Is_PendingReadyOrBusy_Status(FilHdr->HdrInf.ElmNameStatus) ||
         FilHdr->ElmNamePndFlag)
        && FilHdr->HdrInf.ElmNameVerifyDate < PendingDate) {
-      return FALSE; }/*if*/;
+      return false; }/*if*/;
    return (FilHdr->HdrInf.ElmNameStatus > STAT_Unknown);
    }/*IsElmNameUpToDate*/
 
 
-boolean
-IsElmUpToDate(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsElmUpToDate(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    FORBIDDEN(!IsRef(FilHdr));
    if (FilHdr->HdrInf.Status <= STAT_Error) {
-      return TRUE; }/*if*/;
+      return true; }/*if*/;
    if (FilHdr->HdrInf.ElmVerifyDate < VerifyDate) {
-      return FALSE; }/*if*/;
+      return false; }/*if*/;
    if ((Is_PendingReadyOrBusy_Status(FilHdr->HdrInf.ElmStatus) ||
         FilHdr->ElmPndFlag)
        && FilHdr->HdrInf.ElmVerifyDate < PendingDate) {
-      return FALSE; }/*if*/;
+      return false; }/*if*/;
    return (FilHdr->HdrInf.ElmStatus > STAT_Unknown);
    }/*IsElmUpToDate*/
 
@@ -996,30 +840,24 @@ void SPrint_TgtValVerifyDate(tp_Str To,
   sprintf(To, "%s%d%s", Leader, FilHdr->HdrInf.ElmVerifyDate, Trailer);
 }
 
-boolean
-IsTgtValUpToDate(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+bool
+IsTgtValUpToDate(tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
    if (!IsSource(FilHdr)) {
-      return TRUE; }/*if*/;
+      return true; }/*if*/;
    if (FilHdr->HdrInf.ElmVerifyDate < VerifyDate) {
-      return FALSE; }/*if*/;
+      return false; }/*if*/;
    if ((Is_PendingReadyOrBusy_Status(FilHdr->HdrInf.ElmStatus) ||
         FilHdr->ElmPndFlag)
        && FilHdr->HdrInf.ElmVerifyDate < PendingDate) {
-      return FALSE; }/*if*/;
+      return false; }/*if*/;
    return (FilHdr->HdrInf.ElmStatus > STAT_Unknown);
    }/*IsTgtValUpToDate*/
 
 
 tp_FilHdr
-FilHdr_Father(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_Father(tp_FilHdr FilHdr)
 {
    tp_LocHdr FatherLocHdr;
 
@@ -1031,10 +869,7 @@ FilHdr_Father(
 
 
 tp_FilHdr
-FilHdr_SrcFilHdr(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_SrcFilHdr(tp_FilHdr FilHdr)
 {
    tp_LocHdr SrcLocHdr;
 
@@ -1048,10 +883,7 @@ FilHdr_SrcFilHdr(
 
 
 tp_FilHdr
-FilHdr_DirFilHdr(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_DirFilHdr(tp_FilHdr FilHdr)
 {
    tp_FilHdr DirFilHdr;
 
@@ -1063,30 +895,18 @@ FilHdr_DirFilHdr(
 
 
 tp_Str
-FilHdr_Key(
-   GMC_ARG(tp_Str, StrBuf),
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_Str, StrBuf)
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_Key(tp_Str StrBuf,tp_FilHdr FilHdr)
 {
    FORBIDDEN(FilHdr == ERROR);
 
    if (!HasKey_FKind(FilHdr->HdrInf.FKind)) {
       return NIL; }/*if*/;
-   return FilHdr_Label(StrBuf, FilHdr, FALSE);
+   return FilHdr_Label(StrBuf, FilHdr, false);
    }/*FilHdr_Key*/
 
 
 tp_Label
-FilHdr_Label(
-   GMC_ARG(tp_Str, StrBuf),
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(boolean, UniqueFlag)
-   )
-   GMC_DCL(tp_Str, StrBuf)
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(boolean, UniqueFlag)
+FilHdr_Label(tp_Str StrBuf,tp_FilHdr FilHdr,bool UniqueFlag)
 {
    FORBIDDEN(FilHdr == ERROR);
 
@@ -1100,10 +920,7 @@ FilHdr_Label(
 
 
 tp_FilHdr
-FilHdr_ElmFilHdr(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+FilHdr_ElmFilHdr(tp_FilHdr FilHdr)
 {
    tp_FilElm FilElm;
    tp_FilHdr ElmFilHdr;

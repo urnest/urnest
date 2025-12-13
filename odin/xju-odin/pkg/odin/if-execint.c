@@ -49,7 +49,7 @@ ExecInternal(
    tp_LocElm LocElm, FirstLE, LastLE;
    tp_FilElm FilElm;
    int i;
-   boolean ErrFlag, OldIsIPC;
+   bool ErrFlag, OldIsIPC;
 
    Do_Log("{Generating", FilHdr, LOGLEVEL_IntGenerate);
    MinStatus = DepStatus;
@@ -62,7 +62,7 @@ ExecInternal(
    Outputs = ExecSpc->OutFilHdrs;
 
    Save_ErrFile(&OldErrFileName, &OldIsIPC, &OldErrFD);
-   Set_ErrFile(Job->ErrorFN, FALSE, (tp_FilDsc)NIL);
+   Set_ErrFile(Job->ErrorFN, false, (tp_FilDsc)NIL);
    Clr_ErrStatus(FilHdr);
 
    TClass = Tool_TClass(Tool);
@@ -119,13 +119,13 @@ ExecInternal(
 	 break;}/*case*/;
       case TC_ReadList: {
 	 FORBIDDEN(ExecSpc->NumInps != 1 || ExecSpc->NumOuts != 1);
-	 Exec_List(FilHdr, Inputs[0], FilHdr_FilPrm(FilHdr), FALSE);
+	 Exec_List(FilHdr, Inputs[0], FilHdr_FilPrm(FilHdr), false);
 	 if (IsPntr(FilHdr)) Validate_IsPntr(FilHdr);
 	 break;}/*case*/;
       case TC_SrcNames: case TC_OpNames: {
 	 FORBIDDEN(ExecSpc->NumInps != 1 || ExecSpc->NumOuts != 1);
 	 Get_WorkFileName(OutFileName, Job, FilHdr);
-	 OutFD = FileName_WFilDsc(OutFileName, TRUE);
+	 OutFD = FileName_WFilDsc(OutFileName, true);
 	 FilHdr_DataFileName(InFileName, Inputs[0]);
 	 WriteSrcNames(OutFD, InFileName, (TClass == TC_OpNames));
 	 Close(OutFD);
@@ -133,7 +133,7 @@ ExecInternal(
       case TC_ViewSpec: {
 	 FORBIDDEN(ExecSpc->NumInps != 1 || ExecSpc->NumOuts != 1);
          Do_Log("{Exec_List(View_Spec)", FilHdr, LOGLEVEL_IntGenerate);
-	 Exec_List(FilHdr, Inputs[0], RootFilPrm, FALSE);
+	 Exec_List(FilHdr, Inputs[0], RootFilPrm, false);
          Do_Log("}Exec_List(View_Spec)", FilHdr, LOGLEVEL_IntGenerate);
          Do_Log("{Validate_ViewSpec", FilHdr, LOGLEVEL_IntGenerate);
 	 Validate_ViewSpec(FilHdr);
@@ -156,14 +156,14 @@ ExecInternal(
       case TC_Name: {
 	 FORBIDDEN(ExecSpc->NumInps != 1 || ExecSpc->NumOuts != 1);
 	 Get_WorkFileName(OutFileName, Job, FilHdr);
-	 OutFD = FileName_WFilDsc(OutFileName, TRUE);
+	 OutFD = FileName_WFilDsc(OutFileName, true);
 	 WritePrmOdinExpr(OutFD, Inputs[0], FilHdr_FilPrm(FilHdr));
 	 Close(OutFD);
 	 break;}/*case*/;
       case TC_Names: {
 	 FORBIDDEN(ExecSpc->NumInps != 1 || ExecSpc->NumOuts != 1);
 	 Get_WorkFileName(OutFileName, Job, FilHdr);
-	 OutFD = FileName_WFilDsc(OutFileName, TRUE);
+	 OutFD = FileName_WFilDsc(OutFileName, true);
 	 WriteNames(OutFD, Inputs[0], FilHdr_FilPrm(FilHdr));
 	 Close(OutFD);
 	 break;}/*case*/;
@@ -172,7 +172,7 @@ ExecInternal(
 	 /*select*/{
 	    if (IsAtmc(Inputs[0])) {
 	       Get_WorkFileName(OutFileName, Job, FilHdr);
-	       OutFD = FileName_WFilDsc(OutFileName, TRUE);
+	       OutFD = FileName_WFilDsc(OutFileName, true);
 	       FilHdr_DataFileName(InFileName, Inputs[0]);
 	       Writeln(OutFD, InFileName);
 	       Close(OutFD);
@@ -183,14 +183,14 @@ ExecInternal(
       case TC_FileNames: {
 	 FORBIDDEN(ExecSpc->NumInps != 1 || ExecSpc->NumOuts != 1);
 	 Get_WorkFileName(OutFileName, Job, FilHdr);
-	 OutFD = FileName_WFilDsc(OutFileName, TRUE);
+	 OutFD = FileName_WFilDsc(OutFileName, true);
 	 WriteFlat(OutFD, Inputs[0]);
 	 Close(OutFD);
 	 break;}/*case*/;
       case TC_Cat: {
 	 FORBIDDEN(ExecSpc->NumInps != 1 || ExecSpc->NumOuts != 1);
 	 Get_WorkFileName(OutFileName, Job, FilHdr);
-	 OutFD = FileName_WFilDsc(OutFileName, TRUE);
+	 OutFD = FileName_WFilDsc(OutFileName, true);
 	 WriteCat(OutFD, Inputs[0]);
 	 Close(OutFD);
 	 break;}/*case*/;
@@ -239,34 +239,34 @@ ExecInternal(
       case TC_Error: {
 	 FORBIDDEN(ExecSpc->NumInps != 1 || ExecSpc->NumOuts != 1);
 	 Get_WorkFileName(OutFileName, Job, FilHdr);
-	 OutFD = FileName_WFilDsc(OutFileName, TRUE);
+	 OutFD = FileName_WFilDsc(OutFileName, true);
 	 WriteReport(OutFD, Inputs[0], STAT_TgtValError);
 	 Close(OutFD);
 	 break;}/*case*/;
       case TC_Warning: {
 	 FORBIDDEN(ExecSpc->NumInps != 1 || ExecSpc->NumOuts != 1);
 	 Get_WorkFileName(OutFileName, Job, FilHdr);
-	 OutFD = FileName_WFilDsc(OutFileName, TRUE);
+	 OutFD = FileName_WFilDsc(OutFileName, true);
 	 WriteReport(OutFD, Inputs[0], STAT_Warning);
 	 Close(OutFD);
 	 break;}/*case*/;
       case TC_Label: {
 	 Get_WorkFileName(OutFileName, Job, FilHdr);
-	 OutFD = FileName_WFilDsc(OutFileName, TRUE);
-	 Writeln(OutFD, FilHdr_Label(StrBuf, Inputs[0], FALSE));
+	 OutFD = FileName_WFilDsc(OutFileName, true);
+	 Writeln(OutFD, FilHdr_Label(StrBuf, Inputs[0], false));
 	 Close(OutFD);
 	 break;}/*case*/;
       case TC_Labels: {
 	 FORBIDDEN(!IsList(Inputs[0]));
 	 FORBIDDEN(ExecSpc->NumInps != 1 || ExecSpc->NumOuts != 1);
 	 Get_WorkFileName(OutFileName, Job, FilHdr);
-	 OutFD = FileName_WFilDsc(OutFileName, TRUE);
+	 OutFD = FileName_WFilDsc(OutFileName, true);
 	 WriteLabels(OutFD, Inputs[0]);
 	 Close(OutFD);
 	 break;}/*case*/;
       case TC_Id: {
 	 Get_WorkFileName(OutFileName, Job, FilHdr);
-	 OutFD = FileName_WFilDsc(OutFileName, TRUE);
+	 OutFD = FileName_WFilDsc(OutFileName, true);
 	 WriteInt(OutFD, (int)FilHdr_LocHdr(Inputs[0]));
 	 Writeln(OutFD, "");
 	 Close(OutFD);
@@ -285,12 +285,12 @@ ExecInternal(
 	 break;}/*case*/;
       case TC_TargetsInc: {
 	 FORBIDDEN(ExecSpc->NumInps != 1 || ExecSpc->NumOuts != 1);
-	 Exec_List(FilHdr, Inputs[0], RootFilPrm, TRUE);
+	 Exec_List(FilHdr, Inputs[0], RootFilPrm, true);
 	 break;}/*case*/;
       case TC_Targets: {
 	 FORBIDDEN(ExecSpc->NumInps != 1 || ExecSpc->NumOuts != 1);
 	 Get_WorkFileName(OutFileName, Job, FilHdr);
-	 OutFD = FileName_WFilDsc(OutFileName, TRUE);
+	 OutFD = FileName_WFilDsc(OutFileName, true);
 	 FilHdr_DataFileName(InFileName, Inputs[0]);
 	 Push_ContextFilHdr(Copy_FilHdr(Inputs[0]));
 	 Exec_Targets(OutFD, InFileName);
@@ -300,7 +300,7 @@ ExecInternal(
       case TC_ActTargets: case TC_VirTargets: {
 	 FORBIDDEN(ExecSpc->NumInps != 1 || ExecSpc->NumOuts != 1);
 	 FilHdr_DataFileName(InFileName, Inputs[0]);
-	 InFD = FileName_RFilDsc(InFileName, FALSE);
+	 InFD = FileName_RFilDsc(InFileName, false);
 	 LocElm = NIL;
 	 if (InFD != NIL) {
 	    Push_ContextFilHdr(Copy_FilHdr(FilHdr));
@@ -326,48 +326,48 @@ ExecInternal(
       case TC_ExpandHooks: {
 	 FORBIDDEN(ExecSpc->NumInps != 2 || ExecSpc->NumOuts != 1);
 	 FilHdr_DataFileName(InFileName, Inputs[1]);
-	 InFD = FileName_RFilDsc(InFileName, TRUE);
+	 InFD = FileName_RFilDsc(InFileName, true);
 	 Get_WorkFileName(OutFileName, Job, FilHdr);
-	 OutFD = FileName_WFilDsc(OutFileName, TRUE);
+	 OutFD = FileName_WFilDsc(OutFileName, true);
 	 ExpandHooks(OutFD, InFD, Inputs[0]);
 	 Close(InFD); Close(OutFD);
 	 break;}/*case*/;
       case TC_NestedHooks: {
 	 FORBIDDEN(ExecSpc->NumInps != 1 || ExecSpc->NumOuts != 2);
 	 FilHdr_DataFileName(InFileName, Inputs[0]);
-	 InFD = FileName_RFilDsc(InFileName, TRUE);
+	 InFD = FileName_RFilDsc(InFileName, true);
 	 Get_WorkFileName(OutFileName, Job, Outputs[1]);
-	 OutFD = FileName_WFilDsc(OutFileName, TRUE);
+	 OutFD = FileName_WFilDsc(OutFileName, true);
 	 NestedHooks(Outputs[0], Outputs[1], OutFD,
 		     InFD, FilHdr_FilPrm(FilHdr));
 	 Close(InFD); Close(OutFD);
 	 break;}/*case*/;
       case TC_TextDef: {
 	 FilHdr_DataFileName(InFileName, Inputs[0]);
-	 InFD = FileName_RFilDsc(InFileName, TRUE);
+	 InFD = FileName_RFilDsc(InFileName, true);
 	 Get_WorkFileName(OutFileName, Job, FilHdr);
-	 OutFD = FileName_WFilDsc(OutFileName, TRUE);
+	 OutFD = FileName_WFilDsc(OutFileName, true);
 	 WriteTextDef(FilHdr, OutFD, OutFileName, InFD, InFileName);
 	 Close(InFD); Close(OutFD);
 	 break;}/*case*/;
       case TC_PrefixHelp: case TC_SuffixHelp: {
 	 FORBIDDEN(ExecSpc->NumInps != 1 || ExecSpc->NumOuts != 1);
 	 Get_WorkFileName(OutFileName, Job, FilHdr);
-	 OutFD = FileName_WFilDsc(OutFileName, TRUE);
+	 OutFD = FileName_WFilDsc(OutFileName, true);
 	 WriteSrcFilTyps(OutFD, (TClass == TC_PrefixHelp));
 	 Close(OutFD);
 	 break;}/*case*/;
       case TC_DrvHelp: {
 	 FORBIDDEN(ExecSpc->NumInps != 1 || ExecSpc->NumOuts != 1);
 	 Get_WorkFileName(OutFileName, Job, FilHdr);
-	 OutFD = FileName_WFilDsc(OutFileName, TRUE);
+	 OutFD = FileName_WFilDsc(OutFileName, true);
 	 WriteDrvHelp(OutFD, Inputs[0]);
 	 Close(OutFD);
 	 break;}/*case*/;
       case TC_PrmHelp: {
 	 FORBIDDEN(ExecSpc->NumInps > 2 || ExecSpc->NumOuts != 1);
 	 Get_WorkFileName(OutFileName, Job, FilHdr);
-	 OutFD = FileName_WFilDsc(OutFileName, TRUE);
+	 OutFD = FileName_WFilDsc(OutFileName, true);
 	 WritePrmHelp(OutFD, Inputs[0], FilHdr_FilPrm(FilHdr));
 	 Close(OutFD);
 	 break;}/*case*/;
@@ -385,7 +385,7 @@ ExecInternal(
 
    Do_Log("{Do_Update", FilHdr, LOGLEVEL_IntGenerate);
    Do_Update(FilHdr, ExecSpc->OutFilHdrs, ExecSpc->NumOuts, Job,
-	     MinStatus, DepModDate, TRUE);
+	     MinStatus, DepModDate, true);
    Do_Log("}Do_Update", FilHdr, LOGLEVEL_IntGenerate);
 
    Ret_Job(Job);

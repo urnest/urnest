@@ -13,24 +13,28 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/CastEdg.h"
-#include "inc/DG_Version.h"
-#include "inc/DrvEdg.h"
-#include "inc/EnvVar.h"
-#include "inc/EnvVarLst.h"
-#include "inc/EqvEdg.h"
-#include "inc/FileName.h"
-#include "inc/FilTyp.h"
-#include "inc/InpEdg.h"
-#include "inc/InpSpc.h"
-#include "inc/MemEdg.h"
-#include "inc/PrmTyp.h"
-#include "inc/PrmTypLst.h"
-#include "inc/SrcTyp.h"
-#include "inc/Str.h"
-#include "inc/Tool.h"
-#include "inc/Version.h"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
+#include <odin/inc/CastEdg.h>
+#include <odin/inc/DG_Version.h>
+#include <odin/inc/DrvEdg.h>
+#include <odin/inc/EnvVar.h>
+#include <odin/inc/EnvVarLst.h>
+#include <odin/inc/EqvEdg.h>
+#include <odin/inc/FilTyp.h>
+#include <odin/inc/InpEdg.h>
+#include <odin/inc/InpSpc.h>
+#include <odin/inc/MemEdg.h>
+#include <odin/inc/PrmTyp.h>
+#include <odin/inc/PrmTypLst.h>
+#include <odin/inc/SrcTyp.h>
+#include <odin/inc/Tool.h>
+#include <odin/inc/Version.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 extern char *	DG_Version;
 extern int	num_SrcTypS;
@@ -77,10 +81,7 @@ static tp_InpSpc	InpSpcS = _InpSpcS;
 
 
 static tp_SrcTyp
-I_SrcTyp(
-   GMC_ARG(int, i)
-   )
-   GMC_DCL(int, i)
+I_SrcTyp(int i)
 {
    if (i < 0 || i >= num_SrcTypS) return 0;
    return &SrcTypS[i];
@@ -88,19 +89,13 @@ I_SrcTyp(
 
 
 tp_FilTyp
-IFilTyp_FilTyp(
-   GMC_ARG(int, i)
-   )
-   GMC_DCL(int, i)
+IFilTyp_FilTyp(int i)
 {
    return &FilTypS[i];
    }/*IFilTyp_FilTyp*/
 
 static tp_FilTyp
-I_FilTyp(
-   GMC_ARG(int, i)
-   )
-   GMC_DCL(int, i)
+I_FilTyp(int i)
 {
    if (i < 0 || i >= num_FilTypS) return 0;
    return &FilTypS[i];
@@ -108,19 +103,13 @@ I_FilTyp(
 
 
 tp_PrmTyp
-IPrmTyp_PrmTyp(
-   GMC_ARG(int, i)
-   )
-   GMC_DCL(int, i)
+IPrmTyp_PrmTyp(int i)
 {
    return &PrmTypS[i];
    }/*IPrmTyp_PrmTyp*/
 
 tp_PrmTyp
-I_PrmTyp(
-   GMC_ARG(int, i)
-   )
-   GMC_DCL(int, i)
+I_PrmTyp(int i)
 {
    if (i < 0 || i >= num_PrmTypS) return 0;
    return &PrmTypS[i];
@@ -128,10 +117,7 @@ I_PrmTyp(
 
 
 static tp_EnvVar
-I_EnvVar(
-   GMC_ARG(int, i)
-   )
-   GMC_DCL(int, i)
+I_EnvVar(int i)
 {
    if (i < 0 || i >= num_EnvVarS) return 0;
    return &EnvVarS[i];
@@ -139,10 +125,7 @@ I_EnvVar(
 
 
 static tp_Tool
-I_Tool(
-   GMC_ARG(int, i)
-   )
-   GMC_DCL(int, i)
+I_Tool(int i)
 {
    if (i == -1) return 0;
    return &ToolS[i];
@@ -150,10 +133,7 @@ I_Tool(
 
 
 static tp_InpEdg
-I_InpEdg(
-   GMC_ARG(int, i)
-   )
-   GMC_DCL(int, i)
+I_InpEdg(int i)
 {
    if (i == -1) return 0;
    return &InpEdgS[i];
@@ -161,10 +141,7 @@ I_InpEdg(
 
 
 static tp_MemEdg
-I_MemEdg(
-   GMC_ARG(int, i)
-   )
-   GMC_DCL(int, i)
+I_MemEdg(int i)
 {
    if (i == -1) return 0;
    return &MemEdgS[i];
@@ -172,10 +149,7 @@ I_MemEdg(
 
 
 static tp_EqvEdg
-I_EqvEdg(
-   GMC_ARG(int, i)
-   )
-   GMC_DCL(int, i)
+I_EqvEdg(int i)
 {
    if (i == -1) return 0;
    return &EqvEdgS[i];
@@ -183,10 +157,7 @@ I_EqvEdg(
 
 
 static tp_CastEdg
-I_CastEdg(
-   GMC_ARG(int, i)
-   )
-   GMC_DCL(int, i)
+I_CastEdg(int i)
 {
    if (i == -1) return 0;
    return &CastEdgS[i];
@@ -194,10 +165,7 @@ I_CastEdg(
 
 
 static tp_DrvEdg
-I_DrvEdg(
-   GMC_ARG(int, i)
-   )
-   GMC_DCL(int, i)
+I_DrvEdg(int i)
 {
    if (i == -1) return 0;
    return &DrvEdgS[i];
@@ -205,10 +173,7 @@ I_DrvEdg(
 
 
 static tp_PrmTypLst
-I_PrmTypLst(
-   GMC_ARG(int, i)
-   )
-   GMC_DCL(int, i)
+I_PrmTypLst(int i)
 {
    if (i == -1) return 0;
    return &PrmTypLstS[i];
@@ -216,10 +181,7 @@ I_PrmTypLst(
 
 
 static tp_EnvVarLst
-I_EnvVarLst(
-   GMC_ARG(int, i)
-   )
-   GMC_DCL(int, i)
+I_EnvVarLst(int i)
 {
    if (i == -1) return 0;
    return &EnvVarLstS[i];
@@ -227,10 +189,7 @@ I_EnvVarLst(
 
 
 static tp_InpSpc
-I_InpSpc(
-   GMC_ARG(int, i)
-   )
-   GMC_DCL(int, i)
+I_InpSpc(int i)
 {
    if (i == -1) return 0;
    return &InpSpcS[i];
@@ -238,10 +197,7 @@ I_InpSpc(
 
 
 static void
-Read_FilTyps(
-   GMC_ARG(FILE*, DrvGrfFILE)
-   )
-   GMC_DCL(FILE*, DrvGrfFILE)
+Read_FilTyps(FILE* DrvGrfFILE)
 {
    int i, count;
    int iFilTyp, iTool;
@@ -278,8 +234,8 @@ Read_FilTyps(
       FilTyp->CastEdg = I_CastEdg(iCastEdg);
       FilTyp->DrvEdg = I_DrvEdg(iDrvEdg);
       FilTyp->MapPrmTypLst = I_PrmTypLst(iPrmTypLst);
-      FilTyp->Reach = FALSE;
-      FilTyp->Mark = FALSE;
+      FilTyp->Reach = false;
+      FilTyp->Mark = false;
       FilTyp->Pos = NIL; }/*for*/;
 
    count = fscanf(DrvGrfFILE, "%d\n", &iFilTyp);
@@ -357,10 +313,7 @@ Read_FilTyps(
 
 
 static void
-Read_PrmTyps(
-   GMC_ARG(FILE*, DrvGrfFILE)
-   )
-   GMC_DCL(FILE*, DrvGrfFILE)
+Read_PrmTyps(FILE* DrvGrfFILE)
 {
    int i, count;
    int iPrmTyp, iFilTyp, iNext;
@@ -379,7 +332,7 @@ Read_PrmTyps(
       PrmTyp->FilTyp = I_FilTyp(iFilTyp);
       PrmTyp->RootLocPVal = NIL;
       PrmTyp->StrDirLocHdr = NIL;
-      PrmTyp->Mark = FALSE; }/*for*/;
+      PrmTyp->Mark = false; }/*for*/;
 
    count = fscanf(DrvGrfFILE, "%d\n", &iPrmTyp);
    FORBIDDEN(count != 1);
@@ -407,10 +360,7 @@ Read_PrmTyps(
 
 
 static void
-Read_EnvVars(
-   GMC_ARG(FILE*, DrvGrfFILE)
-   )
-   GMC_DCL(FILE*, DrvGrfFILE)
+Read_EnvVars(FILE* DrvGrfFILE)
 {
    int i, count;
    int iEnvVar, iNext;
@@ -437,10 +387,7 @@ Read_EnvVars(
 
 
 static void
-Read_Tools(
-   GMC_ARG(FILE*, DrvGrfFILE)
-   )
-   GMC_DCL(FILE*, DrvGrfFILE)
+Read_Tools(FILE* DrvGrfFILE)
 {
    int i, count;
    int iTool, iInpEdg, iPrmTypLst, iEnvVarLst;
@@ -492,10 +439,7 @@ Read_Tools(
 
 
 static void
-Read_Edgs(
-   GMC_ARG(FILE*, DrvGrfFILE)
-   )
-   GMC_DCL(FILE*, DrvGrfFILE)
+Read_Edgs(FILE* DrvGrfFILE)
 {
    int i, count;
    tp_InpEdg InpEdg;
@@ -545,10 +489,7 @@ Read_Edgs(
 
 
 static void
-Read_InpSpcs(
-   GMC_ARG(FILE*, DrvGrfFILE)
-   )
-   GMC_DCL(FILE*, DrvGrfFILE)
+Read_InpSpcs(FILE* DrvGrfFILE)
 {
    int count, i;
    int iFilTyp, iPrmTyp, iInpSpc, iNext;
@@ -580,7 +521,7 @@ Read_InpSpcs(
 #endif
 
 void
-Read_DrvGrf(GMC_ARG_VOID)
+Read_DrvGrf()
 {
    tps_Str VersionBuf, BannerBuf;
    tps_FileName	DGFileName;
@@ -590,7 +531,7 @@ Read_DrvGrf(GMC_ARG_VOID)
 
    FORBIDDEN(strcmp(DG_Version, DG_VERSION_STR) != 0);
    Get_DGFileName(DGFileName);
-   DrvGrfFD = FileName_RFilDsc(DGFileName, FALSE);
+   DrvGrfFD = FileName_RFilDsc(DGFileName, false);
    if (DrvGrfFD == ERROR) {
       return; }/*if*/;
 
@@ -631,10 +572,7 @@ Read_DrvGrf(GMC_ARG_VOID)
 
 
 void
-Local_Get_Banner(
-   GMC_ARG(tp_Str, Str)
-   )
-   GMC_DCL(tp_Str, Str)
+Local_Get_Banner(tp_Str Str)
 {
    tp_Str Version;
 

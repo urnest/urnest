@@ -13,11 +13,10 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/System.hh"
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "inc/GMC.h"
+#include <gmc/gmc.h>
 #include "inc/EnvVar.h"
 #include "inc/FileName.h"
 #include "inc/Job.h"
@@ -28,8 +27,8 @@ extern int		num_EnvVarS;
 extern tp_EnvVar	EnvVarS;
 
 tp_Str		RBS_Cmd;
-boolean		ShortCacheNameFlag;
-boolean		LocalIPCFlag;
+bool		ShortCacheNameFlag;
+bool		LocalIPCFlag;
 
 tp_FileName	OdinDirName;
 tp_FileName	CacheDirName;
@@ -39,10 +38,7 @@ static tp_Str	*EnvVarDefS;
 
 
 void
-Get_SocketFileName(
-   GMC_ARG(tp_FileName, FileName)
-   )
-   GMC_DCL(tp_FileName, FileName)
+Get_SocketFileName(tp_FileName FileName)
 {
    size_t sz;
 
@@ -55,10 +51,7 @@ Get_SocketFileName(
 
 
 void
-Get_DGFileName(
-   GMC_ARG(tp_FileName, FileName)
-   )
-   GMC_DCL(tp_FileName, FileName)
+Get_DGFileName(tp_FileName FileName)
 {
    size_t sz;
 
@@ -71,12 +64,7 @@ Get_DGFileName(
 
 
 void
-Get_PkgDirName(
-   GMC_ARG(tp_FileName, FileName),
-   GMC_ARG(tp_Package, Package)
-   )
-   GMC_DCL(tp_FileName, FileName)
-   GMC_DCL(tp_Package, Package)
+Get_PkgDirName(tp_FileName FileName,tp_Package Package)
 {
    size_t sz;
 
@@ -89,10 +77,7 @@ Get_PkgDirName(
 
 
 void
-Get_InfoFileName(
-   GMC_ARG(tp_FileName, FileName)
-   )
-   GMC_DCL(tp_FileName, FileName)
+Get_InfoFileName(tp_FileName FileName)
 {
    size_t sz;
 
@@ -105,10 +90,7 @@ Get_InfoFileName(
 
 
 void
-Get_DebugFileName(
-   GMC_ARG(tp_FileName, FileName)
-   )
-   GMC_DCL(tp_FileName, FileName)
+Get_DebugFileName(tp_FileName FileName)
 {
    size_t sz;
 
@@ -121,14 +103,7 @@ Get_DebugFileName(
 
 
 void
-Get_WorkFileName(
-   GMC_ARG(tp_FileName, WorkFileName),
-   GMC_ARG(tp_Job, Job),
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FileName, WorkFileName)
-   GMC_DCL(tp_Job, Job)
-   GMC_DCL(tp_FilHdr, FilHdr)
+Get_WorkFileName(tp_FileName WorkFileName,tp_Job Job,tp_FilHdr FilHdr)
 {
    size_t sz;
    tp_FilHdr OutFilHdr;
@@ -147,12 +122,7 @@ Get_WorkFileName(
 
 
 void
-JobID_LogFileName(
-   GMC_ARG(tp_FileName, LogFileName),
-   GMC_ARG(int, JobID)
-   )
-   GMC_DCL(tp_FileName, LogFileName)
-   GMC_DCL(int, JobID)
+JobID_LogFileName(tp_FileName LogFileName,int JobID)
 {
    size_t sz;
 
@@ -165,7 +135,7 @@ JobID_LogFileName(
 
 
 void
-Local_ShutDown(GMC_ARG_VOID)
+Local_ShutDown()
 {
    CurrentClient = LocalClient;
    Exit(0);
@@ -173,17 +143,14 @@ Local_ShutDown(GMC_ARG_VOID)
 
 
 static void
-Read_Env(
-   GMC_ARG(tp_FileName, FileName)
-   )
-   GMC_DCL(tp_FileName, FileName)
+Read_Env(tp_FileName FileName)
 {
    tp_FilDsc FilDsc;
    tp_Str Str;
    tps_Str StrBuf;
    int count, i, status;
 
-   FilDsc = FileName_RFilDsc(FileName, FALSE);
+   FilDsc = FileName_RFilDsc(FileName, false);
    if (FilDsc == ERROR) {
       Writeln(StdOutFD, "Using bootstrap derivation graph.");
       EnvVarDefS = (tp_Str *)malloc((unsigned)(num_EnvVarS * sizeof(tp_Str)));
@@ -209,10 +176,10 @@ Read_Env(
 
 
 void
-Init_Env(GMC_ARG_VOID)
+Init_Env()
 {
    tps_FileName FileName;
-   boolean Abort;
+   bool Abort;
    size_t sz;
 
    OdinDirName = GetEnv("ODINCACHE");
@@ -259,7 +226,7 @@ Init_Env(GMC_ARG_VOID)
 
 
 void
-Write_ENV2(GMC_ARG_VOID)
+Write_ENV2()
 {
    tps_FileName FileName;
    tp_FilDsc FilDsc;
@@ -275,7 +242,7 @@ Write_ENV2(GMC_ARG_VOID)
       (void)fprintf(stderr, "File name too long (MAX_FileName=%d): %s/ENV2\n",
 		  MAX_FileName, OdinDirName);
       exit(1); }/*if*/;
-   FilDsc = FileName_WFilDsc(FileName, FALSE);
+   FilDsc = FileName_WFilDsc(FileName, false);
    if (FilDsc == ERROR) {
       SystemError("Cannot open ENV2 file.\n");
       exit(1); }/*if*/;
@@ -298,7 +265,7 @@ Write_ENV2(GMC_ARG_VOID)
 
 
 void
-Read_ENV2(GMC_ARG_VOID)
+Read_ENV2()
 {
    tps_FileName FileName;
    tp_FilDsc FilDsc;
@@ -312,7 +279,7 @@ Read_ENV2(GMC_ARG_VOID)
       (void)fprintf(stderr, "File name too long (MAX_FileName=%d): %s/ENV2\n",
 		  MAX_FileName, OdinDirName);
       exit(1); }/*if*/;
-   FilDsc = FileName_RFilDsc(FileName, FALSE);
+   FilDsc = FileName_RFilDsc(FileName, false);
    FORBIDDEN(FilDsc == ERROR);
    for (count = fscanf((FILE *)FilDsc, "%[^\1]\1\n", StrBuf);
 	count == 1;
@@ -325,11 +292,8 @@ Read_ENV2(GMC_ARG_VOID)
    }/*Read_ENV2*/
 
 
-boolean
-IsDef_EnvVar(
-   GMC_ARG(tp_Str, Name)
-   )
-   GMC_DCL(tp_Str, Name)
+bool
+IsDef_EnvVar(tp_Str Name)
 {
    int Len, i;
 
@@ -337,8 +301,8 @@ IsDef_EnvVar(
    for (i = 0; i < num_EnvVarS; i += 1) {
       if (strncmp(Name, EnvVarDefS[i], Len) == 0
 	  && EnvVarDefS[i][Len] == '=') {
-	 return TRUE; }/*if*/; }/*for*/;
-   return FALSE;
+	 return true; }/*if*/; }/*for*/;
+   return false;
    }/*IsDef_EnvVar*/
 
 
@@ -346,10 +310,10 @@ static tps_FileName	_CWDirName;
 tp_FileName		CWDirName = _CWDirName;
 
 void
-Init_CWD(GMC_ARG_VOID)
+Init_CWD()
 {
    tp_Str Home, PWD;
-   boolean Abort;
+   bool Abort;
    tps_Str RawCWDirName;
 
    GetWorkingDir(&Abort, RawCWDirName);
@@ -357,16 +321,16 @@ Init_CWD(GMC_ARG_VOID)
       SystemError("Current working directory name too long.\n");
       Exit(1); }/*if*/;
 
-   Do_Alias(OdinDirName, FALSE);
+   Do_Alias(OdinDirName, false);
 
    Home = GetHome("");
    if (Home == NIL) Home = GetEnv("HOME");
-   if (Home != NIL) Do_Alias(Home, FALSE);
+   if (Home != NIL) Do_Alias(Home, false);
 
    PWD = GetEnv("PWD");
    if (PWD == NIL) PWD = GetEnv("cwd");
    if (PWD != NIL && strncmp(PWD, RawCWDirName, strlen(PWD)) != 0) {
-      Do_Alias(PWD, FALSE); }/*if*/;
+      Do_Alias(PWD, false); }/*if*/;
 
    Get_Alias(CWDirName, RawCWDirName);
    Set_CWD(CWDirName);
@@ -374,7 +338,7 @@ Init_CWD(GMC_ARG_VOID)
 
 
 void
-DeadServerExit(GMC_ARG_VOID)
+DeadServerExit()
 {
    tps_FileName FileName;
    tp_FilDsc FilDsc;
@@ -385,7 +349,7 @@ DeadServerExit(GMC_ARG_VOID)
       (void)fprintf(stderr, "File name too long (MAX_FileName=%d): %s/ERR\n",
 		  MAX_FileName, OdinDirName);
       exit(1); }/*if*/;
-   FilDsc = FileName_RFilDsc(FileName, FALSE);
+   FilDsc = FileName_RFilDsc(FileName, false);
    /*select*/{
       if (FilDsc != ERROR) {
 	 FileCopy(StdErrFD, FilDsc);
@@ -397,10 +361,7 @@ DeadServerExit(GMC_ARG_VOID)
 
 
 void
-Exit(
-   GMC_ARG(int, Status)
-   )
-   GMC_DCL(int, Status)
+Exit(int Status)
 {
    tp_Client Client;
 

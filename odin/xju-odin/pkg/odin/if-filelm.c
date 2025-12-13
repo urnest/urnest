@@ -132,7 +132,7 @@ New_FilElm(
 	 FilElm->LocElm = NIL;
 	 FilElm->FilPrm = NIL;
 	 FilElm->Cnt = 0;
-	 FilElm->Modified = FALSE;
+	 FilElm->Modified = false;
 	 FilElm->PrevFree = FreeFilElm->PrevFree;
 	 FilElm->NextFree = FreeFilElm;
 	 FilElm->PrevFree->NextFree = FilElm;
@@ -187,7 +187,7 @@ SetFilElmModified(
    GMC_DCL(tp_FilElm, FilElm)
 {
    if (FilElm->Modified) return;
-   FilElm->Modified = TRUE;
+   FilElm->Modified = true;
    FilElm->NextMod = ModFilElm;
    ModFilElm = FilElm;
    }/*SetFilElmModified*/
@@ -208,7 +208,7 @@ WriteFilElms(GMC_ARG_VOID)
 {
    while (ModFilElm != NIL) {
       FORBIDDEN(!ModFilElm->Modified);
-      ModFilElm->Modified = FALSE;
+      ModFilElm->Modified = false;
       WriteFilElm(ModFilElm);
       ModFilElm = ModFilElm->NextMod; }/*while*/;
    }/*WriteFilElms*/
@@ -359,7 +359,7 @@ DeAlloc_ElmInf(
    }/*DeAlloc_ElmInf*/
 
 
-boolean
+bool
 FilElms_InUse(GMC_ARG_VOID)
 {
    tp_FilElm FilElm;
@@ -537,7 +537,7 @@ Chain_LocElms(
    }/*Chain_LocElms*/
 
 
-boolean
+bool
 IsEquiv_LocElms(
    GMC_ARG(tp_LocElm, LocElm1),
    GMC_ARG(tp_LocElm, LocElm2)
@@ -549,7 +549,7 @@ IsEquiv_LocElms(
    tp_FilPrm FilPrm1, FilPrm2;
 
    if (LocElm1 == LocElm2) {
-      return TRUE; }/*if*/;
+      return true; }/*if*/;
 
    for (FilElm1 = LocElm_FilElm(LocElm1), FilElm2 = LocElm_FilElm(LocElm2);
 	FilElm1 != NIL && FilElm2 != NIL;
@@ -558,13 +558,13 @@ IsEquiv_LocElms(
       FORBIDDEN(FilElm1->ElmInf.ListLocHdr != FilElm2->ElmInf.ListLocHdr);
       if (FilElm1->ElmInf.LocHdr != FilElm2->ElmInf.LocHdr) {
 	 Ret_FilElm(FilElm1); Ret_FilElm(FilElm2);
-	 return FALSE; }/*if*/;
+	 return false; }/*if*/;
       FilPrm1 = LocPrm_FilPrm(FilElm1->ElmInf.LocPrm);
       FilPrm2 = LocPrm_FilPrm(FilElm2->ElmInf.LocPrm);
       FORBIDDEN(FilPrm1 == ERROR || FilPrm2 == ERROR);
       if (!Equal_FilPrm(FilPrm1, FilPrm2)) {
 	 Ret_FilElm(FilElm1); Ret_FilElm(FilElm2);
-	 return FALSE; }/*if*/; }/*for*/;
+	 return false; }/*if*/; }/*for*/;
 
    Ret_FilElm(FilElm1); Ret_FilElm(FilElm2);
    return (FilElm1 == FilElm2);

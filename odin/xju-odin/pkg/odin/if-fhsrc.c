@@ -23,16 +23,7 @@ geoff@boulder.colorado.edu
 
 
 void
-Deref_Pntrs(
-   GMC_ARG(tp_FilHdr*, FilHdrPtr),
-   GMC_ARG(tp_FilPrm*, FilPrmPtr),
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(boolean, IgnoreStatus)
-   )
-   GMC_DCL(tp_FilHdr*, FilHdrPtr)
-   GMC_DCL(tp_FilPrm*, FilPrmPtr)
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(boolean, IgnoreStatus)
+Deref_Pntrs(tp_FilHdr* FilHdrPtr,tp_FilPrm* FilPrmPtr,tp_FilHdr FilHdr,bool IgnoreStatus)
 {
    tp_FilPrm FilPrm;
    tp_FilElm FilElm;
@@ -67,23 +58,17 @@ Deref_Pntrs(
 
 
 tp_FilHdr
-Deref(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+Deref(tp_FilHdr FilHdr)
 {
    tp_FilPrm FilPrm;
 
-   Deref_Pntrs(&FilHdr, &FilPrm, FilHdr, FALSE);
+   Deref_Pntrs(&FilHdr, &FilPrm, FilHdr, false);
    return FilHdr;
    }/*Deref*/
 
 
 tp_FilHdr
-Deref_SymLink(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+Deref_SymLink(tp_FilHdr FilHdr)
 {
    tp_FilHdr ElmFilHdr;
 
@@ -98,10 +83,7 @@ Deref_SymLink(
 
 
 void
-Local_Test(
-   GMC_ARG(tp_FileName, FileName)
-   )
-   GMC_DCL(tp_FileName, FileName)
+Local_Test(tp_FileName FileName)
 {
    tp_FilHdr FilHdr, SymLinkFH;
 
@@ -112,17 +94,17 @@ Local_Test(
       SymLinkFH = Deref_SymLink(Copy_FilHdr(FilHdr));
       Set_Status(SymLinkFH, STAT_Unknown);
       Ret_FilHdr(SymLinkFH);
-      Update_SrcFilHdr(FilHdr, FALSE); }/*if*/;
+      Update_SrcFilHdr(FilHdr, false); }/*if*/;
    Ret_FilHdr(FilHdr);
    }/*Local_Test*/
 
 
 void
-Local_Test_All(GMC_ARG_VOID)
+Local_Test_All()
 {
    tp_Client OldCurrentClient;
    tp_FilHdr FilHdr;
-   boolean AllDone;
+   bool AllDone;
 
    CurrentDate += 1;
    VerifyDate = CurrentDate;
@@ -139,10 +121,7 @@ Local_Test_All(GMC_ARG_VOID)
 
 
 tp_FilHdr
-Get_Copy_DestFilHdr(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+Get_Copy_DestFilHdr(tp_FilHdr FilHdr)
 {
    tp_FilPVal FilPVal;
 
@@ -153,14 +132,7 @@ Get_Copy_DestFilHdr(
 
 
 tp_LocElm
-Make_CopyLocElm(
-   GMC_ARG(tp_FilHdr, OrigFilHdr),
-   GMC_ARG(tp_FilHdr, DestFilHdr),
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, OrigFilHdr)
-   GMC_DCL(tp_FilHdr, DestFilHdr)
-   GMC_DCL(tp_FilHdr, FilHdr)
+Make_CopyLocElm(tp_FilHdr OrigFilHdr,tp_FilHdr DestFilHdr,tp_FilHdr FilHdr)
 {
    tp_FilHdr ElmFilHdr;
    tp_FilPrm ElmFilPrm;
@@ -177,18 +149,7 @@ Make_CopyLocElm(
 
 
 static void
-Get_CopyList(
-   GMC_ARG(tp_LocElm*, FirstLEPtr),
-   GMC_ARG(tp_LocElm*, LastLEPtr),
-   GMC_ARG(tp_FilHdr, OrigFilHdr),
-   GMC_ARG(tp_FilHdr, DestFilHdr),
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_LocElm*, FirstLEPtr)
-   GMC_DCL(tp_LocElm*, LastLEPtr)
-   GMC_DCL(tp_FilHdr, OrigFilHdr)
-   GMC_DCL(tp_FilHdr, DestFilHdr)
-   GMC_DCL(tp_FilHdr, FilHdr)
+Get_CopyList(tp_LocElm* FirstLEPtr,tp_LocElm* LastLEPtr,tp_FilHdr OrigFilHdr,tp_FilHdr DestFilHdr,tp_FilHdr FilHdr)
 {
    tp_FilHdr DestElmFH, OrigElmFH;
    tp_LocElm LocElm;
@@ -201,7 +162,7 @@ Get_CopyList(
 
    if (!IsRef(OrigFilHdr)) {
       DestElmFH = Copy_FilHdr(DestFilHdr);
-      DestElmFH = Do_Key(DestElmFH, FilHdr_Label(StrBuf, OrigFilHdr, FALSE));
+      DestElmFH = Do_Key(DestElmFH, FilHdr_Label(StrBuf, OrigFilHdr, false));
       LocElm = Make_CopyLocElm(OrigFilHdr, DestElmFH, FilHdr);
       Chain_LocElms(FirstLEPtr, LastLEPtr, LocElm);
       Ret_FilHdr(DestElmFH);
@@ -217,14 +178,7 @@ Get_CopyList(
 
 
 void
-Exec_CopyCmd(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilHdr, DestFilHdr),
-   GMC_ARG(tp_FilHdr, OrigFilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilHdr, DestFilHdr)
-   GMC_DCL(tp_FilHdr, OrigFilHdr)
+Exec_CopyCmd(tp_FilHdr FilHdr,tp_FilHdr DestFilHdr,tp_FilHdr OrigFilHdr)
 {
    tp_LocElm LocElm, LastLocElm;
    tps_FileName DestFileName;
@@ -235,7 +189,7 @@ Exec_CopyCmd(
       SystemError("Destination of copy must be a source file or directory.\n");
       goto done; }/*if*/;
 
-   FilHdr_HostFN(DestFileName, DestFilHdr, FALSE);
+   FilHdr_HostFN(DestFileName, DestFilHdr, false);
    if (!IsDirectory_FileName(DestFileName)) {
       if (IsList(OrigFilHdr)) {
 	 SystemError("List objects can only be copied to directories.\n");

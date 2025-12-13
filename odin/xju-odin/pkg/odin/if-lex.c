@@ -18,7 +18,7 @@ geoff@boulder.colorado.edu
 #include "inc/TokTyp_.h"
 
 
-boolean		IsCmdLex;
+bool		IsCmdLex;
 
 tp_FileName	ParseFN;
 int		*ParseLNPtr;
@@ -70,11 +70,11 @@ EndLex(GMC_ARG_VOID)
 
 static void
 ExpandVar(
-   GMC_ARG(boolean*, AbortPtr),
+   GMC_ARG(bool*, AbortPtr),
    GMC_ARG(tp_Str*, RestStrPtr),
    GMC_ARG(tp_Str, Str)
    )
-   GMC_DCL(boolean*, AbortPtr)
+   GMC_DCL(bool*, AbortPtr)
    GMC_DCL(tp_Str*, RestStrPtr)
    GMC_DCL(tp_Str, Str)
 {
@@ -82,7 +82,7 @@ ExpandVar(
    tps_Str VarStrBuf;
 
    FORBIDDEN(*Str != '$');
-   *AbortPtr = FALSE;
+   *AbortPtr = false;
    TmpStr = Str;
    VarStr = VarStrBuf;
    for (TmpStr = Str+1; IsWordChr(*TmpStr); TmpStr += 1) {
@@ -90,7 +90,7 @@ ExpandVar(
    *VarStr = 0;
    if (!(IsCmdLex || IsDef_EnvVar(VarStrBuf))) {
       SystemError("Environment variable must be declared in a package.\n");
-      *AbortPtr = TRUE;
+      *AbortPtr = true;
       return; }/*if*/;
    ValStr = GetEnv(VarStrBuf);
    if (ValStr == NIL) ValStr = "";
@@ -102,20 +102,20 @@ ExpandVar(
 
 static void
 ExpandHome(
-   GMC_ARG(boolean*, AbortPtr),
+   GMC_ARG(bool*, AbortPtr),
    GMC_ARG(tp_Str, Str)
    )
-   GMC_DCL(boolean*, AbortPtr)
+   GMC_DCL(bool*, AbortPtr)
    GMC_DCL(tp_Str, Str)
 {
    tp_Str TmpStr, HomeStr, ValStr;
    tps_Str HomeStrBuf;
 
    FORBIDDEN(*Str != '~');
-   *AbortPtr = FALSE;
+   *AbortPtr = false;
    if (!IsCmdLex) {
       SystemError("Cannot use ~ in Odinfile filenames.\n");
-      *AbortPtr = TRUE;
+      *AbortPtr = true;
       return; }/*if*/;
    TmpStr = Str;
    HomeStr = HomeStrBuf;
@@ -125,7 +125,7 @@ ExpandHome(
    ValStr = GetHome(HomeStrBuf);
    if (ValStr == NIL) {
       SystemError("Home directory ~%s not found.\n", HomeStrBuf);
-      *AbortPtr = TRUE;
+      *AbortPtr = true;
       return; }/*if*/;
    StrShift(Str, strlen(ValStr) - (TmpStr-Str));
    (void)strncpy(Str, ValStr, strlen(ValStr));
@@ -139,10 +139,10 @@ Lex(GMC_ARG_VOID)
    tp_Str RestStr;
    int iStr;
    tp_Sym Sym;
-   boolean Abort;
+   bool Abort;
 
    PrevParseStr = ParseStr;
-   while (TRUE) {
+   while (true) {
       switch (*ParseStr) {
 	 case 0: {
 	    return EOFTOK;
@@ -250,7 +250,7 @@ Lex(GMC_ARG_VOID)
 	       Sym = Str_Sym(Str);
 	       Push_SymStack(Sym);
 	       return OBJTID; }/*if*/;
-	    while (TRUE) {
+	    while (true) {
 	       /*select*/{
 		  if (IsWordChr(*ParseStr)) {
 		     Str[iStr] = *ParseStr; iStr += 1;
@@ -300,7 +300,7 @@ Lex(GMC_ARG_VOID)
    }/*Lex*/
 
 
-boolean
+bool
 IsWordChr(
    GMC_ARG(char, Chr)
    )
@@ -311,10 +311,10 @@ IsWordChr(
       case ';': case '?': case '!': case '%': case '<': case '>':
       case '(': case ')': case ':': case '=': case '/': case '+':
       case '\\': case '\'': case '$': {
-	 return FALSE;
+	 return false;
 	 break;}/*case*/;
       default: {
-	 return TRUE; };}/*switch*/;
+	 return true; };}/*switch*/;
 /* NOTREACHED */
    }/*IsWordChr*/
 

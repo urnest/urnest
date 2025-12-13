@@ -142,7 +142,7 @@ New_FilInp(
 	 
 	 FilInp->LocInp = NIL;
 	 FilInp->Cnt = 0;
-	 FilInp->Modified = FALSE;
+	 FilInp->Modified = false;
 	 FilInp->PrevFree = FreeFilInp->PrevFree;
 	 FilInp->NextFree = FreeFilInp;
 	 FilInp->PrevFree->NextFree = FilInp;
@@ -197,7 +197,7 @@ SetFilInpModified(
    GMC_DCL(tp_FilInp, FilInp)
 {
    if (FilInp->Modified) return;
-   FilInp->Modified = TRUE;
+   FilInp->Modified = true;
    FilInp->NextMod = ModFilInp;
    ModFilInp = FilInp;
    }/*SetFilInpModified*/
@@ -218,7 +218,7 @@ WriteFilInps(GMC_ARG_VOID)
 {
    while (ModFilInp != NIL) {
       FORBIDDEN(!ModFilInp->Modified);
-      ModFilInp->Modified = FALSE;
+      ModFilInp->Modified = false;
       WriteFilInp(ModFilInp);
       ModFilInp = ModFilInp->NextMod; }/*while*/;
    }/*WriteFilInps*/
@@ -231,7 +231,7 @@ Alloc_InpInf(GMC_ARG_VOID)
    }/*Alloc_InpInf*/
 
 
-boolean
+bool
 FilInps_InUse(GMC_ARG_VOID)
 {
    tp_FilInp FilInp;

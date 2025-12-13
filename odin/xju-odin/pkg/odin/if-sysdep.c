@@ -21,10 +21,7 @@ geoff@boulder.colorado.edu
 
 #ifndef HAVE_PUTENV
 int
-putenv(
-   GMC_ARG(char*, str)
-   )
-   GMC_DCL(char*, str)
+putenv(char* str)
 {
    extern char *strdup();
    char *strbuf, *equal;
@@ -46,12 +43,7 @@ putenv(
 #ifdef NO_STRCASECMP
 #include <ctype.h>
 #define ToLower(ch) (isupper(ch)?tolower(ch):(ch))
-strcasecmp(
-   GMC_ARG(char*, str1),
-   GMC_ARG(char*, str2)
-   )
-   GMC_DCL(char*, str1)
-   GMC_DCL(char*, str2)
+strcasecmp(char* str1,char* str2)
 {
    while (ToLower(*str1) == ToLower(*str2)) {
       if (*str1 == 0) return 0;

@@ -30,24 +30,21 @@ int		num_FilPrmS = 0;
 
 
 static void
-WriteFilPrm(
-   GMC_ARG(tp_FilPrm, FilPrm)
-   )
-   GMC_DCL(tp_FilPrm, FilPrm)
+WriteFilPrm(tp_FilPrm FilPrm)
 {
    WritePrmInf(&FilPrm->PrmInf, FilPrm->LocPrm);
    }/*WriteFilPrm*/
 
 
 static tp_LocPrm
-Alloc_PrmInf(GMC_ARG_VOID)
+Alloc_PrmInf()
 {
    return (tp_LocPrm) Alloc(sizeof(tps_PrmInf));
    }/*Alloc_PrmInf*/
 
 
 static tp_FilPrm
-New_FilPrm(GMC_ARG_VOID)
+New_FilPrm()
 {
    tp_FilPrm FilPrm;
 
@@ -70,7 +67,7 @@ New_FilPrm(GMC_ARG_VOID)
 
 
 void
-Init_FilPrm(GMC_ARG_VOID)
+Init_FilPrm()
 {
    tps_PrmInf _PrmInf; tp_PrmInf PrmInf = &_PrmInf;
    tp_LocPrm LocPrm;
@@ -87,12 +84,7 @@ Init_FilPrm(GMC_ARG_VOID)
 
 
 void
-Add_RootLocPVal(
-   GMC_ARG(tp_PrmTyp, PrmTyp),
-   GMC_ARG(tp_LocPVal, LocPVal)
-   )
-   GMC_DCL(tp_PrmTyp, PrmTyp)
-   GMC_DCL(tp_LocPVal, LocPVal)
+Add_RootLocPVal(tp_PrmTyp PrmTyp,tp_LocPVal LocPVal)
 {
    tps_PrmInf _PrmInf; tp_PrmInf PrmInf = &_PrmInf;
 
@@ -104,13 +96,8 @@ Add_RootLocPVal(
    }/*Add_RootLocPVal*/
 
 
-boolean
-Equal_FilPrm(
-   GMC_ARG(tp_FilPrm, FilPrm1),
-   GMC_ARG(tp_FilPrm, FilPrm2)
-   )
-   GMC_DCL(tp_FilPrm, FilPrm1)
-   GMC_DCL(tp_FilPrm, FilPrm2)
+bool
+Equal_FilPrm(tp_FilPrm FilPrm1,tp_FilPrm FilPrm2)
 {
    FORBIDDEN(FilPrm1 == ERROR || FilPrm2 == ERROR);
    return FilPrm1 == FilPrm2;
@@ -118,14 +105,7 @@ Equal_FilPrm(
 
 
 static tp_FilPrm
-Add_PrmInf(
-   GMC_ARG(tp_FilPrm, FilPrm),
-   GMC_ARG(tp_PrmTyp, PrmTyp),
-   GMC_ARG(tp_FilPVal, FilPVal)
-   )
-   GMC_DCL(tp_FilPrm, FilPrm)
-   GMC_DCL(tp_PrmTyp, PrmTyp)
-   GMC_DCL(tp_FilPVal, FilPVal)
+Add_PrmInf(tp_FilPrm FilPrm,tp_PrmTyp PrmTyp,tp_FilPVal FilPVal)
 {
    tp_FilPrm TmpFP;
 
@@ -144,14 +124,7 @@ Add_PrmInf(
 
 
 static tp_FilPrm
-Add_TailFilPrm(
-   GMC_ARG(tp_FilPrm, FilPrm),
-   GMC_ARG(tp_FilPrm, EndOldFP),
-   GMC_ARG(tp_FilPrm, OldFP)
-   )
-   GMC_DCL(tp_FilPrm, FilPrm)
-   GMC_DCL(tp_FilPrm, EndOldFP)
-   GMC_DCL(tp_FilPrm, OldFP)
+Add_TailFilPrm(tp_FilPrm FilPrm,tp_FilPrm EndOldFP,tp_FilPrm OldFP)
 {
    if (OldFP == EndOldFP) {
       return FilPrm; }/*if*/;
@@ -162,16 +135,7 @@ Add_TailFilPrm(
 
 
 tp_FilPrm
-Append_PrmInf(
-   GMC_ARG(tp_FilPrm, FilPrm),
-   GMC_ARG(tp_PrmTyp, PrmTyp),
-   GMC_ARG(tp_LocHdr, LocHdr),
-   GMC_ARG(tp_LocPVal, LocPVal)
-   )
-   GMC_DCL(tp_FilPrm, FilPrm)
-   GMC_DCL(tp_PrmTyp, PrmTyp)
-   GMC_DCL(tp_LocHdr, LocHdr)
-   GMC_DCL(tp_LocPVal, LocPVal)
+Append_PrmInf(tp_FilPrm FilPrm,tp_PrmTyp PrmTyp,tp_LocHdr LocHdr,tp_LocPVal LocPVal)
 {
    tp_FilPrm TmpFP, HeadFP;
    tp_FilPVal NewFilPVal;
@@ -196,12 +160,7 @@ Append_PrmInf(
 
 
 tp_FilPrm
-Append_FilPrm(
-   GMC_ARG(tp_FilPrm, FilPrm1),
-   GMC_ARG(tp_FilPrm, FilPrm2)
-   )
-   GMC_DCL(tp_FilPrm, FilPrm1)
-   GMC_DCL(tp_FilPrm, FilPrm2)
+Append_FilPrm(tp_FilPrm FilPrm1,tp_FilPrm FilPrm2)
 {
    tp_FilPrm FilPrm, TmpFP, HeadFP;
    tp_PrmTyp PrmTyp;
@@ -238,10 +197,7 @@ Append_FilPrm(
 
 
 tp_LocPrm
-FilPrm_LocPrm(
-   GMC_ARG(tp_FilPrm, FilPrm)
-   )
-   GMC_DCL(tp_FilPrm, FilPrm)
+FilPrm_LocPrm(tp_FilPrm FilPrm)
 {
    FORBIDDEN(FilPrm == ERROR);
    if (FilPrm->LocPrm == NIL) {
@@ -254,20 +210,14 @@ FilPrm_LocPrm(
 
 
 static tp_FilPrm
-Lookup_FilPrm(
-   GMC_ARG(tp_LocPrm, LocPrm)
-   )
-   GMC_DCL(tp_LocPrm, LocPrm)
+Lookup_FilPrm(tp_LocPrm LocPrm)
 {
    return (tp_FilPrm)Lookup_Item(LocPrm);
    }/*Lookup_FilPrm*/
 
 
 tp_FilPrm
-LocPrm_FilPrm(
-   GMC_ARG(tp_LocPrm, LocPrm)
-   )
-   GMC_DCL(tp_LocPrm, LocPrm)
+LocPrm_FilPrm(tp_LocPrm LocPrm)
 {
    tp_FilPrm FilPrm;
    tps_PrmInf _PrmInf; tp_PrmInf PrmInf = &_PrmInf;
@@ -291,30 +241,20 @@ LocPrm_FilPrm(
    }/*LocPrm_FilPrm*/
 
 
-static boolean
-In_PrmTypLst(
-   GMC_ARG(tp_PrmTyp, PrmTyp),
-   GMC_ARG(tp_PrmTypLst, PrmTypLst)
-   )
-   GMC_DCL(tp_PrmTyp, PrmTyp)
-   GMC_DCL(tp_PrmTypLst, PrmTypLst)
+static bool
+In_PrmTypLst(tp_PrmTyp PrmTyp,tp_PrmTypLst PrmTypLst)
 {
    tp_PrmTypLst OKLElem;
 
    for (OKLElem = PrmTypLst; OKLElem != NIL; OKLElem = OKLElem->Next) {
       if (PrmTyp == OKLElem->PrmTyp) {
-	 return TRUE; }/*if*/; }/*for*/;
-   return FALSE;
+	 return true; }/*if*/; }/*for*/;
+   return false;
    }/*In_PrmTypLst*/
 
 
 tp_FilPrm
-Strip_FilPrm(
-   GMC_ARG(tp_FilPrm, FilPrm),
-   GMC_ARG(tp_PrmTypLst, PrmTypLst)
-   )
-   GMC_DCL(tp_FilPrm, FilPrm)
-   GMC_DCL(tp_PrmTypLst, PrmTypLst)
+Strip_FilPrm(tp_FilPrm FilPrm,tp_PrmTypLst PrmTypLst)
 {
    tp_FilPrm FatherFilPrm;
 
@@ -331,12 +271,7 @@ Strip_FilPrm(
 
 
 tp_FilPrm
-StripExcept_FilPrm(
-   GMC_ARG(tp_FilPrm, FilPrm),
-   GMC_ARG(tp_PrmTyp, PrmTyp)
-   )
-   GMC_DCL(tp_FilPrm, FilPrm)
-   GMC_DCL(tp_PrmTyp, PrmTyp)
+StripExcept_FilPrm(tp_FilPrm FilPrm,tp_PrmTyp PrmTyp)
 {
    tp_FilPrm FatherFilPrm;
 
@@ -353,10 +288,7 @@ StripExcept_FilPrm(
 
 
 tp_FilPVal
-FilPrm_FilPVal(
-   GMC_ARG(tp_FilPrm, FilPrm)
-   )
-   GMC_DCL(tp_FilPrm, FilPrm)
+FilPrm_FilPVal(tp_FilPrm FilPrm)
 {
    if (FilPrm == ERROR) {
       return ERROR; }/*if*/;
@@ -365,12 +297,7 @@ FilPrm_FilPVal(
 
 
 tp_FilPVal
-Get_FilPVal(
-   GMC_ARG(tp_FilPrm, FilPrm),
-   GMC_ARG(tp_PrmTyp, PrmTyp)
-   )
-   GMC_DCL(tp_FilPrm, FilPrm)
-   GMC_DCL(tp_PrmTyp, PrmTyp)
+Get_FilPVal(tp_FilPrm FilPrm,tp_PrmTyp PrmTyp)
 {
    tp_FilPrm TmpFP;
 
@@ -382,12 +309,7 @@ Get_FilPVal(
 
 
 tp_FilHdr
-Get_FPVFilHdr(
-   GMC_ARG(tp_PrmTyp, PrmTyp),
-   GMC_ARG(tp_FilPrm, FilPrm)
-   )
-   GMC_DCL(tp_PrmTyp, PrmTyp)
-   GMC_DCL(tp_FilPrm, FilPrm)
+Get_FPVFilHdr(tp_PrmTyp PrmTyp,tp_FilPrm FilPrm)
 {
    tp_FilPrm TmpFP;
    tp_FilPVal FilPVal;
@@ -420,10 +342,7 @@ Get_FPVFilHdr(
 
 
 tp_FilPrm
-FilPrm_DerefPrmVal(
-   GMC_ARG(tp_FilPrm, FilPrm)
-   )
-   GMC_DCL(tp_FilPrm, FilPrm)
+FilPrm_DerefPrmVal(tp_FilPrm FilPrm)
 {
    if (FilPrm == RootFilPrm) {
       return FilPrm; }/*if*/;
@@ -434,16 +353,7 @@ FilPrm_DerefPrmVal(
 
 
 void
-Chain_FilPrm_DerefPrmVal(
-   GMC_ARG(tp_LocInp*, FirstLIPtr),
-   GMC_ARG(tp_LocInp*, LastLIPtr),
-   GMC_ARG(tp_FilPrm, FilPrm),
-   GMC_ARG(tp_FilHdr, OutFilHdr)
-   )
-   GMC_DCL(tp_LocInp*, FirstLIPtr)
-   GMC_DCL(tp_LocInp*, LastLIPtr)
-   GMC_DCL(tp_FilPrm, FilPrm)
-   GMC_DCL(tp_FilHdr, OutFilHdr)
+Chain_FilPrm_DerefPrmVal(tp_LocInp* FirstLIPtr,tp_LocInp* LastLIPtr,tp_FilPrm FilPrm,tp_FilHdr OutFilHdr)
 {
    tp_FilPrm TmpFP;
 
@@ -454,14 +364,7 @@ Chain_FilPrm_DerefPrmVal(
 
 
 void
-Print_FilPrm(
-   GMC_ARG(tp_FilDsc, FilDsc),
-   GMC_ARG(tp_Str, Str),
-   GMC_ARG(tp_FilPrm, FilPrm)
-   )
-   GMC_DCL(tp_FilDsc, FilDsc)
-   GMC_DCL(tp_Str, Str)
-   GMC_DCL(tp_FilPrm, FilPrm)
+Print_FilPrm(tp_FilDsc FilDsc,tp_Str Str,tp_FilPrm FilPrm)
 {
    FORBIDDEN(((FilDsc == NIL) == (Str == NIL)) || FilPrm == ERROR);
 
@@ -476,10 +379,7 @@ Print_FilPrm(
 
 
 void
-SetPrmTypLst_Marks(
-   GMC_ARG(tp_PrmTypLst, PrmTypLst)
-   )
-   GMC_DCL(tp_PrmTypLst, PrmTypLst)
+SetPrmTypLst_Marks(tp_PrmTypLst PrmTypLst)
 {
    tp_PrmTypLst TmpPrmTypLst;
 

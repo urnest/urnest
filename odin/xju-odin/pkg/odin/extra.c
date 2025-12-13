@@ -21,14 +21,7 @@ extern int *IPC_IArg1, *IPC_IArg2, *IPC_IArg3;
 extern tp_Str IPC_SArg1, IPC_SArg2, IPC_SArg3;
 extern int yydebug, ocdebug;
 
-extra(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Sym, Sym),
-   GMC_ARG(tp_Nod, Nod)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Sym, Sym)
-   GMC_DCL(tp_Nod, Nod)
+extra(tp_FilHdr FilHdr,tp_Sym Sym,tp_Nod Nod)
 {
    yydebug = 0; ocdebug = 0;
    IPC_IArg1 = IPC_IArg3; IPC_SArg2 = IPC_SArg3;

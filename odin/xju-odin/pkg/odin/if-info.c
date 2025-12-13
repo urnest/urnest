@@ -66,22 +66,14 @@ static tp_Item	HashItemS [MAX_HashItemS];
 
 
 static int
-Loc_HashVal(
-   GMC_ARG(tp_Loc, Loc)
-   )
-   GMC_DCL(tp_Loc, Loc)
+Loc_HashVal(tp_Loc Loc)
 {
    return (Loc & HASH_MASK);
    }/*Loc_HashVal*/
 
 
 void
-Hash_Item(
-   GMC_ARG(tp_Item, Item),
-   GMC_ARG(tp_Loc, Loc)
-   )
-   GMC_DCL(tp_Item, Item)
-   GMC_DCL(tp_Loc, Loc)
+Hash_Item(tp_Item Item,tp_Loc Loc)
 {
    int HashVal;
 
@@ -93,10 +85,7 @@ Hash_Item(
 
 
 void
-UnHash_Item(
-   GMC_ARG(tp_Item, Item)
-   )
-   GMC_DCL(tp_Item, Item)
+UnHash_Item(tp_Item Item)
 {
    int HashVal;
    tp_Item PrevItem;
@@ -116,10 +105,7 @@ UnHash_Item(
 
 
 tp_Item
-Lookup_Item(
-   GMC_ARG(tp_Loc, Loc)
-   )
-   GMC_DCL(tp_Loc, Loc)
+Lookup_Item(tp_Loc Loc)
 {
    int HashVal;
    tp_Item Item;
@@ -135,14 +121,7 @@ Lookup_Item(
 
 
 static void
-InfoWrite(
-   GMC_ARG(tp_Loc, Loc),
-   GMC_ARG(char*, Buf),
-   GMC_ARG(int, Size)
-   )
-   GMC_DCL(tp_Loc, Loc)
-   GMC_DCL(char*, Buf)
-   GMC_DCL(int, Size)
+InfoWrite(tp_Loc Loc,char* Buf,int Size)
 {
    int status, count;
 
@@ -165,14 +144,7 @@ InfoWrite(
 
 
 static void
-InfoRead(
-   GMC_ARG(tp_Loc, Loc),
-   GMC_ARG(char*, Buf),
-   GMC_ARG(int, Size)
-   )
-   GMC_DCL(tp_Loc, Loc)
-   GMC_DCL(char*, Buf)
-   GMC_DCL(int, Size)
+InfoRead(tp_Loc Loc,char* Buf,int Size)
 {
    int status, count;
 
@@ -202,22 +174,14 @@ InfoRead(
 
 
 static void
-WriteWord(
-   GMC_ARG(int, Word),
-   GMC_ARG(tp_Loc, Loc)
-   )
-   GMC_DCL(int, Word)
-   GMC_DCL(tp_Loc, Loc)
+WriteWord(int Word,tp_Loc Loc)
 {
    InfoWrite(Loc, (char *)&Word, (sizeof(Word)));
    }/*WriteWord*/
 
 
 static int
-ReadWord(
-   GMC_ARG(tp_Loc, Loc)
-   )
-   GMC_DCL(tp_Loc, Loc)
+ReadWord(tp_Loc Loc)
 {
    int Word;
 
@@ -227,22 +191,14 @@ ReadWord(
 
 
 static void
-WriteLoc(
-   GMC_ARG(tp_Loc, LocVal),
-   GMC_ARG(tp_Loc, Loc)
-   )
-   GMC_DCL(tp_Loc, LocVal)
-   GMC_DCL(tp_Loc, Loc)
+WriteLoc(tp_Loc LocVal,tp_Loc Loc)
 {
    InfoWrite(Loc, (char *)&LocVal, sizeof(LocVal));
    }/*WriteLoc*/
 
 
 static tp_Loc
-ReadLoc(
-   GMC_ARG(tp_Loc, Loc)
-   )
-   GMC_DCL(tp_Loc, Loc)
+ReadLoc(tp_Loc Loc)
 {
    tp_Loc LocVal;
 
@@ -252,29 +208,21 @@ ReadLoc(
 
 
 static void
-WriteDataNum(
-   GMC_ARG(int, Num)
-   )
-   GMC_DCL(int, Num)
+WriteDataNum(int Num)
 {
    WriteWord(Num, LocDataNum);
    }/*WriteDataNum*/
 
 
 static int
-ReadDataNum(GMC_ARG_VOID)
+ReadDataNum()
 {
    return ReadWord(LocDataNum);
    }/*ReadDataNum*/
 
 
 void
-Append_DataNum(
-   GMC_ARG(tp_Str, Str),
-   GMC_ARG(int, Num)
-   )
-   GMC_DCL(tp_Str, Str)
-   GMC_DCL(int, Num)
+Append_DataNum(tp_Str Str,int Num)
 {
    int Div, Rem;
    tp_Str TailStr;
@@ -292,112 +240,91 @@ Append_DataNum(
 
 
 static void
-WriteCurrentDate(
-   GMC_ARG(tp_Date, Date)
-   )
-   GMC_DCL(tp_Date, Date)
+WriteCurrentDate(tp_Date Date)
 {
    WriteWord(Date, LocCurrentDate);
    }/*WriteCurrentDate*/
 
 
 static tp_Date
-ReadCurrentDate(GMC_ARG_VOID)
+ReadCurrentDate()
 {
    return ReadWord(LocCurrentDate);
    }/*ReadCurrentDate*/
 
 
 static void
-WriteVerifyDate(
-   GMC_ARG(tp_Date, Date)
-   )
-   GMC_DCL(tp_Date, Date)
+WriteVerifyDate(tp_Date Date)
 {
    WriteWord(Date, LocVerifyDate);
    }/*WriteVerifyDate*/
 
 
 static tp_Date
-ReadVerifyDate(GMC_ARG_VOID)
+ReadVerifyDate()
 {
    return ReadWord(LocVerifyDate);
    }/*ReadVerifyDate*/
 
 
 static void
-WriteCurSize(
-   GMC_ARG(int, CurSize)
-   )
-   GMC_DCL(int, CurSize)
+WriteCurSize(int CurSize)
 {
    WriteWord(CurSize, LocCurSize);
    }/*WriteCurSize*/
 
 
 static int
-ReadCurSize(GMC_ARG_VOID)
+ReadCurSize()
 {
    return ReadWord(LocCurSize);
    }/*ReadCurSize*/
 
 
 static void
-WritePValLocPrm(
-   GMC_ARG(tp_LocElm, PValLocPrm)
-   )
-   GMC_DCL(tp_LocElm, PValLocPrm)
+WritePValLocPrm(tp_LocElm PValLocPrm)
 {
    WriteLoc(PValLocPrm, LocPValLocPrm);
    }/*WritePValLocPrm*/
 
 
 static tp_LocPrm
-ReadPValLocPrm(GMC_ARG_VOID)
+ReadPValLocPrm()
 {
    return (tp_LocPrm)ReadLoc(LocPValLocPrm);
    }/*ReadPValLocPrm*/
 
 
 static void
-WriteFreeLocElm(
-   GMC_ARG(tp_LocElm, FreeLocElm)
-   )
-   GMC_DCL(tp_LocElm, FreeLocElm)
+WriteFreeLocElm(tp_LocElm FreeLocElm)
 {
    WriteLoc(FreeLocElm, LocFreeLocElm);
    }/*WriteFreeLocElm*/
 
 
 static tp_LocElm
-ReadFreeLocElm(GMC_ARG_VOID)
+ReadFreeLocElm()
 {
    return (tp_LocElm)ReadLoc(LocFreeLocElm);
    }/*ReadFreeLocElm*/
 
 
 static void
-WriteLastLoc(
-   GMC_ARG(tp_Loc, LastLoc)
-   )
-   GMC_DCL(tp_Loc, LastLoc)
+WriteLastLoc(tp_Loc LastLoc)
 {
    WriteLoc(LastLoc, LocLastLoc);
    }/*WriteLastLoc*/
 
 
 static tp_Loc
-ReadLastLoc(GMC_ARG_VOID)
+ReadLastLoc()
 {
    return (tp_Loc)ReadLoc(LocLastLoc);
    }/*ReadLastLoc*/
 
 
 tp_Loc
-Alloc(
-   GMC_ARG(int, Size)
-   )
-   GMC_DCL(int, Size)
+Alloc(int Size)
 {
    tp_Loc Loc;
 
@@ -409,10 +336,7 @@ Alloc(
 
 
 tp_LocStr
-WriteStr(
-   GMC_ARG(tp_Str, Str)
-   )
-   GMC_DCL(tp_Str, Str)
+WriteStr(tp_Str Str)
 {
    tp_LocStr LocStr;
    int count, Length, Size;
@@ -433,10 +357,7 @@ WriteStr(
 
 
 tp_Str
-ReadStr(
-   GMC_ARG(tp_LocStr, LocStr)
-   )
-   GMC_DCL(tp_LocStr, LocStr)
+ReadStr(tp_LocStr LocStr)
 {
    int count, Length, Size;
    tps_Str Str;
@@ -457,136 +378,83 @@ ReadStr(
 
 
 void
-WritePrmInf(
-   GMC_ARG(tp_PrmInf, PrmInf),
-   GMC_ARG(tp_LocPrm, LocPrm)
-   )
-   GMC_DCL(tp_PrmInf, PrmInf)
-   GMC_DCL(tp_LocPrm, LocPrm)
+WritePrmInf(tp_PrmInf PrmInf,tp_LocPrm LocPrm)
 {
    InfoWrite(LocPrm, (char *)PrmInf, sizeof(*PrmInf));
    }/*WritePrmInf*/
 
 
 void
-ReadPrmInf(
-   GMC_ARG(tp_PrmInf, PrmInf),
-   GMC_ARG(tp_LocPrm, LocPrm)
-   )
-   GMC_DCL(tp_PrmInf, PrmInf)
-   GMC_DCL(tp_LocPrm, LocPrm)
+ReadPrmInf(tp_PrmInf PrmInf,tp_LocPrm LocPrm)
 {
    InfoRead(LocPrm, (char *)PrmInf, sizeof(*PrmInf));
    }/*ReadPrmInf*/
 
 
 void
-WritePValInf(
-   GMC_ARG(tp_PValInf, PValInf),
-   GMC_ARG(tp_LocPVal, LocPVal)
-   )
-   GMC_DCL(tp_PValInf, PValInf)
-   GMC_DCL(tp_LocPVal, LocPVal)
+WritePValInf(tp_PValInf PValInf,tp_LocPVal LocPVal)
 {
    InfoWrite(LocPVal, (char *)PValInf, sizeof(*PValInf));
    }/*WritePValInf*/
 
 
 void
-ReadPValInf(
-   GMC_ARG(tp_PValInf, PValInf),
-   GMC_ARG(tp_LocPVal, LocPVal)
-   )
-   GMC_DCL(tp_PValInf, PValInf)
-   GMC_DCL(tp_LocPVal, LocPVal)
+ReadPValInf(tp_PValInf PValInf,tp_LocPVal LocPVal)
 {
    InfoRead(LocPVal, (char *)PValInf, sizeof(*PValInf));
    }/*ReadPValInf*/
 
 
 void
-WriteHdrInf(
-   GMC_ARG(tp_HdrInf, HdrInf),
-   GMC_ARG(tp_LocHdr, LocHdr)
-   )
-   GMC_DCL(tp_HdrInf, HdrInf)
-   GMC_DCL(tp_LocHdr, LocHdr)
+WriteHdrInf(tp_HdrInf HdrInf,tp_LocHdr LocHdr)
 {
    InfoWrite(LocHdr, (char *)HdrInf, sizeof(*HdrInf));
    }/*WriteHdrInf*/
 
 
 void
-ReadHdrInf(
-   GMC_ARG(tp_HdrInf, HdrInf),
-   GMC_ARG(tp_LocHdr, LocHdr)
-   )
-   GMC_DCL(tp_HdrInf, HdrInf)
-   GMC_DCL(tp_LocHdr, LocHdr)
+ReadHdrInf(tp_HdrInf HdrInf,tp_LocHdr LocHdr)
 {
    InfoRead(LocHdr, (char *)HdrInf, sizeof(*HdrInf));
    }/*ReadHdrInf*/
 
 
 void
-WriteInpInf(
-   GMC_ARG(tp_InpInf, InpInf),
-   GMC_ARG(tp_LocInp, LocInp)
-   )
-   GMC_DCL(tp_InpInf, InpInf)
-   GMC_DCL(tp_LocInp, LocInp)
+WriteInpInf(tp_InpInf InpInf,tp_LocInp LocInp)
 {
    InfoWrite(LocInp, (char *)InpInf, sizeof(*InpInf));
    }/*WriteInpInf*/
 
 
 void
-ReadInpInf(
-   GMC_ARG(tp_InpInf, InpInf),
-   GMC_ARG(tp_LocInp, LocInp)
-   )
-   GMC_DCL(tp_InpInf, InpInf)
-   GMC_DCL(tp_LocInp, LocInp)
+ReadInpInf(tp_InpInf InpInf,tp_LocInp LocInp)
 {
    InfoRead(LocInp, (char *)InpInf, sizeof(*InpInf));
    }/*ReadInpInf*/
 
 
 void
-WriteElmInf(
-   GMC_ARG(tp_ElmInf, ElmInf),
-   GMC_ARG(tp_LocElm, LocElm)
-   )
-   GMC_DCL(tp_ElmInf, ElmInf)
-   GMC_DCL(tp_LocElm, LocElm)
+WriteElmInf(tp_ElmInf ElmInf,tp_LocElm LocElm)
 {
    InfoWrite(LocElm, (char *)ElmInf, sizeof(*ElmInf));
    }/*WriteElmInf*/
 
 
 void
-ReadElmInf(
-   GMC_ARG(tp_ElmInf, ElmInf),
-   GMC_ARG(tp_LocElm, LocElm)
-   )
-   GMC_DCL(tp_ElmInf, ElmInf)
-   GMC_DCL(tp_LocElm, LocElm)
+ReadElmInf(tp_ElmInf ElmInf,tp_LocElm LocElm)
 {
    InfoRead(LocElm, (char *)ElmInf, sizeof(*ElmInf));
    }/*ReadElmInf*/
 
 
 void
-Init_Info(
-   GMC_ARG(boolean*, NewFlagPtr)
-   )
-   GMC_DCL(boolean*, NewFlagPtr)
+Init_Info(bool* NewFlagPtr)
 {
    tps_FileName InfoFileName;
    tp_Loc Initial_LastLoc;
    tps_HdrInf _NewRootHdrInf; tp_HdrInf NewRootHdrInf = &_NewRootHdrInf;
 
-   *NewFlagPtr = FALSE;
+   *NewFlagPtr = false;
    Get_InfoFileName(InfoFileName);
    LocDataNum = 4;
    LocCurrentDate = LocDataNum + sizeof(int);
@@ -599,8 +467,8 @@ Init_Info(
    Initial_LastLoc = RootLocHdr + sizeof(tps_HdrInf);
 
    if (!Exists(InfoFileName) || Empty(InfoFileName)) {
-      *NewFlagPtr = TRUE;
-      InfoFD = FileName_WBFilDsc(InfoFileName, FALSE);
+      *NewFlagPtr = true;
+      InfoFD = FileName_WBFilDsc(InfoFileName, false);
       if (InfoFD == ERROR) {
 	 SystemError("Cannot open Odin database file: %s.\n", InfoFileName);
 	 IPC_Finish();
@@ -620,7 +488,7 @@ Init_Info(
 
       Close(InfoFD); }/*if*/;
 
-   InfoFD = FileName_RWBFilDsc(InfoFileName, FALSE);
+   InfoFD = FileName_RWBFilDsc(InfoFileName, false);
    if (InfoFD == ERROR) {
       SystemError("Cannot open Odin database file: %s.\n", InfoFileName);
       IPC_Finish();
@@ -636,14 +504,14 @@ Init_Info(
 
 
 void
-Close_Info(GMC_ARG_VOID)
+Close_Info()
 {
    Close(InfoFD);
    }/*Close_Info*/
 
 
 void
-Update_Info(GMC_ARG_VOID)
+Update_Info()
 {
    if (DataNum != OldDataNum) {
       WriteDataNum(DataNum);

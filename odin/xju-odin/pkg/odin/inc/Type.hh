@@ -1,3 +1,8 @@
+#ifndef ODIN_TYPE_H
+#define ODIN_TYPE_H
+
+#include <gmc/gmc.h>
+
 typedef int		tp_LogLevel;
 typedef int		tp_ISKind;
 typedef int		tp_DPType;
@@ -5,7 +10,6 @@ typedef int		tp_FKind;
 typedef int		tp_SKind;
 typedef int		tp_Flag;
 typedef int		tp_FTClass;
-typedef int		tp_NodTyp;
 typedef int		tp_ParseKind;
 typedef int		tp_PrmClass;
 typedef int		tp_PType;
@@ -82,9 +86,10 @@ typedef char *		tp_Ident;
 typedef char *		tp_Str;
 
 typedef tp_FilTyp *	tp_InpTyps;
-typedef boolean *	tp_IsDepend;
 typedef tp_FilHdr *	tp_InpFilHdrs;
 typedef tp_FilTyp *	tp_OutTyps;
 typedef tp_FilHdr *	tp_OutFilHdrs;
 
 typedef tp_Pos		tp_Lvl;
+
+#endif

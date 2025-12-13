@@ -49,7 +49,7 @@ WriteCat(
 	 Writeln(FilDsc, FileName);
       }else if (!IsRef(FilHdr)) {
 	 FilHdr_DataFileName(FileName, FilHdr);
-	 InFD = FileName_RFilDsc(FileName, FALSE);
+	 InFD = FileName_RFilDsc(FileName, false);
 	 if (InFD != NIL) {
 	    FileCopy(FilDsc, InFD);
 	    Close(InFD); }/*if*/;
@@ -147,7 +147,7 @@ WriteLabels(
    Set_Flag(FilHdr, FLAG_Union);
    /*select*/{
       if (!IsRef(FilHdr)) {
-	 Writeln(FilDsc, FilHdr_Label(StrBuf, FilHdr, FALSE));
+	 Writeln(FilDsc, FilHdr_Label(StrBuf, FilHdr, false));
       }else{
 	 for (FilElm = LocElm_FilElm(FilHdr_LocElm(FilHdr));
 	      FilElm != NIL;
@@ -235,7 +235,7 @@ Clr_UnionFlags(
    }/*Clr_UnionFlags*/
 
 
-static boolean
+static bool
 TagStrCmp(
    GMC_ARG(tp_Str, Str),
    GMC_ARG(tp_Str, Tag)
@@ -253,15 +253,15 @@ TagStrCmp(
 static void
 Get_DefInfo(
    GMC_ARG(tp_Str*, NamePtr),
-   GMC_ARG(boolean*, CmdFlagPtr),
-   GMC_ARG(boolean*, ExecFlagPtr),
+   GMC_ARG(bool*, CmdFlagPtr),
+   GMC_ARG(bool*, ExecFlagPtr),
    GMC_ARG(tp_Str*, TagStrPtr),
    GMC_ARG(tp_Nod*, TgtNodPtr),
    GMC_ARG(tp_Nod, Nod)
    )
    GMC_DCL(tp_Str*, NamePtr)
-   GMC_DCL(boolean*, CmdFlagPtr)
-   GMC_DCL(boolean*, ExecFlagPtr)
+   GMC_DCL(bool*, CmdFlagPtr)
+   GMC_DCL(bool*, ExecFlagPtr)
    GMC_DCL(tp_Str*, TagStrPtr)
    GMC_DCL(tp_Nod*, TgtNodPtr)
    GMC_DCL(tp_Nod, Nod)
@@ -306,12 +306,12 @@ Exec_List(
    GMC_ARG(tp_FilHdr, ListFilHdr),
    GMC_ARG(tp_FilHdr, FilHdr),
    GMC_ARG(tp_FilPrm, FilPrm),
-   GMC_ARG(boolean, IsOdinfile)
+   GMC_ARG(bool, IsOdinfile)
    )
    GMC_DCL(tp_FilHdr, ListFilHdr)
    GMC_DCL(tp_FilHdr, FilHdr)
    GMC_DCL(tp_FilPrm, FilPrm)
-   GMC_DCL(boolean, IsOdinfile)
+   GMC_DCL(bool, IsOdinfile)
 {
    tps_FileName FileName;
    tp_LocElm FirstLE, LastLE;
@@ -325,7 +325,7 @@ Exec_List(
    tp_PrmFHdr PrmFHdr;
    tp_FilHdr ElmFilHdr;
    tp_FilPrm ElmFilPrm;
-   boolean End, CmdFlag, ExecFlag;
+   bool End, CmdFlag, ExecFlag;
 
    FirstLE = NIL; LastLE = NIL;
 
@@ -341,7 +341,7 @@ Exec_List(
       Set_LocElm(ListFilHdr, FirstLE);
       return; }/*if*/;
 
-   InFD = FileName_RFilDsc(FileName, FALSE);
+   InFD = FileName_RFilDsc(FileName, false);
    if (InFD == ERROR) {
       Set_LocElm(ListFilHdr, (tp_LocElm)NIL);
       return; }/*if*/;
@@ -463,9 +463,9 @@ Exec_Targets(
    tp_PrmFHdr PrmFHdr;
    tp_FilHdr FilHdr;
    tp_FilPrm FilPrm;
-   boolean CmdFlag, ExecFlag;
+   bool CmdFlag, ExecFlag;
 
-   InFD = FileName_RFilDsc(FileName, FALSE);
+   InFD = FileName_RFilDsc(FileName, false);
    if (InFD == ERROR) {
       return; }/*if*/;
 
@@ -494,7 +494,7 @@ Exec_Targets(
 	       SystemError("in odin expression at:\n");
 	       FileError("\n"); }/*if*/;
 	    Use_PrmFHdr(&FilHdr, &FilPrm, PrmFHdr);
-	    Deref_Pntrs(&FilHdr, &FilPrm, FilHdr, TRUE);
+	    Deref_Pntrs(&FilHdr, &FilPrm, FilHdr, true);
 	    if (FilHdr != ERROR) {
 	       FilHdr_DataFileName(DataFileName, FilHdr);
 	       Exec_Targets(OutFD, DataFileName);
@@ -520,20 +520,20 @@ void
 WriteSrcNames(
    GMC_ARG(tp_FilDsc, OutFD),
    GMC_ARG(tp_FileName, FileName),
-   GMC_ARG(boolean, OpFlag)
+   GMC_ARG(bool, OpFlag)
    )
    GMC_DCL(tp_FilDsc, OutFD)
    GMC_DCL(tp_FileName, FileName)
-   GMC_DCL(boolean, OpFlag)
+   GMC_DCL(bool, OpFlag)
 {
    tp_FilDsc InFD;
    tp_Str Str, TailStr;
    tps_Str StrBuf;
    tp_Nod Nod, DS_Nod, Son;
    int LineNum;
-   boolean FoundOp;
+   bool FoundOp;
 
-   InFD = FileName_RFilDsc(FileName, FALSE);
+   InFD = FileName_RFilDsc(FileName, false);
    if (InFD == ERROR) {
       return; }/*if*/;
 
@@ -552,17 +552,17 @@ WriteSrcNames(
 		  FileError("\n");
 	       }else{
 		  (void)strcpy(Str, "");
-		  FoundOp = FALSE;
+		  FoundOp = false;
 		  Son = Nod_Son(1, DS_Nod);
 		  if (Nod_NodTyp(Son) == SEGOPR && !OpFlag) {
 		     (void)strcpy(Str, ".");
-		     FoundOp = TRUE; }/*if*/;
+		     FoundOp = true; }/*if*/;
 		  while (Son != NIL) {
 		     TailStr = Tail(Str);
 		     switch (Nod_NodTyp(Son)) {
 			case PRMOPR: case APLOPR: case DRVOPR:
 			case HODOPR: case SEGOPR: {
-			   FoundOp = TRUE; };}/*switch*/;
+			   FoundOp = true; };}/*switch*/;
 		     if (FoundOp == OpFlag) {
 			YY_Unparse(TailStr, Son); }/*if*/;
 		     Son = Nod_Brother(Son); }/*while*/;
@@ -582,9 +582,9 @@ Validate_ViewSpec(
 {
    tp_FilElm FilElm;
    tp_FilHdr ElmFilHdr;
-   boolean StrFlag;
+   bool StrFlag;
 
-   StrFlag = TRUE;
+   StrFlag = true;
    for (FilElm = LocElm_FilElm(FilHdr_LocElm(FilHdr));
 	FilElm != NIL;
 	FilElm = FilElm_NextFilElm(FilElm)) {
@@ -619,11 +619,11 @@ FilElm_NextStrFilElm(
 
 void
 Exec_CmptView(
-   GMC_ARG(boolean*, ErrPtr),
+   GMC_ARG(bool*, ErrPtr),
    GMC_ARG(tp_FilHdr, OutFilHdr),
    GMC_ARG(tp_FilHdr, InpFilHdr)
    )
-   GMC_DCL(boolean*, ErrPtr)
+   GMC_DCL(bool*, ErrPtr)
    GMC_DCL(tp_FilHdr, OutFilHdr)
    GMC_DCL(tp_FilHdr, InpFilHdr)
 {
@@ -633,7 +633,7 @@ Exec_CmptView(
    tp_FilHdr ElmFilHdr;
    tp_Str Str;
 
-   *ErrPtr = FALSE;
+   *ErrPtr = false;
    FirstLE = NIL; LastLE = NIL;
    for (FilElm = LocElm_FilElm(FilHdr_LocElm(InpFilHdr));
 	FilElm != NIL;
@@ -642,7 +642,7 @@ Exec_CmptView(
       /*select*/{
 	 if (FilHdr_ElmStatus(ElmFilHdr) == STAT_NoFile) {
 	    if (FilHdr_TgtValStatus(ElmFilHdr) != STAT_OK) {
-	       *ErrPtr = TRUE; }/*if*/;
+	       *ErrPtr = true; }/*if*/;
 	 }else{
 	    /*select*/{
 	       if (IsStr(ElmFilHdr)) {
@@ -673,7 +673,7 @@ Install_ActTgt(
 
    if (FilHdr_ActTgtInstalled(ActTgtFilHdr)) {
       return; }/*if*/;
-   Set_ActTgtInstalled(ActTgtFilHdr, TRUE);
+   Set_ActTgtInstalled(ActTgtFilHdr, true);
    Key = FilHdr_Key(StrBuf, ActTgtFilHdr);
    FORBIDDEN(Key == NIL);
    FilHdr = Do_Key(FilHdr_SrcFilHdr(Copy_FilHdr(ActTgtFilHdr)), Key);
@@ -706,7 +706,7 @@ Uninstall_ActTgt(
 
    if (!FilHdr_ActTgtInstalled(ActTgtFilHdr)) {
       return; }/*if*/;
-   Set_ActTgtInstalled(ActTgtFilHdr, FALSE);
+   Set_ActTgtInstalled(ActTgtFilHdr, false);
    Key = FilHdr_Key(StrBuf, ActTgtFilHdr);
    FORBIDDEN(Key == NIL);
    FilHdr = Do_Key(FilHdr_SrcFilHdr(Copy_FilHdr(ActTgtFilHdr)), Key);
@@ -741,7 +741,7 @@ WriteTextDef(
    GMC_DCL(tp_FilDsc, InFD)
    GMC_DCL(tp_FileName, InFileName)
 {
-   boolean CmdFlag, ExecFlag, Found, NeedLastEOL, NeedEOL;
+   bool CmdFlag, ExecFlag, Found, NeedLastEOL, NeedEOL;
    tp_Key Key;
    tps_Str StrBuf, KeyBuf;
    tp_Str Str, Name, TagStr;
@@ -765,18 +765,18 @@ WriteTextDef(
 			 == IsVTgtText_FKind(FilHdr_FKind(FilHdr))));
 	    Ret_Nod(Nod);
 	    if (TagStr != NIL) {
-	       NeedLastEOL = TRUE;
+	       NeedLastEOL = true;
 	       if (TagStr[0] == '\n') {
-		  NeedLastEOL = FALSE;
+		  NeedLastEOL = false;
 		  TagStr = &TagStr[1]; }/*if*/;
-	       NeedEOL = FALSE;
+	       NeedEOL = false;
 	       for (Str = Readln(StrBuf, InFD), LineNum += 1;
 		    Str != ERROR && TagStrCmp(Str, TagStr) != 0;
 		    Str = Readln(StrBuf, InFD), LineNum += 1) {
 		  if (Found) {
 		     if (NeedEOL) Writeln(OutFD, "");
 		     Write(OutFD, Str);
-		     NeedEOL = TRUE; }/*if*/; }/*for*/;
+		     NeedEOL = true; }/*if*/; }/*for*/;
 	       if (Found) {
 		  if (NeedLastEOL) Writeln(OutFD, "");
 		  if (ExecFlag) MakeExecutable(OutFileName);
@@ -785,7 +785,7 @@ WriteTextDef(
 			("Terminator \"%s\" not found for target \"%s\".\n",
 			 TagStr, Name); }/*if*/;
 		  return; }/*if*/; }/*if*/;
-	    Found = FALSE; break;}/*case*/;
+	    Found = false; break;}/*case*/;
 	 case DRVFLS: {
 	    if (Nod_NumSons(Nod) > 0) {
 	       FileError("Must be a target.\n");
@@ -806,19 +806,19 @@ Make_TargetsLocElm(
    GMC_ARG(tp_FilDsc, InFD),
    GMC_ARG(tp_FileName, InFileName),
    GMC_ARG(tp_Date, DepModDate),
-   GMC_ARG(boolean, VirFlag)
+   GMC_ARG(bool, VirFlag)
    )
    GMC_DCL(tp_FilHdr, FilHdr)
    GMC_DCL(tp_FilDsc, InFD)
    GMC_DCL(tp_FileName, InFileName)
    GMC_DCL(tp_Date, DepModDate)
-   GMC_DCL(boolean, VirFlag)
+   GMC_DCL(bool, VirFlag)
 {
    tp_Nod Nod, TgtNod;
    tps_Str StrBuf;
    tp_Str Str, Name, TagStr;
    int LineNum;
-   boolean CmdFlag, ExecFlag;
+   bool CmdFlag, ExecFlag;
    tp_PrmFHdr PrmFHdr;
    tp_FilPrm FilPrm;
    tp_FilHdr ValFilHdr, TgtFilHdr;
@@ -900,7 +900,7 @@ Exec_VirDir(
    tp_Str Key;
    tp_FilHdr ElmFilHdr;
    tp_FilElm FilElm;
-   boolean Abort;
+   bool Abort;
    size_t sz;
 
    FilHdr_DataFileName(FileName, FilHdr);
@@ -1114,7 +1114,7 @@ Get_ExDel(
    GMC_ARG(tp_FilPrm, FilPrm),
    GMC_ARG(tp_FilTyp, FilTyp),
    GMC_ARG(tp_FilHdr, ListFilHdr),
-   GMC_ARG(boolean, ExFlag)
+   GMC_ARG(bool, ExFlag)
    )
    GMC_DCL(tp_LocElm*, FirstLEPtr)
    GMC_DCL(tp_LocElm*, LastLEPtr)
@@ -1122,7 +1122,7 @@ Get_ExDel(
    GMC_DCL(tp_FilPrm, FilPrm)
    GMC_DCL(tp_FilTyp, FilTyp)
    GMC_DCL(tp_FilHdr, ListFilHdr)
-   GMC_DCL(boolean, ExFlag)
+   GMC_DCL(bool, ExFlag)
 {
    tp_LocElm LocElm;
    tp_FilElm FilElm;
@@ -1154,11 +1154,11 @@ tp_LocElm
 Make_ExDelLocElm(
    GMC_ARG(tp_FilHdr, FilHdr),
    GMC_ARG(tp_FilHdr, ListFilHdr),
-   GMC_ARG(boolean, ExFlag)
+   GMC_ARG(bool, ExFlag)
    )
    GMC_DCL(tp_FilHdr, FilHdr)
    GMC_DCL(tp_FilHdr, ListFilHdr)
-   GMC_DCL(boolean, ExFlag)
+   GMC_DCL(bool, ExFlag)
 {
    tp_LocElm FirstLE, LastLE;
    tp_FilTyp FilTyp;

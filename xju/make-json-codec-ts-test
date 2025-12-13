@@ -5,13 +5,19 @@
 import json
 import re
 from pathlib import Path
-from typing import Literal, Self, NewType, ClassVar
+from typing import Literal, Self, NewType, ClassVar, Protocol, TypeVar,Any
 from types import NoneType
 from ipaddress import IPv4Address,IPv4Interface
 from xju.json_codec import codec, TypeScriptNamespace, TypeScriptSourceCode, TypeScriptNamespace
 from xju.json_codec import TypeScriptUQN, AnyJsonCodecImpl, encode_attr_as, PythonAttrName, JsonAttrName
-from xju.json_codec import JsonType, dont_encode_attr
-from xju.json_codec import CustomNonStringKeyClassCodec,CustomClassCodec,CustomStringKeyClassCodec
+from xju.json_codec import JsonType, dont_encode_attr, CodecProto
+from xju.json_codec import CustomGenericClassCodec
+from xju.json_codec import (
+    CustomNonStringKeyClassCodec,
+    CustomClassCodec,
+    CustomStringKeyClassCodec,
+    CustomStringKeyGenericClassCodec
+)
 from xju.misc import ByteCount
 from xju.newtype import Str, Float
 from xju.time import Duration, Timestamp
@@ -115,6 +121,8 @@ class Even:
             ,f"    }}"
             ,f"}})"]))
 
+assert isinstance(Even,CustomClassCodec)
+assert not isinstance(Even,(CustomStringKeyClassCodec,CustomNonStringKeyClassCodec))
     
 class IpV4Addr(IPv4Address):
     """usable as a dict key (non-string key type)"""
@@ -322,6 +330,158 @@ Assert(IpV4AddrWithPrefix).isSubclassOf(CustomClassCodec)
 Assert(IpV4AddrWithPrefix).isSubclassOf(CustomStringKeyClassCodec)
 
 
+class ShapeOfT(Protocol):
+    x: str
+
+@dataclass(kw_only=True)
+class G[C, T: ShapeOfT]:
+    c: type[C]
+    v: T
+
+    @staticmethod
+    def get_codec(type_var_map:dict[TypeVar,Any]) -> CodecProto:
+        assert type_var_map is not None
+        return codec(type_var_map[G.__parameters__[1]].__annotations__['x'])  # type: ignore
+
+    # xju.json_codec.CustomGenericClassCodec:
+    @staticmethod
+    def xju_json_codec_encode_generic(
+            x:"G[C,T]",
+            type_var_map:dict[TypeVar,type]) -> JsonType:
+        """only encodes the T.x attribute"""
+        return G.get_codec(type_var_map).encode(x.v.x)
+    @staticmethod
+    def xju_json_codec_decode_generic(
+            x:JsonType,
+            type_var_map:dict[TypeVar,type]) -> "G[C,T]":
+        v_x=G.get_codec(type_var_map).decode(x)
+        return G(c=type_var_map[G.__parameters__[0]],  # type: ignore
+                 v=type_var_map[G.__parameters__[1]](x=v_x))  # type: ignore
+    @staticmethod
+    def xju_json_codec_get_json_schema_generic(
+            definitions:dict[str,dict],
+            type_var_map:dict[TypeVar,type]) -> dict:
+        '''return json schema for T'''
+        '''- may add any supporting definitions to definitions'''
+        return G.get_codec(type_var_map).get_json_schema()
+    @staticmethod
+    def xju_json_codec_get_typescript_type_generic(
+            type_var_map:dict[TypeVar,type]) -> TypeScriptSourceCode:
+        kt=f"typeof {G.__parameters__[0]}"
+        vt=f"{G.__parameters__[1]}"
+        return TypeScriptSourceCode(f"string /* G<{kt},{vt} */");
+    @staticmethod
+    def xju_json_codec_5_get_typescript_isa_generic(
+            namespace: TypeScriptNamespace,
+            type_var_map:dict[TypeVar,type]) -> TypeScriptSourceCode:
+        '''return typescript source that evaluates to a xju.json_codec.IsInstance
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        return TypeScriptSourceCode("xju.json_codec.isInstanceOfString;");
+    @staticmethod
+    def xju_json_codec_5_get_typescript_asa_generic(
+            namespace: TypeScriptNamespace,
+            type_var_map:dict[TypeVar,type]) -> TypeScriptSourceCode:
+        '''return typescript source code that verifies {expression} with defaults applied would be a T and returns xju.json_codec.ApplyDefaults that would apply defaults, throwing an Error if {expression} is not valid as a T'''
+        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
+        kt=f"typeof {G.__parameters__[0]}"
+        vt=f"{G.__parameters__[1]}"
+        return TypeScriptSourceCode(f"xju.json_codec.asInstanceOfString('G<{kt},{vt}>'");
+    pass
+
+assert issubclass(G, CustomGenericClassCodec)
+
+
+@dataclass(kw_only=True)
+class GK[C, T: ShapeOfT]:
+    c: type[C]
+    v: T
+
+    @staticmethod
+    def get_codec(type_var_map:dict[TypeVar,Any]) -> CodecProto:
+        assert type_var_map is not None
+        return codec(type_var_map[GK.__parameters__[1]].__annotations__['x'])  # type: ignore
+
+    # xju.json_codec.CustomGenericClassCodec:
+    @staticmethod
+    def xju_json_codec_encode_generic(
+            x:"GK[C,T]",
+            type_var_map:dict[TypeVar,type]) -> JsonType:
+        """only encodes the T.x attribute"""
+        return GK.get_codec(type_var_map).encode(x.v.x)
+    @staticmethod
+    def xju_json_codec_decode_generic(
+            x:JsonType,
+            type_var_map:dict[TypeVar,type]) -> "GK[C,T]":
+        v_x=GK.get_codec(type_var_map).decode(x)
+        return GK(c=type_var_map[GK.__parameters__[0]],  # type: ignore
+                  v=type_var_map[GK.__parameters__[1]](x=v_x))  # type: ignore
+    @staticmethod
+    def xju_json_codec_get_json_schema_generic(
+            definitions:dict[str,dict],
+            type_var_map:dict[TypeVar,type]) -> dict:
+        '''return json schema for T'''
+        '''- may add any supporting definitions to definitions'''
+        return GK.get_codec(type_var_map).get_json_schema()
+    @staticmethod
+    def xju_json_codec_get_typescript_type_generic(
+            type_var_map:dict[TypeVar,type]) -> TypeScriptSourceCode:
+        kt=f"typeof {G.__parameters__[0]}"
+        vt=f"{G.__parameters__[1]}"
+        return TypeScriptSourceCode(f"string /* GK<{kt},{vt}> */");
+    @staticmethod
+    def xju_json_codec_5_get_typescript_isa_generic(
+            namespace: TypeScriptNamespace,
+            type_var_map:dict[TypeVar,type]) -> TypeScriptSourceCode:
+        '''return typescript source that evaluates to a xju.json_codec.IsInstance
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        return TypeScriptSourceCode("xju.json_codec.isInstanceOfString;");
+    @staticmethod
+    def xju_json_codec_5_get_typescript_asa_generic(
+            namespace: TypeScriptNamespace,
+            type_var_map:dict[TypeVar,type]) -> TypeScriptSourceCode:
+        '''return typescript source code that verifies {expression} with defaults applied would be a T and returns xju.json_codec.ApplyDefaults that would apply defaults, throwing an Error if {expression} is not valid as a T'''
+        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
+        kt=f"typeof {GK.__parameters__[0]}"
+        vt=f"{GK.__parameters__[1]}"
+        return TypeScriptSourceCode(f"xju.json_codec.asInstanceOfString('GK<{kt},{vt}>'");
+    @staticmethod
+    def xju_json_codec_get_object_key_json_schema_generic(
+            definitions:dict[str,dict],
+            type_var_map:dict[TypeVar,type]) -> dict:
+        '''return json schema for T when used as an object key
+           - may add any supporting definitions to definitions'''
+        return GK.get_codec(type_var_map).get_json_schema()
+    @staticmethod
+    def xju_json_codec_typescript_key_type_generic(type_var_map:dict[TypeVar,type])-> Literal['String']:
+        return 'String'
+
+    @staticmethod
+    def xju_json_codec_5_get_typescript_isa_key_generic(
+            namespace: TypeScriptNamespace,
+            type_var_map:dict[TypeVar,type]) -> TypeScriptSourceCode:
+        '''return typescript source code that evaluates to a xju.json_codec.IsKey
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        assert False  #pragma NO COVER
+        return TypeScriptSourceCode('')
+    @staticmethod
+    def xju_json_codec_5_get_typescript_asa_key_generic(
+            namespace: TypeScriptNamespace,
+            type_var_map:dict[TypeVar,type]) -> TypeScriptSourceCode:
+        '''return typescript source code that evaluates to a xju.json_codec.AsKey
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        assert False  #pragma NO COVER
+        return TypeScriptSourceCode('')
+    pass
+
+assert issubclass(GK, CustomStringKeyGenericClassCodec)
+
+
+@dataclass(kw_only=True)
+class GT:
+    x: str
+    pass
+
+
 Colour = NewType('Colour',str)
 
 Milligrams = NewType('Milligrams',float)
@@ -329,7 +489,7 @@ Milligrams = NewType('Milligrams',float)
 Votes = NewType('Votes',int)
 
 Enabled = NewType('Enabled',bool)
-    
+
 @dataclass
 class Selfish:
     value: int
@@ -415,7 +575,7 @@ class EncodableData:
     a_frozen_set: frozenset[int]
     any_frozen_set: frozenset
     some_bytes: bytes
-    a_tuple: tuple[int, str]
+    a_tuple: tuple[int, str, G[int,GT]]
     a_literal_str: Literal['ann','mai']
     a_literal_int: Literal[7]
     a_literal_bool: Literal[True]
@@ -433,13 +593,15 @@ class EncodableData:
     a_custom_encoded: IpV4Addr
     another_custom_encoded: IpV4AddrWithPrefix
     non_key_custom_encoded: Even
+    a_custom_generic: G[int,GT]
+    a_custom_generic_usable_as_key: GK[int,GT]
 
     # dictionary key encodings (json object keys must be strings; various python
     # dict key types are supported and encoded to/from strings)
 
     cl: ClassVar[int] = 3
 
-encodable_data_codec=codec(EncodableData)
+encodable_data_codec=codec(EncodableData)  # type: ignore  # REVISIT
 encodable_data_codec.ensure_typescript_defs(namespace)
 codec(int|str).add_typescript_alias(namespace, [TypeScriptUQN('xju'),TypeScriptUQN('NorS')])
 
@@ -463,6 +625,7 @@ class EncodableKeyTypes:
     newint_key: dict[Votes,int]
     newbool_key: dict[Enabled,int]
     any_key: dict
+    a_custom_generic: dict[GK[int,GT],bool]
     pass
 
 encodable_key_types_codec=codec(EncodableKeyTypes)
@@ -488,7 +651,7 @@ good_encodable_data=json.loads('''{
         "a_frozen_set": [7],
         "any_frozen_set": [2, 4.6],
         "some_bytes": [10,11,12],
-        "a_tuple": [8, "jock"],
+        "a_tuple": [8, "jock", "fred"],
         "a_literal_str": "mai",
         "a_literal_int": 7,
         "a_literal_bool": true,
@@ -504,7 +667,9 @@ good_encodable_data=json.loads('''{
         "a_json":9,
         "a_custom_encoded":2975337473,
         "another_custom_encoded":"177.88.12.0/22",
-        "non_key_custom_encoded":3
+        "non_key_custom_encoded":3,
+        "a_custom_generic":"fred",
+        "a_custom_generic_usable_as_key":"fred"
     }''')
 
 good_encodable_key_types=EncodableKeyTypes(
@@ -524,7 +689,8 @@ good_encodable_key_types=EncodableKeyTypes(
     xjufloat_key={ Metres(22.5):1 },
     newint_key={ Votes(7):1 },
     newbool_key={ Enabled(False):1 },
-    any_key={ "8":1, "fred":2, "null":3, "7.6":4, "true":5 }  # keys have to be strings to json.dumps
+    any_key={ "8":1, "fred":2, "null":3, "7.6":4, "true":5 },  # keys have to be strings to json.dumps
+    a_custom_generic={"fred":True}
 )
 Assert(encodable_key_types_codec.encode(good_encodable_key_types))==encodable_key_types_codec.encode(encodable_key_types_codec.decode(encodable_key_types_codec.encode(good_encodable_key_types)))
 
@@ -594,6 +760,22 @@ try:
     codec(IpV4Addr).decode(None)
 except Exception as e:
     Assert(readable_repr(e)).contains("None (of type <class 'NoneType'>) is not a <class 'int'>.")
+else:
+    assert False
+    pass
+
+try:
+    codec(Even).encode(None)  # type: ignore  # json_codec plugin correctly rejects
+except Exception as e:
+    Assert(readable_repr(e)).contains("Failed to encode None as a <class '__main__.Even'> because\n'NoneType' object has no attribute 'value'.")
+else:
+    assert False
+    pass
+
+try:
+    codec(Even).decode(None)
+except Exception as e:
+    Assert(readable_repr(e)).contains("Failed to decode None to a <class '__main__.Even'> because\nfailed to decode None as a <class '__main__.Even'> because\nfailed to decode None to a <class 'int'> because\nNone (of type <class 'NoneType'>) is not a <class 'int'>.")
 else:
     assert False
     pass

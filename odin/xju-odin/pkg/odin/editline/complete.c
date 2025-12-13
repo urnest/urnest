@@ -1,8 +1,8 @@
 /*  
 **  History and file completion functions for editline library.
 */
-#include "editline.h"
-
+#include <odin/editline/editline.h>
+#include <string.h>
 
 #ifdef NEED_STRDUP
 /*
@@ -26,18 +26,14 @@ strdup(
 **  strcmp-like sorting predicate for qsort.
 */
 STATIC int
-compare(
-  CONST GMC_ARG(void*, p1),
-  CONST GMC_ARG(void*, p2)
-  )
-  GMC_DCL(void*, p1)
-  GMC_DCL(void*, p2)
+compare(const void* p1,
+        const void* p2)
 {
-    CONST char	**v1;
-    CONST char	**v2;
+    const char	**v1;
+    const char	**v2;
 
-    v1 = (CONST char **)p1;
-    v2 = (CONST char **)p2;
+    v1 = (const char **)p1;
+    v2 = (const char **)p2;
     return strcmp(*v1, *v2);
 }
 
@@ -46,14 +42,7 @@ compare(
 **  Ignore . and .. .
 */
 STATIC int
-FindMatches(
-  GMC_ARG(char*, dir),
-  GMC_ARG(char*, file),
-  GMC_ARG(char***, avp)
-  )
-  GMC_DCL(char*, dir)
-  GMC_DCL(char*, file)
-  GMC_DCL(char***, avp)
+FindMatches(char* dir,char* file,char*** avp)
 {
     char	**av;
     char	**newval;
@@ -105,14 +94,7 @@ FindMatches(
 **  Split a pathname into allocated directory and trailing filename parts.
 */
 STATIC int
-SplitPath(
-  GMC_ARG(char*, path),
-  GMC_ARG(char**, dirpart),
-  GMC_ARG(char**, filepart)
-  )
-  GMC_DCL(char*, path)
-  GMC_DCL(char**, dirpart)
-  GMC_DCL(char**, filepart)
+SplitPath(char* path,char** dirpart,char** filepart)
 {
     static char	DOT[] = ".";
     char	*dpart;
@@ -145,12 +127,7 @@ SplitPath(
 **  Fill in *unique if we completed it, or set it to 0 if ambiguous.
 */
 char *
-rl_complete(
-  GMC_ARG(char*, pathname),
-  GMC_ARG(int*, unique)
-  )
-  GMC_DCL(char*, pathname)
-  GMC_DCL(int*, unique)
+rl_complete(char* pathname,int* unique)
 {
     char	**av;
     char	*dir;
@@ -220,12 +197,7 @@ rl_complete(
 **  Return all possible completions.
 */
 int
-rl_list_possib(
-  GMC_ARG(char*, pathname),
-  GMC_ARG(char***, avp)
-  )
-  GMC_DCL(char*, pathname)
-  GMC_DCL(char***, avp)
+rl_list_possib(char* pathname,char*** avp)
 {
     char	*dir;
     char	*file;

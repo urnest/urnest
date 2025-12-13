@@ -42,10 +42,7 @@ char		*BuildArgV[MAX_BUILDARGV];
 
 
 void
-Local_Add_BuildArg(
-   GMC_ARG(tp_FileName, Arg)
-   )
-   GMC_DCL(tp_FileName, Arg)
+Local_Add_BuildArg(tp_FileName Arg)
 {
    FORBIDDEN((Num_BuildArgV+2) > MAX_BUILDARGV);
    if (BuildArgV[Num_BuildArgV] != NIL) free(BuildArgV[Num_BuildArgV]);
@@ -55,10 +52,7 @@ Local_Add_BuildArg(
 
 
 tp_Build
-BuildID_Build(
-   GMC_ARG(tp_BuildID, BuildID)
-   )
-   GMC_DCL(tp_BuildID, BuildID)
+BuildID_Build(tp_BuildID BuildID)
 {
    tp_Build Build;
 
@@ -70,10 +64,7 @@ BuildID_Build(
 
 
 tp_Build
-JobID_Build(
-   GMC_ARG(tp_JobID, JobID)
-   )
-   GMC_DCL(tp_JobID, JobID)
+JobID_Build(tp_JobID JobID)
 {
    tp_Build Build;
 
@@ -85,7 +76,7 @@ JobID_Build(
 
 
 tp_Build
-New_Build(GMC_ARG_VOID)
+New_Build()
 {
    tp_Build Build;
 
@@ -101,14 +92,7 @@ New_Build(GMC_ARG_VOID)
 
 
 static int
-RBS_Read(
-   GMC_ARG(int, fd),
-   GMC_ARG(char*, buf),
-   GMC_ARG(int, len)
-   )
-   GMC_DCL(int, fd)
-   GMC_DCL(char*, buf)
-   GMC_DCL(int, len)
+RBS_Read(int fd,char* buf,int len)
 {
    int n, i;
 
@@ -121,10 +105,7 @@ RBS_Read(
 
 
 static void
-RBS_Write_Int(
-   GMC_ARG(int, Int)
-   )
-   GMC_DCL(int, Int)
+RBS_Write_Int(int Int)
 {
    int cc;
 
@@ -134,10 +115,7 @@ RBS_Write_Int(
 
 
 static void
-RBS_Read_Int(
-   GMC_ARG(int*, IntPtr)
-   )
-   GMC_DCL(int*, IntPtr)
+RBS_Read_Int(int* IntPtr)
 {
    int cc;
 
@@ -147,10 +125,7 @@ RBS_Read_Int(
 
 
 static void
-RBS_Write_Str(
-   GMC_ARG(const char*, Str)
-   )
-   GMC_DCL(char*, Str)
+RBS_Write_Str(const char* Str)
 {
    int cc, len;
 
@@ -163,10 +138,7 @@ RBS_Write_Str(
 
 
 static void
-RBS_Read_Str(
-   GMC_ARG(char*, Str)
-   )
-   GMC_DCL(char*, Str)
+RBS_Read_Str(char* Str)
 {
    int cc, len;
 
@@ -179,7 +151,7 @@ RBS_Read_Str(
 
 
 void
-RBS_Read_VarDef(GMC_ARG_VOID)
+RBS_Read_VarDef()
 {
    tps_Str StrBuf;
    int status;
@@ -191,7 +163,7 @@ RBS_Read_VarDef(GMC_ARG_VOID)
 
 
 void
-Set_ODINRBSHOST(GMC_ARG_VOID)
+Set_ODINRBSHOST()
 {
    int status;
    char LocalHostName[MAXHOSTNAMELEN];
@@ -204,12 +176,7 @@ Set_ODINRBSHOST(GMC_ARG_VOID)
    }/*Set_ODINRBSHOST*/
 
 
-int main(
-   GMC_ARG(int, argc),
-   GMC_ARG(char**, argv)
-   )
-   GMC_DCL(int, argc)
-   GMC_DCL(char**, argv)
+int main(int argc,char** argv)
 {
 #ifndef BSD_SIGNALS
    struct sigaction actbuf;
@@ -219,7 +186,7 @@ int main(
    struct sockaddr *SockAddrPtr = (struct sockaddr *)&InSockAddr;
    struct hostent *HostEnt;
    int i, status, MsgType, BuildID, JobID;
-   boolean Abort;
+   bool Abort;
    fd_set _readfds, *readfds = &_readfds;
    int fd, pid, nfds;
    struct timeval _Timeout, *Timeout;
@@ -227,9 +194,8 @@ int main(
    tp_Build Build;
 
    FORBIDDEN(argc != 3);
-   Init_IO();
-   Init_Err();
-   Init_Sigs(FALSE);
+   Init_Gmc();
+   Init_Sigs(false);
 
    Unblock_Signals();
    HostName = argv[1];
@@ -263,12 +229,12 @@ int main(
 
    status = connect(SocketFD, SockAddrPtr, sizeof(InSockAddr));
    FORBIDDEN(status != 0);
-   while (TRUE) {
+   while (true) {
       FD_SET(SocketFD, readfds);
-      nfds = Await_Event(readfds, FALSE);
+      nfds = Await_Event(readfds, false);
       if (nfds < 0) FD_ZERO(readfds);
       if (SigChild) {
-	 SigChild = FALSE;
+	 SigChild = false;
 	 for (SystemWait(&BuildID, &Abort);
 	      BuildID != 0;
 	      SystemWait(&BuildID, &Abort)) {
@@ -324,10 +290,7 @@ int main(
 
 
 void
-Exit(
-   GMC_ARG(int, Status)
-   )
-   GMC_DCL(int, Status)
+Exit(int Status)
 {
    tp_Build Build;
 

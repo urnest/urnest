@@ -25,21 +25,21 @@ static int AnyOKDepth = 1;
 static int ElmDepth = 1;
 
 
-static void GetReqs(GMC_P1(tp_FilHdr) GMC_PN(boolean) GMC_PN(boolean) GMC_PN(int *));
+static void GetReqs(GMC_P1(tp_FilHdr) GMC_PN(bool) GMC_PN(bool) GMC_PN(int *));
 
 
-static boolean
+static bool
 Is_CopyDone(
    GMC_ARG(tp_FilHdr, FilHdr)
    )
    GMC_DCL(tp_FilHdr, FilHdr)
 {
    tp_FilHdr OrigFilHdr, DestFilHdr;
-   boolean OK;
+   bool OK;
 
    DestFilHdr = Deref_SymLink(Get_Copy_DestFilHdr(Copy_FilHdr(FilHdr)));
    if (DestFilHdr == NIL) {
-      return FALSE; }/*if*/;
+      return false; }/*if*/;
    OrigFilHdr = Deref(FilHdr_Father(Copy_FilHdr(FilHdr)));
    OrigFilHdr = Deref_SymLink(OrigFilHdr);
    OK = (FilHdr_LocHdr(OrigFilHdr) == FilHdr_OrigLocHdr(DestFilHdr)
@@ -56,7 +56,7 @@ GetNotUpToDateFile(tp_FilHdr FilHdr)
    tp_Status Status, MinStatus, InpStatus;
    tp_Date ModDate, MaxSonModDate;
    tp_Tool Tool;
-   boolean DataFlag, NameFlag;
+   bool DataFlag, NameFlag;
    tp_FilInp FilInp;
    tp_InpKind InpKind;
 
@@ -64,18 +64,18 @@ GetNotUpToDateFile(tp_FilHdr FilHdr)
    if (Status == STAT_Ready || Status == STAT_Busy) {
       FORBIDDEN(FilHdr_DepStatus(FilHdr) <= STAT_Error && !IsSource(FilHdr));
       Set_Status(FilHdr, Status);
-      Set_PndFlag(FilHdr, FALSE);
+      Set_PndFlag(FilHdr, false);
       if (!IsTgtValUpToDate(FilHdr)) {
         // REVISIT: why do this conditionally? It means we won't update
         // its verify date even though we just verified it at the currnet date?
 	 Set_TgtValStatus(FilHdr, FilHdr_TgtValStatus(FilHdr));
-	 Set_TgtValPndFlag(FilHdr, FALSE); }/*if*/;
+	 Set_TgtValPndFlag(FilHdr, false); }/*if*/;
       Push_ToDo(Copy_FilHdr(FilHdr));
       return; }/*if*/;
 
    if (IsSource(FilHdr)) {
       if (!IsSrcUpToDate(FilHdr)) {
-	 Update_SrcFilHdr(FilHdr, TRUE); }/*if*/;
+	 Update_SrcFilHdr(FilHdr, true); }/*if*/;
       Set_Status(FilHdr, FilHdr_Status(FilHdr));
       if (!IsTgtValUpToDate(FilHdr)) {
 	 TgtValFilHdr = FilHdr_TgtValFilHdr(Copy_FilHdr(FilHdr));
@@ -83,7 +83,7 @@ GetNotUpToDateFile(tp_FilHdr FilHdr)
 	 if (TgtValFilHdr != NIL) {
 	    FORBIDDEN(IsSource(TgtValFilHdr));
 	    AnyOKDepth += 1;
-	    GetReqs(TgtValFilHdr, FALSE, FALSE, (int *)0);
+	    GetReqs(TgtValFilHdr, false, false, (int *)0);
 	    AnyOKDepth -= 1;
 	    Status = FilHdr_MinStatus(TgtValFilHdr, IK_Simple);
 	    /*select*/{
@@ -97,8 +97,8 @@ GetNotUpToDateFile(tp_FilHdr FilHdr)
 		     }/*if*/; };}/*select*/;
 	    Ret_FilHdr(TgtValFilHdr); }/*if*/;
 	 Set_TgtValStatus(FilHdr, Status); }/*if*/;
-      Set_PndFlag(FilHdr, FALSE);
-      Set_TgtValPndFlag(FilHdr, FALSE);
+      Set_PndFlag(FilHdr, false);
+      Set_TgtValPndFlag(FilHdr, false);
       return; }/*if*/;
 
    if (FilHdr_Flag(FilHdr, FLAG_Get)) {
@@ -107,7 +107,7 @@ GetNotUpToDateFile(tp_FilHdr FilHdr)
       Status = ((AnyOKDepth > FilHdr_AnyOKDepth(FilHdr))
 		? STAT_Unknown : STAT_Circular);
       Set_ListStatus(FilHdr, Status);
-      Set_ListPndFlag(FilHdr, FALSE);
+      Set_ListPndFlag(FilHdr, false);
       return; }/*if*/;
    Set_Flag(FilHdr, FLAG_Get);
 
@@ -202,7 +202,7 @@ GetNotUpToDateFile(tp_FilHdr FilHdr)
    ExecInternal(FilHdr, MinStatus, MaxSonModDate);
 
 done:;
-   Set_ListPndFlag(FilHdr, FALSE);
+   Set_ListPndFlag(FilHdr, false);
    Clr_Flag(FilHdr, FLAG_Get);
    }/*GetFile*/
 
@@ -226,14 +226,14 @@ GetFile(
 static void
 ClearAll_SCC(
    GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(boolean, DataFlag)
+   GMC_ARG(bool, DataFlag)
    )
    GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(boolean, DataFlag)
+   GMC_DCL(bool, DataFlag)
 {
    tp_FilElm FilElm;
    tp_FilHdr SCC_FilHdr, ElmFilHdr;
-   boolean ViewSpecFlag;
+   bool ViewSpecFlag;
 
    if (FilHdr_ElmDepth(FilHdr) != ElmDepth) {
       FORBIDDEN(FilHdr_ElmDepth(FilHdr) != 0 && FilHdr_ElmDepth(FilHdr) > ElmDepth);
@@ -245,12 +245,12 @@ ClearAll_SCC(
    Set_ElmNameStatus(FilHdr, FilHdr_ElmNameStatus(SCC_FilHdr));
    Set_ElmNameModDate(FilHdr, FilHdr_ElmNameModDate(SCC_FilHdr));
    Set_ElmNameConfirmDate(FilHdr);
-   Set_ElmNamePndFlag(FilHdr, FALSE);
+   Set_ElmNamePndFlag(FilHdr, false);
    if (DataFlag) {
       Set_ElmStatus(FilHdr, FilHdr_ElmStatus(SCC_FilHdr));
       Set_ElmModDate(FilHdr, FilHdr_ElmModDate(SCC_FilHdr));
       Set_ElmConfirmDate(FilHdr);
-      Set_ElmPndFlag(FilHdr, FALSE); }/*if*/;
+      Set_ElmPndFlag(FilHdr, false); }/*if*/;
    Ret_FilHdr(SCC_FilHdr);
 
    ViewSpecFlag = IsViewSpec(FilHdr);
@@ -271,16 +271,16 @@ ClearAll_SCC(
 static void
 GetReqs(
    GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(boolean, NameFlag),
-   GMC_ARG(boolean, DataFlag),
+   GMC_ARG(bool, NameFlag),
+   GMC_ARG(bool, DataFlag),
    GMC_ARG(int*, ETPtr)
    )
    GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(boolean, NameFlag)
-   GMC_DCL(boolean, DataFlag)
+   GMC_DCL(bool, NameFlag)
+   GMC_DCL(bool, DataFlag)
    GMC_DCL(int*, ETPtr)
 {
-   boolean DepthSet, ListFlag, ViewSpecFlag;
+   bool DepthSet, ListFlag, ViewSpecFlag;
    int ElmTagInit, ElmTag, *ElmTagPtr;
    tp_FilElm FilElm;
    tp_FilHdr ElmFilHdr, SCC_ElmFilHdr, SCC_FilHdr, DerefFilHdr;
@@ -301,10 +301,10 @@ GetReqs(
        Do_Log("{ Get reqs of", FilHdr, LOGLEVEL_Process);
      }
    }
-   DepthSet = FALSE;
+   DepthSet = false;
    if (FilHdr_AnyOKDepth(FilHdr) == 0) {
       Set_AnyOKDepth(FilHdr, AnyOKDepth);
-      DepthSet = TRUE; }/*if*/;
+      DepthSet = true; }/*if*/;
 
    ElmDepth += 1;
    GetFile(FilHdr);
@@ -467,7 +467,7 @@ GetAllReqs(
    GMC_DCL(tp_FilHdr, FilHdr)
    GMC_DCL(tp_InpKind, InpKind)
 {
-   boolean DataFlag, NameFlag;
+   bool DataFlag, NameFlag;
 
    Do_Log("{ Get all reqs of", FilHdr, LOGLEVEL_Process);
    

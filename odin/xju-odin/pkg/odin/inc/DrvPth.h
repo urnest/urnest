@@ -1,4 +1,4 @@
-#ifndef TPS_DRVPTH
+!!#ifndef TPS_DRVPTH
 #define TPS_DRVPTH
 
 typedef struct _tps_DrvPth {
@@ -7,7 +7,7 @@ typedef struct _tps_DrvPth {
    tp_FilTyp FilTyp;
    tp_DrvEdg DrvEdg;
    tp_DrvPth Next;
-   boolean InUse;
+   bool InUse;
    }				tps_DrvPth;
 
 #endif

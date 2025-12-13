@@ -19,10 +19,7 @@ geoff@boulder.colorado.edu
 
 
 static tp_Str
-Get_DrvOprName(
-   GMC_ARG(tp_Nod, Root)
-   )
-   GMC_DCL(tp_Nod, Root)
+Get_DrvOprName(tp_Nod Root)
 {
    tp_Nod Brother;
 
@@ -35,49 +32,40 @@ Get_DrvOprName(
 
 
 void
-Do_Help(
-   GMC_ARG(boolean*, AbortPtr),
-   GMC_ARG(boolean*, IsHelpPtr),
-   GMC_ARG(boolean*, IsHandledPtr),
-   GMC_ARG(tp_Nod, Root)
-   )
-   GMC_DCL(boolean*, AbortPtr)
-   GMC_DCL(boolean*, IsHelpPtr)
-   GMC_DCL(boolean*, IsHandledPtr)
-   GMC_DCL(tp_Nod, Root)
+Do_Help(bool* AbortPtr,bool* IsHelpPtr,bool* IsHandledPtr,tp_Nod Root)
 {
    tp_Str DrvOprName;
    tps_Str StrBuf;
    tp_Nod Son;
 
-   *AbortPtr = FALSE;
-   *IsHelpPtr = FALSE;
-   *IsHandledPtr = FALSE;
+   *AbortPtr = false;
+   *IsHelpPtr = false;
+   *IsHandledPtr = false;
    if (Root == NIL) {
       return; }/*if*/;
    switch (Nod_NodTyp(Root)) {
       case HELP: {
-	 *IsHelpPtr = TRUE; break; }/*case*/;
+	 *IsHelpPtr = true; break; }/*case*/;
       case PFHELP: {
-	 *IsHelpPtr = TRUE;
-	 *IsHandledPtr = TRUE;
+	 *IsHelpPtr = true;
+	 *IsHandledPtr = true;
 	 TopLevelCI(AbortPtr, "() :prefix_help>");
 	 break; }/*case*/;
       case SFHELP: {
-	 *IsHelpPtr = TRUE;
-	 *IsHandledPtr = TRUE;
+	 *IsHelpPtr = true;
+	 *IsHandledPtr = true;
 	 TopLevelCI(AbortPtr, "() :suffix_help>");
 	 break; }/*case*/;
       case EPHELP: {
-	 *IsHelpPtr = TRUE;
-	 *IsHandledPtr = TRUE;
+	 *IsHelpPtr = true;
+	 *IsHandledPtr = true;
 	 Writeln(StdOutFD, "?*? An arbitrary string of characters.");
 	 Writeln(StdOutFD, "?*? ( an initial special character must be escaped with a \\ )"); break; }/*case*/;
       case STRING: {
 	 Do_Help(AbortPtr, IsHelpPtr, IsHandledPtr, Nod_Son(1, Root));
 	 if (*IsHelpPtr) {
 	    if (!*IsHandledPtr) {
-	       *IsHandledPtr = TRUE;
+	       *IsHandledPtr = true;
 	       Write(StdOutFD, "?*? An arbitrary string of characters");
 	       Writeln(StdOutFD, " (special characters must be escaped).");
 	       }/*if*/; }/*if*/; break; }/*case*/;
@@ -94,14 +82,14 @@ Do_Help(
 	 Do_Help(AbortPtr, IsHelpPtr, IsHandledPtr, Son);
 	 if (*IsHelpPtr) {
 	    if (!*IsHandledPtr && Nod_NumSons(Root) > 1) {
-	       *IsHandledPtr = TRUE;
+	       *IsHandledPtr = true;
 	       Writeln(StdOutFD, "*?* An Odin expression."); }/*if*/;
 	    return; }/*if*/;
 	 for (Son = Nod_Brother(Son); Son != NIL; Son = Nod_Brother(Son)) {
 	    Do_Help(AbortPtr, IsHelpPtr, IsHandledPtr, Son);
 	    if (*IsHelpPtr) {
 	       if (!*IsHandledPtr) {
-		  *IsHandledPtr = TRUE;
+		  *IsHandledPtr = true;
 		  OC_Unparse(StrBuf, Root);
 		  /*select*/{
 		     if (Nod_NodTyp(Son) == DRVOPR) {
@@ -121,18 +109,18 @@ Do_Help(
 	 Do_Help(AbortPtr, IsHelpPtr, IsHandledPtr, Nod_Son(1, Root));
 	 if (*IsHelpPtr) {
 	    if (!*IsHandledPtr) {
-	       *IsHandledPtr = TRUE;
+	       *IsHandledPtr = true;
 	       Writeln(StdOutFD, "*?* An Odin expression."); }/*if*/;
 	    return; }/*if*/;
 	 Do_Help(AbortPtr, IsHelpPtr, IsHandledPtr, Nod_Son(2, Root));
 	 if (*IsHelpPtr && !*IsHandledPtr) {
-	    *IsHandledPtr = TRUE;
+	    *IsHandledPtr = true;
 	    Writeln(StdOutFD, "*?* An Odin expression or can be left blank.");
 	    }/*if*/; break; }/*case*/;
       case DISPLY: case EDIT: case EXECUT: {
 	 Do_Help(AbortPtr, IsHelpPtr, IsHandledPtr, Nod_Son(1, Root));
 	 if (*IsHelpPtr && !*IsHandledPtr) {
-	    *IsHandledPtr = TRUE;
+	    *IsHandledPtr = true;
 	    Writeln(StdOutFD, "*?* An Odin expression.");
 	    return; }/*if*/;
 	 if (Nod_NumSons(Root) > 1) {
@@ -142,45 +130,45 @@ Do_Help(
 	 if (Nod_NumSons(Root) == 1) {
 	    Do_Help(AbortPtr, IsHelpPtr, IsHandledPtr, Nod_Son(1, Root));
 	    if (*IsHelpPtr && !*IsHandledPtr) {
-	       *IsHandledPtr = TRUE;
+	       *IsHandledPtr = true;
 	       UtilityDefaultHelp(); }/*if*/;
 	    return; }/*if*/;
 	 Do_Help(AbortPtr, IsHelpPtr, IsHandledPtr, Nod_Son(1, Root));
 	 if (*IsHelpPtr) {
 	    if (!*IsHandledPtr) {
-	       *IsHandledPtr = TRUE;
+	       *IsHandledPtr = true;
 	       Writeln(StdOutFD, "*?* An Odin expression."); }/*if*/;
 	    return; }/*if*/;
 	 Do_Help(AbortPtr, IsHelpPtr, IsHandledPtr, Nod_Son(2, Root));
 	 if (*IsHelpPtr && !*IsHandledPtr) {
-	    *IsHandledPtr = TRUE;
+	    *IsHandledPtr = true;
 	    UtilityHelp(); }/*if*/; break; }/*case*/;
       case VARVAL: {
 	 Do_Help(AbortPtr, IsHelpPtr, IsHandledPtr, Nod_Son(1, Root));
 	 if (*IsHelpPtr && !*IsHandledPtr) {
-	    *IsHandledPtr = TRUE;
+	    *IsHandledPtr = true;
 	    ShowVars(); }/*if*/; break; }/*case*/;
       case VARSET: {
 	 Do_Help(AbortPtr, IsHelpPtr, IsHandledPtr, Nod_Son(1, Root));
 	 if (*IsHelpPtr) {
 	    if (!*IsHandledPtr) {
-	       *IsHandledPtr = TRUE;
+	       *IsHandledPtr = true;
 	       ShowVars(); }/*if*/;
 	    return; }/*if*/;
 	 Do_Help(AbortPtr, IsHelpPtr, IsHandledPtr, Nod_Son(2, Root));
 	 if (*IsHelpPtr && !*IsHandledPtr) {
-	    *IsHandledPtr = TRUE;
+	    *IsHandledPtr = true;
 	    HelpVar(Root); }/*if*/; break; }/*case*/;
       case SEGOPR: {
 	 Do_Help(AbortPtr, IsHelpPtr, IsHandledPtr, Nod_Son(1, Root));
 	 if (*IsHelpPtr && !*IsHandledPtr) {
-	    *IsHandledPtr = TRUE;
+	    *IsHandledPtr = true;
 	    Writeln(StdOutFD, "*?* A virtual name.");
 	    }/*if*/; break; }/*case*/;
       case ABSFIL: {
 	 Do_Help(AbortPtr, IsHelpPtr, IsHandledPtr, Nod_Son(1, Root));
 	 if (*IsHelpPtr && !*IsHandledPtr) {
-	    *IsHandledPtr = TRUE;
+	    *IsHandledPtr = true;
 	    Writeln(StdOutFD, "*?* A file in the root directory.");
 	    }/*if*/; break; }/*case*/;
       case PRMOPR: {
@@ -190,20 +178,20 @@ Do_Help(
 	 if (Nod_NumSons(Root) > 1) {
 	    Do_Help(AbortPtr, IsHelpPtr, IsHandledPtr, Nod_Son(2, Root));
 	    if (*IsHelpPtr && !*IsHandledPtr) {
-	       *IsHandledPtr = TRUE;
+	       *IsHandledPtr = true;
 	       Writeln(StdOutFD, "*?* A sequence of parameter values.");
 	       return; }/*if*/; }/*for*/; break; }/*case*/;
       case APLOPR: {
 	 Do_Help(AbortPtr, IsHelpPtr, IsHandledPtr, Nod_Son(1, Root));
 	 if (*IsHelpPtr && !*IsHandledPtr) {
-	    *IsHandledPtr = TRUE;
+	    *IsHandledPtr = true;
 	    Writeln(StdOutFD, "*?* An Odin expression.");
 	    return; }/*if*/; break; }/*case*/;
       case PRMVLS: {
 	 for (Son=Nod_Son(1, Root); Son!=NIL; Son=Nod_Brother(Son)) {
 	    Do_Help(AbortPtr, IsHelpPtr, IsHandledPtr, Son);
 	    if (*IsHelpPtr && !*IsHandledPtr) {
-	       *IsHandledPtr = TRUE;
+	       *IsHandledPtr = true;
 	       Writeln(StdOutFD,
 		"*?* A word or an Odin expression in parentheses.");
 	       return; }/*if*/; }/*for*/; break; }/*case*/;
@@ -213,32 +201,32 @@ Do_Help(
 	 Do_Help(AbortPtr, IsHelpPtr, IsHandledPtr, Nod_Son(1, Root));
 	 if (*IsHelpPtr) {
 	    if (!*IsHandledPtr) {
-	       *IsHandledPtr = TRUE;
+	       *IsHandledPtr = true;
 	       Write(StdOutFD, "*?* \"lookup\", \"map\", \"recurse\", ");
 	       Writeln(StdOutFD, "\"extract\", or \"delete\"."); }/*if*/;
 	    return; }/*if*/;
 	 Do_Help(AbortPtr, IsHelpPtr, IsHandledPtr, Nod_Son(2, Root));
 	 if (*IsHelpPtr && !*IsHandledPtr) {
-	    *IsHandledPtr = TRUE;
+	    *IsHandledPtr = true;
 	    Writeln(StdOutFD, "*?* An Odin derivation type.");
 	    }/*if*/; break; }/*case*/;
       case ELMOPR: {
 	 Do_Help(AbortPtr, IsHelpPtr, IsHandledPtr, Nod_Son(1, Root));
 	 if (*IsHelpPtr && !*IsHandledPtr) {
-	    *IsHandledPtr = TRUE;
+	    *IsHandledPtr = true;
 	    Writeln(StdOutFD, "*?* An element of the directory.");
 	    }/*if*/; break; }/*case*/;
       case OPRTNS: {
 	 for (Son=Nod_Son(1, Root); Son!=NIL; Son=Nod_Brother(Son)) {
 	    Do_Help(AbortPtr, IsHelpPtr, IsHandledPtr, Son);
 	    if (*IsHelpPtr && !*IsHandledPtr) {
-	       *IsHandledPtr = TRUE;
+	       *IsHandledPtr = true;
 	       Writeln(StdOutFD, "*?* An Odin operation.");
 	       return; }/*if*/; }/*for*/; break; }/*case*/;
       case PVLFIL: {
 	 Do_Help(AbortPtr, IsHelpPtr, IsHandledPtr, Nod_Son(1, Root));
 	 if (*IsHelpPtr && !*IsHandledPtr) {
-	    *IsHandledPtr = TRUE;
+	    *IsHandledPtr = true;
 	    Writeln(StdOutFD, "*?* An Odin expression.");
 	    }/*if*/; break; }/*case*/;
       default: {
@@ -247,12 +235,7 @@ Do_Help(
 
 
 void
-Local_Next_OdinFile(
-   GMC_ARG(tp_Str, OdinExpr),
-   GMC_ARG(int, ID)
-   )
-   GMC_DCL(tp_Str, OdinExpr)
-   GMC_DCL(int, ID)
+Local_Next_OdinFile(tp_Str OdinExpr,int ID)
 {
    WriteInt(StdOutFD, ID);
    Write(StdOutFD, "\t- ");

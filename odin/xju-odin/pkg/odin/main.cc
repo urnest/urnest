@@ -1,5 +1,5 @@
-#include "inc/GMC.h"
-#include "inc/if-main.h"
+#include <gmc/gmc.h>
+#include <odin/inc/if-main.h>
 
 int main(int argc, char* argv[])
 {

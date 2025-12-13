@@ -1,4 +1,4 @@
-#ifndef TPS_FILHDR
+!!#ifndef TPS_FILHDR
 #define TPS_FILHDR
 
 #include "HdrInf.h"
@@ -15,7 +15,7 @@ typedef struct _tps_FilHdr {
    int Cnt;
    tp_FilHdr PrevFree, NextFree;
 
-   boolean Modified;
+   bool Modified;
    tp_FilHdr NextMod;
 
    tp_Flag Flag;
@@ -25,7 +25,7 @@ typedef struct _tps_FilHdr {
    tp_FilHdr SCC;
    tp_Status DepStatus;
    tp_Date DepModDate;
-   boolean PndFlag, ElmNamePndFlag, ElmPndFlag;
+   bool PndFlag, ElmNamePndFlag, ElmPndFlag;
    }				tps_FilHdr;
 
 #endif

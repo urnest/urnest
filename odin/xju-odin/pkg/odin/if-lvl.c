@@ -34,14 +34,14 @@ static int		num_FreePosS = 0;
 
 
 static void
-Init_Lvls(GMC_ARG_VOID)
+Init_Lvls()
 {
    FORBIDDEN(num_PosS != num_FreePosS);
    }/*Init_Lvls*/
 
 
 static tp_Pos
-New_Pos(GMC_ARG_VOID)
+New_Pos()
 {
    tp_Pos Pos;
 
@@ -60,69 +60,49 @@ New_Pos(GMC_ARG_VOID)
 
 
 static tp_Lvl
-Begin_Lvl(GMC_ARG_VOID)
+Begin_Lvl()
 {
    return NIL;
    }/*Begin_Lvl*/
 
 
-static boolean
-IsEmpty_Lvl(
-   GMC_ARG(tp_Lvl, Lvl)
-   )
-   GMC_DCL(tp_Lvl, Lvl)
+static bool
+IsEmpty_Lvl(tp_Lvl Lvl)
 {
    return (Lvl == NIL);
    }/*IsEmpty_Lvl*/
 
 
 static tp_Pos
-First_Pos(
-   GMC_ARG(tp_Lvl, Lvl)
-   )
-   GMC_DCL(tp_Lvl, Lvl)
+First_Pos(tp_Lvl Lvl)
 {
    return Lvl;
    }/*First_Pos*/
 
 
 static tp_Pos
-Next_Pos(
-   GMC_ARG(tp_Pos, Pos)
-   )
-   GMC_DCL(tp_Pos, Pos)
+Next_Pos(tp_Pos Pos)
 {
    return Pos->Next;
    }/*Next_Pos*/
 
 
 static tp_FilTyp
-Pos_FilTyp(
-   GMC_ARG(tp_Pos, Pos)
-   )
-   GMC_DCL(tp_Pos, Pos)
+Pos_FilTyp(tp_Pos Pos)
 {
    return Pos->FilTyp;
    }/*Pos_FilTyp*/
 
 
-static boolean
-IsInLvl(
-   GMC_ARG(tp_FilTyp, FilTyp)
-   )
-   GMC_DCL(tp_FilTyp, FilTyp)
+static bool
+IsInLvl(tp_FilTyp FilTyp)
 {
    return (FilTyp->Pos != NIL);
    }/*IsInLvl*/
 
 
 static tp_DrvPth
-Make_DrvPth(
-   GMC_ARG(tp_FKind, FKind),
-   GMC_ARG(tp_FilTyp, FilTyp)
-   )
-   GMC_DCL(tp_FKind, FKind)
-   GMC_DCL(tp_FilTyp, FilTyp)
+Make_DrvPth(tp_FKind FKind,tp_FilTyp FilTyp)
 {
    tp_DrvPth DrvPth;
 
@@ -133,10 +113,7 @@ Make_DrvPth(
 
 
 static tp_DrvPth
-Pos_DrvPth(
-   GMC_ARG(tp_Pos, EndPos)
-   )
-   GMC_DCL(tp_Pos, EndPos)
+Pos_DrvPth(tp_Pos EndPos)
 {
    tp_Pos Pos;
    tp_DrvPth DrvPth, NextDrvPth;
@@ -167,14 +144,7 @@ Pos_DrvPth(
 
 
 static void
-AddInpToLvl(
-   GMC_ARG(tp_Pos*, PosPtr),
-   GMC_ARG(tp_Lvl*, LvlPtr),
-   GMC_ARG(tp_FilTyp, FilTyp)
-   )
-   GMC_DCL(tp_Pos*, PosPtr)
-   GMC_DCL(tp_Lvl*, LvlPtr)
-   GMC_DCL(tp_FilTyp, FilTyp)
+AddInpToLvl(tp_Pos* PosPtr,tp_Lvl* LvlPtr,tp_FilTyp FilTyp)
 {
    tp_Pos Pos;
 
@@ -194,14 +164,7 @@ AddInpToLvl(
 
 
 static void
-AddCastEdgToLvl(
-   GMC_ARG(tp_Lvl*, LvlPtr),
-   GMC_ARG(tp_FilTyp, FilTyp),
-   GMC_ARG(tp_Pos, BasePos)
-   )
-   GMC_DCL(tp_Lvl*, LvlPtr)
-   GMC_DCL(tp_FilTyp, FilTyp)
-   GMC_DCL(tp_Pos, BasePos)
+AddCastEdgToLvl(tp_Lvl* LvlPtr,tp_FilTyp FilTyp,tp_Pos BasePos)
 {
    tp_Pos Pos;
 
@@ -220,14 +183,7 @@ AddCastEdgToLvl(
 
 
 static void
-AddEqvEdgToLvl(
-   GMC_ARG(tp_Lvl*, LvlPtr),
-   GMC_ARG(tp_FilTyp, FilTyp),
-   GMC_ARG(tp_Pos, BasePos)
-   )
-   GMC_DCL(tp_Lvl*, LvlPtr)
-   GMC_DCL(tp_FilTyp, FilTyp)
-   GMC_DCL(tp_Pos, BasePos)
+AddEqvEdgToLvl(tp_Lvl* LvlPtr,tp_FilTyp FilTyp,tp_Pos BasePos)
 {
    tp_Pos Pos;
 
@@ -246,16 +202,7 @@ AddEqvEdgToLvl(
 
 
 static void
-AddDrvEdgToLvl(
-   GMC_ARG(tp_Lvl*, LvlPtr),
-   GMC_ARG(tp_FilTyp, FilTyp),
-   GMC_ARG(tp_DrvEdg, DrvEdg),
-   GMC_ARG(tp_Pos, BasePos)
-   )
-   GMC_DCL(tp_Lvl*, LvlPtr)
-   GMC_DCL(tp_FilTyp, FilTyp)
-   GMC_DCL(tp_DrvEdg, DrvEdg)
-   GMC_DCL(tp_Pos, BasePos)
+AddDrvEdgToLvl(tp_Lvl* LvlPtr,tp_FilTyp FilTyp,tp_DrvEdg DrvEdg,tp_Pos BasePos)
 {
    tp_Pos Pos;
 
@@ -275,16 +222,7 @@ AddDrvEdgToLvl(
 
 
 static void
-AddEqvEdgsToLvl(
-   GMC_ARG(tp_Pos*, PosPtr),
-   GMC_ARG(tp_Lvl*, LvlPtr),
-   GMC_ARG(tp_Pos, Pos),
-   GMC_ARG(tp_FilTyp, ToFilTyp)
-   )
-   GMC_DCL(tp_Pos*, PosPtr)
-   GMC_DCL(tp_Lvl*, LvlPtr)
-   GMC_DCL(tp_Pos, Pos)
-   GMC_DCL(tp_FilTyp, ToFilTyp)
+AddEqvEdgsToLvl(tp_Pos* PosPtr,tp_Lvl* LvlPtr,tp_Pos Pos,tp_FilTyp ToFilTyp)
 {
    tp_EqvEdg EqvEdg;
    tp_FilTyp EqvFilTyp;
@@ -309,16 +247,7 @@ AddEqvEdgsToLvl(
 
 
 static void
-AddCastEdgsToLvl(
-   GMC_ARG(tp_Pos*, PosPtr),
-   GMC_ARG(tp_Lvl*, LvlPtr),
-   GMC_ARG(tp_Pos, Pos),
-   GMC_ARG(tp_FilTyp, ToFilTyp)
-   )
-   GMC_DCL(tp_Pos*, PosPtr)
-   GMC_DCL(tp_Lvl*, LvlPtr)
-   GMC_DCL(tp_Pos, Pos)
-   GMC_DCL(tp_FilTyp, ToFilTyp)
+AddCastEdgsToLvl(tp_Pos* PosPtr,tp_Lvl* LvlPtr,tp_Pos Pos,tp_FilTyp ToFilTyp)
 {
    tp_CastEdg CastEdg;
    tp_FilTyp CastFilTyp;
@@ -349,18 +278,7 @@ AddCastEdgsToLvl(
 
 
 static void
-AddDrvEqvEdgsToLvl(
-   GMC_ARG(tp_Pos*, PosPtr),
-   GMC_ARG(tp_Lvl*, LvlPtr),
-   GMC_ARG(tp_DrvEdg, DrvEdg),
-   GMC_ARG(tp_Pos, Pos),
-   GMC_ARG(tp_FilTyp, ToFilTyp)
-   )
-   GMC_DCL(tp_Pos*, PosPtr)
-   GMC_DCL(tp_Lvl*, LvlPtr)
-   GMC_DCL(tp_DrvEdg, DrvEdg)
-   GMC_DCL(tp_Pos, Pos)
-   GMC_DCL(tp_FilTyp, ToFilTyp)
+AddDrvEqvEdgsToLvl(tp_Pos* PosPtr,tp_Lvl* LvlPtr,tp_DrvEdg DrvEdg,tp_Pos Pos,tp_FilTyp ToFilTyp)
 {
    tp_FilTyp DrvFilTyp;
    tp_Pos DrvPos;
@@ -378,16 +296,7 @@ AddDrvEqvEdgsToLvl(
 
 
 static void
-AddDrvEdgsToLvl(
-   GMC_ARG(tp_Pos*, PosPtr),
-   GMC_ARG(tp_Lvl*, LvlPtr),
-   GMC_ARG(tp_Pos, Pos),
-   GMC_ARG(tp_FilTyp, ToFilTyp)
-   )
-   GMC_DCL(tp_Pos*, PosPtr)
-   GMC_DCL(tp_Lvl*, LvlPtr)
-   GMC_DCL(tp_Pos, Pos)
-   GMC_DCL(tp_FilTyp, ToFilTyp)
+AddDrvEdgsToLvl(tp_Pos* PosPtr,tp_Lvl* LvlPtr,tp_Pos Pos,tp_FilTyp ToFilTyp)
 {
    tp_DrvEdg DrvEdg, MemDrvEdg;
    tp_FilTyp DrvFilTyp, MemFilTyp;
@@ -416,12 +325,7 @@ AddDrvEdgsToLvl(
 
 
 static void
-AppendLvl(
-   GMC_ARG(tp_Lvl*, LvlPtr),
-   GMC_ARG(tp_Lvl, AddLvl)
-   )
-   GMC_DCL(tp_Lvl*, LvlPtr)
-   GMC_DCL(tp_Lvl, AddLvl)
+AppendLvl(tp_Lvl* LvlPtr,tp_Lvl AddLvl)
 {
    tp_Lvl Lvl;
 
@@ -436,10 +340,7 @@ AppendLvl(
 
 
 static void
-Clear_InLvls(
-   GMC_ARG(tp_Lvl, Lvl)
-   )
-   GMC_DCL(tp_Lvl, Lvl)
+Clear_InLvls(tp_Lvl Lvl)
 {
    tp_Pos Pos, LastPos;
 
@@ -454,14 +355,7 @@ Clear_InLvls(
 
 
 static void
-AddDrvLvls(
-   GMC_ARG(tp_Pos*, PosPtr),
-   GMC_ARG(tp_Lvl*, LvlPtr),
-   GMC_ARG(tp_FilTyp, ToFilTyp)
-   )
-   GMC_DCL(tp_Pos*, PosPtr)
-   GMC_DCL(tp_Lvl*, LvlPtr)
-   GMC_DCL(tp_FilTyp, ToFilTyp)
+AddDrvLvls(tp_Pos* PosPtr,tp_Lvl* LvlPtr,tp_FilTyp ToFilTyp)
 {
    tp_Lvl OldLvls, Lvl, NewLvl;
    tp_Pos Pos;
@@ -484,16 +378,7 @@ done:
 
 
 static void
-AddCastLvls1(
-   GMC_ARG(tp_Pos*, PosPtr),
-   GMC_ARG(tp_Lvl*, LvlPtr),
-   GMC_ARG(tp_Pos, Pos),
-   GMC_ARG(tp_FilTyp, ToFilTyp)
-   )
-   GMC_DCL(tp_Pos*, PosPtr)
-   GMC_DCL(tp_Lvl*, LvlPtr)
-   GMC_DCL(tp_Pos, Pos)
-   GMC_DCL(tp_FilTyp, ToFilTyp)
+AddCastLvls1(tp_Pos* PosPtr,tp_Lvl* LvlPtr,tp_Pos Pos,tp_FilTyp ToFilTyp)
 {
    tp_EqvEdg EqvEdg;
    tp_Pos EqvPos;
@@ -513,16 +398,7 @@ AddCastLvls1(
 
 
 static void
-AddCastLvls(
-   GMC_ARG(tp_Pos*, PosPtr),
-   GMC_ARG(tp_Lvl*, LvlPtr),
-   GMC_ARG(tp_Pos, InpPos),
-   GMC_ARG(tp_FilTyp, ToFilTyp)
-   )
-   GMC_DCL(tp_Pos*, PosPtr)
-   GMC_DCL(tp_Lvl*, LvlPtr)
-   GMC_DCL(tp_Pos, InpPos)
-   GMC_DCL(tp_FilTyp, ToFilTyp)
+AddCastLvls(tp_Pos* PosPtr,tp_Lvl* LvlPtr,tp_Pos InpPos,tp_FilTyp ToFilTyp)
 {
    tp_Lvl CastLvl;
 
@@ -538,16 +414,7 @@ done:;
 
 
 static void
-Find_Pos(
-   GMC_ARG(tp_Pos*, PosPtr),
-   GMC_ARG(tp_Lvl*, LvlPtr),
-   GMC_ARG(tp_FilTyp, FrmFilTyp),
-   GMC_ARG(tp_FilTyp, ToFilTyp)
-   )
-   GMC_DCL(tp_Pos*, PosPtr)
-   GMC_DCL(tp_Lvl*, LvlPtr)
-   GMC_DCL(tp_FilTyp, FrmFilTyp)
-   GMC_DCL(tp_FilTyp, ToFilTyp)
+Find_Pos(tp_Pos* PosPtr,tp_Lvl* LvlPtr,tp_FilTyp FrmFilTyp,tp_FilTyp ToFilTyp)
 {
    tp_Pos InpPos;
 
@@ -565,16 +432,7 @@ Find_Pos(
 
 
 static void
-ExtendLvl(
-   GMC_ARG(tp_Pos*, PosPtr),
-   GMC_ARG(tp_Lvl*, LvlPtr),
-   GMC_ARG(tp_FilTyp, FrmFilTyp),
-   GMC_ARG(tp_FilTyp, ToFilTyp)
-   )
-   GMC_DCL(tp_Pos*, PosPtr)
-   GMC_DCL(tp_Lvl*, LvlPtr)
-   GMC_DCL(tp_FilTyp, FrmFilTyp)
-   GMC_DCL(tp_FilTyp, ToFilTyp)
+ExtendLvl(tp_Pos* PosPtr,tp_Lvl* LvlPtr,tp_FilTyp FrmFilTyp,tp_FilTyp ToFilTyp)
 {
    tp_Lvl NewLvl;
 
@@ -585,18 +443,7 @@ ExtendLvl(
 
 
 static void
-Do_BuiltInSearch(
-   GMC_ARG(tp_DrvPth*, DrvPthPtr),
-   GMC_ARG(tp_Pos*, PosPtr),
-   GMC_ARG(tp_Lvl*, LvlPtr),
-   GMC_ARG(tp_FilTyp, FrmFilTyp),
-   GMC_ARG(tp_FilTyp, ToFilTyp)
-   )
-   GMC_DCL(tp_DrvPth*, DrvPthPtr)
-   GMC_DCL(tp_Pos*, PosPtr)
-   GMC_DCL(tp_Lvl*, LvlPtr)
-   GMC_DCL(tp_FilTyp, FrmFilTyp)
-   GMC_DCL(tp_FilTyp, ToFilTyp)
+Do_BuiltInSearch(tp_DrvPth* DrvPthPtr,tp_Pos* PosPtr,tp_Lvl* LvlPtr,tp_FilTyp FrmFilTyp,tp_FilTyp ToFilTyp)
 {
    *DrvPthPtr = NIL;
    if (FrmFilTyp->Pos == NIL) {
@@ -610,16 +457,7 @@ Do_BuiltInSearch(
 
 
 static void
-Find_SubTypePos(
-   GMC_ARG(tp_Pos*, PosPtr),
-   GMC_ARG(tp_Lvl*, LvlPtr),
-   GMC_ARG(tp_FilTyp, FrmFilTyp),
-   GMC_ARG(tp_FilTyp, ToFilTyp)
-   )
-   GMC_DCL(tp_Pos*, PosPtr)
-   GMC_DCL(tp_Lvl*, LvlPtr)
-   GMC_DCL(tp_FilTyp, FrmFilTyp)
-   GMC_DCL(tp_FilTyp, ToFilTyp)
+Find_SubTypePos(tp_Pos* PosPtr,tp_Lvl* LvlPtr,tp_FilTyp FrmFilTyp,tp_FilTyp ToFilTyp)
 {
    tp_Pos InpPos;
 
@@ -633,13 +471,8 @@ Find_SubTypePos(
    }/*Find_SubTypePos*/
 
 
-boolean
-IsSubType(
-   GMC_ARG(tp_FilTyp, FrmFilTyp),
-   GMC_ARG(tp_FilTyp, ToFilTyp)
-   )
-   GMC_DCL(tp_FilTyp, FrmFilTyp)
-   GMC_DCL(tp_FilTyp, ToFilTyp)
+bool
+IsSubType(tp_FilTyp FrmFilTyp,tp_FilTyp ToFilTyp)
 {
    tp_Lvl Lvl;
    tp_Pos Pos;
@@ -648,7 +481,7 @@ IsSubType(
 
    if (ToFilTyp == FrmFilTyp
        || ToFilTyp == FileFilTyp || ToFilTyp == ObjectFilTyp) {
-      return TRUE; }/*if*/;
+      return true; }/*if*/;
 
    Init_Lvls();
    Lvl = NIL;
@@ -661,25 +494,14 @@ IsSubType(
 
 
 void
-Do_Search(
-   GMC_ARG(tp_DrvPth*, DrvPthPtr),
-   GMC_ARG(boolean*, IsGenericPtr),
-   GMC_ARG(tp_FKind, FrmFKind),
-   GMC_ARG(tp_FilTyp, FrmFilTyp),
-   GMC_ARG(tp_FilTyp, ToFilTyp)
-   )
-   GMC_DCL(tp_DrvPth*, DrvPthPtr)
-   GMC_DCL(boolean*, IsGenericPtr)
-   GMC_DCL(tp_FKind, FrmFKind)
-   GMC_DCL(tp_FilTyp, FrmFilTyp)
-   GMC_DCL(tp_FilTyp, ToFilTyp)
+Do_Search(tp_DrvPth* DrvPthPtr,bool* IsGenericPtr,tp_FKind FrmFKind,tp_FilTyp FrmFilTyp,tp_FilTyp ToFilTyp)
 {
    tp_Lvl Lvl;
    tp_Pos Pos;
 
    FORBIDDEN(ToFilTyp == FrmFilTyp);
    *DrvPthPtr = NIL;
-   *IsGenericPtr = FALSE;
+   *IsGenericPtr = false;
 
    Init_Lvls();
    Lvl = NIL;
@@ -704,7 +526,7 @@ Do_Search(
       if (CanPntrHo_FKind(FrmFKind) || IsPntr_FilTyp(FrmFilTyp)) {
 	 *DrvPthPtr = Make_DrvPth(FK_PntrHo, ToFilTyp);
       }else if (GenericFilTyp->Pos != NIL) {
-	 *IsGenericPtr = TRUE;
+	 *IsGenericPtr = true;
 	 Pos = GenericFilTyp->Pos;
 	 *DrvPthPtr = Pos_DrvPth(Pos); };}/*select*/;
 

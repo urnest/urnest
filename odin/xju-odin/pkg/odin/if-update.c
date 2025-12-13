@@ -53,7 +53,7 @@ Update_File(
 {
    tp_Status NewStatus;
    int NewSize;
-   boolean Abort, Changed;
+   bool Abort, Changed;
    tps_FileName DataFileName;
    tp_FilDsc WorkFD, DataFD;
    tp_SKind k;
@@ -77,9 +77,9 @@ Update_File(
 
    Changed = (FilHdr_Size(FilHdr) != NewSize || !Data_Exists(FilHdr));
    if (!Changed && NewSize > 0) {
-      WorkFD = FileName_RFilDsc(WorkFileName, FALSE);
+      WorkFD = FileName_RFilDsc(WorkFileName, false);
       FORBIDDEN(WorkFD == ERROR);
-      DataFD = FileName_RFilDsc(DataFileName, TRUE);
+      DataFD = FileName_RFilDsc(DataFileName, true);
       FORBIDDEN(DataFD == ERROR);
       Changed = !(Equal(WorkFD, DataFD));
       Close(WorkFD); Close(DataFD); }/*if*/;
@@ -90,7 +90,7 @@ Update_File(
 	 if (Abort) {
 	    SystemError("Cannot write to cache file: %s.\n", DataFileName);
 	    Set_Status(FilHdr, STAT_Unknown);
-	    Local_Do_Interrupt(FALSE);
+	    Local_Do_Interrupt(false);
 	    return; }/*if*/;
 	 Set_ModDate(FilHdr);
 	 Set_Size(FilHdr, NewSize);
@@ -147,7 +147,7 @@ Do_DrvDir(
    tps_FileName InFileName, DirName, ElmFileName, LinkFileName;
    tps_Str Key;
    tp_FilDsc WorkDirFilDsc;
-   boolean End, Abort;
+   bool End, Abort;
    size_t sz;
 
    FilHdr_DataFileName(DirName, FilHdr);
@@ -197,7 +197,7 @@ Do_Update(
    GMC_ARG(tp_Job, Job),
    GMC_ARG(tp_Status, Status),
    GMC_ARG(tp_Date, DepModDate),
-   GMC_ARG(boolean, IsInternal)
+   GMC_ARG(bool, IsInternal)
    )
    GMC_DCL(tp_FilHdr, FilHdr)
    GMC_DCL(tp_OutFilHdrs, OutFilHdrs)
@@ -205,7 +205,7 @@ Do_Update(
    GMC_DCL(tp_Job, Job)
    GMC_DCL(tp_Status, Status)
    GMC_DCL(tp_Date, DepModDate)
-   GMC_DCL(boolean, IsInternal)
+   GMC_DCL(bool, IsInternal)
 {
    tp_Date NewDepModDate;
    tp_Status NewStatus;

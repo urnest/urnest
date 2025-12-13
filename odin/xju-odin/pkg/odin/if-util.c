@@ -44,7 +44,7 @@ extern int	num_NodS;
 extern int	num_StackElmS;
 extern int	num_PrmFHdrS;
 
-boolean			DebugLocElm = FALSE;
+bool			DebugLocElm = false;
 
 static tp_FilDsc	DebugFD = NIL;
 
@@ -270,8 +270,8 @@ Local_Set_Debug(
       }else if (strcasecmp(DebugName, "locelm") == 0) {
 	 if (DebugFD == NIL) {
 	    Get_DebugFileName(DebugFileName);
-	    DebugFD = FileName_AFilDsc(DebugFileName, FALSE); }/*if*/;
-	 DebugLocElm = TRUE;
+	    DebugFD = FileName_AFilDsc(DebugFileName, false); }/*if*/;
+	 DebugLocElm = true;
       }else{
 	 SystemError("** Unknown debug request.\n"); };}/*select*/;
    }/*Local_Set_Debug*/

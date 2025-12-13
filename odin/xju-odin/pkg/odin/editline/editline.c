@@ -23,7 +23,7 @@
 #define HIST_SIZE	20
 #endif	/* !defined(HIST_SIZE) */
 
-typedef CONST CHAR	*STRING;
+typedef CONST CHAR	*String;
 
 /*
 **  Command status codes.
@@ -104,7 +104,7 @@ int		rl_susp;
 #endif	/* defined(DO_SIGTSTP) */
 
 STATIC CHAR		EmptyStr[] = "";
-STATIC STRING		Input = EmptyStr;
+STATIC String		Input = EmptyStr;
 STATIC CHAR		*Line;
 STATIC CONST char	*Prompt;
 STATIC CHAR		*Yanked;
@@ -221,9 +221,9 @@ TTYput(
 
 STATIC void
 TTYputs(
-  GMC_ARG(STRING, p)
+  GMC_ARG(String, p)
   )
-  GMC_DCL(STRING, p)
+  GMC_DCL(String, p)
 {
     while (*p)
 	TTYput(*p++);
@@ -277,7 +277,7 @@ TTYget(GMC_ARG_VOID)
     return read(0, &c, (SIZE_T)1) == 1 ? c : EOF;
 }
 
-#define TTYback()	(backspace ? TTYputs((STRING)backspace) : TTYput('\b'))
+#define TTYback()	(backspace ? TTYputs((String)backspace) : TTYput('\b'))
 
 STATIC void
 TTYbackn(
@@ -372,7 +372,7 @@ columns(
 	    longest = j;
     cols = TTYwidth / (longest + 3);
 
-    TTYputs((STRING)NEWLINE);
+    TTYputs((String)NEWLINE);
     for (skip = ac / cols + 1, i = 0; i < skip; i++) {
 	for (j = i; j < ac; j += skip) {
 	    for (p = av[j], len = strlen((char *)p), k = len; --k >= 0; p++)
@@ -381,7 +381,7 @@ columns(
 		while (++len < longest + 3)
 		    TTYput(' ');
 	}
-	TTYputs((STRING)NEWLINE);
+	TTYputs((String)NEWLINE);
     }
 }
 
@@ -392,7 +392,7 @@ reposition(GMC_ARG_VOID)
     CHAR	*p;
 
     TTYput('\r');
-    TTYputs((STRING)Prompt);
+    TTYputs((String)Prompt);
     for (i = Point, p = Line; --i >= 0; p++)
 	TTYshow(*p);
 }
@@ -597,8 +597,8 @@ insert_string(
 STATIC STATUS
 redisplay(GMC_ARG_VOID)
 {
-    TTYputs((STRING)NEWLINE);
-    TTYputs((STRING)Prompt);
+    TTYputs((String)NEWLINE);
+    TTYputs((String)Prompt);
     TTYstring(Line);
     return CSmove;
 }
@@ -761,12 +761,12 @@ h_search(GMC_ARG_VOID)
     clear_line();
     old_prompt = Prompt;
     Prompt = "Search: ";
-    TTYputs((STRING)Prompt);
+    TTYputs((String)Prompt);
     move = Repeat == NO_ARG ? prev_hist : next_hist;
     p = editinput();
     Prompt = old_prompt;
     Searching = 0;
-    TTYputs((STRING)Prompt);
+    TTYputs((String)Prompt);
     if (p == NULL && Signal > 0) {
 	Signal = 0;
 	clear_line();
@@ -1150,10 +1150,10 @@ readline(
     ScreenSize = SCREEN_INC;
     Screen = NEW(char, ScreenSize);
     Prompt = prompt ? prompt : (char *)EmptyStr;
-    TTYputs((STRING)Prompt);
+    TTYputs((String)Prompt);
     if ((line = editinput()) != NULL) {
 	line = (CHAR *)strdup((char *)line);
-	TTYputs((STRING)NEWLINE);
+	TTYputs((String)NEWLINE);
 	TTYflush();
     }
     rl_ttyset(1);

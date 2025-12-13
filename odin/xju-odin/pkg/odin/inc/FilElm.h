@@ -1,4 +1,4 @@
-#ifndef TPS_FILELM
+!!#ifndef TPS_FILELM
 #define TPS_FILELM
 
 #include "ElmInf.h"
@@ -13,7 +13,7 @@ typedef struct _tps_FilElm {
    int Cnt;
    tp_FilElm PrevFree, NextFree;
 
-   boolean Modified;
+   bool Modified;
    tp_FilElm NextMod;
    }				tps_FilElm;
 

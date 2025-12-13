@@ -147,7 +147,7 @@ Various modules implemented to some broad principles:
 * extensible with custom encodings
 
 * see `xju/json_codec.py.test <xju/json_codec.py.test>`_ for full sample code
-* see `xju/test-json-codec-typescript.ts <xju/test-json-codec-typescript.ts>`_ for typescript sample code
+* see `xju/typescript/test-json-codec-typescript.ts <xju/typescript/test-json-codec-typescript.ts>`_ for typescript sample code
 
 
 `xju.jsonschema <xju/jsonschema.py>`_
@@ -185,6 +185,33 @@ Various modules implemented to some broad principles:
 
 Release History
 
+- 5.0.0 xju.json_codec - add default attribute value support to generated typescript
+      So for a python class like:
+        class X:
+          a: int
+          b: str = "fred"
+      ... the generated typescript will insert the default value when b is missing:
+        asInstanceOfX({a: 2}) => {a:2, b:"fred"}
+        x={a: 2}; isInstanceOfX({a: 2}) => true; x => {a:2, b:"fred"}
+    - factor common code out of generated typescript, giving smaller
+      and cleaner generated code
+      Generated code now requires supporting function that are supplied
+      in the python site-packages xju/typescript/ directory
+    - remove generally unused generated functions
+
+- 5.0.0 xju.json_codec - support "mixed in" enum value types, including
+      generating working typescript where values are not valid typescript
+      enum values
+    - see xju/json_codec.py.test MixedEnum
+
+- 5.0.0 xju.json_codec - add literal and bytes support in generated typescript
+    - see xju/json_codec.py.test
+
+- 5.0.0 xju.json_codec - support recursive class structures
+    - search "recursive" in xju/json_codec.py.test
+
+- 5.0.0 xju.xn - fix in_context v jsonschema.ValidationError
+  
 - 4.2.0 xju.json_codec
     - support ClassVar (class vars are not encoded)
     - add dont_encode_attr as separate explicit feature

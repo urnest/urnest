@@ -1,23 +1,26 @@
+#ifndef ODIN_VAR_H
+#define ODIN_VAR_H
+
 extern tp_Str		RBS_Cmd;
-extern boolean		ShortCacheNameFlag;
-extern boolean		LocalIPCFlag;
+extern bool		ShortCacheNameFlag;
+extern bool		LocalIPCFlag;
 extern tp_Loc		LastLoc;
-extern boolean		History;
-extern boolean		IsCmdLex;
+extern bool		History;
+extern bool		IsCmdLex;
 extern int		ErrLevel;
 extern int		WarnLevel;
 extern int		VerifyLevel;
 extern tp_Date		VerifyDate;
 extern tp_LocPrm	PValLocPrm;
-extern boolean		IsAny_ReadyServerAction;
-extern boolean		IsTTY;
-extern boolean		DebugLocElm;
-extern boolean		DumpCore;
-extern boolean		IsClient;
-extern boolean		IsServer;
-extern boolean		Signalled;
-extern boolean		Handled;
-extern boolean		SigChild;
+extern bool		IsAny_ReadyServerAction;
+extern bool		IsTTY;
+extern bool		DebugLocElm;
+extern bool		DumpCore;
+extern bool		IsClient;
+extern bool		IsServer;
+extern bool		Signalled;
+extern bool		Handled;
+extern bool		SigChild;
 extern int		MaxBuilds;
 extern int		CurSize;
 extern int		DataNum;
@@ -28,9 +31,6 @@ extern tp_Client	CurrentClient;
 extern tp_Client	FirstClient;
 extern tp_Date		PendingDate;
 extern tp_Date		CurrentDate;
-extern tp_FilDsc	StdErrFD;
-extern tp_FilDsc	StdInFD;
-extern tp_FilDsc	StdOutFD;
 extern tp_FilElm	ModFilElm;
 extern tp_FilHdr	EmptyFilHdr;
 extern tp_FilHdr	PrmDataDirFilHdr;
@@ -85,4 +85,6 @@ extern tp_Tool		PntrHoTool;
 extern tp_Tool		PntrElmTool;
 extern tp_Tool		InternalPntrTool;
 extern tp_Tool		TextDefTool;
-extern void		(*IPC_Action)(GMC_P1(boolean*) GMC_PN(tp_Str));
+extern void		(*IPC_Action)(bool* tp_Str);
+
+#endif
