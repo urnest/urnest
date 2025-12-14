@@ -1742,6 +1742,7 @@ class CustomStringKeyGenericClassCodec(Protocol):
            - may add any supporting definitions to definitions'''
         assert False  #pragma NO COVER
         return {}
+
     @staticmethod
     def xju_json_codec_typescript_key_type_generic(type_var_map:dict[TypeVar,type])-> Literal['String']:
         assert False #pragma NO COVER

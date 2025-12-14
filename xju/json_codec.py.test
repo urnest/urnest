@@ -2009,9 +2009,9 @@ class G[C, T: ShapeOfT]:
     v: T
 
     @staticmethod
-    def get_codec(type_var_map:dict[TypeVar,Any]) -> CodecProto:
+    def get_codec(type_var_map:dict[TypeVar,type]) -> CodecProto:
         assert type_var_map is not None
-        return codec(type_var_map[G.__parameters__[1]].__annotations__['x'])  # type: ignore
+        return codec(type_var_map[G.__parameters__[1]].__annotations__['x'])
 
     # xju.json_codec.CustomGenericClassCodec:
     @staticmethod
@@ -2025,8 +2025,8 @@ class G[C, T: ShapeOfT]:
             x:JsonType,
             type_var_map:dict[TypeVar,type]) -> "G[C,T]":
         v_x=G.get_codec(type_var_map).decode(x)
-        return G(c=type_var_map[G.__parameters__[0]],  # type: ignore
-                 v=type_var_map[G.__parameters__[1]](x=v_x))  # type: ignore
+        return G(c=type_var_map[G.__parameters__[0]],
+                 v=type_var_map[G.__parameters__[1]](x=v_x))
     @staticmethod
     def xju_json_codec_get_json_schema_generic(
             definitions:dict[str,dict],
@@ -2066,9 +2066,9 @@ class GT:
     pass
 
 
-Assert(codec(G[int,GT]).decode('fred'))==G(c=int, v=GT(x='fred'))  # type: ignore
-Assert(codec(G[int,GT]).encode(G(c=int, v=GT(x='fred'))))=='fred'  # type: ignore
-Assert(codec(G[int,GT]).get_json_schema())=={'type': 'string', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}} # type: ignore
+Assert(codec(G[int,GT]).decode('fred'))==G(c=int, v=GT(x='fred'))
+Assert(codec(G[int,GT]).encode(G(c=int, v=GT(x='fred'))))=='fred'
+Assert(codec(G[int,GT]).get_json_schema())=={'type': 'string', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}}
 Assert(codec(tuple[G[int,GT]]).get_json_schema())=={'$ref': '#/definitions/tuple[G]', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'tuple[G]': {'type': 'array', 'prefixItems': [{'type': 'string', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}}]}}} # type: ignore
 
 try:
@@ -2094,7 +2094,7 @@ class GK[C, T: ShapeOfT]:
     @staticmethod
     def get_codec(type_var_map:dict[TypeVar,Any]) -> CodecProto:
         assert type_var_map is not None
-        return codec(type_var_map[GK.__parameters__[1]].__annotations__['x'])  # type: ignore
+        return codec(type_var_map[GK.__parameters__[1]].__annotations__['x'])
 
     # xju.json_codec.CustomGenericClassCodec:
     @staticmethod
@@ -2108,8 +2108,8 @@ class GK[C, T: ShapeOfT]:
             x:JsonType,
             type_var_map:dict[TypeVar,type]) -> "GK[C,T]":
         v_x=GK.get_codec(type_var_map).decode(x)
-        return GK(c=type_var_map[GK.__parameters__[0]],  # type: ignore
-                  v=type_var_map[GK.__parameters__[1]](x=v_x))  # type: ignore
+        return GK(c=type_var_map[GK.__parameters__[0]],
+                  v=type_var_map[GK.__parameters__[1]](x=v_x))
     @staticmethod
     def xju_json_codec_get_json_schema_generic(
             definitions:dict[str,dict],
@@ -2169,12 +2169,12 @@ class GK[C, T: ShapeOfT]:
     pass
 
 assert issubclass(GK, CustomStringKeyGenericClassCodec)
-Assert(codec(GK[int,GT]).decode('fred'))==GK(c=int, v=GT(x='fred'))  # type: ignore
-Assert(codec(GK[int,GT]).encode(GK(c=int, v=GT(x='fred'))))=='fred'  # type: ignore
-Assert(codec(GK[int,GT]).get_json_schema())=={'type': 'string', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}} # type: ignore
-Assert(codec(tuple[GK[int,GT]]).get_json_schema())=={'$ref': '#/definitions/tuple[GK]', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'tuple[GK]': {'type': 'array', 'prefixItems': [{'type': 'string', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}}]}}} # type: ignore
-Assert(codec(dict[GK[int,GT],bool]).get_json_schema())=={'$ref': '#/definitions/dict[GK,bool]', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'dict[GK,bool]': {'type': 'object', 'additionalProperties': {'type': 'boolean'}}}} # type: ignore
-Assert(codec(tuple[GK[int,GT]]).get_json_schema())=={'$ref': '#/definitions/tuple[GK]', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'tuple[GK]': {'type': 'array', 'prefixItems': [{'type': 'string', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}}]}}} # type: ignore
+Assert(codec(GK[int,GT]).decode('fred'))==GK(c=int, v=GT(x='fred'))
+Assert(codec(GK[int,GT]).encode(GK(c=int, v=GT(x='fred'))))=='fred'
+Assert(codec(GK[int,GT]).get_json_schema())=={'type': 'string', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}}
+Assert(codec(tuple[GK[int,GT]]).get_json_schema())=={'$ref': '#/definitions/tuple[GK]', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'tuple[GK]': {'type': 'array', 'prefixItems': [{'type': 'string', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}}]}}}
+Assert(codec(dict[GK[int,GT],bool]).get_json_schema())=={'$ref': '#/definitions/dict[GK,bool]', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'dict[GK,bool]': {'type': 'object', 'additionalProperties': {'type': 'boolean'}}}}
+Assert(codec(tuple[GK[int,GT]]).get_json_schema())=={'$ref': '#/definitions/tuple[GK]', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'tuple[GK]': {'type': 'array', 'prefixItems': [{'type': 'string', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}}]}}}
 
 try:
     codec(GK[int,GT]).decode({})  # type: ignore

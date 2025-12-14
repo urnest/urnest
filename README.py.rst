@@ -199,6 +199,13 @@ Release History
       in the python site-packages xju/typescript/ directory
     - remove generally unused generated functions
 
+- 5.0.0 xju.json_codec - new custom encoding interface
+      - reworked typescript generation for default values means that
+        existing custom encoding classes must change, though it is possible
+        to support both json_codec 4 and 5 at the same time as differing
+        methods have new names (see xju_json_codec_5* functions in
+        xju/json_codec.py; see xju/json_codec.py.test for example use)
+
 - 5.0.0 xju.json_codec - support "mixed in" enum value types, including
       generating working typescript where values are not valid typescript
       enum values

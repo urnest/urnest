@@ -20,13 +20,13 @@
 (() => {
     const good = good_encodable_data;
 
-    xju.assert.assertEqual(asInstanceOfEncodableData({"an_int": 7, "a_float": 9.2, "a_str": "fred", "a_new_int": 22, "an_xju_int": 88, "a_new_float": 2.2, "an_xju_float": 18.2, "a_new_str": "red", "an_xju_str": "ally", "a_null": null, "a_boolean": true, "a_union": "walker", "a_list": [1, 2, 3], "any_list": [1, null, "a"], "a_set": [4, 5, 6], "any_set": [null, 2], "a_frozen_set": [7], "any_frozen_set": [2, 4.6], "some_bytes": [10, 11, 12], "a_tuple": [8, "jock"], "a_literal_str": "mai", "a_literal_int": 7, "a_literal_bool": true, "a_class": {"first_name": "fran", "middle_names": ["jan"], "last_name": "lan", "class": "Upper"}, "a_dont_encode": {"y": "yyy"}, "fred_7_false": false, "a_recurse_self": {"defs": {}}, "a_timestamp": 45000.0, "an_enum": "fred", "a_mixed_in_enum": {"k": 2, "v": "jock"}, "a_recursive": {"a": [{"o": ["1", "2", ["7"]]}, "3", [{"a": ["4", "6", ["8"]]}]]}, "an_enum_value": "fred", "a_json": 9, "a_custom_encoded": 2975337473, "another_custom_encoded": "177.88.12.0/22", "non_key_custom_encoded": 3, "a_custom_generic": "fred"}) as object, good());
-    xju.assert.assertEqual(isInstanceOfEncodableData({"an_int": 7, "a_float": 9.2, "a_str": "fred", "a_new_int": 22, "an_xju_int": 88, "a_new_float": 2.2, "an_xju_float": 18.2, "a_new_str": "red", "an_xju_str": "ally", "a_null": null, "a_boolean": true, "a_union": "walker", "a_list": [1, 2, 3], "any_list": [1, null, "a"], "a_set": [4, 5, 6], "any_set": [null, 2], "a_frozen_set": [7], "any_frozen_set": [2, 4.6], "some_bytes": [10, 11, 12], "a_tuple": [8, "jock"], "a_literal_str": "mai", "a_literal_int": 7, "a_literal_bool": true, "a_class": {"first_name": "fran", "middle_names": ["jan"], "last_name": "lan", "class": "Upper"}, "a_dont_encode": {"y": "yyy"}, "fred_7_false": false, "a_recurse_self": {"defs": {}}, "a_timestamp": 45000.0, "an_enum": "fred", "a_mixed_in_enum": {"k": 2, "v": "jock"}, "a_recursive": {"a": [{"o": ["1", "2", ["7"]]}, "3", [{"a": ["4", "6", ["8"]]}]]}, "an_enum_value": "fred", "a_json": 9, "a_custom_encoded": 2975337473, "another_custom_encoded": "177.88.12.0/22", "non_key_custom_encoded": 3, "a_custom_generic": "fred"}), true);
+    xju.assert.assertEqual(asInstanceOfEncodableData({"an_int": 7, "a_float": 9.2, "a_str": "fred", "a_new_int": 22, "an_xju_int": 88, "a_new_float": 2.2, "an_xju_float": 18.2, "a_new_str": "red", "an_xju_str": "ally", "a_null": null, "a_boolean": true, "a_union": "walker", "a_list": [1, 2, 3], "any_list": [1, null, "a"], "a_set": [4, 5, 6], "any_set": [null, 2], "a_frozen_set": [7], "any_frozen_set": [2, 4.6], "some_bytes": [10, 11, 12], "a_tuple": [8, "jock", "fred"], "a_literal_str": "mai", "a_literal_int": 7, "a_literal_bool": true, "a_class": {"first_name": "fran", "middle_names": ["jan"], "last_name": "lan", "class": "Upper"}, "a_dont_encode": {"y": "yyy"}, "fred_7_false": false, "a_recurse_self": {"defs": {}}, "a_timestamp": 45000.0, "an_enum": "fred", "a_mixed_in_enum": {"k": 2, "v": "jock"}, "a_recursive": {"a": [{"o": ["1", "2", ["7"]]}, "3", [{"a": ["4", "6", ["8"]]}]]}, "an_enum_value": "fred", "a_json": 9, "a_custom_encoded": 2975337473, "another_custom_encoded": "177.88.12.0/22", "non_key_custom_encoded": 3, "a_custom_generic": "fred", "a_custom_generic_usable_as_key": "fred"}) as object, good());
+    xju.assert.assertEqual(isInstanceOfEncodableData({"an_int": 7, "a_float": 9.2, "a_str": "fred", "a_new_int": 22, "an_xju_int": 88, "a_new_float": 2.2, "an_xju_float": 18.2, "a_new_str": "red", "an_xju_str": "ally", "a_null": null, "a_boolean": true, "a_union": "walker", "a_list": [1, 2, 3], "any_list": [1, null, "a"], "a_set": [4, 5, 6], "any_set": [null, 2], "a_frozen_set": [7], "any_frozen_set": [2, 4.6], "some_bytes": [10, 11, 12], "a_tuple": [8, "jock", "fred"], "a_literal_str": "mai", "a_literal_int": 7, "a_literal_bool": true, "a_class": {"first_name": "fran", "middle_names": ["jan"], "last_name": "lan", "class": "Upper"}, "a_dont_encode": {"y": "yyy"}, "fred_7_false": false, "a_recurse_self": {"defs": {}}, "a_timestamp": 45000.0, "an_enum": "fred", "a_mixed_in_enum": {"k": 2, "v": "jock"}, "a_recursive": {"a": [{"o": ["1", "2", ["7"]]}, "3", [{"a": ["4", "6", ["8"]]}]]}, "an_enum_value": "fred", "a_json": 9, "a_custom_encoded": 2975337473, "another_custom_encoded": "177.88.12.0/22", "non_key_custom_encoded": 3, "a_custom_generic": "fred", "a_custom_generic_usable_as_key": "fred"}), true);
 
-    xju.assert.assertEqual(asInstanceOfEncodableData({"an_int": 7, "a_float": 9.2, "a_new_int": 22, "an_xju_int": 88, "a_new_float": 2.2, "an_xju_float": 18.2, "a_new_str": "red", "an_xju_str": "ally", "a_null": null, "a_boolean": true, "a_union": "walker", "a_list": [1, 2, 3], "any_list": [1, null, "a"], "a_set": [4, 5, 6], "any_set": [null, 2], "a_frozen_set": [7], "any_frozen_set": [2, 4.6], "some_bytes": [10, 11, 12], "a_tuple": [8, "jock"], "a_literal_str": "mai", "a_literal_int": 7, "a_literal_bool": true, "a_class": {"first_name": "fran", "middle_names": ["jan"], "last_name": "lan", "class": "Upper"}, "a_dont_encode": {"y": "yyy"}, "fred_7_false": false, "a_recurse_self": {"defs": {}}, "a_timestamp": 45000.0, "an_enum": "fred", "a_mixed_in_enum": {"k": 2, "v": "jock"}, "a_recursive": {"a": [{"o": ["1", "2", ["7"]]}, "3", [{"a": ["4", "6", ["8"]]}]]}, "an_enum_value": "fred", "a_json": 9, "a_custom_encoded": 2975337473, "another_custom_encoded": "177.88.12.0/22", "non_key_custom_encoded": 3, "a_custom_generic": "fred"}) as object,{
+    xju.assert.assertEqual(asInstanceOfEncodableData({"an_int": 7, "a_float": 9.2, "a_new_int": 22, "an_xju_int": 88, "a_new_float": 2.2, "an_xju_float": 18.2, "a_new_str": "red", "an_xju_str": "ally", "a_null": null, "a_boolean": true, "a_union": "walker", "a_list": [1, 2, 3], "any_list": [1, null, "a"], "a_set": [4, 5, 6], "any_set": [null, 2], "a_frozen_set": [7], "any_frozen_set": [2, 4.6], "some_bytes": [10, 11, 12], "a_tuple": [8, "jock", "fred"], "a_literal_str": "mai", "a_literal_int": 7, "a_literal_bool": true, "a_class": {"first_name": "fran", "middle_names": ["jan"], "last_name": "lan", "class": "Upper"}, "a_dont_encode": {"y": "yyy"}, "fred_7_false": false, "a_recurse_self": {"defs": {}}, "a_timestamp": 45000.0, "an_enum": "fred", "a_mixed_in_enum": {"k": 2, "v": "jock"}, "a_recursive": {"a": [{"o": ["1", "2", ["7"]]}, "3", [{"a": ["4", "6", ["8"]]}]]}, "an_enum_value": "fred", "a_json": 9, "a_custom_encoded": 2975337473, "another_custom_encoded": "177.88.12.0/22", "non_key_custom_encoded": 3, "a_custom_generic": "fred", "a_custom_generic_usable_as_key": "fred"}) as object,{
       ...good(), a_str: "a_str_default"
     });
-    xju.assert.assertEqual(isInstanceOfEncodableData({"an_int": 7, "a_float": 9.2, "a_new_int": 22, "an_xju_int": 88, "a_new_float": 2.2, "an_xju_float": 18.2, "a_new_str": "red", "an_xju_str": "ally", "a_null": null, "a_boolean": true, "a_union": "walker", "a_list": [1, 2, 3], "any_list": [1, null, "a"], "a_set": [4, 5, 6], "any_set": [null, 2], "a_frozen_set": [7], "any_frozen_set": [2, 4.6], "some_bytes": [10, 11, 12], "a_tuple": [8, "jock"], "a_literal_str": "mai", "a_literal_int": 7, "a_literal_bool": true, "a_class": {"first_name": "fran", "middle_names": ["jan"], "last_name": "lan", "class": "Upper"}, "a_dont_encode": {"y": "yyy"}, "fred_7_false": false, "a_recurse_self": {"defs": {}}, "a_timestamp": 45000.0, "an_enum": "fred", "a_mixed_in_enum": {"k": 2, "v": "jock"}, "a_recursive": {"a": [{"o": ["1", "2", ["7"]]}, "3", [{"a": ["4", "6", ["8"]]}]]}, "an_enum_value": "fred", "a_json": 9, "a_custom_encoded": 2975337473, "another_custom_encoded": "177.88.12.0/22", "non_key_custom_encoded": 3, "a_custom_generic": "fred"}), true);
+    xju.assert.assertEqual(isInstanceOfEncodableData({"an_int": 7, "a_float": 9.2, "a_new_int": 22, "an_xju_int": 88, "a_new_float": 2.2, "an_xju_float": 18.2, "a_new_str": "red", "an_xju_str": "ally", "a_null": null, "a_boolean": true, "a_union": "walker", "a_list": [1, 2, 3], "any_list": [1, null, "a"], "a_set": [4, 5, 6], "any_set": [null, 2], "a_frozen_set": [7], "any_frozen_set": [2, 4.6], "some_bytes": [10, 11, 12], "a_tuple": [8, "jock", "fred"], "a_literal_str": "mai", "a_literal_int": 7, "a_literal_bool": true, "a_class": {"first_name": "fran", "middle_names": ["jan"], "last_name": "lan", "class": "Upper"}, "a_dont_encode": {"y": "yyy"}, "fred_7_false": false, "a_recurse_self": {"defs": {}}, "a_timestamp": 45000.0, "an_enum": "fred", "a_mixed_in_enum": {"k": 2, "v": "jock"}, "a_recursive": {"a": [{"o": ["1", "2", ["7"]]}, "3", [{"a": ["4", "6", ["8"]]}]]}, "an_enum_value": "fred", "a_json": 9, "a_custom_encoded": 2975337473, "another_custom_encoded": "177.88.12.0/22", "non_key_custom_encoded": 3, "a_custom_generic": "fred", "a_custom_generic_usable_as_key": "fred"}), true);
 
     const errors:Array<string> = [];
     try {
@@ -38,7 +38,7 @@
     }
     catch(e){
         try{
-            xju.assert.assertXcontainsY(xju.str(e), 'Error: failed to verify { an_int:7.6, a_float:9.2, a_str:\"fred\", a_new_int:22, an_xju_int:88, a_new_float:2.2, an_xju_float:18.2, a_new_str:\"red\", an_xju_str:\"ally\", a_null:null, a_boolean:true, a_union:\"walker\", a_list:[1,2,3], any_list:[1,null,\"a\"], a_set:[4,5,6], any_set:[null,2], a_frozen_set:[7], any_frozen_set:[2,4.6], some_bytes:[10,11,12], a_tuple:[8,\"jock\"], a_literal_str:\"mai\", a_literal_int:7, a_literal_bool:true, a_class:{ first_name:\"fran\", middle_names:[\"jan\"], last_name:\"lan\", class:\"Upper\" }, a_dont_encode:{ y:\"yyy\" }, fred_7_false:false, a_recurse_self:{ defs:{ } }, a_timestamp:45000, an_enum:\"fred\", a_mixed_in_enum:{ k:2, v:\"jock\" }, a_recursive:{ a:[{ o:[\"1\",\"2\",[\"7\"]] },\"3\",[{ a:[\"4\",\"6\",[\"8\"]] }]] }, an_enum_value:\"fred\", a_json:9, a_custom_encoded:2975337473, another_custom_encoded:\"177.88.12.0/22\", non_key_custom_encoded:3, a_custom_generic:\"fred\" } is a EncodableData because failed to validate property an_int because failed to verify 7.6 is a int because 7.6 is not a whole number');
+            xju.assert.assertXcontainsY(xju.str(e), 'Error: failed to verify { an_int:7.6, a_float:9.2, a_str:\"fred\", a_new_int:22, an_xju_int:88, a_new_float:2.2, an_xju_float:18.2, a_new_str:\"red\", an_xju_str:\"ally\", a_null:null, a_boolean:true, a_union:\"walker\", a_list:[1,2,3], any_list:[1,null,\"a\"], a_set:[4,5,6], any_set:[null,2], a_frozen_set:[7], any_frozen_set:[2,4.6], some_bytes:[10,11,12], a_tuple:[8,\"jock\",\"fred\"], a_literal_str:\"mai\", a_literal_int:7, a_literal_bool:true, a_class:{ first_name:\"fran\", middle_names:[\"jan\"], last_name:\"lan\", class:\"Upper\" }, a_dont_encode:{ y:\"yyy\" }, fred_7_false:false, a_recurse_self:{ defs:{ } }, a_timestamp:45000, an_enum:\"fred\", a_mixed_in_enum:{ k:2, v:\"jock\" }, a_recursive:{ a:[{ o:[\"1\",\"2\",[\"7\"]] },\"3\",[{ a:[\"4\",\"6\",[\"8\"]] }]] }, an_enum_value:\"fred\", a_json:9, a_custom_encoded:2975337473, another_custom_encoded:\"177.88.12.0/22\", non_key_custom_encoded:3, a_custom_generic:\"fred\", a_custom_generic_usable_as_key:\"fred\" } is a EncodableData because failed to validate property an_int because failed to verify 7.6 is a int because 7.6 is not a whole number');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -317,13 +317,13 @@
     try {
         asInstanceOfEncodableData({
             ...good(),
-            a_tuple: [3000,99]
+            a_tuple: [3000,99,"fred"]
         });
         xju.assert.assertNeverReached('a_tuple');
     }
     catch(e){
         try{
-            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_tuple because failed to verify [3000,99] is a [int,string] because failed to validate item 1 because failed to verify 99 is a string because 99 is a number not a string');
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_tuple because failed to verify [3000,99,"fred"] is a [int,string,G<int,GT>] because failed to validate item 1 because failed to verify 99 is a string because 99 is a number not a string');
         }
         catch(ee){
             errors.push(`${ee}`);
@@ -619,7 +619,7 @@
 (() => {
     const good = good_encodable_key_types;
 
-    xju.assert.assertEqual(asInstanceOfEncodableKeyTypes({"str_key": {"fred": 3}, "int_key": {"1": 4}, "more_keys": {"null": 1, "9": 2, "5.5": 3, "true": 4}, "duration_key": {"77.2": 1}, "timestamp_key": {"88.1": 1}, "non_str_literal_key": {"10": 1, "true": 2}, "str_literal_key": {"a\n\"nail\"'s tip": 3, "fred": 4, "rooster": 5}, "enum_key": {"fred": 1, "jock": 2}, "custom_key": {"3221751809": 1}, "alt_custom_key": {"192.8.8.1/24": 1}, "newstr_key": {"red": 1, "green": 2}, xjustr_key:{ally: 9}, "newfloat_key": {"22.0": 1}, xjufloat_key:{ 22.5:1 }, "newint_key": {"7": 1}, "newbool_key": {"false": 1}, "any_key": {"8": 1, "fred": 2, "null": 3, "7.6": 4, "true": 5}}) as object, good());
+    xju.assert.assertEqual(asInstanceOfEncodableKeyTypes({"str_key": {"fred": 3}, "int_key": {"1": 4}, "more_keys": {"null": 1, "9": 2, "5.5": 3, "true": 4}, "duration_key": {"77.2": 1}, "timestamp_key": {"88.1": 1}, "non_str_literal_key": {"10": 1, "true": 2}, "str_literal_key": {"a\n\"nail\"'s tip": 3, "fred": 4, "rooster": 5}, "enum_key": {"fred": 1, "jock": 2}, "custom_key": {"3221751809": 1}, "alt_custom_key": {"192.8.8.1/24": 1}, "newstr_key": {"red": 1, "green": 2}, xjustr_key:{ally: 9}, "newfloat_key": {"22.0": 1}, xjufloat_key:{ 22.5:1 }, "newint_key": {"7": 1}, "newbool_key": {"false": 1}, "any_key": {"8": 1, "fred": 2, "null": 3, "7.6": 4, "true": 5}, "a_custom_generic_key": {"fred": true}}) as object, good());
     xju.assert.assertEqual(isInstanceOfEncodableKeyTypes(good()), true);
 
     const errors:Array<string> = [];
@@ -892,6 +892,21 @@
     catch(e){
         try{
             xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property any_key because failed to verify null is a { [key any] : any } because null is not a non-array object');
+        }
+        catch(ee){
+            errors.push(`${ee}`);
+        }
+    }
+    try {
+        const x = asInstanceOfEncodableKeyTypes({
+            ...good(),
+            a_custom_generic_key: null
+        });
+        xju.assert.assertNotEqual(x, x);
+    }
+    catch(e){
+        try{
+            xju.assert.assertXcontainsY(xju.str(e), 'failed to validate property a_custom_generic_key because failed to verify null is a { [key GK<int,GT>] : bool } because null is not a non-array object');
         }
         catch(ee){
             errors.push(`${ee}`);

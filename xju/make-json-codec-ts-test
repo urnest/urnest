@@ -367,25 +367,25 @@ class G[C, T: ShapeOfT]:
     @staticmethod
     def xju_json_codec_get_typescript_type_generic(
             type_var_map:dict[TypeVar,type]) -> TypeScriptSourceCode:
-        kt=f"typeof {G.__parameters__[0]}"
-        vt=f"{G.__parameters__[1]}"
-        return TypeScriptSourceCode(f"string /* G<{kt},{vt} */");
+        kt=f"{type_var_map[G.__parameters__[0]]}"
+        vt=f"{type_var_map[G.__parameters__[1]]}"
+        return TypeScriptSourceCode(f"string /* G<{kt},{vt}> */");
     @staticmethod
     def xju_json_codec_5_get_typescript_isa_generic(
             namespace: TypeScriptNamespace,
             type_var_map:dict[TypeVar,type]) -> TypeScriptSourceCode:
         '''return typescript source that evaluates to a xju.json_codec.IsInstance
            - may add any supporting definitions to namespace, e.g. type for T itself'''
-        return TypeScriptSourceCode("xju.json_codec.isInstanceOfString;");
+        return TypeScriptSourceCode("xju.json_codec.isInstanceOfString");
     @staticmethod
     def xju_json_codec_5_get_typescript_asa_generic(
             namespace: TypeScriptNamespace,
             type_var_map:dict[TypeVar,type]) -> TypeScriptSourceCode:
         '''return typescript source code that verifies {expression} with defaults applied would be a T and returns xju.json_codec.ApplyDefaults that would apply defaults, throwing an Error if {expression} is not valid as a T'''
         '''- may add any supporting definitions to namespace, e.g. type for T itself'''
-        kt=f"typeof {G.__parameters__[0]}"
-        vt=f"{G.__parameters__[1]}"
-        return TypeScriptSourceCode(f"xju.json_codec.asInstanceOfString('G<{kt},{vt}>'");
+        kt=f"{type_var_map[G.__parameters__[0]].__name__}"
+        vt=f"{type_var_map[G.__parameters__[1]].__name__}"
+        return TypeScriptSourceCode(f"xju.json_codec.asInstanceOfString('G<{kt},{vt}>')");
     pass
 
 assert issubclass(G, CustomGenericClassCodec)
@@ -395,6 +395,9 @@ assert issubclass(G, CustomGenericClassCodec)
 class GK[C, T: ShapeOfT]:
     c: type[C]
     v: T
+
+    def __hash__(self) -> int:
+        return hash(self.v.x)
 
     @staticmethod
     def get_codec(type_var_map:dict[TypeVar,Any]) -> CodecProto:
@@ -425,7 +428,7 @@ class GK[C, T: ShapeOfT]:
     @staticmethod
     def xju_json_codec_get_typescript_type_generic(
             type_var_map:dict[TypeVar,type]) -> TypeScriptSourceCode:
-        kt=f"typeof {G.__parameters__[0]}"
+        kt=f"{G.__parameters__[0]}"
         vt=f"{G.__parameters__[1]}"
         return TypeScriptSourceCode(f"string /* GK<{kt},{vt}> */");
     @staticmethod
@@ -434,16 +437,18 @@ class GK[C, T: ShapeOfT]:
             type_var_map:dict[TypeVar,type]) -> TypeScriptSourceCode:
         '''return typescript source that evaluates to a xju.json_codec.IsInstance
            - may add any supporting definitions to namespace, e.g. type for T itself'''
-        return TypeScriptSourceCode("xju.json_codec.isInstanceOfString;");
+        return TypeScriptSourceCode("xju.json_codec.isInstanceOfString");
     @staticmethod
     def xju_json_codec_5_get_typescript_asa_generic(
             namespace: TypeScriptNamespace,
             type_var_map:dict[TypeVar,type]) -> TypeScriptSourceCode:
         '''return typescript source code that verifies {expression} with defaults applied would be a T and returns xju.json_codec.ApplyDefaults that would apply defaults, throwing an Error if {expression} is not valid as a T'''
         '''- may add any supporting definitions to namespace, e.g. type for T itself'''
-        kt=f"typeof {GK.__parameters__[0]}"
-        vt=f"{GK.__parameters__[1]}"
-        return TypeScriptSourceCode(f"xju.json_codec.asInstanceOfString('GK<{kt},{vt}>'");
+        kt=f"{type_var_map[GK.__parameters__[0]].__name__}"
+        vt=f"{type_var_map[GK.__parameters__[1]].__name__}"
+        return TypeScriptSourceCode(f"xju.json_codec.asInstanceOfString('GK<{kt},{vt}>')");
+
+    # xju.json_codec.CustomStringKeyGenericClassCodec
     @staticmethod
     def xju_json_codec_get_object_key_json_schema_generic(
             definitions:dict[str,dict],
@@ -452,6 +457,7 @@ class GK[C, T: ShapeOfT]:
            - may add any supporting definitions to definitions'''
         return GK.get_codec(type_var_map).get_json_schema()
     @staticmethod
+
     def xju_json_codec_typescript_key_type_generic(type_var_map:dict[TypeVar,type])-> Literal['String']:
         return 'String'
 
@@ -461,16 +467,16 @@ class GK[C, T: ShapeOfT]:
             type_var_map:dict[TypeVar,type]) -> TypeScriptSourceCode:
         '''return typescript source code that evaluates to a xju.json_codec.IsKey
            - may add any supporting definitions to namespace, e.g. type for T itself'''
-        assert False  #pragma NO COVER
-        return TypeScriptSourceCode('')
+        return TypeScriptSourceCode("xju.json_codec.isKeyOfString");
     @staticmethod
     def xju_json_codec_5_get_typescript_asa_key_generic(
             namespace: TypeScriptNamespace,
             type_var_map:dict[TypeVar,type]) -> TypeScriptSourceCode:
         '''return typescript source code that evaluates to a xju.json_codec.AsKey
            - may add any supporting definitions to namespace, e.g. type for T itself'''
-        assert False  #pragma NO COVER
-        return TypeScriptSourceCode('')
+        kt=f"{type_var_map[GK.__parameters__[0]].__name__}"
+        vt=f"{type_var_map[GK.__parameters__[1]].__name__}"
+        return TypeScriptSourceCode(f"xju.json_codec.asKeyOfString('GK<{kt},{vt}>')");
     pass
 
 assert issubclass(GK, CustomStringKeyGenericClassCodec)
@@ -625,7 +631,7 @@ class EncodableKeyTypes:
     newint_key: dict[Votes,int]
     newbool_key: dict[Enabled,int]
     any_key: dict
-    a_custom_generic: dict[GK[int,GT],bool]
+    a_custom_generic_key: dict[GK[int,GT],bool]
     pass
 
 encodable_key_types_codec=codec(EncodableKeyTypes)
@@ -690,12 +696,12 @@ good_encodable_key_types=EncodableKeyTypes(
     newint_key={ Votes(7):1 },
     newbool_key={ Enabled(False):1 },
     any_key={ "8":1, "fred":2, "null":3, "7.6":4, "true":5 },  # keys have to be strings to json.dumps
-    a_custom_generic={"fred":True}
+    a_custom_generic_key={GK(c=int,v=GT(x="fred")): True}
 )
 Assert(encodable_key_types_codec.encode(good_encodable_key_types))==encodable_key_types_codec.encode(encodable_key_types_codec.decode(encodable_key_types_codec.encode(good_encodable_key_types)))
 
 with open('json_codec_typescript_test.ts','w') as f:
-    print('GENERATED BY xju/make-json-codec-ts-test - DO NOT EDIT', file=f)
+    print('// GENERATED BY xju/make-json-codec-ts-test - DO NOT EDIT', file=f)
     print('/// <reference path="../xju.ts"/>', file=f)
     print('/// <reference path="../xju/json_codec.ts"/>', file=f)
     print(namespace.get_formatted_defs(), file=f)
