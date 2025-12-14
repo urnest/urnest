@@ -27,7 +27,8 @@ const _isInstanceOfLiasee = xju.json_codec.isInstanceOfClass('Liasee', [
 
 function asInstanceOfLias(v:any):Lias {
     _asInstanceOfLiasee.f(v).applyDefaults();
-    return v as Lias;}
+    return v as Lias;
+}
 function isInstanceOfLias(v:any):v is Lias {
     const r=_isInstanceOfLiasee(v);
     return r&&r.applyDefaults();
@@ -175,7 +176,8 @@ namespace xju {
                 xju.json_codec.asInstanceOfInt('int'),
                 xju.json_codec.asInstanceOfString('string')
             ]).f(v).applyDefaults();
-        return v as NorS;}
+        return v as NorS;
+    }
     export function isInstanceOfNorS(v:any):v is NorS {
         const r=xju.json_codec.isInstanceOfUnion([
                 xju.json_codec.isInstanceOfInt,
@@ -364,26 +366,26 @@ const _asInstanceOfOr = xju.json_codec.asInstanceOfClass('Or', [
         {
             typeName: "string|And|Or",
             f:(x:any) => xju.json_codec.asInstanceOfUnion([
-                    xju.json_codec.asInstanceOfString('string'),
-                    _asInstanceOfAnd,
-                    _asInstanceOfOr
-                ]).f(x)
+                xju.json_codec.asInstanceOfString('string'),
+                _asInstanceOfAnd,
+                _asInstanceOfOr
+            ]).f(x)
         },
         {
             typeName: "string|And|Or",
             f:(x:any) => xju.json_codec.asInstanceOfUnion([
-                    xju.json_codec.asInstanceOfString('string'),
-                    _asInstanceOfAnd,
-                    _asInstanceOfOr
-                ]).f(x)
+                xju.json_codec.asInstanceOfString('string'),
+                _asInstanceOfAnd,
+                _asInstanceOfOr
+            ]).f(x)
         },
         xju.json_codec.asInstanceOfList({
             typeName: "string|And|Or",
             f:(x:any) => xju.json_codec.asInstanceOfUnion([
-                    xju.json_codec.asInstanceOfString('string'),
-                    _asInstanceOfAnd,
-                    _asInstanceOfOr
-                ]).f(x)
+                xju.json_codec.asInstanceOfString('string'),
+                _asInstanceOfAnd,
+                _asInstanceOfOr
+            ]).f(x)
         })
     ])}
 ]);
@@ -413,26 +415,26 @@ const _asInstanceOfAnd = xju.json_codec.asInstanceOfClass('And', [
         {
             typeName: "string|And|Or",
             f:(x:any) => xju.json_codec.asInstanceOfUnion([
-                    xju.json_codec.asInstanceOfString('string'),
-                    _asInstanceOfAnd,
-                    _asInstanceOfOr
-                ]).f(x)
+                xju.json_codec.asInstanceOfString('string'),
+                _asInstanceOfAnd,
+                _asInstanceOfOr
+            ]).f(x)
         },
         {
             typeName: "string|And|Or",
             f:(x:any) => xju.json_codec.asInstanceOfUnion([
-                    xju.json_codec.asInstanceOfString('string'),
-                    _asInstanceOfAnd,
-                    _asInstanceOfOr
-                ]).f(x)
+                xju.json_codec.asInstanceOfString('string'),
+                _asInstanceOfAnd,
+                _asInstanceOfOr
+            ]).f(x)
         },
         xju.json_codec.asInstanceOfList({
             typeName: "string|And|Or",
             f:(x:any) => xju.json_codec.asInstanceOfUnion([
-                    xju.json_codec.asInstanceOfString('string'),
-                    _asInstanceOfAnd,
-                    _asInstanceOfOr
-                ]).f(x)
+                xju.json_codec.asInstanceOfString('string'),
+                _asInstanceOfAnd,
+                _asInstanceOfOr
+            ]).f(x)
         })
     ])}
 ]);

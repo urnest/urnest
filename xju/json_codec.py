@@ -234,7 +234,7 @@ class Codec(Generic[T]):
             target_namespace.defs[TypeScriptUQN(f"asInstanceOf{fqn[-1]}")] = TypeScriptSourceCode(
                 f"function asInstanceOf{fqn[-1]}(v:any):{fqn[-1]} {{\n"
                 f"    {indent(8, self.codec.get_typescript_asa(namespace))}.f(v).applyDefaults();\n"
-                f"    return v as {fqn[-1]};"
+                f"    return v as {fqn[-1]};\n"
                 f"}}")
             target_namespace.defs[TypeScriptUQN(f"isInstanceOf{fqn[-1]}")] = TypeScriptSourceCode(
                 f"function isInstanceOf{fqn[-1]}(v:any):v is {fqn[-1]} {{\n"
@@ -2526,7 +2526,7 @@ class BackRefCodecImpl:
         return TypeScriptSourceCode("\n".join([
             f"{{"
             ,f"    typeName: {json.dumps(str(self.typescript_type()))},"
-            ,f"    f:(x:any) => {indent(8,self.codec.get_typescript_asa(namespace))}.f(x)"
+            ,f"    f:(x:any) => {indent(4,self.codec.get_typescript_asa(namespace))}.f(x)"
             ,f"}}"]))
 
 def _explodeSchema(
