@@ -189,7 +189,10 @@ def check_in_function_context(x: FunctionContext) -> Type:
                          None)
             e.set_line(expr)
             # note local_type_map() cannot handle exceptions
-            with checker_api.local_type_map() as type_map:
+            with (
+                    checker_api.local_type_map() if callable(checker_api.local_type_map)
+                    else checker_api.local_type_map
+            ) as type_map:
                 for arg, arg_type in arg_type_map.items():
                     type_map[arg]=arg_type
                 

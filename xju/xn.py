@@ -36,7 +36,7 @@ class FileAndLine(object):
         return ''
     pass
 
-class Xn:
+class Xn(BaseException):
     """Capture cause and context.
     """
     def __init__(self, cause:object)->None:

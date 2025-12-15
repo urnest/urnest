@@ -26,7 +26,8 @@
 #  on failure eg replace/html
 #
 from __future__ import annotations
-from typing import Iterator
+from typing import Iterator,Self
+from abc import abstractmethod
 from html.parser import HTMLParser
 from html.entities import entitydefs as htmlentitydefs
 from html.entities import name2codepoint as entities
@@ -90,8 +91,15 @@ class Node:
                 return [self.parent.children[i]]
             pass
         return []
-    
+    @abstractmethod
+    def text(self) -> str:
+        pass
+    @abstractmethod
+    def clone(self, newParent) -> Node:
+        pass
+
 class Root(Node):
+    children: list[Node]
     def __init__(self, pos:Pos):
         Node.__init__(self,pos)
         self.children:list[Node]=[]
@@ -103,6 +111,13 @@ class Root(Node):
         self.children=self.children[0:i]+self.children[i+1:]
         node.parent=None
         return self
+    def text(self) -> str:
+        return ''.join([child.text() for child in self.children])
+    def clone(self, newParent) -> Root:
+        assert newParent is None, newParent
+        result=Root(self.pos)
+        result.children=[_.clone(result) for _ in self.children]
+        return result
     pass
 
 endOptional=frozenset([
@@ -199,7 +214,7 @@ class Tag(Node):
         self.children[self.indexOf(node)]=newNode
         newNode.parent=self
         return self
-    def clone(self, newParent):
+    def clone(self, newParent) -> Tag:
         result=Tag(self.tagName, self.attrs.items(), newParent, self.pos)
         result.end=self.end
         result.classes=set(self.classes)
@@ -211,14 +226,14 @@ class Tag(Node):
                 isinstance(c,PI)
             c.clone(result)
         return result
-    def text(self):
+    def text(self) -> str:
         if self.tagName=='br':
-            return u'\n'
+            return '\n'
         if self.tagName=='p':
-            return u''.join([_.text() for _ in self.children])+u'\n'
+            return ''.join([_.text() for _ in self.children])+u'\n'
         if self.tagName=='li':
-            return u''.join([_.text() for _ in self.children])+u'\n'
-        return u''.join([_.text() for _ in self.children])
+            return ''.join([_.text() for _ in self.children])+u'\n'
+        return ''.join([_.text() for _ in self.children])
     pass
 
 class Data(Node):
@@ -231,7 +246,7 @@ class Data(Node):
         return encodeEntities(self.data)
     def __repr__(self):
         return 'data at %(pos)s, %(data)r' % self.__dict__
-    def clone(self, newParent):
+    def clone(self, newParent) -> Data:
         result=Data(self.data, newParent, self.pos)
         return result
     def text(self):
@@ -247,7 +262,7 @@ class Comment(Node):
         return '<!--%(comment)s-->' % self.__dict__
     def __repr__(self):
         return 'comment at %(pos)s' % self.__dict__
-    def clone(self, newParent):
+    def clone(self, newParent) -> Comment:
         result=Comment(self.comment, newParent, self.pos)
         return result
     def text(self):
@@ -263,7 +278,7 @@ class Decl(Node):
         return '<!%(decl)s>' % self.__dict__
     def __repr__(self):
         return 'decl at %(pos)s' % self.__dict__
-    def clone(self, newParent):
+    def clone(self, newParent) -> Decl:
         result=Decl(self.decl, newParent, self.pos)
         return result
     def text(self):
@@ -279,7 +294,7 @@ class PI(Node):
         return '<?%(pi)s>' % self.__dict__
     def __repr__(self):
         return 'processing instruction at %(pos)s' % self.__dict__
-    def clone(self, newParent):
+    def clone(self, newParent) -> PI:
         result=PI(self.pi, newParent, self.pos)
         return result
     def text(self):
@@ -373,6 +388,7 @@ class Selection:
         for n in nodes:
             if n.parent: n.parent.remove(n)
         for n in self.nodeList[0:1]:
+            assert isinstance(n, (Root,Tag)), n
             n.children=nodes
             for c in n.children:
                 c.parent=n
@@ -448,7 +464,8 @@ class Selection:
     def children(self):
         '''return Selection containing children of our nodes'''
         nodeList:list[Node]=[]
-        return Selection(sum([_.children for _ in self.nodeList],nodeList))
+        return Selection(
+            sum([_.children for _ in self.nodeList if isinstance(_, (Root,Tag))],nodeList))
     def predecessors(self):
         '''return Selection containing predecessor of each of our nodes'''
         nodeList:list[Node]=[]
