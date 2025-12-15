@@ -291,6 +291,7 @@ for n in ['__rpow__', '__dir__', '__reduce__', '__pow__', '__str__', '__init_sub
     # i functions not implemented or hand-coded
 if '__getstate__' in rem: rem.remove('__getstate__')  # python 3.11 and above
 if '__setformat__' in rem: rem.remove('__setformat__')  # python 3.10
+if 'from_number' in rem: rem.remove('from_number')  # python 3.14 and above
 assert len(rem)==0,rem
 rem=set(dir(str))
 str_methods=''

@@ -379,6 +379,9 @@ class Float(Generic[Tag]):
     def __round__(self, ndigits:int=0)->Self:
         return self.__class__(self.value().__round__(ndigits))
 
+    def from_number(self, x:Any)->Self:
+        return self.__class__(float(x))
+
     
     def __abs__(self)->Self:
         return self.__class__(self.value().__abs__())
