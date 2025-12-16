@@ -72,7 +72,7 @@ FILE:50: error: Dict entry 0 has incompatible type "int": "str"; expected "None"
 FILE:51: error: dict keys must be str,xju.newtype.Str or any union of int, float, bool, None, xju.newtype.Int, xju.newtype.Float, xju.newtype.Bool (not tuple)  [misc]
 FILE:52: error: union dict key types must not be a mix of string-like ([builtins.str]) and non-string-like ([builtins.int])  [misc]
 FILE:65: error: union dict key types must not be a mix of string-like ([json_codec_errors.NS]) and non-string-like ([json_codec_errors.NI, json_codec_errors.NF, json_codec_errors.NB, None])  [misc]
-FILE:68: error: union dict key types must not be a mix of string-like ([builtins.str]) and non-string-like ([Union[builtins.int, builtins.bool]])  [misc]
+FILE:68: error: union dict key types must not be a mix of string-like ([builtins.str]) and non-string-like ([builtins.int | builtins.bool])  [misc]
 FILE:80: error: union dict key types must not be a mix of string-like ([Literal[json_codec_errors.Pnum.b]]) and non-string-like ([builtins.int])  [misc]
 FILE:81: error: union dict key types must not be a mix of string-like ([Literal[json_codec_errors.Pnum.b]]) and non-string-like ([Literal[json_codec_errors.Pnum.a]])  [misc]
 FILE:82: error: dict keys must be str,xju.newtype.Str or any union of int, float, bool, None, xju.newtype.Int, xju.newtype.Float, xju.newtype.Bool (not builtins.list)  [misc]
@@ -410,21 +410,13 @@ FILE:172: error: Argument 2 to "in_function_context" has incompatible type "Call
 FILE: note: In function "gg":
 FILE:210: error: 'g' is not a valid (i.e. initialised) local variable or a function parameter (i.e. not one of ['self', 'x', 'oo']  [misc]
 FILE: note: In function "p":
-FILE:219: error: p not found  [misc]
-FILE: note: In member "p" of class "oo":
-FILE:219: error: p not found  [misc]
-FILE: note: In function "p":
-FILE:219: error: Name "p" is not defined  [name-defined]
-FILE: note: In member "p" of class "oo":
-FILE:227: error: for class X method f(), use in_function_context(X.f, vars()) not in_function_context(self.f, vars()) to avoid potential inheritance related errors  [misc]
-FILE:227: error: Argument 1 to "in_function_context" has incompatible type "int"; expected "Callable[..., Any]"  [arg-type]
+FILE:219: error: xju.xn.in_function_context with property+setter is not supported; use in_context directly instead in this case  [misc]
+FILE:227: error: xju.xn.in_function_context with property+setter is not supported; use in_context directly instead in this case  [misc]
 FILE: note: In class "oo":
 FILE:229: error: Single overload definition, multiple required  [misc]
 FILE: note: In member "qq" of class "oo":
 FILE:230: error: Missing return statement  [empty-body]
 FILE: note: In function "my_decorator":
-FILE:244: error: decorator functools.wraps not supported with in_function_context (only property, abstractmethod, classmethod supported; use in_context directly instead in this case)  [misc]
-FILE: note: In function "wrapper":
 FILE:244: error: decorator functools.wraps not supported with in_function_context (only property, abstractmethod, classmethod supported; use in_context directly instead in this case)  [misc]
 FILE: note: In function "cm":
 FILE:255: error: decorator contextmanager not supported with in_function_context (only property, abstractmethod, classmethod supported; use in_context directly instead in this case)  [misc]

@@ -317,8 +317,9 @@ class Float(Generic[Tag]):
     def __round__(self, ndigits:int=0)->Self:
         return self.__class__(self.value().__round__(ndigits))
 
-    def from_number(self, x:Any)->Self:
-        return self.__class__(float(x))
+    @classmethod
+    def from_number(cls,x:Any)->Self:
+        return cls(float(x))
 
     # generated Float methods here...
 

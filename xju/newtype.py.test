@@ -381,6 +381,8 @@ Assert(l2.is_integer())==True
 Assert(l1+l2)==Length(17.5)
 Assert(l1-l2)==Length(-2.5)
 Assert(Length(2.5).as_integer_ratio())==2.5.as_integer_ratio()
+Assert(Length.from_number(8))==Length(8)
+
 
 try:
     Length(7)+cast(Length,7)

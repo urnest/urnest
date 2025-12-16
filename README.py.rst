@@ -185,6 +185,8 @@ Various modules implemented to some broad principles:
 
 Release History
 
+- 5.0.0 mypy 1.19 support
+
 - 5.0.0 xju.json_codec - add default attribute value support to generated typescript
       So for a python class like:
         class X:

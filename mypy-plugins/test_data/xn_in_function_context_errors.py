@@ -216,7 +216,7 @@ class oo(o):
         try:
             return 2
         except Exception:
-            raise in_function_context(p,vars())  # no self.p
+            raise in_function_context(oo.p,vars())  # property+setter not supported as ambiguous
         pass
     @p.setter
     def p(self, i: int) -> None:
@@ -224,7 +224,7 @@ class oo(o):
         try:
             pass
         except Exception:
-            raise in_function_context(self.p,vars())  # no p (should be i)
+            raise in_function_context(oo.p,vars())  # property+setter not supported as ambiguous
         pass
     @overload  # missing implementation
     def qq(self, s: str) -> int:
@@ -254,3 +254,13 @@ def cm():
     except:
         raise in_function_context(cm, vars())
     pass
+
+class po:
+    @property
+    def p(self) -> int:
+        'get {self.p}'
+        try:
+            return 2
+        except Exception:
+            raise in_function_context(po.p,vars())  # good
+        pass

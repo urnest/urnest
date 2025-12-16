@@ -30,7 +30,7 @@ from sys import path
 from os.path import dirname
 if path[0]==dirname(__file__): path.pop(0)
 
-from xju.pq import parse,hasClass,encodeEntities,tagName,Selection,loadFile,parseFile
+from xju.pq import parse,hasClass,encodeEntities,tagName,Selection,loadFile,parseFile,Parser
 from xju.pq import attrEquals,hasAttr
 from xju.assert_ import Assert
 from xju.xn import readable_repr
@@ -390,7 +390,12 @@ def test39():
     x=parse('<div><span class="A">a</span><span class="A">x</span></div>')
     x.find(hasClass('A')).text('b')
     Assert(str(x))=='<div><span class="A">b</span><span class="A">b</span></div>'
+    Assert(x.text())=="bb"
     pass
+
+def test40():
+    x=Parser('xxx.html')
+    Assert(x.root.clone(None).text())==""
 
 if __name__=='__main__':
     tests=[var for name,var in list(vars().items())

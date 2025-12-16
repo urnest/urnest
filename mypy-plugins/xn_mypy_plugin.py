@@ -29,7 +29,7 @@ from mypy.types import (
 )
 from mypy.patterns import AsPattern,StarredPattern,OrPattern,SequencePattern,MappingPattern,SingletonPattern,ClassPattern,ValuePattern
 from mypy.nodes import (
-    DictExpr,MatchStmt,Block,SliceExpr,Import,ParamSpecExpr,OperatorAssignmentStmt,TypeVarExpr,TempNode,NameExpr,IfStmt,SuperExpr,TryStmt,BreakStmt,ImportFrom,IndexExpr,DelStmt,EnumCallExpr,OverloadedFuncDef,WithStmt,YieldFromExpr,TypeApplication,Var,GeneratorExpr,PlaceholderNode,DictionaryComprehension,LambdaExpr,AssignmentStmt,NewTypeExpr,ListExpr,AssignmentExpr,SetComprehension,ForStmt,ListComprehension,MemberExpr,IntExpr,AssertTypeExpr,TypeAlias,TypeAliasStmt,OpExpr,SetExpr,GlobalDecl,StarExpr,TupleExpr,Decorator,FloatExpr,NonlocalDecl,BytesExpr,WhileStmt,ComplexExpr,EllipsisExpr,CastExpr,ExpressionStmt,ComparisonExpr,TypeVarTupleExpr,NamedTupleExpr,FakeExpression,ImportAll,FakeInfo,CallExpr,StrExpr,TypeAliasExpr,FuncDef,YieldExpr,AssertStmt,ReturnStmt,MypyFile,UnaryExpr,TypedDictExpr,ConditionalExpr,ContinueStmt,RaiseStmt,AwaitExpr,ClassDef,Argument,RevealExpr,PromoteExpr,PassStmt,
+    DictExpr,MatchStmt,Block,SliceExpr,Import,ParamSpecExpr,OperatorAssignmentStmt,TypeVarExpr,TempNode,NameExpr,IfStmt,SuperExpr,TryStmt,BreakStmt,ImportFrom,IndexExpr,DelStmt,EnumCallExpr,OverloadedFuncDef,WithStmt,YieldFromExpr,TypeApplication,Var,GeneratorExpr,PlaceholderNode,DictionaryComprehension,LambdaExpr,AssignmentStmt,NewTypeExpr,ListExpr,AssignmentExpr,SetComprehension,ForStmt,ListComprehension,MemberExpr,IntExpr,AssertTypeExpr,TypeAlias,TypeAliasStmt,OpExpr,SetExpr,GlobalDecl,StarExpr,TupleExpr,Decorator,TypeFormExpr,FloatExpr,NonlocalDecl,BytesExpr,WhileStmt,ComplexExpr,EllipsisExpr,CastExpr,ExpressionStmt,ComparisonExpr,TypeVarTupleExpr,NamedTupleExpr,FakeExpression,ImportAll,FakeInfo,CallExpr,StrExpr,TypeAliasExpr,FuncDef,YieldExpr,AssertStmt,ReturnStmt,MypyFile,UnaryExpr,TypedDictExpr,ConditionalExpr,ContinueStmt,RaiseStmt,AwaitExpr,ClassDef,Argument,RevealExpr,PromoteExpr,PassStmt,
     MypyFile, OverloadedFuncDef, FuncDef, Decorator, Var, TypeVarLikeExpr, TypeInfo, TypeAlias, PlaceholderNode,
     OverloadedFuncDef, FuncItem,
     NameExpr,
@@ -51,7 +51,7 @@ class DocStringError(Exception):
     
 IN_FUNCTION_CONTEXT_FQN="xju.xn.in_function_context"
 
-LeafNodeTypes = DictExpr | MatchStmt | AsPattern | Block | SliceExpr | Import | ParamSpecExpr | OperatorAssignmentStmt | StarredPattern | TypeVarExpr | TempNode | NameExpr | IfStmt | SuperExpr | TryStmt | BreakStmt | ImportFrom | IndexExpr | DelStmt | EnumCallExpr | OverloadedFuncDef | WithStmt | YieldFromExpr | TypeApplication | Var | GeneratorExpr | PlaceholderNode | DictionaryComprehension | LambdaExpr | AssignmentStmt | ValuePattern | ClassPattern | NewTypeExpr | ListExpr | AssignmentExpr | SetComprehension | ForStmt | ListComprehension | MemberExpr | IntExpr | AssertTypeExpr | TypeAlias | TypeAliasStmt | OpExpr | SetExpr | GlobalDecl | StarExpr | TupleExpr | Decorator | SingletonPattern | FloatExpr | NonlocalDecl | BytesExpr | WhileStmt | ComplexExpr | EllipsisExpr | CastExpr | ExpressionStmt | ComparisonExpr | TypeVarTupleExpr | NamedTupleExpr | FakeExpression | ImportAll | MappingPattern | FakeInfo | CallExpr | StrExpr | TypeAliasExpr | FuncDef | YieldExpr | AssertStmt | ReturnStmt | MypyFile | UnaryExpr | SequencePattern | TypedDictExpr | OrPattern | ConditionalExpr | ContinueStmt | RaiseStmt | AwaitExpr | ClassDef | Argument | RevealExpr | PromoteExpr | PassStmt
+LeafNodeTypes = DictExpr | MatchStmt | AsPattern | Block | SliceExpr | Import | ParamSpecExpr | OperatorAssignmentStmt | StarredPattern | TypeVarExpr | TempNode | NameExpr | IfStmt | SuperExpr | TryStmt | BreakStmt | ImportFrom | IndexExpr | DelStmt | EnumCallExpr | OverloadedFuncDef | WithStmt | YieldFromExpr | TypeApplication | Var | GeneratorExpr | PlaceholderNode | DictionaryComprehension | LambdaExpr | AssignmentStmt | ValuePattern | ClassPattern | NewTypeExpr | ListExpr | AssignmentExpr | SetComprehension | ForStmt | ListComprehension | MemberExpr | IntExpr | AssertTypeExpr | TypeAlias | TypeAliasStmt | OpExpr | SetExpr | GlobalDecl | StarExpr | TupleExpr | Decorator | TypeFormExpr | SingletonPattern | FloatExpr | NonlocalDecl | BytesExpr | WhileStmt | ComplexExpr | EllipsisExpr | CastExpr | ExpressionStmt | ComparisonExpr | TypeVarTupleExpr | NamedTupleExpr | FakeExpression | ImportAll | MappingPattern | FakeInfo | CallExpr | StrExpr | TypeAliasExpr | FuncDef | YieldExpr | AssertStmt | ReturnStmt | MypyFile | UnaryExpr | SequencePattern | TypedDictExpr | OrPattern | ConditionalExpr | ContinueStmt | RaiseStmt | AwaitExpr | ClassDef | Argument | RevealExpr | PromoteExpr | PassStmt
 
 
 class XnPlugin(Plugin):
@@ -250,15 +250,22 @@ def get_function_doc_string_value(expr: Expression) -> str:
         case _:
             raise DocStringError(f"{expr} is not an xn-supported function reference (i.e. not a MemberExpr)")
     if isinstance(f, OverloadedFuncDef):
-        if f.impl is None:
+
+        if f.is_property and len(f.items)==1:
+            f=f.items[0] # first item is "getter" decorator function, which at run time is what X.f gives
+        elif f.is_property:
+            raise DocStringError(f"xju.xn.in_function_context with property+setter is not supported; use in_context directly instead in this case")
+        elif f.impl is None:
+            #pdb_trace()
             raise DocStringError(f'overloaded {f} is missing its "implementation" def?')
-        f=f.impl
+        else:
+            f=f.impl
         pass
     if isinstance(f, Decorator):
-        for d in f.decorators:
+        for d in f.original_decorators:
             match d:
                 case NameExpr():
-                    if d.name not in ('property','abstractmethod'):
+                    if d.name not in ('property','abstractmethod','classmethod','staticmethod'):
                         raise DocStringError(f"decorator {d.name} not supported with in_function_context (only property, abstractmethod, classmethod supported; use in_context directly instead in this case)")
                 case CallExpr() if isinstance(d.callee, NameExpr):
                         raise DocStringError(f"decorator {d.callee.fullname} not supported with in_function_context (only property, abstractmethod, classmethod supported; use in_context directly instead in this case)")
@@ -376,7 +383,7 @@ def collect_vars_defined_for_expr(
     match collect_from:
         # REVISIT: expr we're looking for could be in some of these, need to handle more
         # individually (e.g. ListExpr could be [ 0, in_function_context(X, vars())]
-        case Import() | ParamSpecExpr() | ImportFrom() | DelStmt() | EnumCallExpr() | OverloadedFuncDef() | StarredPattern() | TypeVarExpr() | TempNode() | NameExpr() | YieldFromExpr() | TypeApplication() | PlaceholderNode() | DictionaryComprehension() | LambdaExpr() | ValuePattern() | ClassPattern() | NewTypeExpr() | ListExpr() | SetComprehension() | GeneratorExpr() | MemberExpr() | IntExpr() | AssertTypeExpr() | SetExpr() | GlobalDecl() | StarExpr() | TupleExpr() | Decorator() | SingletonPattern() | FloatExpr() | BytesExpr() | ComplexExpr() | EllipsisExpr() | CastExpr() | ComparisonExpr() | TypeVarTupleExpr() | NamedTupleExpr() | FakeExpression() | ImportAll() | MappingPattern() | FakeInfo() | StrExpr() | TypeAliasExpr() | FuncDef() | YieldExpr() | AssertStmt() | MypyFile() | UnaryExpr() | SequencePattern() | TypedDictExpr() | ContinueStmt() | AwaitExpr() | Argument() | RevealExpr() | PromoteExpr() | PassStmt() | OperatorAssignmentStmt() | SuperExpr() |  BreakStmt() | TypeAlias() | NonlocalDecl():
+        case Import() | ParamSpecExpr() | ImportFrom() | DelStmt() | EnumCallExpr() | OverloadedFuncDef() | StarredPattern() | TypeVarExpr() | TempNode() | NameExpr() | YieldFromExpr() | TypeApplication() | PlaceholderNode() | DictionaryComprehension() | LambdaExpr() | ValuePattern() | ClassPattern() | NewTypeExpr() | ListExpr() | SetComprehension() | GeneratorExpr() | MemberExpr() | IntExpr() | AssertTypeExpr() | SetExpr() | GlobalDecl() | StarExpr() | TupleExpr() | Decorator() | SingletonPattern() | FloatExpr() | BytesExpr() | ComplexExpr() | EllipsisExpr() | CastExpr() | ComparisonExpr() | TypeVarTupleExpr() | NamedTupleExpr() | FakeExpression() | ImportAll() | MappingPattern() | FakeInfo() | StrExpr() | TypeAliasExpr() | FuncDef() | YieldExpr() | AssertStmt() | MypyFile() | UnaryExpr() | SequencePattern() | TypedDictExpr() | ContinueStmt() | AwaitExpr() | Argument() | RevealExpr() | PromoteExpr() | PassStmt() | OperatorAssignmentStmt() | SuperExpr() |  BreakStmt() | TypeAlias() | NonlocalDecl() | TypeFormExpr():
             return vars_so_far
         case Block():
             # there's no sensible handling for block, we need to handle it in context e.g.
