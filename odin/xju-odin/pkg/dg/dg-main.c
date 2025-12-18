@@ -14,10 +14,13 @@ See the GNU General Public License for more details.
 
 geoff@boulder.colorado.edu
 */
-#include "inc/dg-main.h"
+#include <gmc/gmc.h>
+#include <dg/inc/Type.hh>
+#include <dg/inc/Func.hh>
+#include <dg/inc/dg-main.h>
 #include <stdio.h>
-#include "inc/GMC.h"
-#include "inc/Str.h"
+#include <stdlib.h>
+#include <string.h>
 
 
 tp_Str		Author = "geoff@cs.colorado.edu";
@@ -32,8 +35,7 @@ int c_main(argc, argv)
    tp_FilDsc FilDsc;
 
    DumpCore = (getenv("DUMPCORE") != 0);
-   Init_IO();
-   Init_Err();
+   Init_Gmc();
    Init_Parse();
    Init_EnvVars();
    Init_FilTyps();
@@ -43,7 +45,7 @@ int c_main(argc, argv)
    if (argc < 4 || argc > 4) {
       SystemError("Usage: dg.exe PKGS ToolDir SkipFlag \n");
       exit(102); }/*if*/;
-   FilDsc = FileName_RFilDsc(argv[1], FALSE);
+   FilDsc = FileName_RFilDsc(argv[1], false);
    for (Pkg=Readln(StrBuf, FilDsc); Pkg!=NIL; Pkg=Readln(StrBuf, FilDsc)) {
       Build_DerivationGraph(argv[2], Sym_Str(Str_Sym(Pkg))); }/*for*/;
    Write_ENV();

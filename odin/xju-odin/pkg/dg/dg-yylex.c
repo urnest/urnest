@@ -16,10 +16,12 @@ geoff@boulder.colorado.edu
 */
 
 #include <stdio.h>
-#include "inc/GMC.h"
-#include "inc/Str.h"
-#include "inc/TokTyp_.h"
-#include "inc/NodTyp_.h"
+#include <string.h>
+#include <gmc/gmc.h>
+#include <gmc/nod.h>
+#include <dg/inc/Func.hh>
+#include <dg/inc/TokTyp_.h>
+#include <dg/inc/NodTyp_.h>
 
 
 tp_FileName	ParseFN;
@@ -101,7 +103,7 @@ EndLex()
    }/*EndLex*/
 
 
-static boolean
+static bool
 YY_IsWordChr(Chr)
    char Chr;
 {
@@ -110,10 +112,10 @@ YY_IsWordChr(Chr)
       case ':': case '+': case '=': case '(': case ')': 
       case '%': case '/': case ';': case '?': case '<': case '>': 
       case '&': case '@': case '*': case '\\': {
-	 return FALSE;
+	 return false;
 	 break;}/*case*/;
       default: {
-	 return TRUE; };}/*switch*/;
+	 return true; };}/*switch*/;
 /* NOTREACHED */
    }/*YY_IsWordChr*/
 
@@ -124,11 +126,11 @@ YY_Lex()
    tps_Str Str;
    int iStr;
    tp_Sym Sym;
-   boolean KeywordFlag;
+   bool KeywordFlag;
    int SymTok;
 
    PrevParseStr = ParseStr;
-   while (TRUE) {
+   while (true) {
       switch (*ParseStr) {
 	 case 0: {
 	    return TOK_EOF;
@@ -204,15 +206,15 @@ YY_Lex()
 	    return TOK_Dollar;
 	    break;}/*case*/;
 	 default: {
-	    KeywordFlag = TRUE;
+	    KeywordFlag = true;
 	    iStr = 0;
-	    while (TRUE) {
+	    while (true) {
 	       /*select*/{
 		  if (YY_IsWordChr(*ParseStr)) {
 		     Str[iStr] = *ParseStr; iStr += 1;
 		     NextChar();
 		  }else if (*ParseStr == '\\') {
-		     KeywordFlag = FALSE;
+		     KeywordFlag = false;
 		     NextChar();
 		     if (*ParseStr == '\0') {
 			ParseError("backslash followed by EOF");
@@ -222,7 +224,7 @@ YY_Lex()
 		     Str[iStr] = *ParseStr; iStr += 1;
 		     NextChar();
 		  }else if (*ParseStr == '\'') {
-		     KeywordFlag = FALSE;
+		     KeywordFlag = false;
 		     NextChar();
 		     while (*ParseStr != '\'') {
 			if (*ParseStr == '\\') {

@@ -14,17 +14,21 @@ geoff@boulder.colorado.edu
 */
 
 #include <stdio.h>
-#include "inc/GMC.h"
-#include "inc/DG_Version.h"
-#include "inc/Entry.h"
-#include "inc/FTClass_.h"
-#include "inc/InpSpc.h"
-#include "inc/InpKind_.h"
-#include "inc/ISKind_.h"
-#include "inc/NodTyp_.h"
-#include "inc/Str.h"
-#include "inc/TClass_.h"
-#include "inc/Tool.h"
+#include <gmc/gmc.h>
+#include <dg/inc/Type.hh>
+#include <gmc/nod.h>
+#include <dg/inc/Func.hh>
+#include <dg/inc/Var.hh>
+#include <dg/inc/DG_Version.h>
+#include <dg/inc/Entry.h>
+#include <dg/inc/FTClass_.h>
+#include <dg/inc/InpSpc.h>
+#include <dg/inc/InpKind_.h>
+#include <dg/inc/ISKind_.h>
+#include <dg/inc/NodTyp_.h>
+#include <dg/inc/TClass_.h>
+#include <dg/inc/Tool.h>
+#include <string.h>
 
 extern int	num_SrcTypS, num_FilTypS, num_PrmTypS, num_EnvVarS,
 		num_EnvVarLstS, num_ToolS, num_InpEdgS,
@@ -36,7 +40,7 @@ static tp_Str 		Banner = NIL;
 static tp_InpSpc	NoInputInpSpc;
 
 
-static tp_InpSpc Nod_InpSpc(GMC_P1(tp_Nod) GMC_PN(tp_Tool));
+static tp_InpSpc Nod_InpSpc(tp_Nod, tp_Tool);
 
 
 void
@@ -82,7 +86,7 @@ Declare_SrcTyp(EntryNod)
 {
    tp_Nod PatternNod;
    tp_SrcTyp SrcTyp;
-   boolean IsPrefix;
+   bool IsPrefix;
    tp_Pattern Pattern;
 
    PatternNod = Nod_Son(1, EntryNod);
@@ -107,7 +111,7 @@ Declare_SrcTyp(EntryNod)
 static void
 Make_VarWord(StrPtr, IsEnvVarPtr, VarWordNod, Tool)
    tp_Str *StrPtr;
-   boolean *IsEnvVarPtr;
+   bool *IsEnvVarPtr;
    tp_Nod VarWordNod;
    tp_Tool Tool;
 {
@@ -115,13 +119,13 @@ Make_VarWord(StrPtr, IsEnvVarPtr, VarWordNod, Tool)
 
    if (Nod_NodTyp(VarWordNod) == NOD_VarWord) {
       *StrPtr = Sym_Str(Nod_Sym(Nod_Son(1, VarWordNod)));
-      *IsEnvVarPtr = TRUE;
+      *IsEnvVarPtr = true;
       EnvVar = Lookup_EnvVar(*StrPtr);
       Set_Tool_EnvVarLst(Tool, Union_EnvVarLst(Tool_EnvVarLst(Tool),
 					       Make_EnvVarLst(EnvVar)));
       return; }/*if*/;
    *StrPtr = Sym_Str(Nod_Sym(VarWordNod));
-   *IsEnvVarPtr = FALSE;
+   *IsEnvVarPtr = false;
    }/*Make_VarWord*/
 
 
@@ -270,7 +274,7 @@ Nod_InpSpc(InpNod, Tool)
 static void
 Make_Desc(DescPtr, HiddenPtr, DescNod)
    tp_Desc *DescPtr;
-   boolean *HiddenPtr;
+   bool *HiddenPtr;
    tp_Nod DescNod;
 {
    tp_Nod StrNod;
@@ -278,10 +282,10 @@ Make_Desc(DescPtr, HiddenPtr, DescNod)
    /*select*/{
       if (Nod_NodTyp(DescNod) == NOD_Hidden) {
 	 StrNod = Nod_Son(1, DescNod);
-	 *HiddenPtr = TRUE;
+	 *HiddenPtr = true;
       }else{
 	 StrNod = DescNod;
-	 *HiddenPtr = FALSE; };}/*select*/;
+	 *HiddenPtr = false; };}/*select*/;
    *DescPtr = Sym_Str(Nod_Sym(StrNod));
    }/*Make_Desc*/
 
@@ -292,7 +296,7 @@ Declare_ObjTyp(EntryNod)
 {
    tp_FilTyp FilTyp;
    tp_Desc Desc;
-   boolean Hidden;
+   bool Hidden;
    tp_Nod Nod;
 
    FilTyp = Make_FilTyp(Nod_Son(1, EntryNod));
@@ -315,7 +319,7 @@ Declare_PrmTyp(EntryNod)
    tp_PrmTyp PrmTyp;
    tp_FilTyp FilTyp;
    tp_Desc Desc;
-   boolean Hidden;
+   bool Hidden;
 
    PrmTyp = Make_PrmTyp(Nod_Son(1, EntryNod));
    FilTyp = Make_FilTyp(Nod_Son(3, EntryNod));
@@ -342,7 +346,7 @@ Declare_EnvVar(EntryNod)
    tp_EnvVar EnvVar;
    tp_Desc Desc;
    tp_Str Default;
-   boolean Hidden, IsFile;
+   bool Hidden, IsFile;
    tps_Str StrBuf;
 
    EnvVar = Lookup_EnvVar(Sym_Str(Nod_Sym(Nod_Son(1, EntryNod))));
@@ -353,10 +357,10 @@ Declare_EnvVar(EntryNod)
 	 if (Nod_NodTyp(Nod_Son(3, EntryNod)) == NOD_OdinExpr) {
 	    YY_Unparse(StrBuf, Nod_Son(3, EntryNod));
 	    Default = Sym_Str(Str_Sym(StrBuf));
-	    IsFile = TRUE;
+	    IsFile = true;
 	 }else{
 	    Default = Sym_Str(Nod_Sym(Nod_Son(3, EntryNod)));
-	    IsFile = FALSE; };}/*select*/;
+	    IsFile = false; };}/*select*/;
       Set_EnvVar_Default(EnvVar, Default, IsFile); }/*if*/;
    }/*Declare_EnvVar*/
 
@@ -398,7 +402,7 @@ Make_ToolFilTyp(Package, ToolPackage, ResultNod)
       InpSpc = New_InpSpc();
       InpSpc->ISKind = ISK_Drv;
       InpSpc->FilTyp = FilTyp;
-      Add_InpEdg(InpSpc, IK_Simple, FALSE, Tool);
+      Add_InpEdg(InpSpc, IK_Simple, false, Tool);
       Set_Tool(MemFilTyp, Tool);
       Add_MemEdg(FilTyp, MemFilTyp); }/*for*/;
    return FilTyp;
@@ -409,7 +413,7 @@ static void
 Add_InpTyps(Tool, ArgsNod, IsUserArg)
    tp_Tool Tool;
    tp_Nod ArgsNod;
-   boolean IsUserArg;
+   bool IsUserArg;
 {
    tp_Nod FirstNod, ArgNod, InpNod;
    tp_InpKind InpKind;
@@ -454,10 +458,10 @@ Declare_Tool(Package, EntryNod)
       Set_Tool(FilTyp, Tool);
       Tool->FilTyp = FilTyp;
       Tool->Package = ToolPackage; }/*if*/;
-   Add_InpTyps(Tool, Nod_Son(2, EntryNod), TRUE);
-   Add_InpTyps(Tool, Nod_Son(3, EntryNod), FALSE);
+   Add_InpTyps(Tool, Nod_Son(2, EntryNod), true);
+   Add_InpTyps(Tool, Nod_Son(3, EntryNod), false);
    if (!HasInput(Tool)) {
-      Add_InpEdg(NoInputInpSpc, IK_Simple, FALSE, Tool); }/*if*/;
+      Add_InpEdg(NoInputInpSpc, IK_Simple, false, Tool); }/*if*/;
    /*select*/{
       if (strcmp(ToolName, "EXEC") == 0) {
 	 Tool->TClass = TC_External;
@@ -591,7 +595,7 @@ Build_DerivationGraph(ToolDirName, Package)
    int LineNum;
 
    (void)sprintf(DGFileName, "%s/%s/%s.dg", ToolDirName, Package, Package);
-   FilDsc = FileName_RFilDsc(DGFileName, FALSE);
+   FilDsc = FileName_RFilDsc(DGFileName, false);
    if (FilDsc == NIL) {
       SystemError("Derivation graph <%s> not found.\n", DGFileName);
       return; }/*if*/;

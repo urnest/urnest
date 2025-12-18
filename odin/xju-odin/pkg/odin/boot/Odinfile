@@ -2,9 +2,26 @@
    client-yacc.c; fsys-yacc.c; default-dg.c; stub-in.c; stub-out.c
 
 %client.ygi == %cast.ygi +cmd=(../inc%keep-double-slash.sh) (../client.ygi,c:cpp) :stdout
+%fsys.ygi == %cast.ygi +cmd=(../inc%keep-double-slash.sh) (../fsys.ygi,c :cpp) :stdout
 
-client-yacc.c == %client.ygi +yaccid=oc :c \
-   +cmd='sed -e "/extern char/d" -e "/^# *line/d"' :stdout
+# as a sanity check, verify that we can regenerate our own client-yacc.c unaltered
+# we don't overwrite the committed files automatically as they should not normally change
+# (if they do change, the responsible person will commit the changes once they're correct)
+%check==%check.ls:list
+
+%check.ls==<<
+%check-client-yacc.c
+%check-fsys-yacc.c
+
+%check-client-yacc.c==(client-yacc.c)+cmd=diff '--ignore-matching-lines="^#line"' (%client-yacc.c) (client-yacc.c):stdout
+
+%client-ygt.y==(../../tregrm%cast.y)+cmd=cat (%client-ygt/y):stdout
+
+%client-ygt==()+cmd=(../../tregrm%ygt.sh) (../../tregrm/ygt.sh) (%client.ygi) (../../tregrm%exe) 'oc':output
+
+%fsys-ygt.y==(../../tregrm%cast.y)+cmd=cat (%fsys-ygt/y):stdout
+
+%fsys-ygt==()+cmd=(../../tregrm%ygt.sh) (../../tregrm/ygt.sh) (%fsys.ygi) (../../tregrm%exe):output
 
 default-dg.c == () +cmd=(../../dg%exe) (../../PKGLST) (../..) 0 \
    +need=(../../PKGLST +cmd=sed '"s,\\(.*\\),\\1/\\1.dg,"' :stdout:list) \
@@ -12,9 +29,12 @@ default-dg.c == () +cmd=(../../dg%exe) (../../PKGLST) (../..) 0 \
 
 %cast.ygi == <<
 
-%fsys.ygi == %cast.ygi +cmd=(../inc%keep-double-slash.sh) (../fsys.ygi,c :cpp) :stdout
+%check-fsys-yacc.c==(fsys-yacc.c)+cmd=diff '--ignore-matching-lines="^#line"' (%fsys-yacc.c) (fsys-yacc.c):stdout
 
-fsys-yacc.c == %fsys.ygi :c \
+%client-yacc.c == %client-ygt.y+yaccid=oc:c \
+   +cmd='sed -e "/extern char/d" -e "/^# *line/d"' :stdout
+
+%fsys-yacc.c == %fsys-ygt.y:c \
    +cmd='sed -e "/extern char/d" -e "/^# *line/d"' :stdout
 
 #stub-in.c == ../if-stub.c +cmd=(../ipcgen%exe) :output/IN.c

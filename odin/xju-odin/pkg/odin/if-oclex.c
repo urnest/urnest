@@ -13,8 +13,12 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/OC_NodTyp_.h"
+#include <string.h>
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
+#include <odin/inc/OC_NodTyp_.h>
 
 
 extern tp_Str		PrevParseStr;
@@ -38,7 +42,7 @@ OC_Parser(tp_Str Str,tp_FileName FileName,int* LNPtr)
 int
 OC_Lex()
 {
-   IsCmdLex = TRUE;
+   IsCmdLex = true;
    return Lex();
    }/*OC_Lex*/
 

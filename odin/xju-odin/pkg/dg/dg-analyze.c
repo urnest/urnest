@@ -56,8 +56,8 @@ static int			num_BackOrdered_FilTypS = 0;
 static tp_PrmTypLst	GenericMapPrmTypLst = NIL;
 
 
-static void Set_MapPrmTypLst(GMC_P1(boolean *) GMC_PN(tp_FilTyp));
-static void Set_DrvEdg_PrmTypLst(GMC_P1(boolean *) GMC_PN(tp_DrvEdg));
+static void Set_MapPrmTypLst(bool *, tp_FilTyp);
+static void Set_DrvEdg_PrmTypLst(bool *, tp_DrvEdg);
 
 
 static void
@@ -135,7 +135,7 @@ Broadcast_IsCopy(FilTyp)
 
    if (FilTyp->IsCopy) {
       return; }/*if*/;
-   FilTyp->IsCopy = TRUE;
+   FilTyp->IsCopy = true;
    for (EqvEdg=FilTyp->FrmEqvEdg; EqvEdg!=NIL; EqvEdg=EqvEdg->FrmNext) {
       Broadcast_IsCopy(EqvEdg->FrmFilTyp); }/*for*/;
    for (CastEdg=FilTyp->FrmCastEdg; CastEdg!=NIL; CastEdg=CastEdg->FrmNext) {
@@ -151,7 +151,7 @@ Broadcast_IsGrouping(FilTyp)
 
    if (FilTyp->IsGrouping) {
       return; }/*if*/;
-   FilTyp->IsGrouping = TRUE;
+   FilTyp->IsGrouping = true;
    for (EqvEdg=FilTyp->EqvEdg; EqvEdg!=NIL; EqvEdg=EqvEdg->Next) {
       Broadcast_IsGrouping(EqvEdg->FilTyp); }/*for*/;
    }/*Broadcast_IsGrouping*/
@@ -165,13 +165,13 @@ Broadcast_IsGroupingInput(FilTyp)
 
    if (FilTyp->IsGroupingInput) {
       return; }/*if*/;
-   FilTyp->IsGroupingInput = TRUE;
+   FilTyp->IsGroupingInput = true;
    for (EqvEdg=FilTyp->EqvEdg; EqvEdg!=NIL; EqvEdg=EqvEdg->Next) {
       Broadcast_IsGroupingInput(EqvEdg->FilTyp); }/*for*/;
    }/*Broadcast_IsGroupingInput*/
 
 
-boolean
+bool
 Is_Output(FilTyp, Tool)
    tp_FilTyp FilTyp;
    tp_Tool Tool;
@@ -184,12 +184,12 @@ Is_Output(FilTyp, Tool)
       if (TmpTool == Tool
 	  || (TmpTool != NIL && TmpTool->TClass == TC_StructMem
 	      && (TmpTool->InpEdg->InpSpc->FilTyp->Tool == Tool))) {
-	 return TRUE; }/*if*/; }/*for*/;
-   return FALSE;
+	 return true; }/*if*/; }/*for*/;
+   return false;
    }/*Is_Output*/
 
 
-static boolean
+static bool
 Is_Reached(FilTyp, Tool)
    tp_FilTyp FilTyp;
    tp_Tool Tool;
@@ -200,25 +200,25 @@ Is_Reached(FilTyp, Tool)
 
 static void
 Order_FilTyp(AbortPtr, FilTyp, BackFlag)
-   boolean *AbortPtr;
+   bool *AbortPtr;
    tp_FilTyp FilTyp;
-   boolean BackFlag;
+   bool BackFlag;
 {
    tp_InpEdg InpEdg;
    tp_MemEdg MemEdg;
    tp_EqvEdg EqvEdg;
 
-   *AbortPtr = FALSE;
+   *AbortPtr = false;
    if (FilTyp->Done) {
       return; }/*if*/;
    if (FilTyp->Active) {
       Print_FilTyp(StdErrFD, FilTyp);
       Writeln(StdErrFD, " is recursive");
       Print_FilTyp(StdErrFD, FilTyp);
-      *AbortPtr = TRUE;
+      *AbortPtr = true;
       return;}/*if*/;
 
-   FilTyp->Active = TRUE;
+   FilTyp->Active = true;
    for (InpEdg = FilTyp->InpLink;
 	InpEdg != 0;
 	InpEdg = InpEdg->InpLink) {
@@ -244,7 +244,7 @@ Order_FilTyp(AbortPtr, FilTyp, BackFlag)
 	 Write(StdErrFD, " <= ");
 	 Print_FilTyp(StdErrFD, FilTyp);
 	 return; }/*if*/; }/*for*/;
-   FilTyp->Active = FALSE;
+   FilTyp->Active = false;
 
    /*select*/{
       if (BackFlag) {
@@ -266,42 +266,42 @@ Order_FilTyp(AbortPtr, FilTyp, BackFlag)
 	 FORBIDDEN(FilTyp->NextOrder != NIL);
 	 LastOrdered_FilTyp = FilTyp;
 	 num_Ordered_FilTypS += 1; };}/*select*/;
-   FilTyp->Done = TRUE;
+   FilTyp->Done = true;
    }/*Order_FilTyp*/
 
 
 static void
 Mark_NewReach(ChangedPtr)
-   boolean *ChangedPtr;
+   bool *ChangedPtr;
 {
    tp_Tool Tool;
    tp_InpEdg InpEdg;
-   boolean CanRun;
+   bool CanRun;
    tp_FilTyp FilTyp;
 
-   *ChangedPtr = FALSE;
+   *ChangedPtr = false;
    for (Tool = ToolS;
 	Tool != NIL;
 	Tool = Tool->Link) {
       if (!Tool->Flag && !IsDummy_Tool(Tool)) {
 	 FORBIDDEN(Tool->InpEdg == NIL);
-	 CanRun = TRUE;
+	 CanRun = true;
 	 for (InpEdg = Tool->InpEdg;
 	      InpEdg != 0 && CanRun;
 	      InpEdg = InpEdg->Next) {
 	    if (!Is_Reached(InpEdg->FilTyp, Tool)) {
-	       CanRun = FALSE; }/*if*/; }/*for*/;
+	       CanRun = false; }/*if*/; }/*for*/;
 	 for (InpEdg = Tool->HomInpEdg;
 	      InpEdg != 0 && CanRun;
 	      InpEdg = InpEdg->Next) {
 	    if (!Is_Reached(InpEdg->FilTyp, Tool)) {
-	       CanRun = FALSE; }/*if*/; }/*for*/;
+	       CanRun = false; }/*if*/; }/*for*/;
 	 if (CanRun) {
-	    Tool->Flag = TRUE;
+	    Tool->Flag = true;
 	    FilTyp = Tool->FilTyp;
 	    FORBIDDEN(FilTyp->Reach);
-	    FilTyp->NewReach = TRUE ;
-	    *ChangedPtr = TRUE; }/*if*/; }/*if*/;}/*for*/;
+	    FilTyp->NewReach = true ;
+	    *ChangedPtr = true; }/*if*/; }/*if*/;}/*for*/;
    }/*Mark_NewReach*/
 
 
@@ -314,9 +314,9 @@ Mark_Reach(FrmFilTyp)
 
    if (FrmFilTyp->Reach) return;
    FORBIDDEN(FrmFilTyp->NewReach);
-   FrmFilTyp->Reach = TRUE;
+   FrmFilTyp->Reach = true;
    if (FrmFilTyp->Tool != NIL) {
-      FrmFilTyp->Tool->Flag = TRUE; }/*if*/;
+      FrmFilTyp->Tool->Flag = true; }/*if*/;
 
    for (EqvEdg = FrmFilTyp->EqvEdg; EqvEdg != 0; EqvEdg = EqvEdg->Next) {
       Mark_Reach(EqvEdg->FilTyp); }/*for*/;
@@ -330,7 +330,7 @@ static void
 Add_DrvEdgs(FrmFilTyp)
    tp_FilTyp FrmFilTyp;
 {
-   boolean Changed;
+   bool Changed;
    tp_FilTyp FilTyp;
 
    Mark_Reach(FrmFilTyp);
@@ -342,9 +342,9 @@ Add_DrvEdgs(FrmFilTyp)
 	 if (FilTyp->NewReach) {
 	    FORBIDDEN(FilTyp->Reach);
 	    Add_DrvEdg(FrmFilTyp, FilTyp);
-	    FilTyp->NewReach = FALSE;
+	    FilTyp->NewReach = false;
 	    Mark_Reach(FilTyp);
-	    FrmFilTyp->Reach = TRUE; }/*if*/; }/*for*/;
+	    FrmFilTyp->Reach = true; }/*if*/; }/*for*/;
       Mark_NewReach(&Changed); }/*while*/;
    }/*Add_DrvEdgs*/
 
@@ -353,13 +353,13 @@ void
 Make_DrvEdgs()
 {
    tp_FilTyp FilTyp;
-   boolean Abort;
+   bool Abort;
 
    Add_EqvEdg(ObjectFilTyp, NoInputFilTyp);
 
    Clear_Flags();
    for (FilTyp = FilTypS; FilTyp != NIL; FilTyp = FilTyp->Link) {
-      Order_FilTyp(&Abort, FilTyp, FALSE);
+      Order_FilTyp(&Abort, FilTyp, false);
       if (Abort) {
 	 SystemError(".\n");
 	 return; }/*if*/; }/*for*/;
@@ -367,7 +367,7 @@ Make_DrvEdgs()
 
    Clear_Flags();
    for (FilTyp = LastFilTyp; FilTyp != NIL; FilTyp = FilTyp->BackLink) {
-      Order_FilTyp(&Abort, FilTyp, TRUE);
+      Order_FilTyp(&Abort, FilTyp, true);
       if (Abort) {
 	 SystemError(".\n");
 	 return; }/*if*/; }/*for*/;
@@ -401,21 +401,21 @@ Make_DrvEdgs()
 
 static void
 Set_DrvPth_PrmTypLst(ReDoPtr, PrmTypLstPtr, PntrHoPtr, FailPtr, FrmFKind, FrmFilTyp, ToFilTyp)
-   boolean *ReDoPtr;
+   bool *ReDoPtr;
    tp_PrmTypLst *PrmTypLstPtr;
-   boolean *PntrHoPtr;
-   boolean *FailPtr;
+   bool *PntrHoPtr;
+   bool *FailPtr;
    tp_FKind FrmFKind;
    tp_FilTyp FrmFilTyp;
    tp_FilTyp ToFilTyp;
 {
    tp_DrvPth DrvPth, DrvPthElm;
-   boolean IsGeneric;
+   bool IsGeneric;
    tp_DrvEdg DrvEdg;
    tp_FilTyp FilTyp;
 
-   *PntrHoPtr = FALSE;
-   *FailPtr = FALSE;
+   *PntrHoPtr = false;
+   *FailPtr = false;
    if (FrmFilTyp == ToFilTyp) {
       return; }/*if*/;
    Do_Search(&DrvPth, &IsGeneric, FrmFKind, FrmFilTyp, ToFilTyp);
@@ -423,7 +423,7 @@ Set_DrvPth_PrmTypLst(ReDoPtr, PrmTypLstPtr, PntrHoPtr, FailPtr, FrmFKind, FrmFil
       Ret_DrvPth(DrvPth);
       DrvPth = ERROR; }/*if*/;
    if (DrvPth == ERROR) {
-      *FailPtr = TRUE;
+      *FailPtr = true;
       return; }/*if*/;
    for (DrvPthElm = DrvPth;
 	DrvPthElm != 0;
@@ -431,7 +431,7 @@ Set_DrvPth_PrmTypLst(ReDoPtr, PrmTypLstPtr, PntrHoPtr, FailPtr, FrmFKind, FrmFil
       FORBIDDEN(*PntrHoPtr);
       DrvEdg = DrvPth_DrvEdg(DrvPthElm);
       if (DrvPth_FKind(DrvPthElm) == FK_PntrHo) {
-	 *PntrHoPtr = TRUE; }/*if*/;
+	 *PntrHoPtr = true; }/*if*/;
       ;/*select*/{
 	 if (DrvEdg != NIL) {
 	    Set_DrvEdg_PrmTypLst(ReDoPtr, DrvEdg);
@@ -447,7 +447,7 @@ Set_DrvPth_PrmTypLst(ReDoPtr, PrmTypLstPtr, PntrHoPtr, FailPtr, FrmFKind, FrmFil
 
 static void
 Set_Tool_PrmTypLst(ReDoPtr, Tool)
-   boolean * ReDoPtr;
+   bool * ReDoPtr;
    tp_Tool Tool;
 {
    tp_FilTyp FrmFilTyp;
@@ -455,14 +455,14 @@ Set_Tool_PrmTypLst(ReDoPtr, Tool)
    tp_InpSpc InpSpc;
    tp_InpEdg InpEdg;
    tp_FKind FrmFKind;
-   boolean PntrHoFlag, FailFlag;
+   bool PntrHoFlag, FailFlag;
    tp_Str InpName;
 
    if (Tool->Flag && Tool->PrmTypLst != ERROR) return;
    if (Tool->Flag) {
       Tool->PrmTypLst = Tool->BasePrmTypLst;
       return; }/*if*/;
-   Tool->Flag = TRUE;
+   Tool->Flag = true;
 
    PrmTypLst = Tool->BasePrmTypLst;
    FORBIDDEN(PrmTypLst == ERROR);
@@ -535,32 +535,32 @@ Set_Tool_PrmTypLst(ReDoPtr, Tool)
 	 SystemError(
 	  "In package %s: argument \"%s\" to EXEC cannot be a list.\n",
 	  Tool->Package, InpName); }/*if*/;
-      InpEdg->Done = TRUE; }/*for*/;
+      InpEdg->Done = true; }/*for*/;
    if (Tool->PrmTypLst != ERROR && Tool->PrmTypLst != PrmTypLst) {
       Write(StdOutFD, "Recomputing parameters for recursive derivation : ");
       Print_FilTyp(StdOutFD, Tool->FilTyp);
       Writeln(StdOutFD, "");
-      *ReDoPtr = TRUE; }/*if*/;
+      *ReDoPtr = true; }/*if*/;
    Tool->PrmTypLst = PrmTypLst;
    }/*Set_Tool_PrmTypLst*/
 
 
 static void
 Set_DrvEdg_PrmTypLst(ReDoPtr, DrvEdg)
-   boolean * ReDoPtr;
+   bool * ReDoPtr;
    tp_DrvEdg DrvEdg;
 {
    tp_FilTyp FrmFilTyp, ToFilTyp, FilTyp;
    tp_Tool Tool;
    tp_PrmTypLst PrmTypLst;
    tp_InpEdg InpEdg;
-   boolean PntrHoFlag, FailFlag;
+   bool PntrHoFlag, FailFlag;
 
    if (DrvEdg->Flag && DrvEdg->PrmTypLst != ERROR) return;
    if (DrvEdg->Flag) {
       DrvEdg->PrmTypLst = DfltPrmTypLst;
       return; }/*if*/;
-   DrvEdg->Flag = TRUE;
+   DrvEdg->Flag = true;
    FrmFilTyp = DrvEdg->FrmFilTyp;
    ToFilTyp = DrvEdg->FilTyp;
    Tool = ToFilTyp->Tool;
@@ -587,14 +587,14 @@ Set_DrvEdg_PrmTypLst(ReDoPtr, DrvEdg)
       Write(StdOutFD, "Recomputing parameters for recursive derivation : ");
       Print_DrvEdg(StdOutFD, DrvEdg);
       Writeln(StdOutFD, "");
-      *ReDoPtr = TRUE; }/*if*/;
+      *ReDoPtr = true; }/*if*/;
    DrvEdg->PrmTypLst = PrmTypLst;
    }/*Set_DrvEdg_PrmTypLst*/
 
 
 static void
 Set_MapPrmTypLst(ReDoPtr, FilTyp)
-   boolean * ReDoPtr;
+   bool * ReDoPtr;
    tp_FilTyp FilTyp;
 {
    tp_PrmTypLst PrmTypLst, NewPrmTypLst;
@@ -607,7 +607,7 @@ Set_MapPrmTypLst(ReDoPtr, FilTyp)
       FilTyp->MapPrmTypLst = GenericMapPrmTypLst;
       return; }/*if*/;
 
-   FilTyp->Flag = TRUE;
+   FilTyp->Flag = true;
    PrmTypLst = GenericMapPrmTypLst;
 
    for (FrmDrvEdg = FilTyp->FrmDrvEdg;
@@ -634,7 +634,7 @@ Set_MapPrmTypLst(ReDoPtr, FilTyp)
       Write(StdOutFD, "Recomputing parameters for recursive derivation : ");
       Print_FilTyp(StdOutFD, FilTyp);
       Writeln(StdOutFD, "");
-      *ReDoPtr = TRUE; }/*if*/;
+      *ReDoPtr = true; }/*if*/;
    FilTyp->MapPrmTypLst = PrmTypLst;
    }/*Set_MapPrmTypLst*/
 
@@ -642,7 +642,7 @@ Set_MapPrmTypLst(ReDoPtr, FilTyp)
 void
 Make_PrmTypLsts()
 {
-   boolean ReDo;
+   bool ReDo;
    tp_DrvEdg DrvEdg;
    tp_FilTyp FilTyp;
    tp_Tool Tool;
@@ -651,10 +651,10 @@ Make_PrmTypLsts()
 
    GenericMapPrmTypLst = DfltPrmTypLst;
 
-   ReDo = TRUE;
+   ReDo = true;
    OldGenericMapPTL = DfltPrmTypLst;
    while (ReDo || OldGenericMapPTL != GenericMapPrmTypLst) {
-      ReDo = FALSE;
+      ReDo = false;
       OldGenericMapPTL = GenericMapPrmTypLst;
       Clear_Flags();
       Clear_EdgFlags();
@@ -666,24 +666,24 @@ Make_PrmTypLsts()
 	    
 	    }/*if*/; }/*for*/; }/*while*/;
 
-   ReDo = TRUE;
+   ReDo = true;
    while (ReDo) {
-      ReDo = FALSE;
+      ReDo = false;
       Clear_Flags();
       Clear_EdgFlags();
       for (DrvEdg = DrvEdgS; DrvEdg != NIL; DrvEdg = DrvEdg->Link) {
 	 Set_DrvEdg_PrmTypLst(&ReDo, DrvEdg); }/*for*/; }/*while*/;
 
-   ReDo = TRUE;
+   ReDo = true;
    while (ReDo) {
-      ReDo = FALSE;
+      ReDo = false;
       Clear_Flags();
       for (Tool = ToolS; Tool != NIL; Tool = Tool->Link) {
 	 Set_Tool_PrmTypLst(&ReDo, Tool); }/*for*/; }/*while*/;
 
-   ReDo = TRUE;
+   ReDo = true;
    while (ReDo) {
-      ReDo = FALSE;
+      ReDo = false;
       Clear_Flags();
       for (FilTyp = FilTypS; FilTyp != NIL; FilTyp = FilTyp->Link) {
 	 Set_MapPrmTypLst(&ReDo, FilTyp); }/*for*/; }/*while*/;

@@ -14,19 +14,19 @@ See the GNU General Public License for more details.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/FileName.h"
-#include "inc/FilElm.h"
-#include "inc/FilHdr.h"
-#include "inc/FilInp.h"
-#include "inc/FKind_.h"
-#include "inc/HdrInf.h"
-#include "inc/LogLevel_.h"
-#include "inc/ModKind_.h"
-#include "inc/NodTyp_.h"
-#include "inc/Outputs.h"
-#include "inc/Status_.h"
-#include "inc/Str.h"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/FilElm.h>
+#include <odin/inc/FilHdr.h>
+#include <odin/inc/FilInp.h>
+#include <odin/inc/FKind_.h>
+#include <odin/inc/HdrInf.h>
+#include <odin/inc/LogLevel_.h>
+#include <odin/inc/ModKind_.h>
+#include <odin/inc/NodTyp_.h>
+#include <odin/inc/Outputs.h>
+#include <odin/inc/Status_.h>
 #include <sys/time.h>
 
 

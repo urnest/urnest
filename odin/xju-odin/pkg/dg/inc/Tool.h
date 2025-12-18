@@ -9,7 +9,7 @@ typedef struct _tps_Tool {
    tp_PrmTypLst BasePrmTypLst, PrmTypLst;
    tp_EnvVarLst EnvVarLst;
    tp_Package Package;
-   boolean Flag;
+   bool Flag;
    int Defer;
    int Index;
    tp_Tool Link;

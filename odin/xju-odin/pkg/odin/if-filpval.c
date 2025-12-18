@@ -1,4 +1,4 @@
-!!/*
+/*
 Copyright (C) 1991 Geoffrey M. Clemm
 
 This file is part of the Odin system.
@@ -13,12 +13,13 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/InpKind_.h"
-#include "inc/FilPVal.h"
-#include "inc/FileName.h"
-#include "inc/FKind_.h"
-#include "inc/Flag_.h"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/InpKind_.h>
+#include <odin/inc/FilPVal.h>
+#include <odin/inc/FKind_.h>
+#include <odin/inc/Flag_.h>
 
 
 int		num_FilPValS = 0;
@@ -35,14 +36,14 @@ WriteFilPVal(
 
 
 static tp_LocPVal
-Alloc_PValInf(GMC_ARG_VOID)
+Alloc_PValInf()
 {
    return (tp_LocPVal) Alloc(sizeof(tps_PValInf));
    }/*Alloc_PValInf*/
 
 
 tp_FilPVal
-New_FilPVal(GMC_ARG_VOID)
+New_FilPVal()
 {
    tp_FilPVal FilPVal;
 

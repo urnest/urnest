@@ -13,9 +13,16 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdio.h>
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
 #include <fcntl.h>
-#include "inc/sys_param.h"
+#include <odin/inc/sys_param.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -23,10 +30,7 @@ geoff@boulder.colorado.edu
 #include <netinet/in.h>
 #include <signal.h>
 
-#include "inc/FileName.h"
-#include "inc/Build.h"
-#include "inc/Str.h"
-
+#include <odin/inc/Build.h>
 
 extern char **environ;
 

@@ -1,4 +1,4 @@
-!!#ifndef TPS_FILHDR
+#ifndef TPS_FILHDR
 #define TPS_FILHDR
 
 #include "HdrInf.h"

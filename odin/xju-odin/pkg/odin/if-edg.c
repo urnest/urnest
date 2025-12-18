@@ -21,7 +21,7 @@ geoff@boulder.colorado.edu
 #include <odin/inc/EqvEdg.h>
 #include <odin/inc/MemEdg.h>
 #include <odin/inc/InpEdg.h>
-#include <odin/inc/InpKind_.h>
+#include <dg/inc/InpKind_.h>
 
 
 tp_PrmTypLst

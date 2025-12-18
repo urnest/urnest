@@ -1,5 +1,5 @@
-#ifndef TP_YYNODTYP
-#define TP_YYNODTYP
+#ifndef TP_OCNODTYP
+#define TP_OCNODTYP
 
 typedef enum NodTyp {
   NSTDEF=1,

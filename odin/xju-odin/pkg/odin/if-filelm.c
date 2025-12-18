@@ -13,9 +13,12 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/FilElm.h"
-#include "inc/ElmInf.h"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
+#include <odin/inc/FilElm.h>
+#include <odin/inc/ElmInf.h>
 
 
 int		num_FilElmS = 0;
@@ -29,7 +32,7 @@ static tp_FilElm		FreeFilElm = &_FreeFilElm;
 
 
 void
-Init_FilElms(GMC_ARG_VOID)
+Init_FilElms()
 {
    UsedFilElm->PrevFree = UsedFilElm;
    UsedFilElm->NextFree = UsedFilElm;
@@ -83,7 +86,7 @@ Ret_FilElm(
 
 
 void
-Free_FilElms(GMC_ARG_VOID)
+Free_FilElms()
 {
    tp_FilElm FilElm, NextFilElm;
 
@@ -204,7 +207,7 @@ WriteFilElm(
 
 
 void
-WriteFilElms(GMC_ARG_VOID)
+WriteFilElms()
 {
    while (ModFilElm != NIL) {
       FORBIDDEN(!ModFilElm->Modified);
@@ -307,7 +310,7 @@ Unlink_LocElm(
 
 
 static tp_FilElm
-Alloc_ElmInf(GMC_ARG_VOID)
+Alloc_ElmInf()
 {
    tp_FilElm FilElm;
    tp_LocPrm LocElm;
@@ -360,7 +363,7 @@ DeAlloc_ElmInf(
 
 
 bool
-FilElms_InUse(GMC_ARG_VOID)
+FilElms_InUse()
 {
    tp_FilElm FilElm;
 

@@ -2,6 +2,7 @@
 #define ODIN_TYPE_H
 
 #include <gmc/gmc.h>
+#include <dg/inc/Type.hh>
 
 typedef int		tp_LogLevel;
 typedef int		tp_ISKind;
@@ -44,8 +45,6 @@ typedef struct _tps_DrvSpc *	tp_DrvSpc;
 typedef struct _tps_ElmInf *	tp_ElmInf;
 typedef struct _tps_EqvEdg *	tp_EqvEdg;
 typedef struct _tps_FilElm *	tp_FilElm;
-typedef struct _tps_FilHdr *	tp_FilHdr;
-typedef struct _tps_HdrInf *	tp_HdrInf;
 typedef struct _tps_FilInp *	tp_FilInp;
 typedef struct _tps_SrcTyp *	tp_SrcTyp;
 typedef struct _tps_FilTyp *	tp_FilTyp;

@@ -13,8 +13,10 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/FileName.h"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
 
 
 tp_Str		Author = "odin-build-users@lists.sourceforge.net";

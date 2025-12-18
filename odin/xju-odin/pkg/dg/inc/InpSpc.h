@@ -6,7 +6,7 @@ typedef struct _tps_InpSpc {
    tp_FilTyp FilTyp;
    tp_PrmTyp PrmTyp;
    tp_Str Str;
-   boolean IsEnvVar;
+   bool IsEnvVar;
    tp_InpSpc InpSpc;
    tp_InpSpc Next;
    int Index;

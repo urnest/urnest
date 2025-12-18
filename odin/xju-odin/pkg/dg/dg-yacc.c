@@ -71,16 +71,17 @@
 
 #include "gmc/gmc.h"
 #include "gmc/nod.h"
+#include "dg/inc/Func.hh"
 extern int num_ParseErrors;
 tp_Nod YY_Parse() {tp_Nod Nod;
 num_ParseErrors = 0; Init_Lex(); Init_ConstructTree();
 (void)yyparse(); Nod = End_ConstructTree();
 return Nod;}
-void yyerror(GMC_ARG(char*, s)) GMC_DCL(char*, s) 
+void yyerror(char* s)
 {num_ParseErrors++; ParseError(s);}
 int yylex() {return YY_Lex();}
 
-#line 84 "y.tab.c"
+#line 85 "y.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -625,13 +626,13 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,    37,    37,    41,    45,    48,    50,    53,    58,    64,
-      70,    76,    85,    88,    92,    95,   101,   103,   107,   112,
-     117,   124,   127,   131,   135,   139,   143,   146,   150,   152,
-     156,   159,   163,   165,   169,   172,   176,   182,   188,   190,
-     192,   195,   200,   206,   208,   211,   217,   220,   222,   224,
-     226,   228,   231,   236,   239,   242,   244,   248,   251,   253,
-     259,   261,   265,   270,   273,   277,   279,   283,   285,   288
+       0,    38,    38,    42,    46,    49,    51,    54,    59,    65,
+      71,    77,    86,    89,    93,    96,   102,   104,   108,   113,
+     118,   125,   128,   132,   136,   140,   144,   147,   151,   153,
+     157,   160,   164,   166,   170,   173,   177,   183,   189,   191,
+     193,   196,   201,   207,   209,   212,   218,   221,   223,   225,
+     227,   229,   232,   237,   240,   243,   245,   249,   252,   254,
+     260,   262,   266,   271,   274,   278,   280,   284,   286,   289
 };
 #endif
 
@@ -1273,289 +1274,289 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* xDerivationGraph: xDerivationGraph_1  */
-#line 37 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 38 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                        {Action(1,1);}
-#line 1279 "y.tab.c"
+#line 1280 "y.tab.c"
     break;
 
   case 3: /* xDerivationGraph_1: xDerivationGraph_1 TOK_Semicolon xDGEntry  */
-#line 43 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 44 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
              {Action(0,2);}
-#line 1285 "y.tab.c"
+#line 1286 "y.tab.c"
     break;
 
   case 5: /* xDGEntry: %empty  */
-#line 48 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 49 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
  {Action(0,0);}
-#line 1291 "y.tab.c"
+#line 1292 "y.tab.c"
     break;
 
   case 6: /* xDGEntry: TOK_BANNER TOK_Wordleaf  */
-#line 51 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 52 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                  {Action(2,1);}
-#line 1297 "y.tab.c"
+#line 1298 "y.tab.c"
     break;
 
   case 7: /* xDGEntry: xSourceType TOK_Equals TOK_RightAngle xObjectType  */
-#line 56 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 57 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                 {Action(3,2);}
-#line 1303 "y.tab.c"
+#line 1304 "y.tab.c"
     break;
 
   case 8: /* xDGEntry: xObjectType xDesc TOK_Equals TOK_RightAngle xDGEntry_1  */
-#line 62 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 63 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                {Action(5,3);}
-#line 1309 "y.tab.c"
+#line 1310 "y.tab.c"
     break;
 
   case 9: /* xDGEntry: xParameterType xDesc TOK_Equals TOK_RightAngle xObjectType  */
-#line 68 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 69 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                 {Action(4,3);}
-#line 1315 "y.tab.c"
+#line 1316 "y.tab.c"
     break;
 
   case 10: /* xDGEntry: TOK_Dollar TOK_Wordleaf xDesc TOK_Equals xParameterValue  */
-#line 74 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 75 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                     {Action(7,3);}
-#line 1321 "y.tab.c"
+#line 1322 "y.tab.c"
     break;
 
   case 11: /* xDGEntry: TOK_Wordleaf xArgs xNeeds TOK_Equals TOK_RightAngle xResults  */
-#line 81 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 82 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
              {Action(6,4);}
-#line 1327 "y.tab.c"
+#line 1328 "y.tab.c"
     break;
 
   case 12: /* xDGEntry_1: xDGEntry_1 xSuperType  */
-#line 86 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 87 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                {Action(0,2);}
-#line 1333 "y.tab.c"
+#line 1334 "y.tab.c"
     break;
 
   case 14: /* xSourceType: TOK_Wordleaf TOK_Asterisk  */
-#line 93 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 94 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                  {Action(8,1);}
-#line 1339 "y.tab.c"
+#line 1340 "y.tab.c"
     break;
 
   case 15: /* xSourceType: TOK_Asterisk xSourceType_1  */
-#line 96 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 97 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                   {Action(9,1);}
-#line 1345 "y.tab.c"
+#line 1346 "y.tab.c"
     break;
 
   case 17: /* xSourceType_1: %empty  */
-#line 103 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 104 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
      {Action(0,0);}
-#line 1351 "y.tab.c"
+#line 1352 "y.tab.c"
     break;
 
   case 20: /* xForeignObjectType: TOK_Colon TOK_Wordleaf TOK_Asterisk TOK_Wordleaf  */
-#line 120 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 121 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                  {Action(0,2);}
-#line 1357 "y.tab.c"
+#line 1358 "y.tab.c"
     break;
 
   case 22: /* xDesc: TOK_Wordleaf  */
-#line 127 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 128 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                  {Action(10,1);}
-#line 1363 "y.tab.c"
+#line 1364 "y.tab.c"
     break;
 
   case 23: /* xSuperType: TOK_LeftAngle xObjectType TOK_RightAngle  */
-#line 133 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 134 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                    {Action(11,1);}
-#line 1369 "y.tab.c"
+#line 1370 "y.tab.c"
     break;
 
   case 25: /* xArgs: xArgs_1  */
-#line 139 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 140 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
             {Action(12,1);}
-#line 1375 "y.tab.c"
+#line 1376 "y.tab.c"
     break;
 
   case 26: /* xArgs_1: xArgs_1 xArg  */
-#line 144 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 145 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
          {Action(0,2);}
-#line 1381 "y.tab.c"
+#line 1382 "y.tab.c"
     break;
 
   case 28: /* xNeeds: TOK_NEEDS xNeeds_1  */
-#line 151 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 152 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
              {Action(13,1);}
-#line 1387 "y.tab.c"
+#line 1388 "y.tab.c"
     break;
 
   case 29: /* xNeeds: %empty  */
-#line 152 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 153 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
  {Action(13,0);}
-#line 1393 "y.tab.c"
+#line 1394 "y.tab.c"
     break;
 
   case 30: /* xNeeds_1: xNeeds_1 xArg  */
-#line 157 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 158 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
          {Action(0,2);}
-#line 1399 "y.tab.c"
+#line 1400 "y.tab.c"
     break;
 
   case 32: /* xResults: xResults_1  */
-#line 163 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 164 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                {Action(16,1);}
-#line 1405 "y.tab.c"
+#line 1406 "y.tab.c"
     break;
 
   case 33: /* xResults: xForeignResult  */
-#line 165 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 166 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                    {Action(16,1);}
-#line 1411 "y.tab.c"
+#line 1412 "y.tab.c"
     break;
 
   case 34: /* xResults_1: xResults_1 xResult  */
-#line 170 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 171 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
             {Action(0,2);}
-#line 1417 "y.tab.c"
+#line 1418 "y.tab.c"
     break;
 
   case 37: /* xForeignResult: TOK_LeftParen xForeignObjectType TOK_RightParen  */
-#line 184 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 185 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                    {Action(17,1);}
-#line 1423 "y.tab.c"
+#line 1424 "y.tab.c"
     break;
 
   case 40: /* xArg: xFileArg TOK_At  */
-#line 193 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 194 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
            {Action(14,1);}
-#line 1429 "y.tab.c"
+#line 1430 "y.tab.c"
     break;
 
   case 41: /* xArg: xFileArg TOK_Ampersand  */
-#line 196 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 197 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                   {Action(15,1);}
-#line 1435 "y.tab.c"
+#line 1436 "y.tab.c"
     break;
 
   case 42: /* xFileArg: TOK_LeftParen xOdinExpr1 TOK_RightParen  */
-#line 202 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 203 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                    {Action(18,1);}
-#line 1441 "y.tab.c"
+#line 1442 "y.tab.c"
     break;
 
   case 44: /* xOdinExpr1: xOdinExpr1 xOperation  */
-#line 209 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 210 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                {Action(0,2);}
-#line 1447 "y.tab.c"
+#line 1448 "y.tab.c"
     break;
 
   case 46: /* xRoot: TOK_LeftParen TOK_RightParen  */
-#line 218 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 219 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                    {Action(21,0);}
-#line 1453 "y.tab.c"
+#line 1454 "y.tab.c"
     break;
 
   case 48: /* xRoot: xObjectType  */
-#line 222 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 223 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                 {Action(19,1);}
-#line 1459 "y.tab.c"
+#line 1460 "y.tab.c"
     break;
 
   case 49: /* xRoot: xParameterType  */
-#line 224 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 225 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                    {Action(20,1);}
-#line 1465 "y.tab.c"
+#line 1466 "y.tab.c"
     break;
 
   case 50: /* xRoot: TOK_Slash  */
-#line 226 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 227 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
               {Action(22,0);}
-#line 1471 "y.tab.c"
+#line 1472 "y.tab.c"
     break;
 
   case 51: /* xRoot: TOK_Slash xVarWord  */
-#line 229 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 230 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
              {Action(23,1);}
-#line 1477 "y.tab.c"
+#line 1478 "y.tab.c"
     break;
 
   case 52: /* xRoot: TOK_Percent xVarWord  */
-#line 232 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 233 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
              {Action(30,1);}
-#line 1483 "y.tab.c"
+#line 1484 "y.tab.c"
     break;
 
   case 53: /* xOperation: xParameterType xOperation_1  */
-#line 237 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 238 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                  {Action(24,2);}
-#line 1489 "y.tab.c"
+#line 1490 "y.tab.c"
     break;
 
   case 54: /* xOperation: xParameterType xFileArg  */
-#line 240 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 241 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
              {Action(25,2);}
-#line 1495 "y.tab.c"
+#line 1496 "y.tab.c"
     break;
 
   case 55: /* xOperation: xObjectType  */
-#line 242 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 243 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                 {Action(27,1);}
-#line 1501 "y.tab.c"
+#line 1502 "y.tab.c"
     break;
 
   case 56: /* xOperation: xObjectType TOK_Equals xObjectType  */
-#line 246 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 247 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                 {Action(28,2);}
-#line 1507 "y.tab.c"
+#line 1508 "y.tab.c"
     break;
 
   case 57: /* xOperation: TOK_Slash xVarWord  */
-#line 249 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 250 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
              {Action(31,1);}
-#line 1513 "y.tab.c"
+#line 1514 "y.tab.c"
     break;
 
   case 58: /* xOperation: TOK_Slash  */
-#line 251 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 252 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
               {Action(32,0);}
-#line 1519 "y.tab.c"
+#line 1520 "y.tab.c"
     break;
 
   case 59: /* xOperation: TOK_Percent xVarWord  */
-#line 254 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 255 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
              {Action(30,1);}
-#line 1525 "y.tab.c"
+#line 1526 "y.tab.c"
     break;
 
   case 61: /* xOperation_1: %empty  */
-#line 261 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 262 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
      {Action(0,0);}
-#line 1531 "y.tab.c"
+#line 1532 "y.tab.c"
     break;
 
   case 62: /* xParameterValues: TOK_Equals xParameterValues_1  */
-#line 266 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 267 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                        {Action(26,1);}
-#line 1537 "y.tab.c"
+#line 1538 "y.tab.c"
     break;
 
   case 63: /* xParameterValues_1: xParameterValues_1 xParameterValue  */
-#line 271 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 272 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                     {Action(0,2);}
-#line 1543 "y.tab.c"
+#line 1544 "y.tab.c"
     break;
 
   case 68: /* xVarWord: TOK_Dollar TOK_Wordleaf  */
-#line 286 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 287 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                  {Action(33,1);}
-#line 1549 "y.tab.c"
+#line 1550 "y.tab.c"
     break;
 
   case 69: /* TOK_Wordleaf: TOK_Word  */
-#line 288 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 289 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
                          {Action(34,-1);}
-#line 1555 "y.tab.c"
+#line 1556 "y.tab.c"
     break;
 
 
-#line 1559 "y.tab.c"
+#line 1560 "y.tab.c"
 
       default: break;
     }
@@ -1748,5 +1749,5 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 290 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
+#line 291 "/home/xju/tmp/octs/xjutv/FILES/o/drvgrf.ygi.733020.y"
 

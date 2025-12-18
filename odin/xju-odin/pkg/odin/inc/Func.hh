@@ -1,7 +1,9 @@
 #ifndef ODIN_FUNC_H
 #define ODIN_FUNC_H
 
+#include <gmc/gmc.h>
 #include <gmc/nod.h>
+#include <odin/inc/Type.hh>
 #include <sys/select.h>
 
 /* if-bcast.c */
@@ -551,7 +553,6 @@ extern void WriteInt(tp_FilDsc, int);
 extern void Writeln(tp_FilDsc, const char *);
 extern void WriteLine(tp_FilDsc, tp_Str);
 extern int Readch(tp_FilDsc);
-extern tp_Str Readln(tp_Str, tp_FilDsc);
 extern tp_Str ReadLine(tp_Str, tp_FilDsc);
 extern void FileCopy(tp_FilDsc, tp_FilDsc);
 /* if-ipc.c */
@@ -595,7 +596,6 @@ extern int Nod_NumSons(tp_Nod);
 extern tp_Nod Nod_Son(int, tp_Nod);
 extern tp_Sym Nod_Sym(tp_Nod);
 extern void Set_Nod_Sym(tp_Nod, tp_Sym);
-extern void Push_SymStack(tp_Sym);
 extern void Init_ConstructTree();
 extern tp_Nod End_ConstructTree();
 extern void Action(int, int);

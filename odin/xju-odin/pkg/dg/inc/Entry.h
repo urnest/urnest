@@ -10,7 +10,7 @@ typedef char tps_EntryStr [20];
  (void)fprintf(DG_C_FILE, "extern tps_" #x " _" #x "S [];\n")
 
 #define DG_FOREACH(x) \
- { boolean first_time = TRUE; \
+ { bool first_time = true; \
  (void)fprintf((FILE*)StdOutFD, "%d " #x "'s\n", num_##x##S); \
  (void)fprintf(DG_C_FILE, "int num_" #x "S = %d;\n", num_##x##S); \
  (void)fprintf(DG_C_FILE, "tps_" #x " _" #x "S [%d] = {\n  ", num_##x##S); \
@@ -33,7 +33,7 @@ typedef char tps_EntryStr [20];
  (void)fprintf(DG_C_FILE, "extern tps_%s _%sS [];\n", "x", "x")
 
 #define DG_FOREACH(x) \
- { boolean first_time = TRUE; \
+ { bool first_time = true; \
  (void)fprintf((FILE*)StdOutFD, "%d x's\n", num_/**/x/**/S); \
  (void)fprintf(DG_C_FILE, "int num_%sS = %d;\n", "x", num_/**/x/**/S); \
  (void)fprintf(DG_C_FILE, "tps_%s _%sS [%d] = {\n  ", "x", "x", num_/**/x/**/S); \
@@ -54,6 +54,6 @@ typedef char tps_EntryStr [20];
  if (!first_time) (void)fprintf(DG_C_FILE, ",\n  ")
 
 #define DG_END_FOREACH(x) \
- first_time = FALSE; }/*for*/; }/*block*/; \
+ first_time = false; }/*for*/; }/*block*/; \
  (void)fprintf(DG_C_FILE, " };\n")
 

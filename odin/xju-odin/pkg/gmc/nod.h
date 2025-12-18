@@ -29,6 +29,8 @@ extern void Init_ConstructTree();
 extern tp_Nod End_ConstructTree();
 extern void Action(int Typ,int NumSons);
 
+extern void Push_SymStack(tp_Sym);
+
 #define FOREACH_SON(son,root) \
    for (son=Nod_FirstSon(root); son!=NIL; son=Nod_Brother(son))
 

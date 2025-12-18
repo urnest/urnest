@@ -1,4 +1,6 @@
-#include "inc/GMC.h"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
 
 extern boolean IPC_Do_Return;
 extern int *IPC_IArg1, *IPC_IArg2, *IPC_IArg3;
@@ -229,7 +231,7 @@ Get_UseCount(
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
-   IPC_Do_Return = FALSE;
+   IPC_Do_Return = false;
    IPC_Read_Int(&IPC_Abort, CountPtr);
    if (IPC_Abort) IPC_Do_Abort();
 #ifndef CLIENT_ONLY
@@ -259,7 +261,7 @@ Get_CurSize(
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
-   IPC_Do_Return = FALSE;
+   IPC_Do_Return = false;
    IPC_Read_Int(&IPC_Abort, SizePtr);
    if (IPC_Abort) IPC_Do_Abort();
 #ifndef CLIENT_ONLY
@@ -270,7 +272,7 @@ Get_CurSize(
 
 #ifndef SERVER_ONLY
 void
-ShutDown(GMC_ARG_VOID)
+ShutDown()
 {
    boolean IPC_Abort;
 
@@ -308,7 +310,7 @@ Get_Banner(
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
-   IPC_Do_Return = FALSE;
+   IPC_Do_Return = false;
    IPC_Read_Str(&IPC_Abort, Str);
    if (IPC_Abort) IPC_Do_Abort();
 #ifndef CLIENT_ONLY
@@ -394,7 +396,7 @@ Get_Alias(
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
-   IPC_Do_Return = FALSE;
+   IPC_Do_Return = false;
    IPC_Read_Str(&IPC_Abort, OutFileName);
    if (IPC_Abort) IPC_Do_Abort();
 #ifndef CLIENT_ONLY
@@ -454,7 +456,7 @@ Test(
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
-   IPC_Do_Return = FALSE;
+   IPC_Do_Return = false;
 #ifndef CLIENT_ONLY
    };
 #endif
@@ -463,7 +465,7 @@ Test(
 
 #ifndef SERVER_ONLY
 void
-Test_All(GMC_ARG_VOID)
+Test_All()
 {
    boolean IPC_Abort;
 
@@ -479,7 +481,7 @@ Test_All(GMC_ARG_VOID)
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
-   IPC_Do_Return = FALSE;
+   IPC_Do_Return = false;
 #ifndef CLIENT_ONLY
    };
 #endif
@@ -519,7 +521,7 @@ Get_OdinFile(
          IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
          FORBIDDEN(IPC_Cmd_Abort);
          FORBIDDEN(!IPC_Do_Return); }/*if*/;
-      IPC_Do_Return = FALSE;
+      IPC_Do_Return = false;
       IPC_SArg1 = NIL;
       IPC_IArg2 = NIL;
       IPC_IArg3 = NIL;
@@ -534,7 +536,7 @@ Get_OdinFile(
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
-   IPC_Do_Return = FALSE;
+   IPC_Do_Return = false;
    IPC_Read_Str(&IPC_Abort, FileName);
    if (IPC_Abort) IPC_Do_Abort();
    IPC_Read_Int(&IPC_Abort, StatusPtr);
@@ -570,7 +572,7 @@ Set_CWD(
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
-   IPC_Do_Return = FALSE;
+   IPC_Do_Return = false;
 #ifndef CLIENT_ONLY
    };
 #endif
@@ -602,7 +604,7 @@ Push_Context(
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
-   IPC_Do_Return = FALSE;
+   IPC_Do_Return = false;
    IPC_Read_Str(&IPC_Abort, DirName);
    if (IPC_Abort) IPC_Do_Abort();
 #ifndef CLIENT_ONLY
@@ -632,7 +634,7 @@ Pop_Context(
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
-   IPC_Do_Return = FALSE;
+   IPC_Do_Return = false;
    IPC_Read_Str(&IPC_Abort, DirName);
    if (IPC_Abort) IPC_Do_Abort();
 #ifndef CLIENT_ONLY
@@ -664,7 +666,7 @@ Set_KeepGoing(
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
-   IPC_Do_Return = FALSE;
+   IPC_Do_Return = false;
 #ifndef CLIENT_ONLY
    };
 #endif
@@ -694,7 +696,7 @@ Set_ErrLevel(
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
-   IPC_Do_Return = FALSE;
+   IPC_Do_Return = false;
 #ifndef CLIENT_ONLY
    };
 #endif
@@ -724,7 +726,7 @@ Set_WarnLevel(
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
-   IPC_Do_Return = FALSE;
+   IPC_Do_Return = false;
 #ifndef CLIENT_ONLY
    };
 #endif
@@ -754,7 +756,7 @@ Set_LogLevel(
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
-   IPC_Do_Return = FALSE;
+   IPC_Do_Return = false;
 #ifndef CLIENT_ONLY
    };
 #endif
@@ -784,7 +786,7 @@ Set_HelpLevel(
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
-   IPC_Do_Return = FALSE;
+   IPC_Do_Return = false;
 #ifndef CLIENT_ONLY
    };
 #endif
@@ -814,7 +816,7 @@ Set_Debug(
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
-   IPC_Do_Return = FALSE;
+   IPC_Do_Return = false;
 #ifndef CLIENT_ONLY
    };
 #endif
@@ -844,7 +846,7 @@ Set_MaxJobs(
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
-   IPC_Do_Return = FALSE;
+   IPC_Do_Return = false;
 #ifndef CLIENT_ONLY
    };
 #endif
@@ -874,7 +876,7 @@ Redo(
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
-   IPC_Do_Return = FALSE;
+   IPC_Do_Return = false;
 #ifndef CLIENT_ONLY
    };
 #endif
@@ -906,7 +908,7 @@ OdinExpr_ID(
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
-   IPC_Do_Return = FALSE;
+   IPC_Do_Return = false;
    IPC_Read_Int(&IPC_Abort, IDPtr);
    if (IPC_Abort) IPC_Do_Abort();
 #ifndef CLIENT_ONLY
@@ -940,7 +942,7 @@ ID_OdinExpr(
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
-   IPC_Do_Return = FALSE;
+   IPC_Do_Return = false;
    IPC_Read_Str(&IPC_Abort, OdinExpr);
    if (IPC_Abort) IPC_Do_Abort();
 #ifndef CLIENT_ONLY
@@ -974,7 +976,7 @@ ID_LongOdinExpr(
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
-   IPC_Do_Return = FALSE;
+   IPC_Do_Return = false;
    IPC_Read_Str(&IPC_Abort, OdinExpr);
    if (IPC_Abort) IPC_Do_Abort();
 #ifndef CLIENT_ONLY
@@ -1010,7 +1012,7 @@ Get_Status(
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
-   IPC_Do_Return = FALSE;
+   IPC_Do_Return = false;
    IPC_Read_Int(&IPC_Abort, StatusPtr);
    if (IPC_Abort) IPC_Do_Abort();
    IPC_Read_Int(&IPC_Abort, ElmStatusPtr);
@@ -1044,7 +1046,7 @@ Get_Elements(
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
-   IPC_Do_Return = FALSE;
+   IPC_Do_Return = false;
 #ifndef CLIENT_ONLY
    };
 #endif
@@ -1074,7 +1076,7 @@ Get_ElementsOf(
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
-   IPC_Do_Return = FALSE;
+   IPC_Do_Return = false;
 #ifndef CLIENT_ONLY
    };
 #endif
@@ -1104,7 +1106,7 @@ Get_Inputs(
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
-   IPC_Do_Return = FALSE;
+   IPC_Do_Return = false;
 #ifndef CLIENT_ONLY
    };
 #endif
@@ -1134,7 +1136,7 @@ Get_Outputs(
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
-   IPC_Do_Return = FALSE;
+   IPC_Do_Return = false;
 #ifndef CLIENT_ONLY
    };
 #endif
@@ -1164,7 +1166,7 @@ Get_DPath(
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
-   IPC_Do_Return = FALSE;
+   IPC_Do_Return = false;
 #ifndef CLIENT_ONLY
    };
 #endif

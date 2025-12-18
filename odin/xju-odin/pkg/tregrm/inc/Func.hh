@@ -84,7 +84,6 @@ extern tp_Nod Nod_Son(int, tp_Nod);
 extern tp_Sym Nod_Sym(tp_Nod);
 extern void Set_Nod_Sym(tp_Nod, tp_Sym);
 extern bool Empty_SymStack(void);
-extern void Push_SymStack(tp_Sym);
 extern void Pop_SymStack(void);
 extern void Push_NodStack(tp_Nod);
 extern void Pop_NodStack(void);

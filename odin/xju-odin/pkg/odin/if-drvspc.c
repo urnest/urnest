@@ -12,12 +12,14 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 geoff@boulder.colorado.edu
 */
+#include <stdlib.h>
 
-#include "inc/GMC.h"
-#include "inc/DPType_.h"
-#include "inc/DrvSpc.h"
-#include "inc/FKind_.h"
-#include "inc/Str.h"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <dg/inc/DPType_.h>
+#include <odin/inc/DrvSpc.h>
+#include <dg/inc/FKind_.h>
 
 
 static tp_DrvSpc	FreeDrvSpc;
@@ -25,7 +27,7 @@ int		num_DrvSpcS;
 
 
 static tp_DrvSpc
-New_DrvSpc(GMC_ARG_VOID)
+New_DrvSpc()
 {
    tp_DrvSpc DrvSpc;
 

@@ -15,24 +15,29 @@ See the GNU General Public License for more details.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
+#include <stdlib.h>
+#include <string.h>
+#include <gmc/gmc.h>
+#include <dg/inc/Type.hh>
+#include <dg/inc/Func.hh>
+#include <dg/inc/Var.hh>
 
-#include "inc/CastEdg.h"
-#include "inc/DrvEdg.h"
-#include "inc/EqvEdg.h"
-#include "inc/EnvVar.h"
-#include "inc/FKind_.h"
-#include "inc/FilTyp.h"
-#include "inc/FTClass_.h"
-#include "inc/InpEdg.h"
-#include "inc/InpSpc.h"
-#include "inc/IOTyp.h"
-#include "inc/MemEdg.h"
-#include "inc/PrmTyp.h"
-#include "inc/PrmTypLst.h"
-#include "inc/SrcTyp.h"
-#include "inc/TClass_.h"
-#include "inc/Tool.h"
+#include <dg/inc/CastEdg.h>
+#include <dg/inc/DrvEdg.h>
+#include <dg/inc/EqvEdg.h>
+#include <dg/inc/EnvVar.h>
+#include <dg/inc/FKind_.h>
+#include <dg/inc/FilTyp.h>
+#include <dg/inc/FTClass_.h>
+#include <dg/inc/InpEdg.h>
+#include <dg/inc/InpSpc.h>
+#include <dg/inc/IOTyp.h>
+#include <dg/inc/MemEdg.h>
+#include <dg/inc/PrmTyp.h>
+#include <dg/inc/PrmTypLst.h>
+#include <dg/inc/SrcTyp.h>
+#include <dg/inc/TClass_.h>
+#include <dg/inc/Tool.h>
 
 #ifdef __STDC__
 
@@ -198,7 +203,7 @@ Validate_PrmTyp(PrmTyp)
    tp_PrmTyp PrmTyp;
 {
    tp_DrvPth DrvPth;
-   boolean IsGeneric;
+   bool IsGeneric;
 
    if (PrmTyp->Desc == NIL) {
       SystemError("Undeclared parameter type : \"%s\".\n", PrmTyp->PTName);

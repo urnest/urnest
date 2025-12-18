@@ -1,6 +1,7 @@
-!!#ifndef TPS_PRMFHDR
+#ifndef TPS_PRMFHDR
 #define TPS_PRMFHDR
 
+#include <odin/inc/Type.hh>
 
 typedef struct _tps_PrmFHdr {
    tp_FilHdr FilHdr;

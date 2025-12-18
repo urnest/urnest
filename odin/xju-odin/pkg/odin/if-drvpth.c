@@ -13,10 +13,13 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/DPType_.h"
-#include "inc/DrvPth.h"
-#include "inc/FKind_.h"
+#include <stdlib.h>
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <dg/inc/DPType_.h>
+#include <dg/inc/DrvPth.h>
+#include <dg/inc/FKind_.h>
 
 
 static tp_DrvPth	FreeDrvPth = NIL;
@@ -24,7 +27,7 @@ int		num_DrvPthS = 0;
 
 
 static tp_DrvPth
-New_DrvPth(GMC_ARG_VOID)
+New_DrvPth()
 {
    tp_DrvPth DrvPth;
 
@@ -32,7 +35,7 @@ New_DrvPth(GMC_ARG_VOID)
       if (FreeDrvPth == NIL) {
 	 DrvPth = (tp_DrvPth)malloc(sizeof(tps_DrvPth));
 	 num_DrvPthS += 1;
-	 DrvPth->InUse = FALSE;
+	 DrvPth->InUse = false;
       }else{
 	 DrvPth = FreeDrvPth;
 	 FreeDrvPth = FreeDrvPth->Next; };}/*select*/;
@@ -43,7 +46,7 @@ New_DrvPth(GMC_ARG_VOID)
    DrvPth->DrvEdg = ERROR;
    DrvPth->Next = NIL;
    FORBIDDEN(DrvPth->InUse);
-   DrvPth->InUse = TRUE;
+   DrvPth->InUse = true;
    return DrvPth;
    }/*New_DrvPth*/
 
@@ -133,9 +136,9 @@ Ret_DrvPth(
 	TmpDrvPth->Next != NIL;
 	TmpDrvPth = TmpDrvPth->Next) {
       FORBIDDEN(!TmpDrvPth->InUse);
-      TmpDrvPth->InUse = FALSE; }/*for*/;
+      TmpDrvPth->InUse = false; }/*for*/;
    FORBIDDEN(!TmpDrvPth->InUse);
-   TmpDrvPth->InUse = FALSE;
+   TmpDrvPth->InUse = false;
    TmpDrvPth->Next = FreeDrvPth;
    FreeDrvPth = DrvPth;
    }/*Ret_DrvPth*/

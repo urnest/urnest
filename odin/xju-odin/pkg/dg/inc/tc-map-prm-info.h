@@ -6,16 +6,18 @@ extern "C"
 {
 #endif
 
-#include "inc/GMC.h"
-#include "inc/CastEdg.h"
-#include "inc/DPType_.h"
-#include "inc/DrvEdg.h"
-#include "inc/EqvEdg.h"
-#include "inc/FilTyp.h"
+#include <gmc/gmc.h>
+#include <dg/inc/Type.hh>
+#include <dg/inc/Func.hh>
+#include <dg/inc/CastEdg.h>
+#include <dg/inc/DPType_.h>
+#include <dg/inc/DrvEdg.h>
+#include <dg/inc/EqvEdg.h>
+#include <dg/inc/FilTyp.h>
 
-#include "inc/PrmTypLst.h"
-#include "inc/PrmTyp.h"
-#include "inc/Var.hh"
+#include <dg/inc/PrmTypLst.h>
+#include <dg/inc/PrmTyp.h>
+#include <dg/inc/Var.hh>
 
   struct TcMapPrmInfo_;
   typedef struct TcMapPrmInfo_ TcMapPrmInfo;

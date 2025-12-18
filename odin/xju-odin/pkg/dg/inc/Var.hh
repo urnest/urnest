@@ -4,7 +4,7 @@ extern tp_FilDsc	ParseFD;
 extern int		*ParseLNPtr;
 extern tp_FilTyp	CopyFilTyp;
 extern tp_FilTyp	ApplyFilTyp;
-extern boolean		DumpCore;
+extern bool		DumpCore;
 extern tp_FilDsc	ErrFD;
 extern tp_FilDsc	StdInFD;
 extern tp_FilDsc	StdErrFD;

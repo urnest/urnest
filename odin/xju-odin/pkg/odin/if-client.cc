@@ -20,7 +20,7 @@ extern "C"
 #include <odin/inc/Var.hh>
 #include <odin/inc/Client.h>
 #include <odin/inc/Flag_.h>
-#include <odin/inc/InpKind_.h>
+#include <dg/inc/InpKind_.h>
 #include <odin/inc/Job.h>
 #include <odin/inc/LogLevel_.h>
 #include <odin/inc/Status_.h>

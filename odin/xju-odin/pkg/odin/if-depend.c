@@ -14,14 +14,15 @@ geoff@boulder.colorado.edu
 */
 
 #include <gmc/gmc.h>
-#include "inc/FileName.h"
-#include "inc/Flag_.h"
-#include "inc/InpKind_.h"
-#include "inc/Status_.h"
-#include "inc/Str.h"
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
+#include <odin/inc/Flag_.h>
+#include <dg/inc/InpKind_.h>
+#include <odin/inc/Status_.h>
 
 
-static void Get_ElmReport(GMC_P1(tp_FilDsc) GMC_PN(tp_FilHdr) GMC_PN(bool) GMC_PN(tp_Status));
+static void Get_ElmReport(tp_FilDsc, tp_FilHdr, bool, tp_Status);
 
 
 static void

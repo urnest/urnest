@@ -13,9 +13,10 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/Str.h"
-#include "inc/TokTyp_.h"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/TokTyp_.h>
 
 
 bool		IsCmdLex;
@@ -55,14 +56,14 @@ ParseError(
 
 
 void
-Init_Lex(GMC_ARG_VOID)
+Init_Lex()
 {
    if (ParseLNPtr != NIL) *ParseLNPtr = *ParseLNPtr + 1;
    }/*Init_Lex*/
 
 
 void
-EndLex(GMC_ARG_VOID)
+EndLex()
 {
    SystemError("Unexpected call to EndLex.\n");
    }/*EndLex*/
@@ -133,7 +134,7 @@ ExpandHome(
 
 
 int
-Lex(GMC_ARG_VOID)
+Lex()
 {
    tps_Str Str;
    tp_Str RestStr;

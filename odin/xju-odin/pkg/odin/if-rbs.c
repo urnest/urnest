@@ -1,4 +1,4 @@
-!/*
+/*
 Copyright (C) 1991 Geoffrey M. Clemm
 
 This file is part of the Odin system.
@@ -13,8 +13,10 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/System.hh"
-#include "inc/sys_param.h"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/sys_param.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -22,10 +24,8 @@ geoff@boulder.colorado.edu
 #include <netinet/in.h>
 #include <signal.h>
 
-#include "inc/GMC.h"
-#include "inc/Host.h"
-#include "inc/LogLevel_.h"
-#include "inc/Str.h"
+#include <odin/inc/Host.h>
+#include <odin/inc/LogLevel_.h>
 
 tp_Host		FirstHost = NIL;
 
@@ -34,7 +34,7 @@ static int RBS_Port = -1;
 
 
 static void
-Init_RBS(GMC_ARG_VOID)
+Init_RBS()
 {
    struct sockaddr_in InSockAddr;
    struct sockaddr *SockAddrPtr = (struct sockaddr *)&InSockAddr;

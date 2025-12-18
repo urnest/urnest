@@ -13,17 +13,17 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/FileName.h"
-#include "inc/FilInp.h"
-#include "inc/FKind_.h"
-#include "inc/InpSpc.h"
-#include "inc/InpInf.h"
-#include "inc/InpKind_.h"
-#include "inc/Inputs.h"
-#include "inc/ISKind_.h"
-#include "inc/NodTyp_.h"
-#include "inc/Str.h"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <dg/inc/FilInp.h>
+#include <dg/inc/FKind_.h>
+#include <odin/inc/InpSpc.h>
+#include <odin/inc/InpInf.h>
+#include <odin/inc/InpKind_.h>
+#include <odin/inc/Inputs.h>
+#include <odin/inc/ISKind_.h>
+#include <odin/inc/NodTyp_.h>
 
 
 int		num_FilInpS = 0;
@@ -36,11 +36,11 @@ static tps_FilInp _FreeFilInp;
 static tp_FilInp		FreeFilInp = &_FreeFilInp;
 
 
-static tp_FilHdr Do_InpSpc(GMC_P1(tp_FilHdr) GMC_PN(tp_FilPrm) GMC_PN(tp_InpSpc) GMC_PN(tp_Tool));
+static tp_FilHdr Do_InpSpc(tp_FilHdr, tp_FilPrm, tp_InpSpc, tp_Tool);
 
 
 void
-Init_FilInps(GMC_ARG_VOID)
+Init_FilInps()
 {
    UsedFilInp->PrevFree = UsedFilInp;
    UsedFilInp->NextFree = UsedFilInp;
@@ -94,7 +94,7 @@ Ret_FilInp(
 
 
 void
-Free_FilInps(GMC_ARG_VOID)
+Free_FilInps()
 {
    tp_FilInp FilInp, NextFilInp;
 
@@ -214,7 +214,7 @@ WriteFilInp(
 
 
 void
-WriteFilInps(GMC_ARG_VOID)
+WriteFilInps()
 {
    while (ModFilInp != NIL) {
       FORBIDDEN(!ModFilInp->Modified);
@@ -225,14 +225,14 @@ WriteFilInps(GMC_ARG_VOID)
 
 
 static tp_LocInp
-Alloc_InpInf(GMC_ARG_VOID)
+Alloc_InpInf()
 {
    return (tp_LocInp) Alloc(sizeof(tps_InpInf));
    }/*Alloc_InpInf*/
 
 
 bool
-FilInps_InUse(GMC_ARG_VOID)
+FilInps_InUse()
 {
    tp_FilInp FilInp;
 

@@ -3,7 +3,7 @@
 
 typedef struct _tps_SrcTyp {
    tp_Pattern Pattern;
-   boolean IsPrefix;
+   bool IsPrefix;
    tp_FilTyp FilTyp;
    tp_SrcTyp Link;
    }				tps_SrcTyp;

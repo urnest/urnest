@@ -6,7 +6,7 @@ typedef struct _tps_EnvVar {
    tp_Desc Desc;
    int HelpLevel;
    tp_Str Default;
-   boolean IsFile;
+   bool IsFile;
    int Index;
    tp_EnvVar Link;
    }				tps_EnvVar;

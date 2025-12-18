@@ -16,15 +16,19 @@ geoff@boulder.colorado.edu
 */
 
 #include <stdio.h>
-#include "inc/GMC.h"
-#include "inc/Entry.h"
-#include "inc/EnvVar.h"
-#include "inc/EnvVarLst.h"
-#include "inc/FilTyp.h"
-#include "inc/InpSpc.h"
-#include "inc/ISKind_.h"
-#include "inc/PrmTyp.h"
-#include "inc/Str.h"
+#include <stdlib.h>
+#include <string.h>
+#include <gmc/gmc.h>
+#include <dg/inc/Type.hh>
+#include <dg/inc/Func.hh>
+#include <dg/inc/Var.hh>
+#include <dg/inc/Entry.h>
+#include <dg/inc/EnvVar.h>
+#include <dg/inc/EnvVarLst.h>
+#include <dg/inc/FilTyp.h>
+#include <dg/inc/InpSpc.h>
+#include <dg/inc/ISKind_.h>
+#include <dg/inc/PrmTyp.h>
 
 
 tp_EnvVar		EnvVarS = NIL;
@@ -84,7 +88,7 @@ New_EnvVar()
    EnvVar->Desc = NIL;
    EnvVar->HelpLevel = 0;
    EnvVar->Default = NIL;
-   EnvVar->IsFile = FALSE;
+   EnvVar->IsFile = false;
    EnvVar->Index = num_EnvVarS;
    EnvVar->Link = NIL;
    num_EnvVarS++;
@@ -130,7 +134,7 @@ void
 Set_EnvVar_Desc(EnvVar, Desc, Hidden)
    tp_EnvVar EnvVar;
    tp_Desc Desc;
-   boolean Hidden;
+   bool Hidden;
 {
    FORBIDDEN(EnvVar == ERROR || Desc == ERROR);
    FORBIDDEN(EnvVar->Desc != NIL);
@@ -143,7 +147,7 @@ void
 Set_EnvVar_Default(EnvVar, Default, IsFile)
    tp_EnvVar EnvVar;
    tp_Str Default;
-   boolean IsFile;
+   bool IsFile;
 {
    FORBIDDEN(EnvVar == ERROR || Default == ERROR);
    FORBIDDEN(EnvVar->Default != NIL);
@@ -263,7 +267,7 @@ Write_ENV()
    tp_Str Str;
    tp_EnvVar EnvVar;
 
-   FilDsc = FileName_WFilDsc("ENV", FALSE);
+   FilDsc = FileName_WFilDsc("ENV", false);
    if (FilDsc == ERROR) {
       SystemError("Cannot open ENV file.\n");
       exit(1); }/*if*/;
@@ -297,7 +301,7 @@ New_InpSpc()
    InpSpc->FilTyp = NIL;
    InpSpc->PrmTyp = NIL;
    InpSpc->Str = NIL;
-   InpSpc->IsEnvVar = FALSE;
+   InpSpc->IsEnvVar = false;
    InpSpc->InpSpc = NIL;
    InpSpc->Next = NIL;
    InpSpc->Index = num_InpSpcS;

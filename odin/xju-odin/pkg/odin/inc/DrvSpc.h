@@ -1,5 +1,7 @@
-!!#ifndef TPS_DRVSPC
+#ifndef TPS_DRVSPC
 #define TPS_DRVSPC
+
+#include <odin/inc/Type.hh>
 
 typedef struct _tps_DrvSpc {
    tp_FilPrm FilPrm;

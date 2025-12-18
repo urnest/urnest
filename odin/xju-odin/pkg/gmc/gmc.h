@@ -80,6 +80,7 @@ extern void WriteInt(tp_FilDsc FilDsc,int Int);
 extern void Writeln(tp_FilDsc FilDsc,const char* Str);
 extern void WriteLine(tp_FilDsc FilDsc,tp_Str Str);
 extern int Readch(tp_FilDsc FilDsc);
+extern tp_Str Readln(tp_Str, tp_FilDsc);
 extern tp_Str ReadLine(tp_Str StrBuf,tp_FilDsc FilDsc);
 extern bool Equal(tp_FilDsc FilDsc1,tp_FilDsc FilDsc2);
 extern void FileCopy(tp_FilDsc OutFD,tp_FilDsc InFD);
@@ -122,5 +123,6 @@ extern tp_Str Sym_Str(tp_Sym Sym);
 extern int Sym_Att(tp_Sym Sym);
 extern void Set_Sym_Att(tp_Sym Sym,int Att);
 extern void Write_Syms(tp_FilDsc FilDsc);
+
 
 #endif

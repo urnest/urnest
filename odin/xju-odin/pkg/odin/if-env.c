@@ -15,13 +15,17 @@ geoff@boulder.colorado.edu
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <gmc/gmc.h>
-#include "inc/EnvVar.h"
-#include "inc/FileName.h"
-#include "inc/Job.h"
-#include "inc/Str.h"
-#include "inc/LookupPlainAbsPath.h"
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
+#include <odin/inc/EnvVar.h>
+#include <odin/inc/Job.h>
+#include <odin/inc/LookupPlainAbsPath.h>
 
 extern int		num_EnvVarS;
 extern tp_EnvVar	EnvVarS;

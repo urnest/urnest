@@ -17,10 +17,10 @@ geoff@boulder.colorado.edu
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
 #include <odin/inc/Var.hh>
-#include <odin/inc/DPType_.h>
-#include <odin/inc/FKind_.h>
+#include <dg/inc/DPType_.h>
+#include <dg/inc/FKind_.h>
 #include <odin/inc/Flag_.h>
-#include <odin/inc/InpKind_.h>
+#include <dg/inc/InpKind_.h>
 #include <odin/inc/LogLevel_.h>
 #include <odin/inc/NodTyp_.h>
 #include <odin/inc/Status_.h>

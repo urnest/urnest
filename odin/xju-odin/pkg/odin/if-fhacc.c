@@ -13,14 +13,19 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/FileName.h"
-#include "inc/FilHdr.h"
-#include "inc/FKind_.h"
-#include "inc/Flag_.h"
-#include "inc/SKind_.h"
-#include "inc/Status_.h"
-#include "inc/Str.h"
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
+#include <dg/inc/FilHdr.h>
+#include <dg/inc/FKind_.h>
+#include <odin/inc/Flag_.h>
+#include <odin/inc/SKind_.h>
+#include <odin/inc/Status_.h>
 
 
 tp_Date		PendingDate = 0;

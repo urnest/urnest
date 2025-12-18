@@ -196,7 +196,7 @@ extern int	tgetnum();
 */
 
 STATIC void
-TTYflush(GMC_ARG_VOID)
+TTYflush()
 {
     ssize_t count;
 
@@ -263,7 +263,7 @@ TTYstring(
 }
 
 STATIC unsigned int
-TTYget(GMC_ARG_VOID)
+TTYget()
 {
     CHAR	c;
 
@@ -290,7 +290,7 @@ TTYbackn(
 }
 
 STATIC void
-TTYinfo(GMC_ARG_VOID)
+TTYinfo()
 {
     static int		init;
 #ifdef USE_TERMCAP
@@ -386,7 +386,7 @@ columns(
 }
 
 STATIC void
-reposition(GMC_ARG_VOID)
+reposition()
 {
     int		i;
     CHAR	*p;
@@ -428,7 +428,7 @@ right(
 }
 
 STATIC STATUS
-ring_bell(GMC_ARG_VOID)
+ring_bell()
 {
     TTYput('\07');
     TTYflush();
@@ -514,19 +514,19 @@ do_case(
 }
 
 STATIC STATUS
-case_down_word(GMC_ARG_VOID)
+case_down_word()
 {
     return do_case(TOlower);
 }
 
 STATIC STATUS
-case_up_word(GMC_ARG_VOID)
+case_up_word()
 {
     return do_case(TOupper);
 }
 
 STATIC void
-ceol(GMC_ARG_VOID)
+ceol()
 {
     int		extras;
     int		i;
@@ -550,7 +550,7 @@ ceol(GMC_ARG_VOID)
 }
 
 STATIC void
-clear_line(GMC_ARG_VOID)
+clear_line()
 {
     Point = -strlen(Prompt);
     TTYput('\r');
@@ -595,7 +595,7 @@ insert_string(
 }
 
 STATIC STATUS
-redisplay(GMC_ARG_VOID)
+redisplay()
 {
     TTYputs((String)NEWLINE);
     TTYputs((String)Prompt);
@@ -604,7 +604,7 @@ redisplay(GMC_ARG_VOID)
 }
 
 STATIC STATUS
-toggle_meta_mode(GMC_ARG_VOID)
+toggle_meta_mode()
 {
     rl_meta_chars = !rl_meta_chars;
     return redisplay();
@@ -612,13 +612,13 @@ toggle_meta_mode(GMC_ARG_VOID)
 
 
 STATIC CHAR *
-next_hist(GMC_ARG_VOID)
+next_hist()
 {
     return H.Pos >= H.Size - 1 ? NULL : H.Lines[++H.Pos];
 }
 
 STATIC CHAR *
-prev_hist(GMC_ARG_VOID)
+prev_hist()
 {
     return H.Pos == 0 ? NULL : H.Lines[--H.Pos];
 }
@@ -656,25 +656,25 @@ do_hist(
 }
 
 STATIC STATUS
-h_next(GMC_ARG_VOID)
+h_next()
 {
     return do_hist(next_hist);
 }
 
 STATIC STATUS
-h_prev(GMC_ARG_VOID)
+h_prev()
 {
     return do_hist(prev_hist);
 }
 
 STATIC STATUS
-h_first(GMC_ARG_VOID)
+h_first()
 {
     return do_insert_hist(H.Lines[H.Pos = 0]);
 }
 
 STATIC STATUS
-h_last(GMC_ARG_VOID)
+h_last()
 {
     return do_insert_hist(H.Lines[H.Pos = H.Size - 1]);
 }
@@ -713,7 +713,7 @@ search_hist(
     static CHAR	*old_search;
     int		len;
     int		pos;
-    int		(*match)(GMC_P1(CONST char*) GMC_PN(CONST char*) GMC_PN(SIZE_T));
+    int		(*match)(CONST char*, CONST char*, SIZE_T);
     char	*pat;
 
     /* Save or get remembered search pattern. */
@@ -747,7 +747,7 @@ search_hist(
 }
 
 STATIC STATUS
-h_search(GMC_ARG_VOID)
+h_search()
 {
     static int	Searching;
     CONST char	*old_prompt;
@@ -782,7 +782,7 @@ h_search(GMC_ARG_VOID)
 }
 
 STATIC STATUS
-fd_char(GMC_ARG_VOID)
+fd_char()
 {
     int		i;
 
@@ -863,7 +863,7 @@ delete_string(
 }
 
 STATIC STATUS
-bk_char(GMC_ARG_VOID)
+bk_char()
 {
     int		i;
 
@@ -878,7 +878,7 @@ bk_char(GMC_ARG_VOID)
 }
 
 STATIC STATUS
-bk_del_char(GMC_ARG_VOID)
+bk_del_char()
 {
     int		i;
 
@@ -893,7 +893,7 @@ bk_del_char(GMC_ARG_VOID)
 }
 
 STATIC STATUS
-kill_line(GMC_ARG_VOID)
+kill_line()
 {
     int		i;
 
@@ -948,7 +948,7 @@ insert_char(
 }
 
 STATIC STATUS
-meta(GMC_ARG_VOID)
+meta()
 {
     unsigned int	c;
     KEYMAP		*kp;
@@ -1049,7 +1049,7 @@ TTYspecial(
 }
 
 STATIC CHAR *
-editinput(GMC_ARG_VOID)
+editinput()
 {
     unsigned int	c;
 
@@ -1125,7 +1125,7 @@ rl_reset_terminal(
 }
 
 void
-rl_initialize(GMC_ARG_VOID)
+rl_initialize()
 {
 }
 
@@ -1185,7 +1185,7 @@ add_history(
 
 
 STATIC STATUS
-beg_line(GMC_ARG_VOID)
+beg_line()
 {
     if (Point) {
 	Point = 0;
@@ -1195,13 +1195,13 @@ beg_line(GMC_ARG_VOID)
 }
 
 STATIC STATUS
-del_char(GMC_ARG_VOID)
+del_char()
 {
     return delete_string(Repeat == NO_ARG ? 1 : Repeat);
 }
 
 STATIC STATUS
-end_line(GMC_ARG_VOID)
+end_line()
 {
     if (Point != End) {
 	Point = End;
@@ -1215,7 +1215,7 @@ end_line(GMC_ARG_VOID)
 **  allocated copy of it.
 */
 STATIC CHAR *
-find_word(GMC_ARG_VOID)
+find_word()
 {
     static char	SEPS[] = "#;&|^$=`'{}()<>\n\t ";
     CHAR	*p;
@@ -1233,7 +1233,7 @@ find_word(GMC_ARG_VOID)
 }
 
 STATIC STATUS
-c_complete(GMC_ARG_VOID)
+c_complete()
 {
     CHAR	*p;
     CHAR	*word;
@@ -1255,7 +1255,7 @@ c_complete(GMC_ARG_VOID)
 }
 
 STATIC STATUS
-c_possible(GMC_ARG_VOID)
+c_possible()
 {
     CHAR	**av;
     CHAR	*word;
@@ -1276,14 +1276,14 @@ c_possible(GMC_ARG_VOID)
 }
 
 STATIC STATUS
-accept_line(GMC_ARG_VOID)
+accept_line()
 {
     Line[End] = '\0';
     return CSdone;
 }
 
 STATIC STATUS
-transpose(GMC_ARG_VOID)
+transpose()
 {
     CHAR	c;
 
@@ -1301,7 +1301,7 @@ transpose(GMC_ARG_VOID)
 }
 
 STATIC STATUS
-quote(GMC_ARG_VOID)
+quote()
 {
     unsigned int	c;
 
@@ -1309,7 +1309,7 @@ quote(GMC_ARG_VOID)
 }
 
 STATIC STATUS
-wipe(GMC_ARG_VOID)
+wipe()
 {
     int		i;
 
@@ -1327,14 +1327,14 @@ wipe(GMC_ARG_VOID)
 }
 
 STATIC STATUS
-mk_set(GMC_ARG_VOID)
+mk_set()
 {
     Mark = Point;
     return CSstay;
 }
 
 STATIC STATUS
-exchange(GMC_ARG_VOID)
+exchange()
 {
     unsigned int	c;
 
@@ -1350,7 +1350,7 @@ exchange(GMC_ARG_VOID)
 }
 
 STATIC STATUS
-yank(GMC_ARG_VOID)
+yank()
 {
     if (Yanked && *Yanked)
 	return insert_string(Yanked);
@@ -1358,7 +1358,7 @@ yank(GMC_ARG_VOID)
 }
 
 STATIC STATUS
-copy_region(GMC_ARG_VOID)
+copy_region()
 {
     if (Mark > End)
 	return ring_bell();
@@ -1372,7 +1372,7 @@ copy_region(GMC_ARG_VOID)
 }
 
 STATIC STATUS
-move_to_char(GMC_ARG_VOID)
+move_to_char()
 {
     unsigned int	c;
     int			i;
@@ -1389,13 +1389,13 @@ move_to_char(GMC_ARG_VOID)
 }
 
 STATIC STATUS
-fd_word(GMC_ARG_VOID)
+fd_word()
 {
     return do_forward(CSmove);
 }
 
 STATIC STATUS
-fd_kill_word(GMC_ARG_VOID)
+fd_kill_word()
 {
     int		i;
 
@@ -1409,7 +1409,7 @@ fd_kill_word(GMC_ARG_VOID)
 }
 
 STATIC STATUS
-bk_word(GMC_ARG_VOID)
+bk_word()
 {
     int		i;
     CHAR	*p;
@@ -1430,7 +1430,7 @@ bk_word(GMC_ARG_VOID)
 }
 
 STATIC STATUS
-bk_kill_word(GMC_ARG_VOID)
+bk_kill_word()
 {
     (void)bk_word();
     if (OldPoint != Point)
@@ -1488,7 +1488,7 @@ argify(
 }
 
 STATIC STATUS
-last_argument(GMC_ARG_VOID)
+last_argument()
 {
     CHAR	**av;
     CHAR	*p;

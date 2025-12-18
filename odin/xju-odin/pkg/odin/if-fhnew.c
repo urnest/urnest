@@ -13,14 +13,14 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/FileName.h"
-#include "inc/FilHdr.h"
-#include "inc/FilTyp.h"
-#include "inc/FKind_.h"
-#include "inc/LogLevel_.h"
-#include "inc/Status_.h"
-#include "inc/Str.h"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/FilHdr.h>
+#include <odin/inc/FilTyp.h>
+#include <odin/inc/FKind_.h>
+#include <odin/inc/LogLevel_.h>
+#include <odin/inc/Status_.h>
 
 
 static int	InsertNesting = 0;
@@ -73,7 +73,7 @@ Insert_FilHdr(tp_FilHdr BaseFilHdr,tp_FKind FKind,tp_FilTyp FilTyp,tp_FilPrm Fil
    if (IsSource(FilHdr)) {
       if (strcmp(Ident, "..") == 0 || strcmp(Ident, ".") == 0) {
 	 FATALERROR("bad identifier.\n"); }/*if*/;
-      Update_SrcFilHdr(FilHdr, TRUE); }/*if*/;
+      Update_SrcFilHdr(FilHdr, true); }/*if*/;
    Ret_FilHdr(BaseFilHdr);
    return FilHdr;
    }/*Insert_FilHdr*/

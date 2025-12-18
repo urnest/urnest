@@ -1,7 +1,7 @@
 #ifndef TP_OUTPUTS
 #define TP_OUTPUTS
 
-#include "IOTyp.h"
+#include <dg/inc/IOTyp.h>
 
 typedef tp_FilTyp	tps_OutTyps [MAX_Outputs];
 

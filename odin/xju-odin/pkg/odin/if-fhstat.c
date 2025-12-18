@@ -13,12 +13,14 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/FileName.h"
-#include "inc/FilHdr.h"
-#include "inc/Flag_.h"
-#include "inc/LogLevel_.h"
-#include "inc/Status_.h"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
+#include <dg/inc/FilHdr.h>
+#include <odin/inc/Flag_.h>
+#include <odin/inc/LogLevel_.h>
+#include <odin/inc/Status_.h>
 
 
 bool

@@ -18,7 +18,7 @@ geoff@boulder.colorado.edu
 #include <odin/inc/Func.hh>
 #include <odin/inc/Var.hh>
 #include <odin/inc/CastEdg.h>
-#include <odin/inc/DG_Version.h>
+#include <dg/inc/DG_Version.h>
 #include <odin/inc/DrvEdg.h>
 #include <odin/inc/EnvVar.h>
 #include <odin/inc/EnvVarLst.h>

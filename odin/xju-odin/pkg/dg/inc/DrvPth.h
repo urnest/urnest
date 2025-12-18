@@ -1,1 +1,15 @@
-../../odin/inc/DrvPth.h
+#ifndef TPS_DRVPTH
+#define TPS_DRVPTH
+
+#include <odin/inc/Type.hh>
+
+typedef struct _tps_DrvPth {
+   tp_DPType DPType;
+   tp_FKind FKind;
+   tp_FilTyp FilTyp;
+   tp_DrvEdg DrvEdg;
+   tp_DrvPth Next;
+   bool InUse;
+   }				tps_DrvPth;
+
+#endif

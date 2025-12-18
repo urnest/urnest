@@ -1,3 +1,10 @@
+%all == %all.ls:list
+
+%all.ls == <<
+%exe
+%check
+inc%check
+
 %exe == %dg.cxx.sm+(%c-opts) +ignore=\\.hh\$ :exe
 
 %install! == <<
@@ -19,19 +26,15 @@
    dg-analyze.c; dg-build.c; dg-edg.c; dg-envvar.c; dg-filtyp.c
    dg-main.c; dg-prmtyp.c; dg-tool.c; dg-valid.c; dg-yylex.c
    dg-yacc.c; if-drvpth.c; if-ft.c; if-lvl.c
-   ../odin/if-err.c +define=NO_IPC
-   ../odin/if-file.c; ../odin/if-io.c; ../odin/if-nod.c; ../odin/if-symbol.c
+   ../gmc/err-no-ipc.c; ../gmc/gmc.c; ../gmc/nod.c
    tc-map-prm-info.cxx
-   assert.cxx; ../odin/if-inotify-stub.c
+   assert.cxx; ../gmc/inotify-stub.c
 
 %dg-lint.c.sm == <<
    dg-analyze.c; dg-build.c; dg-edg.c; dg-envvar.c; dg-filtyp.c
    dg-main.c; dg-prmtyp.c; dg-tool.c; dg-valid.c; dg-yylex.c
    dg-yacc.c; if-drvpth.c; if-ft.c; if-lvl.c
 
-   == () +cmd='if [ "$ODINBOOT" = "" ] ; then echo "\
-dg-yacc.c == drvgrf.ygi :c \
-   "; fi' :stdout
 
 version == \
    inc/DG_Version.h +cmd='sed \'s/^.*VERSION_STR "\\(.*\\)"/\\1/\'' :stdout
@@ -52,3 +55,19 @@ assert.cxx
    dg-yacc.c; if-drvpth.c; if-ft.c; if-lvl.c
    ../odin/if-err.c +define=NO_IPC
    ../odin/if-file.c; ../odin/if-io.c; ../odin/if-nod.c; ../odin/if-symbol.c
+
+# as a sanity check, verify that we can regenerate our own tok.h and nod.h unaltered
+# we don't overwrite the committed files automatically as they should not normally change
+# (if they do change, the responsible person will commit the changes once they're correct)
+%check==%check.ls:list
+
+%check.ls==<<
+%check-dg-yacc.c
+
+%check-dg-yacc.c==(dg-yacc.c)+cmd=diff '--ignore-matching-lines="^#line"' (%ygt.y:c) (dg-yacc.c):stdout
+
+%ygt.y==(%cast.y)+cmd=cat (%ygt/y):stdout
+
+%ygt==()+cmd=(../tregrm/%ygt.sh) (../tregrm/ygt.sh) (dg.ygi) (../tregrm%exe):output
+
+%cast.y==<<

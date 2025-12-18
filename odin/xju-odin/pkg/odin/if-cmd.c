@@ -14,6 +14,7 @@ geoff@boulder.colorado.edu
 */
 
 #include <gmc/gmc.h>
+#include <string.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
 #include <odin/inc/LogLevel_.h>

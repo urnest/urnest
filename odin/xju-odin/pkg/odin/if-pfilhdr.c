@@ -13,8 +13,10 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/PrmFHdr.h"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/PrmFHdr.h>
 
 
 int			num_PrmFHdrS = 0;
@@ -95,7 +97,7 @@ Use_PrmFHdr(
 
 
 bool
-PrmFHdrs_InUse(GMC_ARG_VOID)
+PrmFHdrs_InUse()
 {
    return (num_PrmFHdrs != 0);
    }/*PrmFHdrs_InUse*/

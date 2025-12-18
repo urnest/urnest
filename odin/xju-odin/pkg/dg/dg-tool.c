@@ -16,13 +16,18 @@ geoff@boulder.colorado.edu
 */
 
 #include <stdio.h>
-#include "inc/GMC.h"
-#include "inc/Entry.h"
-#include "inc/EnvVarLst.h"
-#include "inc/InpEdg.h"
-#include "inc/PrmTypLst.h"
-#include "inc/TClass_.h"
-#include "inc/Tool.h"
+#include <stdlib.h>
+#include <string.h>
+#include <gmc/gmc.h>
+#include <dg/inc/Type.hh>
+#include <dg/inc/Func.hh>
+#include <dg/inc/Var.hh>
+#include <dg/inc/Entry.h>
+#include <dg/inc/EnvVarLst.h>
+#include <dg/inc/InpEdg.h>
+#include <dg/inc/PrmTypLst.h>
+#include <dg/inc/TClass_.h>
+#include <dg/inc/Tool.h>
 
 
 tp_Tool			ToolS = NIL;
@@ -122,7 +127,7 @@ Clear_ToolFlags()
    tp_Tool Tool;
 
    for (Tool = ToolS; Tool != NIL; Tool = Tool->Link) {
-      Tool->Flag = FALSE; }/*for*/;
+      Tool->Flag = false; }/*for*/;
    }/*Clear_Flags*/
 
 
@@ -134,7 +139,7 @@ Tool_Name(Tool)
    }/*Tool_Name*/
 
 
-boolean
+bool
 IsDummy_Tool(Tool)
    tp_Tool Tool;
 {

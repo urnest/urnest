@@ -16,19 +16,25 @@ geoff@boulder.colorado.edu
 */
 
 #include <stdio.h>
-#include "inc/GMC.h"
-#include "inc/CastEdg.h"
-#include "inc/DrvEdg.h"
-#include "inc/Entry.h"
-#include "inc/EqvEdg.h"
-#include "inc/InpSpc.h"
-#include "inc/InpKind_.h"
-#include "inc/ISKind_.h"
-#include "inc/FilTyp.h"
-#include "inc/InpEdg.h"
-#include "inc/MemEdg.h"
-#include "inc/PrmTypLst.h"
-#include "inc/Tool.h"
+#include <stdlib.h>
+#include <string.h>
+#include <gmc/gmc.h>
+#include <dg/inc/Type.hh>
+#include <gmc/nod.h>
+#include <dg/inc/Func.hh>
+#include <dg/inc/Var.hh>
+#include <dg/inc/CastEdg.h>
+#include <dg/inc/DrvEdg.h>
+#include <dg/inc/Entry.h>
+#include <dg/inc/EqvEdg.h>
+#include <dg/inc/InpSpc.h>
+#include <dg/inc/InpKind_.h>
+#include <dg/inc/ISKind_.h>
+#include <dg/inc/FilTyp.h>
+#include <dg/inc/InpEdg.h>
+#include <dg/inc/MemEdg.h>
+#include <dg/inc/PrmTypLst.h>
+#include <dg/inc/Tool.h>
 
 
 
@@ -59,7 +65,7 @@ Clear_EdgFlags()
    tp_DrvEdg DrvEdg;
 
    for (DrvEdg = DrvEdgS; DrvEdg != NIL; DrvEdg = DrvEdg->Link) {
-      DrvEdg->Flag = FALSE; }/*for*/;
+      DrvEdg->Flag = false; }/*for*/;
    }/*Clear_EdgFlags*/
 
 
@@ -81,7 +87,7 @@ New_InpEdg()
    InpEdg->Next = 0;
    InpEdg->Tool = 0;
    InpEdg->InpLink = 0;
-   InpEdg->Done = FALSE;
+   InpEdg->Done = false;
    InpEdg->Index = num_InpEdgS;
    InpEdg->Link = NIL;
    num_InpEdgS++;
@@ -274,7 +280,7 @@ void
 Add_InpEdg(InpSpc, InpKind, IsUserArg, Tool)
    tp_InpSpc InpSpc;
    tp_InpKind InpKind;
-   boolean IsUserArg;
+   bool IsUserArg;
    tp_Tool Tool;
 {
    tp_InpEdg NewInpEdg, InpEdg;
@@ -312,7 +318,7 @@ Add_HomInpEdg(InpSpc, Tool)
    NewInpEdg = New_HomInpEdg();
    NewInpEdg->InpKind = IK_Trans;
    NewInpEdg->FilTyp = ((InpSpc->ISKind == ISK_Drv) ? InpSpc->FilTyp : NIL);
-   NewInpEdg->IsUserArg = FALSE;
+   NewInpEdg->IsUserArg = false;
    NewInpEdg->Next = Tool->HomInpEdg;
    Tool->HomInpEdg = NewInpEdg;
    NewInpEdg->Tool = Tool;
@@ -322,7 +328,7 @@ Add_HomInpEdg(InpSpc, Tool)
    }/*Add_HomInpEdg*/
 
 
-boolean
+bool
 HasInput(Tool)
    tp_Tool Tool;
 {
@@ -330,11 +336,11 @@ HasInput(Tool)
 
    for (InpEdg = Tool->InpEdg; InpEdg != NIL; InpEdg = InpEdg->Next) {
       if (InpEdg->FilTyp != NIL && !Is_Output(InpEdg->FilTyp, Tool)) {
-	 return TRUE; }/*if*/; }/*for*/;
+	 return true; }/*if*/; }/*for*/;
    for (InpEdg = Tool->HomInpEdg; InpEdg != NIL; InpEdg = InpEdg->Next) {
       if (InpEdg->FilTyp != NIL && !Is_Output(InpEdg->FilTyp, Tool)) {
-	 return TRUE; }/*if*/; }/*for*/;
-   return FALSE;
+	 return true; }/*if*/; }/*for*/;
+   return false;
    }/*HasInput*/
 
 

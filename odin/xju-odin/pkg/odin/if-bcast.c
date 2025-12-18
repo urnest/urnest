@@ -16,11 +16,11 @@ geoff@boulder.colorado.edu
 #include <gmc/gmc.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
-#include <odin/inc/InpKind_.h>
+#include <dg/inc/InpKind_.h>
 #include <odin/inc/LogLevel_.h>
 #include <odin/inc/ModKind_.h>
 #include <odin/inc/Status_.h>
-#include <odin/inc/TClass_.h>
+#include <dg/inc/TClass_.h>
 
 
 static bool

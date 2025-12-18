@@ -74,7 +74,7 @@ tp_Nod OC_Parse() {tp_Nod Nod;
 num_ParseErrors = 0; Init_Lex(); Init_ConstructTree();
 (void)ocparse(); Nod = End_ConstructTree();
 return Nod;}
-void ocerror(GMC_ARG(char*, s)) GMC_DCL(char*, s) 
+void ocerror(char* s)
 {num_ParseErrors++; ParseError(s);}
 int oclex() {return OC_Lex();}
 

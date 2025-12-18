@@ -1,7 +1,9 @@
+#ifndef DG_INC_TYPE_H
+#define DG_INC_TYPE_H
+
 typedef int			tp_FTClass;
 typedef int			tp_InpKind;
 typedef int			tp_ISKind;
-typedef int			tp_NodTyp;
 typedef int			tp_Status;
 typedef int			tp_TClass;
 
@@ -35,6 +37,9 @@ typedef struct _tps_InpEdg *	tp_InpEdg;
 typedef struct _tps_Sym *	tp_Sym;
 typedef struct _tps_Tool *	tp_Tool;
 
+typedef struct _tps_FilHdr *	tp_FilHdr;
+typedef struct _tps_HdrInf *	tp_HdrInf;
+
 /* for if.lvl.c */
 
 typedef int		tp_DPType;
@@ -44,3 +49,5 @@ typedef int		tp_PType;
 typedef struct _tps_Pos *	tp_Pos;
 
 typedef tp_Pos		tp_Lvl;
+
+#endif

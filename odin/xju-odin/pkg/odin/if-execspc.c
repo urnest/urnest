@@ -1,4 +1,4 @@
-!/*
+/*
 Copyright (C) 1991 Geoffrey M. Clemm
 
 This file is part of the Odin system.
@@ -13,11 +13,14 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/FKind_.h"
-#include "inc/Inputs.h"
-#include "inc/Outputs.h"
-#include "inc/ExecSpc.h"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
+#include <dg/inc/FKind_.h>
+#include <odin/inc/Inputs.h>
+#include <odin/inc/Outputs.h>
+#include <odin/inc/ExecSpc.h>
 
 
 tp_Tool

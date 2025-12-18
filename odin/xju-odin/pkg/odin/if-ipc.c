@@ -13,10 +13,13 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/System.hh"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
 #include <time.h>
 #include <fcntl.h>
-#include "inc/sys_param.h"
+#include <odin/inc/sys_param.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -24,9 +27,9 @@ geoff@boulder.colorado.edu
 #include <netinet/in.h>
 #include <sys/un.h>
 #include <signal.h>
+#include <stdlib.h>
+#include <stdio.h>
 
-#include "inc/GMC.h"
-#include "inc/Str.h"
 
 time_t time();
 char *ctime();
@@ -45,7 +48,7 @@ bool		IsClient = false;
 bool		IPC_Do_Return = false;
 static int	IPC_Nesting = 0;
 
-void		(*IPC_Action)(GMC_P1(int *) GMC_PN(char *));
+void		(*IPC_Action)(int *, char *);
 
 static int	ListenFD = -1;
 static int	ServerFD = -1;

@@ -16,22 +16,26 @@ geoff@boulder.colorado.edu
 */
 
 #include <stdio.h>
-#include "inc/GMC.h"
-#include "inc/CastEdg.h"
-#include "inc/DrvEdg.h"
-#include "inc/Entry.h"
-#include "inc/EqvEdg.h"
-#include "inc/FilTyp.h"
-#include "inc/FTClass_.h"
-#include "inc/InpSpc.h"
-#include "inc/InpKind_.h"
-#include "inc/ISKind_.h"
-#include "inc/MemEdg.h"
-#include "inc/PrmTypLst.h"
-#include "inc/SrcTyp.h"
-#include "inc/Str.h"
-#include "inc/TClass_.h"
-#include "inc/Tool.h"
+#include <stdlib.h>
+#include <string.h>
+#include <gmc/gmc.h>
+#include <dg/inc/Type.hh>
+#include <dg/inc/Func.hh>
+#include <dg/inc/Var.hh>
+#include <dg/inc/CastEdg.h>
+#include <dg/inc/DrvEdg.h>
+#include <dg/inc/Entry.h>
+#include <dg/inc/EqvEdg.h>
+#include <dg/inc/FilTyp.h>
+#include <dg/inc/FTClass_.h>
+#include <dg/inc/InpSpc.h>
+#include <dg/inc/InpKind_.h>
+#include <dg/inc/ISKind_.h>
+#include <dg/inc/MemEdg.h>
+#include <dg/inc/PrmTypLst.h>
+#include <dg/inc/SrcTyp.h>
+#include <dg/inc/TClass_.h>
+#include <dg/inc/Tool.h>
 
 
 tp_FilTyp		FilTypS = NIL;
@@ -141,7 +145,7 @@ void
 Set_FilTyp_Desc(FilTyp, Desc, Hidden)
    tp_FilTyp FilTyp;
    tp_Desc Desc;
-   boolean Hidden;
+   bool Hidden;
 {
    FORBIDDEN(FilTyp == ERROR || Desc == ERROR);
    FORBIDDEN(FilTyp->Desc != NIL);
@@ -172,9 +176,9 @@ New_FilTyp(FTName)
    FilTyp->DrvEdg = 0;
    FilTyp->FrmDrvEdg = 0;
    FilTyp->MapPrmTypLst = 0;
-   FilTyp->IsCopy = FALSE;
-   FilTyp->IsGrouping = FALSE;
-   FilTyp->IsGroupingInput = FALSE;
+   FilTyp->IsCopy = false;
+   FilTyp->IsGrouping = false;
+   FilTyp->IsGroupingInput = false;
    FilTyp->Pos = 0;
    FilTyp->NextOrder = NIL;
    FilTyp->NextBackOrder = NIL;
@@ -231,7 +235,7 @@ New_SecOrdFilTyp(FTName, ArgFilTyp)
    InpSpc = New_InpSpc();
    InpSpc->ISKind = ISK_Drv;
    InpSpc->FilTyp = ObjectFilTyp;
-   Add_InpEdg(InpSpc, IK_TransName, TRUE, Tool);
+   Add_InpEdg(InpSpc, IK_TransName, true, Tool);
 
    FilTyp->Desc = "";
    FilTyp->HelpLevel = 2;
@@ -338,12 +342,12 @@ Lookup_SecOrdFilTyp(FTName, ArgFilTyp)
    }/*Lookup_SecOrdFilTyp*/
 
 
-static boolean
+static bool
 Is_LaterSrcTyp(Pattern1, IsPrefix1, Pattern2, IsPrefix2)
    tp_Pattern Pattern1;
-   boolean IsPrefix1;
+   bool IsPrefix1;
    tp_Pattern Pattern2;
-   boolean IsPrefix2;
+   bool IsPrefix2;
 {
    if (IsPrefix1 != IsPrefix2) {
       return !IsPrefix1; }/*if*/;
@@ -357,7 +361,7 @@ Is_LaterSrcTyp(Pattern1, IsPrefix1, Pattern2, IsPrefix2)
 tp_SrcTyp
 Lookup_SrcTyp(Pattern, IsPrefix)
    tp_Pattern Pattern;
-   boolean IsPrefix;
+   bool IsPrefix;
 {
    tp_SrcTyp SrcTyp, PrevSrcTyp, NextSrcTyp;
 
@@ -433,11 +437,11 @@ Clear_FilTypFlags()
    tp_FilTyp FilTyp;
 
    for (FilTyp = FilTypS; FilTyp != NIL; FilTyp = FilTyp->Link) {
-      FilTyp->Flag = FALSE;
-      FilTyp->Done = FALSE;
-      FilTyp->Active = FALSE;
-      FilTyp->Reach = FALSE;
-      FilTyp->NewReach = FALSE; }/*for*/;
+      FilTyp->Flag = false;
+      FilTyp->Done = false;
+      FilTyp->Active = false;
+      FilTyp->Reach = false;
+      FilTyp->NewReach = false; }/*for*/;
    }/*Clear_FilTypFlags*/
 
 

@@ -13,18 +13,17 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/System.hh"
-#ifdef HAVE_DIRENT_H
+#include <string.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
 #include <dirent.h>
-#else
-#include <sys/types.h>
-#include <sys/dir.h>
-#endif
 
-#include "inc/GMC.h"
-#include "inc/FileName.h"
-#include "inc/Str.h"
-#include "inc/SKind_.h"
+#include <odin/inc/SKind_.h>
 
 tp_FilDsc
 OpenDir(tp_FileName FileName)
@@ -32,7 +31,7 @@ OpenDir(tp_FileName FileName)
    tp_FilDsc FilDsc;
 
    FilDsc = (tp_FilDsc)opendir(FileName);
-   if (FilDsc == NULL) {
+   if (FilDsc == 0) {
       return ERROR; }/*if*/;
    return FilDsc;
    }/*OpenDir*/
@@ -41,28 +40,19 @@ OpenDir(tp_FileName FileName)
 void
 CloseDir(tp_FilDsc FilDsc)
 {
-#ifdef HAVE_DIRENT_H
    int status;
-#endif
 
    FORBIDDEN(FilDsc == NIL);
-#ifdef HAVE_DIRENT_H
    status = closedir((DIR *)FilDsc);
    if (status == -1) SysCallError(StdOutFD, "closedir(CloseDir)");
-#else
-   (void)closedir((DIR *)FilDsc);
-#endif
    }/*CloseDir*/
 
 
 void
 ReadDir(tp_FileName FileName,bool* EndPtr,tp_FilDsc FilDsc)
 {
-#ifdef HAVE_DIRENT_H
    struct dirent *dp;
-#else
-   struct direct *dp;
-#endif
+
    tps_Str Str;
    size_t sz;
 
@@ -72,12 +62,7 @@ ReadDir(tp_FileName FileName,bool* EndPtr,tp_FilDsc FilDsc)
    if (dp == NULL) {
       *EndPtr = true;
       return; }/*if*/;
-#ifdef HAVE_DIRENT_H
    (void)strcpy(Str, dp->d_name);
-#else
-   (void)strncpy(Str, dp->d_name, (int)dp->d_namlen);
-   Str[dp->d_namlen] = 0;
-#endif
    sz = snprintf(FileName, MAX_FileName, "%s", Str);
    if (sz >= MAX_FileName) {
       (void)fprintf(stderr, "File name too long (MAX_FileName=%d): %s\n",

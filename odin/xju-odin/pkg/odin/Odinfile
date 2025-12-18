@@ -1,7 +1,13 @@
-%all! == <<
-   %install-rbs; ../tregrm%install; %install; %lint
+%all == %all.ls:list
 
-%install! == <<
+%all.ls == <<
+%exe
+inc%check
+
+%isnstall-all! == <<
+   %install-rbs; ../tregrm%install; %install-odin; %lint
+
+%install-odin! == <<
    %exe >$THORPKGS/odin/odin.exe
    ../dg%install
 
@@ -12,7 +18,7 @@
    %rbs-exe > $ODINPKG/rbs.exe
 
 %lint! == <<
-   %odin.cxx.sm +debug +ignore=\\.hh\$ +stub=(extra.c) :lint >
+   %odin.cxx.sm +(%c-opts) +debug +ignore=\\.hh\$ +stub=(extra.c) :lint >
 
 %etags! == !<<
 #!/bin/csh
@@ -21,10 +27,6 @@
 %size == () +cmd= wc `cat (%src-files)` :stdout
 
 %src-files == %exe :depend :ls +cmd=grep -E -v "ODIN|os9|boot|dg\/if|h\$" :stdout
-
-%c-opts==<<
-+inc_sp=(.)
-+inc_sp=(..)
 
 %exe == main.cc +(%c-opts) +ignore=\\.hh\$ +lib=(%odin.cxx.sm+(%c-opts):a)+(%extra-lib) :exe
 
@@ -41,21 +43,25 @@
 main.cc;
    if-bcast.c; if-candrv.c; if-build.c; if-client.cc; if-cmd.c;
    if-depend.c; if-drvgrf.c; if-dir.c; if-drvpth.c; if-drvspc.c;
-   if-edg.c; if-env.c; if-err.c; if-exec.c; if-execint.c; if-execspc.c;
+   if-edg.c; if-env.c; if-exec.c; if-execint.c; if-execspc.c;
    if-fhacc.c; if-fhnam.c; if-fhnew.c; if-fhsrc.c;
-   if-fhstat.c; if-file.c; if-filelm.c; if-filhdr.c; if-filinp.c;
+   if-fhstat.c; if-filelm.c; if-filhdr.c; if-filinp.c;
    if-filprm.c; if-filpval.c; if-filtyp.c; if-ft.c; if-get.c;
    if-help.c; if-hook.c; if-info.c; if-ipc.c;
-   if-lex.c; if-lvl.c; if-main.c; if-nod.c; if-oclex.c;
+   if-lex.c; if-lvl.c; if-main.c; ../gmc/nod.c; if-oclex.c;
    if-pfilhdr.c; if-prmtyp.c; if-rbs.c;
-   if-symbol.c; if-sysdep.c; if-system.c; if-systools.c;
+   if-system.c; if-systools.c;
    if-update.c; if-util.c; if-var.c; if-yylex.c;
    editline%editline.cxx.sm; boot%boot.cxx.sm; LookupPlainAbsPath.cc;
-   if-inotify.cc; ../gmc/gmc.c
+   if-inotify.cc; ../gmc/gmc.c; ../gmc/err.c
 
 %rbs.c.sm == <<
-   rbs.c; if-dir.c; if-err.c +define=NO_IPC; if-file.c; if-io.c;
-   if-symbol.c; if-sysdep.c; if-system.c; if-inotify-stub.c
+   rbs.c; if-dir.c; ../gmc/if-err-no-ipc.c
+   if-system.c; ../gmc/inotify-stub.c
 
 version == \
    inc/Version.h  +cmd='sed \'s/^.*VERSION_STR "\\(.*\\)"/\\1/\'' :stdout
+
+%c-opts==<<
++inc_sp=(.)
++inc_sp=(..)

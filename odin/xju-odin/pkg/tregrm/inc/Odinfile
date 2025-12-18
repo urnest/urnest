@@ -10,18 +10,4 @@
 %check_tok_typ_h==(TokTyp_.h)+cmd=diff (%ygt/tok.h) (TokTyp_.h):stdout
 %check_nod_typ_h==(NodTyp_.h)+cmd=diff (%ygt/nod.h) (NodTyp_.h):stdout
 
-%ygt==()+cmd=(%ygt.sh) (../ygt.sh) (../tregrm.ygi) (..%exe):output
-
-%ygt.sh==!<<
-#!/bin/sh -e
-ygt_sh=$1; ygi=$2; tregrm=$3; yaccid=$4;
-$ygt_sh "$ygi" "$yaccid" "$tregrm"
-if test -r ERRORS && [ $(wc -c < ERRORS) != 0 ]
-then
-  cat ERRORS >&2
-  exit 1
-fi
-if test -r WARNINGS && [ $(wc -l < WARNINGS) != 0 ]
-then
-  cat WARNINGS >&2
-fi
+%ygt==()+cmd=(..%ygt.sh) (../ygt.sh) (../tregrm.ygi) (..%exe):output

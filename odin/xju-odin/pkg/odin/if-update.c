@@ -13,13 +13,13 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/FileName.h"
-#include "inc/FKind_.h"
-#include "inc/Job.h"
-#include "inc/Status_.h"
-#include "inc/Str.h"
-#include "inc/SKind_.h"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <dg/inc/FKind_.h>
+#include <odin/inc/Job.h>
+#include <odin/inc/Status_.h>
+#include <odin/inc/SKind_.h>
 
 
 static void

@@ -12,12 +12,16 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 geoff@boulder.colorado.edu
 */
+#include <stddef.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-#include "inc/GMC.h"
-#include "inc/FKind_.h"
-#include "inc/FileName.h"
-#include "inc/FilHdr.h"
-#include "inc/Str.h"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <dg/inc/FKind_.h>
+#include <dg/inc/FilHdr.h>
 
 
 void

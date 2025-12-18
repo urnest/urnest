@@ -11,7 +11,7 @@
 %check_nod_typ_h==(NodTyp_.h)+cmd=diff (%ygt/nod.h) (NodTyp_.h):stdout
 
 
-%ygt==()+cmd=(%ygt.sh) (../../tregrm/ygt.sh) (%fsys.ygi) (../../tregrm%exe):output
+%ygt==()+cmd=(%ygt.sh) (../../tregrm/ygt.sh) (%fsys.ygi) (../../tregrm%exe) 'oc':output
 
 %fsys.ygi==(%cast-to.ygi)+cmd=(%keep-double-slash.sh) (../fsys.ygi,c:cpp):stdout
 

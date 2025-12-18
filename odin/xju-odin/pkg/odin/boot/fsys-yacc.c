@@ -74,7 +74,7 @@ tp_Nod YY_Parse() {tp_Nod Nod;
 num_ParseErrors = 0; Init_Lex(); Init_ConstructTree();
 (void)yyparse(); Nod = End_ConstructTree();
 return Nod;}
-void yyerror(GMC_ARG(char*, s)) GMC_DCL(char*, s) 
+void yyerror(char* s)
 {num_ParseErrors++; ParseError(s);}
 int yylex() {return YY_Lex();}
 

@@ -13,14 +13,17 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/FKind_.h"
-#include "inc/FilPrm.h"
-#include "inc/FileName.h"
-#include "inc/InpKind_.h"
-#include "inc/NodTyp_.h"
-#include "inc/PrmTypLst.h"
-#include "inc/Str.h"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
+#include <dg/inc/FKind_.h>
+#include <odin/inc/FilPrm.h>
+#include <dg/inc/InpKind_.h>
+#include <odin/inc/NodTyp_.h>
+#include <odin/inc/PrmTypLst.h>
+#include <stdlib.h>
+#include <string.h>
 
 
 tp_LocPrm	RootLocPrm = 1;

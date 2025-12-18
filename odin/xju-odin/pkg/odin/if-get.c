@@ -13,19 +13,21 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/Flag_.h"
-#include "inc/InpKind_.h"
-#include "inc/LogLevel_.h"
-#include "inc/ModKind_.h"
-#include "inc/Status_.h"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/Flag_.h>
+#include <dg/inc/InpKind_.h>
+#include <odin/inc/LogLevel_.h>
+#include <odin/inc/ModKind_.h>
+#include <odin/inc/Status_.h>
 
 
 static int AnyOKDepth = 1;
 static int ElmDepth = 1;
 
 
-static void GetReqs(GMC_P1(tp_FilHdr) GMC_PN(bool) GMC_PN(bool) GMC_PN(int *));
+static void GetReqs(tp_FilHdr, bool, bool, int *);
 
 
 static bool

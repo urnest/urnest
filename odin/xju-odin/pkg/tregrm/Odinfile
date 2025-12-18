@@ -1,3 +1,10 @@
+%all == %all.ls:list
+
+%all.ls == <<
+%exe
+%check
+inc%check
+
 %install! == <<
    %exe > $THORPKGS/tregrm/tregrm.exe
 
@@ -27,7 +34,32 @@ inc%check
    ../gmc/inotify-stub.c
    ../gmc/nod.c
 
-   == () +cmd='if [ "$ODINBOOT" = "" ] ; then echo "\
-tregrm-yacc.c == tregrm.ygi :c +default=(tregrm-yacc.c.dflt) :boot \
-   "; fi' :stdout
+# as a sanity check, verify that we can regenerate our own tregrm-yacc.c unaltered
+# we don't overwrite the committed files automatically as they should not normally change
+# (if they do change, the responsible person will commit the changes once they're correct)
+%check==%check.ls:list
 
+%check.ls==<<
+%check-tregrm-yacc.c
+
+%check-tregrm-yacc.c==(tregrm-yacc.c)+cmd=diff '--ignore-matching-lines="^#line"' (%ygt.y:c) (tregrm-yacc.c):stdout
+
+%ygt.y==(%cast.y)+cmd=cat (%ygt/y):stdout
+
+%ygt==()+cmd=(%ygt.sh) (ygt.sh) (tregrm.ygi) (%exe):output
+
+%ygt.sh==!<<
+#!/bin/sh -e
+ygt_sh=$1; ygi=$2; tregrm=$3; yaccid=$4;
+$ygt_sh "$ygi" "$yaccid" "$tregrm"
+if test -r ERRORS && [ $(wc -c < ERRORS) != 0 ]
+then
+  cat ERRORS >&2
+  exit 1
+fi
+if test -r WARNINGS && [ $(wc -l < WARNINGS) != 0 ]
+then
+  cat WARNINGS >&2
+fi
+
+%cast.y==<<

@@ -50,7 +50,7 @@ Gen_Grammar(FilDsc, Includes_Nod, Scanner_Nod, Rules_Nod)
    Writeln(FilDsc, "num_ParseErrors = 0; Init_Lex(); Init_ConstructTree();");
    Writeln(FilDsc, "(void)yyparse(); Nod = End_ConstructTree();");
    Writeln(FilDsc, "return Nod;}");
-   Writeln(FilDsc, "void yyerror(char*, s) ");
+   Writeln(FilDsc, "void yyerror(char* s)");
    Writeln(FilDsc, "{num_ParseErrors++; ParseError(s);}");
    Writeln(FilDsc, "int yylex() {return YY_Lex();}");
    Writeln(FilDsc, "%}\n");

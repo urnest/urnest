@@ -13,9 +13,10 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/NodTyp_.h"
-#include "inc/Str.h"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/NodTyp_.h>
 
 
 extern tp_Str		PrevParseStr;
@@ -68,7 +69,7 @@ YY_Unparse(tp_Str Str,tp_Nod Nod)
       case WORD: {
 	 Unlex(Str, Sym_Str(Nod_Sym(Nod)));
 	 break; }/*case*/;
-      case HOSTWD: {
+      case SCAN_HOSTWD: {
 	 (void)strcpy(Str, "!");
 	 Unlex(Tail(Str), Sym_Str(Nod_Sym(Nod)));
 	 break; }/*case*/;
@@ -78,7 +79,7 @@ YY_Unparse(tp_Str Str,tp_Nod Nod)
       case ARTFIL: {
 	 (void)strcpy(Str, "/");
 	 break; }/*case*/;
-      case OBJTID: {
+      case SCAN_OBJTID: {
 	 (void)strcpy(Str, "\0");
 	 Unlex(Tail(Str), Sym_Str(Nod_Sym(Nod)));
 	 break; }/*case*/;

@@ -15,8 +15,8 @@ extern "C"
 {
 #endif
 
-#include "GMC.h"
-#include "Type.hh"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
 
   tp_FilHdr LookupPlainAbsPath(char const*const path);
   void RetAbsPaths();

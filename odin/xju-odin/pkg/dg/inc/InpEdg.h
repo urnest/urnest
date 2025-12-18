@@ -5,11 +5,11 @@ typedef struct _tps_InpEdg {
    tp_FilTyp FilTyp;
    tp_InpSpc InpSpc;
    tp_InpKind InpKind;
-   boolean IsUserArg;
+   bool IsUserArg;
    tp_InpEdg Next;
    tp_Tool Tool;
    tp_InpEdg InpLink;
-   boolean Done;
+   bool Done;
    int Index;
    tp_InpEdg Link;
    }				tps_InpEdg;

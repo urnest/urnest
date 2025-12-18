@@ -13,16 +13,18 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/FileName.h"
-#include "inc/ElmInf.h"
-#include "inc/FilHdr.h"
-#include "inc/HdrInf.h"
-#include "inc/Item.h"
-#include "inc/PrmInf.h"
-#include "inc/PValInf.h"
-#include "inc/InpInf.h"
-#include "inc/Str.h"
+
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
+#include <odin/inc/ElmInf.h>
+#include <dg/inc/FilHdr.h>
+#include <odin/inc/HdrInf.h>
+#include <odin/inc/Item.h>
+#include <odin/inc/PrmInf.h>
+#include <odin/inc/PValInf.h>
+#include <odin/inc/InpInf.h>
 
 
 static tp_FilDsc	InfoFD;

@@ -16,12 +16,17 @@ geoff@boulder.colorado.edu
 */
 
 #include <stdio.h>
-#include "inc/GMC.h"
-#include "inc/Entry.h"
-#include "inc/FilTyp.h"
-#include "inc/PrmTyp.h"
-#include "inc/PrmTypLst.h"
-#include "inc/Tool.h"
+#include <stdlib.h>
+#include <string.h>
+#include <gmc/gmc.h>
+#include <dg/inc/Type.hh>
+#include <dg/inc/Func.hh>
+#include <dg/inc/Var.hh>
+#include <dg/inc/Entry.h>
+#include <dg/inc/FilTyp.h>
+#include <dg/inc/PrmTyp.h>
+#include <dg/inc/PrmTypLst.h>
+#include <dg/inc/Tool.h>
 
 
 tp_PrmTyp		PrmTypS = NIL;
@@ -130,7 +135,7 @@ void
 Set_PrmTyp_Desc(PrmTyp, Desc, Hidden)
    tp_PrmTyp PrmTyp;
    tp_Desc Desc;
-   boolean Hidden;
+   bool Hidden;
 {
    FORBIDDEN(PrmTyp == ERROR || Desc == ERROR);
    FORBIDDEN(PrmTyp->Desc != NIL);

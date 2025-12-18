@@ -1,5 +1,6 @@
-#include "inc/GMC.h"
-#include "inc/Str.h"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
 
 extern boolean IPC_Do_Return;
 extern int *IPC_IArg1, *IPC_IArg2, *IPC_IArg3;
@@ -15,7 +16,7 @@ Add_BuildArg_Msg(
 {
    tps_Str FileName;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Str(IPC_AbortPtr, FileName);
    if (*IPC_AbortPtr) return;
    Local_Add_BuildArg(FileName);
@@ -33,7 +34,7 @@ Do_Build_Msg(
    tps_Str JobDirName;
    tps_Str LogFileName;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Int(IPC_AbortPtr, &JobID);
    if (*IPC_AbortPtr) return;
    IPC_Read_Str(IPC_AbortPtr, JobDirName);
@@ -53,7 +54,7 @@ Abort_Build_Msg(
 {
    int JobID;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Int(IPC_AbortPtr, &JobID);
    if (*IPC_AbortPtr) return;
    Local_Abort_Build(JobID);
@@ -69,7 +70,7 @@ Do_MakeReadOnly_Msg(
 {
    tps_Str FileName;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Str(IPC_AbortPtr, FileName);
    if (*IPC_AbortPtr) return;
    Local_Do_MakeReadOnly(FileName);
@@ -85,7 +86,7 @@ ErrMessage_Msg(
 {
    tps_Str Message;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Str(IPC_AbortPtr, Message);
    if (*IPC_AbortPtr) return;
    Local_ErrMessage(Message);
@@ -101,7 +102,7 @@ LogMessage_Msg(
 {
    tps_Str Message;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Str(IPC_AbortPtr, Message);
    if (*IPC_AbortPtr) return;
    Local_LogMessage(Message);
@@ -117,7 +118,7 @@ FileErrMessage_Msg(
 {
    tps_Str FileName;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Str(IPC_AbortPtr, FileName);
    if (*IPC_AbortPtr) return;
    Local_FileErrMessage(FileName);
@@ -134,7 +135,7 @@ Next_OdinFile_Msg(
    tps_Str OdinExpr;
    int ID;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Str(IPC_AbortPtr, OdinExpr);
    if (*IPC_AbortPtr) return;
    IPC_Read_Int(IPC_AbortPtr, &ID);
@@ -153,7 +154,7 @@ Get_UseCount_Msg(
 {
    int CountPtr;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    Local_Get_UseCount(&CountPtr);
    IPC_Write_Int(IPC_AbortPtr, 1);
    if (*IPC_AbortPtr) return;
@@ -171,7 +172,7 @@ Get_CurSize_Msg(
 {
    int SizePtr;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    Local_Get_CurSize(&SizePtr);
    IPC_Write_Int(IPC_AbortPtr, 1);
    if (*IPC_AbortPtr) return;
@@ -188,7 +189,7 @@ ShutDown_Msg(
    GMC_DCL(boolean*, IPC_AbortPtr)
 {
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    Local_ShutDown();
 }
 #endif
@@ -202,7 +203,7 @@ Get_Banner_Msg(
 {
    tps_Str Str;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    Local_Get_Banner(Str);
    IPC_Write_Int(IPC_AbortPtr, 1);
    if (*IPC_AbortPtr) return;
@@ -220,7 +221,7 @@ Do_Interrupt_Msg(
 {
    int InterruptFlag;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Int(IPC_AbortPtr, &InterruptFlag);
    if (*IPC_AbortPtr) return;
    Local_Do_Interrupt(InterruptFlag);
@@ -237,7 +238,7 @@ Do_Alias_Msg(
    tps_Str FileName;
    int ForceFlag;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Str(IPC_AbortPtr, FileName);
    if (*IPC_AbortPtr) return;
    IPC_Read_Int(IPC_AbortPtr, &ForceFlag);
@@ -256,7 +257,7 @@ Get_Alias_Msg(
    tps_Str OutFileName;
    tps_Str FileName;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Str(IPC_AbortPtr, FileName);
    if (*IPC_AbortPtr) return;
    Local_Get_Alias(OutFileName, FileName);
@@ -277,7 +278,7 @@ Job_Done_Msg(
    int JobID;
    int Abort;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Int(IPC_AbortPtr, &JobID);
    if (*IPC_AbortPtr) return;
    IPC_Read_Int(IPC_AbortPtr, &Abort);
@@ -295,7 +296,7 @@ Test_Msg(
 {
    tps_Str FileName;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Str(IPC_AbortPtr, FileName);
    if (*IPC_AbortPtr) return;
    Local_Test(FileName);
@@ -312,7 +313,7 @@ Test_All_Msg(
    GMC_DCL(boolean*, IPC_AbortPtr)
 {
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    Local_Test_All();
    IPC_Write_Int(IPC_AbortPtr, 1);
    if (*IPC_AbortPtr) return;
@@ -354,7 +355,7 @@ LocalEnd_Get_OdinFile(
       *IPC_IArg3 = ExecFlagPtr;
       FORBIDDEN(IPC_Do_Return);
 
-      IPC_Do_Return = TRUE;
+      IPC_Do_Return = true;
 
       return; };
 
@@ -378,7 +379,7 @@ Set_CWD_Msg(
 {
    tps_Str FileName;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Str(IPC_AbortPtr, FileName);
    if (*IPC_AbortPtr) return;
    Local_Set_CWD(FileName);
@@ -397,7 +398,7 @@ Push_Context_Msg(
    tps_Str DirName;
    tps_Str FileName;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Str(IPC_AbortPtr, FileName);
    if (*IPC_AbortPtr) return;
    Local_Push_Context(DirName, FileName);
@@ -417,7 +418,7 @@ Pop_Context_Msg(
 {
    tps_Str DirName;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    Local_Pop_Context(DirName);
    IPC_Write_Int(IPC_AbortPtr, 1);
    if (*IPC_AbortPtr) return;
@@ -435,7 +436,7 @@ Set_KeepGoing_Msg(
 {
    int Flag;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Int(IPC_AbortPtr, &Flag);
    if (*IPC_AbortPtr) return;
    Local_Set_KeepGoing(Flag);
@@ -453,7 +454,7 @@ Set_ErrLevel_Msg(
 {
    int ErrLevel;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Int(IPC_AbortPtr, &ErrLevel);
    if (*IPC_AbortPtr) return;
    Local_Set_ErrLevel(ErrLevel);
@@ -471,7 +472,7 @@ Set_WarnLevel_Msg(
 {
    int WarnLevel;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Int(IPC_AbortPtr, &WarnLevel);
    if (*IPC_AbortPtr) return;
    Local_Set_WarnLevel(WarnLevel);
@@ -489,7 +490,7 @@ Set_LogLevel_Msg(
 {
    int LogLevel;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Int(IPC_AbortPtr, &LogLevel);
    if (*IPC_AbortPtr) return;
    Local_Set_LogLevel(LogLevel);
@@ -507,7 +508,7 @@ Set_HelpLevel_Msg(
 {
    int HelpLevel;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Int(IPC_AbortPtr, &HelpLevel);
    if (*IPC_AbortPtr) return;
    Local_Set_HelpLevel(HelpLevel);
@@ -525,7 +526,7 @@ Set_Debug_Msg(
 {
    tps_Str DebugName;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Str(IPC_AbortPtr, DebugName);
    if (*IPC_AbortPtr) return;
    Local_Set_Debug(DebugName);
@@ -543,7 +544,7 @@ Set_MaxJobs_Msg(
 {
    int MaxJobs;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Int(IPC_AbortPtr, &MaxJobs);
    if (*IPC_AbortPtr) return;
    Local_Set_MaxJobs(MaxJobs);
@@ -561,7 +562,7 @@ Redo_Msg(
 {
    tps_Str OdinExpr;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Str(IPC_AbortPtr, OdinExpr);
    if (*IPC_AbortPtr) return;
    Local_Redo(OdinExpr);
@@ -580,7 +581,7 @@ OdinExpr_ID_Msg(
    int IDPtr;
    tps_Str OdinExpr;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Str(IPC_AbortPtr, OdinExpr);
    if (*IPC_AbortPtr) return;
    Local_OdinExpr_ID(&IDPtr, OdinExpr);
@@ -601,7 +602,7 @@ ID_OdinExpr_Msg(
    tps_Str OdinExpr;
    int ID;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Int(IPC_AbortPtr, &ID);
    if (*IPC_AbortPtr) return;
    Local_ID_OdinExpr(OdinExpr, ID);
@@ -622,7 +623,7 @@ ID_LongOdinExpr_Msg(
    tps_Str OdinExpr;
    int ID;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Int(IPC_AbortPtr, &ID);
    if (*IPC_AbortPtr) return;
    Local_ID_LongOdinExpr(OdinExpr, ID);
@@ -644,7 +645,7 @@ Get_Status_Msg(
    int ElmStatusPtr;
    int ID;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Int(IPC_AbortPtr, &ID);
    if (*IPC_AbortPtr) return;
    Local_Get_Status(&StatusPtr, &ElmStatusPtr, ID);
@@ -666,7 +667,7 @@ Get_Elements_Msg(
 {
    int ID;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Int(IPC_AbortPtr, &ID);
    if (*IPC_AbortPtr) return;
    Local_Get_Elements(ID);
@@ -684,7 +685,7 @@ Get_ElementsOf_Msg(
 {
    int ID;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Int(IPC_AbortPtr, &ID);
    if (*IPC_AbortPtr) return;
    Local_Get_ElementsOf(ID);
@@ -702,7 +703,7 @@ Get_Inputs_Msg(
 {
    int ID;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Int(IPC_AbortPtr, &ID);
    if (*IPC_AbortPtr) return;
    Local_Get_Inputs(ID);
@@ -720,7 +721,7 @@ Get_Outputs_Msg(
 {
    int ID;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Int(IPC_AbortPtr, &ID);
    if (*IPC_AbortPtr) return;
    Local_Get_Outputs(ID);
@@ -738,7 +739,7 @@ Get_DPath_Msg(
 {
    tps_Str OdinExpr;
 
-   *IPC_AbortPtr = FALSE;
+   *IPC_AbortPtr = false;
    IPC_Read_Str(IPC_AbortPtr, OdinExpr);
    if (*IPC_AbortPtr) return;
    Local_Get_DPath(OdinExpr);
@@ -756,280 +757,280 @@ IPC_Do_Msg(
 {
    switch (MsgType) {
       case 1: {
-         IPC_Do_Return = TRUE;
-         *IPC_AbortPtr = FALSE;
+         IPC_Do_Return = true;
+         *IPC_AbortPtr = false;
          break; }/*case*/;
       case 2: {
 #ifndef SERVER_ONLY
          Add_BuildArg_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 3: {
 #ifndef SERVER_ONLY
          Do_Build_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 4: {
 #ifndef SERVER_ONLY
          Abort_Build_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 5: {
 #ifndef SERVER_ONLY
          Do_MakeReadOnly_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 6: {
 #ifndef SERVER_ONLY
          ErrMessage_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 7: {
 #ifndef SERVER_ONLY
          LogMessage_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 8: {
 #ifndef SERVER_ONLY
          FileErrMessage_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 9: {
 #ifndef SERVER_ONLY
          Next_OdinFile_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 10: {
 #ifndef CLIENT_ONLY
          Get_UseCount_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 11: {
 #ifndef CLIENT_ONLY
          Get_CurSize_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 12: {
 #ifndef CLIENT_ONLY
          ShutDown_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 13: {
 #ifndef CLIENT_ONLY
          Get_Banner_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 14: {
 #ifndef CLIENT_ONLY
          Do_Interrupt_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 15: {
 #ifndef CLIENT_ONLY
          Do_Alias_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 16: {
 #ifndef CLIENT_ONLY
          Get_Alias_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 17: {
 #ifndef CLIENT_ONLY
          Job_Done_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 18: {
 #ifndef CLIENT_ONLY
          Test_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 19: {
 #ifndef CLIENT_ONLY
          Test_All_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 20: {
 #ifndef CLIENT_ONLY
          Get_OdinFile_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 21: {
 #ifndef CLIENT_ONLY
          Set_CWD_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 22: {
 #ifndef CLIENT_ONLY
          Push_Context_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 23: {
 #ifndef CLIENT_ONLY
          Pop_Context_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 24: {
 #ifndef CLIENT_ONLY
          Set_KeepGoing_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 25: {
 #ifndef CLIENT_ONLY
          Set_ErrLevel_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 26: {
 #ifndef CLIENT_ONLY
          Set_WarnLevel_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 27: {
 #ifndef CLIENT_ONLY
          Set_LogLevel_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 28: {
 #ifndef CLIENT_ONLY
          Set_HelpLevel_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 29: {
 #ifndef CLIENT_ONLY
          Set_Debug_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 30: {
 #ifndef CLIENT_ONLY
          Set_MaxJobs_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 31: {
 #ifndef CLIENT_ONLY
          Redo_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 32: {
 #ifndef CLIENT_ONLY
          OdinExpr_ID_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 33: {
 #ifndef CLIENT_ONLY
          ID_OdinExpr_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 34: {
 #ifndef CLIENT_ONLY
          ID_LongOdinExpr_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 35: {
 #ifndef CLIENT_ONLY
          Get_Status_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 36: {
 #ifndef CLIENT_ONLY
          Get_Elements_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 37: {
 #ifndef CLIENT_ONLY
          Get_ElementsOf_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 38: {
 #ifndef CLIENT_ONLY
          Get_Inputs_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 39: {
 #ifndef CLIENT_ONLY
          Get_Outputs_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       case 40: {
 #ifndef CLIENT_ONLY
          Get_DPath_Msg(IPC_AbortPtr);
 #else
-         *IPC_AbortPtr = TRUE;
+         *IPC_AbortPtr = true;
 #endif
          break; }/*case*/;
       default: {
