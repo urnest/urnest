@@ -19,15 +19,16 @@ geoff@boulder.colorado.edu
 #include <odin/inc/Var.hh>
 #include <odin/inc/Client.h>
 #include <odin/inc/FilTyp.h>
-#include <odin/inc/FTClass_.h>
+#include <dg/inc/FTClass_.h>
 #include <odin/inc/NodTyp_.h>
 #include <odin/inc/SrcTyp.h>
 #include <odin/inc/Status_.h>
-#include <odin/inc/TClass_.h>
+#include <dg/inc/TClass_.h>
 #include <odin/inc/Tool.h>
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <stdlib.h>
 
 
 extern int		num_SrcTypS;

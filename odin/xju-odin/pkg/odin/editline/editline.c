@@ -208,9 +208,9 @@ TTYflush()
 
 STATIC void
 TTYput(
-  CONST GMC_ARG(CHAR, c)
+  CONST CHAR c
   )
-  GMC_DCL(CHAR, c)
+  
 {
     Screen[ScreenCount] = c;
     if (++ScreenCount >= ScreenSize - 1) {
@@ -221,9 +221,9 @@ TTYput(
 
 STATIC void
 TTYputs(
-  GMC_ARG(String, p)
+  String p
   )
-  GMC_DCL(String, p)
+  
 {
     while (*p)
 	TTYput(*p++);
@@ -231,9 +231,9 @@ TTYputs(
 
 STATIC void
 TTYshow(
-  GMC_ARG(CHAR, c)
+  CHAR c
   )
-  GMC_DCL(CHAR, c)
+  
 {
     if (c == DEL) {
 	TTYput('^');
@@ -254,9 +254,9 @@ TTYshow(
 
 STATIC void
 TTYstring(
-  GMC_ARG(CHAR*, p)
+  CHAR* p
   )
-  GMC_DCL(CHAR*, p)
+  
 {
     while (*p)
 	TTYshow(*p++);
@@ -281,9 +281,9 @@ TTYget()
 
 STATIC void
 TTYbackn(
-  GMC_ARG(int, n)
+  int n
   )
-  GMC_DCL(int, n)
+  
 {
     while (--n >= 0)
 	TTYback();
@@ -351,11 +351,11 @@ TTYinfo()
 */
 STATIC void
 columns(
-  GMC_ARG(int, ac),
-  GMC_ARG(CHAR**, av)
+  int ac,
+  CHAR** av
   )
-  GMC_DCL(int, ac)
-  GMC_DCL(CHAR**, av)
+  
+  
 {
     CHAR	*p;
     int		i;
@@ -399,9 +399,9 @@ reposition()
 
 STATIC void
 left(
-  GMC_ARG(STATUS, Change)
+  STATUS Change
   )
-  GMC_DCL(STATUS, Change)
+  
 {
     TTYback();
     if (Point) {
@@ -418,9 +418,9 @@ left(
 
 STATIC void
 right(
-  GMC_ARG(STATUS, Change)
+  STATUS Change
   )
-  GMC_DCL(STATUS, Change)
+  
 {
     TTYshow(Line[Point]);
     if (Change == CSmove)
@@ -437,9 +437,9 @@ ring_bell()
 
 STATIC STATUS
 do_macro(
-  GMC_ARG(UINT, c)
+  UINT c
   )
-  GMC_DCL(UINT, c)
+  
 {
     CHAR	name[4];
 
@@ -457,9 +457,9 @@ do_macro(
 
 STATIC STATUS
 do_forward(
-  GMC_ARG(STATUS, move)
+  STATUS move
   )
-  GMC_DCL(STATUS, move)
+  
 {
     int		i;
     CHAR	*p;
@@ -484,9 +484,9 @@ do_forward(
 
 STATIC STATUS
 do_case(
-  GMC_ARG(CASE, type)
+  CASE type
   )
-  GMC_DCL(CASE, type)
+  
 {
     int		i;
     int		end;
@@ -562,9 +562,9 @@ clear_line()
 
 STATIC STATUS
 insert_string(
-  GMC_ARG(CHAR*, p)
+  CHAR* p
   )
-  GMC_DCL(CHAR*, p)
+  
 {
     SIZE_T	len;
     int		i;
@@ -625,9 +625,9 @@ prev_hist()
 
 STATIC STATUS
 do_insert_hist(
-  GMC_ARG(CHAR*, p)
+  CHAR* p
   )
-  GMC_DCL(CHAR*, p)
+  
 {
     if (p == NULL)
 	return ring_bell();
@@ -640,9 +640,9 @@ do_insert_hist(
 
 STATIC STATUS
 do_hist(
-  GMC_ARG(MOVE, move)
+  MOVE move
   )
-  GMC_DCL(MOVE, move)
+  
 {
     CHAR	*p;
     int		i;
@@ -684,13 +684,13 @@ h_last()
 */
 STATIC int
 substrcmp(
-  CONST GMC_ARG(char*, text),
-  CONST GMC_ARG(char*, pat),
-  GMC_ARG(SIZE_T, len)
+  CONST char* text,
+  CONST char* pat,
+  SIZE_T len
   )
-  GMC_DCL(char*, text)
-  GMC_DCL(char*, pat)
-  GMC_DCL(SIZE_T, len)
+  
+  
+  
 {
     CHAR	c;
 
@@ -704,11 +704,11 @@ substrcmp(
 
 STATIC CHAR *
 search_hist(
-  GMC_ARG(CHAR*, search),
-  GMC_ARG(MOVE, move)
+  CHAR* search,
+  MOVE move
   )
-  GMC_DCL(CHAR*, search)
-  GMC_DCL(MOVE, move)
+  
+  
 {
     static CHAR	*old_search;
     int		len;
@@ -797,11 +797,11 @@ fd_char()
 
 STATIC void
 save_yank(
-  GMC_ARG(int, begin),
-  GMC_ARG(int, i)
+  int begin,
+  int i
   )
-  GMC_DCL(int, begin)
-  GMC_DCL(int, i)
+  
+  
 {
     if (Yanked) {
 	DISPOSE(Yanked);
@@ -819,9 +819,9 @@ save_yank(
 
 STATIC STATUS
 delete_string(
-  GMC_ARG(int, count)
+  int count
   )
-  GMC_DCL(int, count)
+  
 {
     int		i;
     CHAR	*p;
@@ -920,9 +920,9 @@ kill_line()
 
 STATIC STATUS
 insert_char(
-  GMC_ARG(int, c)
+  int c
   )
-  GMC_DCL(int, c)
+  
 {
     STATUS	s;
     CHAR	buff[2];
@@ -987,9 +987,9 @@ meta()
 
 STATIC STATUS
 emacs(
-  GMC_ARG(UINT, c)
+  UINT c
   )
-  GMC_DCL(UINT, c)
+  
 {
     STATUS	s;
     KEYMAP	*kp;
@@ -1011,9 +1011,9 @@ emacs(
 
 STATIC STATUS
 TTYspecial(
-  GMC_ARG(UINT, c)
+  UINT c
   )
-  GMC_DCL(UINT, c)
+  
 {
     if (ISMETA(c))
 	return CSdispatch;
@@ -1093,9 +1093,9 @@ editinput()
 
 STATIC void
 hist_add(
-  GMC_ARG(CHAR*, p)
+  CHAR* p
   )
-  GMC_DCL(CHAR*, p)
+  
 {
     int		i;
 
@@ -1118,9 +1118,9 @@ hist_add(
 /* ARGSUSED0 */
 void
 rl_reset_terminal(
-  GMC_ARG(char*, p)
+  char* p
   )
-  GMC_DCL(char*, p)
+  
 {
 }
 
@@ -1131,9 +1131,9 @@ rl_initialize()
 
 char *
 readline(
-  CONST GMC_ARG(char*, prompt)
+  CONST char* prompt
   )
-  GMC_DCL(char*, prompt)
+  
 {
     CHAR	*line;
     int		s;
@@ -1169,9 +1169,9 @@ readline(
 
 void
 add_history(
-  GMC_ARG(char*, p)
+  char* p
   )
-  GMC_DCL(char*, p)
+  
 {
     if (p == NULL || *p == '\0')
 	return;
@@ -1440,11 +1440,11 @@ bk_kill_word()
 
 STATIC int
 argify(
-  GMC_ARG(CHAR*, line),
-  GMC_ARG(CHAR***, avp)
+  CHAR* line,
+  CHAR*** avp
   )
-  GMC_DCL(CHAR*, line)
-  GMC_DCL(CHAR***, avp)
+  
+  
 {
     CHAR	*c;
     CHAR	**p;

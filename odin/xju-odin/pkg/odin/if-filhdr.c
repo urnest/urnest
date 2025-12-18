@@ -13,14 +13,17 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
-#include "inc/GMC.h"
-#include "inc/FilHdr.h"
-#include "inc/HdrInf.h"
-#include "inc/FilTyp.h"
-#include "inc/FKind_.h"
-#include "inc/LogLevel_.h"
-#include "inc/Status_.h"
-#include "inc/FileName.h"
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
+#include <odin/inc/FilHdr.h>
+#include <odin/inc/HdrInf.h>
+#include <odin/inc/FilTyp.h>
+#include <dg/inc/FKind_.h>
+#include <odin/inc/LogLevel_.h>
+#include <odin/inc/Status_.h>
+#include <stdlib.h>
 
 
 int			num_FilHdrS = 0;
@@ -123,19 +126,19 @@ Free_FilHdrs()
       NextFilHdr = NextFilHdr->NextFree;
       if (FilHdr_PndFlag(FilHdr)) {
 	 Do_Log("PndFlag clearing status of", FilHdr, LOGLEVEL_Status);
-	 Set_PndFlag(FilHdr, FALSE);
+	 Set_PndFlag(FilHdr, false);
 	 Set_Status(FilHdr, STAT_Unknown); }/*if*/;
       if (FilHdr_ElmNamePndFlag(FilHdr)) {
 	 Do_Log("PndFlag clearing elm-name-status of", FilHdr, LOGLEVEL_Status);
-	 Set_ElmNamePndFlag(FilHdr, FALSE);
+	 Set_ElmNamePndFlag(FilHdr, false);
 	 Set_ElmNameStatus(FilHdr, STAT_Unknown); }/*if*/;
       if (FilHdr_ElmPndFlag(FilHdr)) {
 	 Do_Log("PndFlag clearing elm-status of", FilHdr, LOGLEVEL_Status);
-	 Set_ElmPndFlag(FilHdr, FALSE);
+	 Set_ElmPndFlag(FilHdr, false);
 	 Set_ElmStatus(FilHdr, STAT_Unknown); }/*if*/;
       if (FilHdr_TgtValPndFlag(FilHdr)) {
 	 Do_Log("PndFlag clearing TgtVal-status of", FilHdr, LOGLEVEL_Status);
-	 Set_TgtValPndFlag(FilHdr, FALSE);
+	 Set_TgtValPndFlag(FilHdr, false);
 	 Set_TgtValStatus(FilHdr, STAT_Unknown); }/*if*/;
       if (FilHdr_Status(FilHdr) == STAT_Ready) {
 	 Set_Status(FilHdr, STAT_Unknown); }/*if*/;
@@ -176,16 +179,16 @@ New_FilHdr()
 	 FilHdr->PrevFree->NextFree = FilHdr;
 	 FilHdr->NextFree = FreeFilHdr;
 	 FilHdr->NextFree->PrevFree = FilHdr;
-	 FilHdr->Modified = FALSE;
+	 FilHdr->Modified = false;
 	 FilHdr->NextMod = NIL;
 	 FilHdr->Flag = NIL;
 	 FilHdr->AnyOKDepth = 0;
 	 FilHdr->ElmDepth = 0;
 	 FilHdr->ElmTag = 0;
 	 FilHdr->SCC = (tp_FilHdr)NIL;
-	 FilHdr->PndFlag = FALSE;
-	 FilHdr->ElmNamePndFlag = FALSE;
-	 FilHdr->ElmPndFlag = FALSE;
+	 FilHdr->PndFlag = false;
+	 FilHdr->ElmNamePndFlag = false;
+	 FilHdr->ElmPndFlag = false;
       }else if (FilHdr->LocHdr != NIL) {
 	 FORBIDDEN(FilHdr->Cnt != 0);
 	 if (FilHdr->Modified) WriteFilHdrs();
@@ -285,7 +288,7 @@ void
 SetModified(tp_FilHdr FilHdr)
 {
    if (FilHdr->Modified) return;
-   FilHdr->Modified = TRUE;
+   FilHdr->Modified = true;
    FilHdr->NextMod = ModFilHdr;
    ModFilHdr = FilHdr;
    }/*SetModified*/
@@ -303,7 +306,7 @@ WriteFilHdrs()
 {
    while (ModFilHdr != NIL) {
       FORBIDDEN(!ModFilHdr->Modified);
-      ModFilHdr->Modified = FALSE;
+      ModFilHdr->Modified = false;
       WriteFilHdr(ModFilHdr);
       ModFilHdr = ModFilHdr->NextMod; }/*while*/;
    }/*WriteFilHdrs*/

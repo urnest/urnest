@@ -37,9 +37,6 @@ typedef struct _tps_InpEdg *	tp_InpEdg;
 typedef struct _tps_Sym *	tp_Sym;
 typedef struct _tps_Tool *	tp_Tool;
 
-typedef struct _tps_FilHdr *	tp_FilHdr;
-typedef struct _tps_HdrInf *	tp_HdrInf;
-
 /* for if.lvl.c */
 
 typedef int		tp_DPType;

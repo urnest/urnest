@@ -16,6 +16,7 @@ geoff@boulder.colorado.edu
 #include <gmc/gmc.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
 #include <odin/inc/sys_param.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -23,6 +24,10 @@ geoff@boulder.colorado.edu
 #include <netdb.h>
 #include <netinet/in.h>
 #include <signal.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #include <odin/inc/Host.h>
 #include <odin/inc/LogLevel_.h>
@@ -61,9 +66,9 @@ Init_RBS()
 
 tp_Str
 Host_HostName(
-   GMC_ARG(tp_Host, Host)
+   tp_Host Host
    )
-   GMC_DCL(tp_Host, Host)
+   
 {
    return Host->HostName;
    }/*Host_HostName*/
@@ -71,9 +76,9 @@ Host_HostName(
 
 int
 Host_FD(
-   GMC_ARG(tp_Host, Host)
+   tp_Host Host
    )
-   GMC_DCL(tp_Host, Host)
+   
 {
    return Host->FD;
    }/*Host_FD*/
@@ -81,9 +86,9 @@ Host_FD(
 
 tp_Host
 Host_Next(
-   GMC_ARG(tp_Host, Host)
+   tp_Host Host
    )
-   GMC_DCL(tp_Host, Host)
+   
 {
    return Host->Next;
    }/*Host_Next*/
@@ -91,9 +96,9 @@ Host_Next(
 
 tp_Host
 Lookup_Host(
-   GMC_ARG(tp_Str, HostName)
+   tp_Str HostName
    )
-   GMC_DCL(tp_Str, HostName)
+   
 {
    tp_Host Host;
 
@@ -113,9 +118,9 @@ Lookup_Host(
 
 tp_Host
 PId_Host(
-   GMC_ARG(int, PId)
+   int PId
    )
-   GMC_DCL(int, PId)
+   
 {
    tp_Host Host;
 
@@ -128,9 +133,9 @@ PId_Host(
 
 static void
 RBS_Close(
-   GMC_ARG(tp_Host, Host)
+   tp_Host Host
    )
-   GMC_DCL(tp_Host, Host)
+   
 {
    if (Host->FD < 0) {
       return; }/*if*/;
@@ -142,9 +147,9 @@ RBS_Close(
 
 void
 RBS_Done(
-   GMC_ARG(tp_Host, Host)
+   tp_Host Host
    )
-   GMC_DCL(tp_Host, Host)
+   
 {
    if (Host->RBS_Id < 0) {
       return; }/*if*/;
@@ -157,13 +162,13 @@ RBS_Done(
 
 static void
 RBS_Write_Int(
-   GMC_ARG(bool*, AbortPtr),
-   GMC_ARG(tp_Host, Host),
-   GMC_ARG(int, Int)
+   bool* AbortPtr,
+   tp_Host Host,
+   int Int
    )
-   GMC_DCL(bool*, AbortPtr)
-   GMC_DCL(tp_Host, Host)
-   GMC_DCL(int, Int)
+   
+   
+   
 {
    int cc;
 
@@ -179,13 +184,13 @@ RBS_Write_Int(
 
 static void
 RBS_Read_Int(
-   GMC_ARG(bool*, AbortPtr),
-   GMC_ARG(tp_Host, Host),
-   GMC_ARG(int*, IntPtr)
+   bool* AbortPtr,
+   tp_Host Host,
+   int* IntPtr
    )
-   GMC_DCL(bool*, AbortPtr)
-   GMC_DCL(tp_Host, Host)
-   GMC_DCL(int*, IntPtr)
+   
+   
+   
 {
    int cc;
 
@@ -201,13 +206,13 @@ RBS_Read_Int(
 
 static void
 RBS_Write_Str(
-   GMC_ARG(bool*, AbortPtr),
-   GMC_ARG(tp_Host, Host),
-   GMC_ARG(const char*, Str)
+   bool* AbortPtr,
+   tp_Host Host,
+   const char* Str
    )
-   GMC_DCL(bool*, AbortPtr)
-   GMC_DCL(tp_Host, Host)
-   GMC_DCL(char*, Str)
+   
+   
+   
 {
    int cc, len;
 
@@ -225,13 +230,13 @@ RBS_Write_Str(
 
 static void
 RBS_Read_Str(
-   GMC_ARG(bool*, AbortPtr),
-   GMC_ARG(tp_Host, Host),
-   GMC_ARG(char*, Str)
+   bool* AbortPtr,
+   tp_Host Host,
+   char* Str
    )
-   GMC_DCL(bool*, AbortPtr)
-   GMC_DCL(tp_Host, Host)
-   GMC_DCL(char*, Str)
+   
+   
+   
 {
    int cc, len;
 
@@ -249,9 +254,9 @@ RBS_Read_Str(
 
 void
 RBS_Get_Msg(
-   GMC_ARG(tp_Host, Host)
+   tp_Host Host
    )
-   GMC_DCL(tp_Host, Host)
+   
 {
    bool RBS_Abort, Abort;
    int JobID;
@@ -266,13 +271,13 @@ RBS_Get_Msg(
 
 static void
 RBS_Write_VarDef(
-   GMC_ARG(bool*, RBS_AbortPtr),
-   GMC_ARG(tp_Host, Host),
-   GMC_ARG(tp_Str, VarDef)
+   bool* RBS_AbortPtr,
+   tp_Host Host,
+   tp_Str VarDef
    )
-   GMC_DCL(bool*, RBS_AbortPtr)
-   GMC_DCL(tp_Host, Host)
-   GMC_DCL(tp_Str, VarDef)
+   
+   
+   
 {
    RBS_Write_Int(RBS_AbortPtr, Host, (int)5);
    if (*RBS_AbortPtr) return;
@@ -282,9 +287,9 @@ RBS_Write_VarDef(
 
 static void
 Init_RBS_Env(
-   GMC_ARG(tp_Host, Host)
+   tp_Host Host
    )
-   GMC_DCL(tp_Host, Host)
+   
 {
    extern char **environ;
    char **env;
@@ -299,17 +304,17 @@ Init_RBS_Env(
 
 void
 RBS_Do_Build(
-   GMC_ARG(tp_Host, Host),
-   GMC_ARG(int, JobID),
-   GMC_ARG(tp_FileName, JobDirName),
-   GMC_ARG(tp_FileName, LogFileName),
-   GMC_ARG(char**, ArgV)
+   tp_Host Host,
+   int JobID,
+   tp_FileName JobDirName,
+   tp_FileName LogFileName,
+   char** ArgV
    )
-   GMC_DCL(tp_Host, Host)
-   GMC_DCL(int, JobID)
-   GMC_DCL(tp_FileName, JobDirName)
-   GMC_DCL(tp_FileName, LogFileName)
-   GMC_DCL(char**, ArgV)
+   
+   
+   
+   
+   
 {
    int status, i;
    socklen_t AddrLen;
@@ -366,11 +371,11 @@ RBS_Do_Build(
 
 void
 RBS_Abort_Build(
-   GMC_ARG(tp_Host, Host),
-   GMC_ARG(int, JobID)
+   tp_Host Host,
+   int JobID
    )
-   GMC_DCL(tp_Host, Host)
-   GMC_DCL(int, JobID)
+   
+   
 {
    bool RBS_Abort;
 
@@ -382,9 +387,9 @@ RBS_Abort_Build(
 
 void
 RBS_VarDef(
-   GMC_ARG(tp_Str, VarDef)
+   tp_Str VarDef
    )
-   GMC_DCL(tp_Str, VarDef)
+   
 {
    tp_Host Host;
    bool RBS_Abort;

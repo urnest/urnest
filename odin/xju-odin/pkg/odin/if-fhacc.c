@@ -21,7 +21,7 @@ geoff@boulder.colorado.edu
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
 #include <odin/inc/Var.hh>
-#include <dg/inc/FilHdr.h>
+#include <odin/inc/FilHdr.h>
 #include <dg/inc/FKind_.h>
 #include <odin/inc/Flag_.h>
 #include <odin/inc/SKind_.h>
@@ -734,11 +734,11 @@ Update_SrcFilHdr(tp_FilHdr FilHdr,bool InitOnly)
 
 void
 FilHdr_Error(
-   GMC_ARG(tp_Str, Str),
-   GMC_ARG(tp_FilHdr, FilHdr)
+   tp_Str Str,
+   tp_FilHdr FilHdr
    )
-   GMC_DCL(tp_Str, Str)
-   GMC_DCL(tp_FilHdr, FilHdr)
+   
+   
 {
    tps_Str ObjName;
 

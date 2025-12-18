@@ -13,6 +13,9 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
+#include <stdlib.h>
+#include <stdio.h>
+
 #include <gmc/gmc.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
@@ -44,11 +47,11 @@ Init_FilElms()
 
 static void
 Transfer_FilElm(
-   GMC_ARG(tp_FilElm, FilElm),
-   GMC_ARG(tp_FilElm, FilElmLst)
+   tp_FilElm FilElm,
+   tp_FilElm FilElmLst
    )
-   GMC_DCL(tp_FilElm, FilElm)
-   GMC_DCL(tp_FilElm, FilElmLst)
+   
+   
 {
    FilElm->PrevFree->NextFree = FilElm->NextFree;
    FilElm->NextFree->PrevFree = FilElm->PrevFree;
@@ -61,9 +64,9 @@ Transfer_FilElm(
 
 static tp_FilElm
 Copy_FilElm(
-   GMC_ARG(tp_FilElm, FilElm)
+   tp_FilElm FilElm
    )
-   GMC_DCL(tp_FilElm, FilElm)
+   
 {
    if (FilElm == ERROR) return ERROR;
    if (FilElm->Cnt == 0) {
@@ -75,9 +78,9 @@ Copy_FilElm(
 
 void
 Ret_FilElm(
-   GMC_ARG(tp_FilElm, FilElm)
+   tp_FilElm FilElm
    )
-   GMC_DCL(tp_FilElm, FilElm)
+   
 {
    if (FilElm == ERROR) return;
    FilElm->Cnt -= 1;
@@ -101,9 +104,9 @@ Free_FilElms()
 
 static void
 UnHash_FilElm(
-   GMC_ARG(tp_FilElm, FilElm)
+   tp_FilElm FilElm
    )
-   GMC_DCL(tp_FilElm, FilElm)
+   
 {
    UnHash_Item((tp_Item)FilElm);
    FilElm->FilPrm = ERROR;
@@ -112,9 +115,9 @@ UnHash_FilElm(
 
 static tp_FilElm
 New_FilElm(
-   GMC_ARG(tp_LocElm, LocElm)
+   tp_LocElm LocElm
    )
-   GMC_DCL(tp_LocElm, LocElm)
+   
 {
    tp_FilElm FilElm;
    tp_ElmInf ElmInf;
@@ -152,9 +155,9 @@ New_FilElm(
 
 static tp_FilElm
 Lookup_FilElm(
-   GMC_ARG(tp_LocElm, LocElm)
+   tp_LocElm LocElm
    )
-   GMC_DCL(tp_LocElm, LocElm)
+   
 {
    return Copy_FilElm((tp_FilElm)Lookup_Item(LocElm));
    }/*Lookup_FilElm*/
@@ -162,9 +165,9 @@ Lookup_FilElm(
 
 tp_FilElm
 LocElm_FilElm(
-   GMC_ARG(tp_LocElm, LocElm)
+   tp_LocElm LocElm
    )
-   GMC_DCL(tp_LocElm, LocElm)
+   
 {
    tp_FilElm FilElm;
    tp_ElmInf ElmInf;
@@ -185,9 +188,9 @@ LocElm_FilElm(
 
 static void
 SetFilElmModified(
-   GMC_ARG(tp_FilElm, FilElm)
+   tp_FilElm FilElm
    )
-   GMC_DCL(tp_FilElm, FilElm)
+   
 {
    if (FilElm->Modified) return;
    FilElm->Modified = true;
@@ -198,9 +201,9 @@ SetFilElmModified(
 
 static void
 WriteFilElm(
-   GMC_ARG(tp_FilElm, FilElm)
+   tp_FilElm FilElm
    )
-   GMC_DCL(tp_FilElm, FilElm)
+   
 {
    WriteElmInf(&(FilElm->ElmInf), FilElm->LocElm);
    }/*WriteFilElm*/
@@ -219,11 +222,11 @@ WriteFilElms()
 
 static void
 Link_LocElm(
-   GMC_ARG(tp_LocElm, LocElm),
-   GMC_ARG(tp_FilHdr, FilHdr)
+   tp_LocElm LocElm,
+   tp_FilHdr FilHdr
    )
-   GMC_DCL(tp_LocElm, LocElm)
-   GMC_DCL(tp_FilHdr, FilHdr)
+   
+   
 {
    tp_FilElm FilElm, RiteFilElm, LeftFilElm;
    tp_ElmInf ElmInf;
@@ -264,9 +267,9 @@ Link_LocElm(
 
 static void
 Unlink_LocElm(
-   GMC_ARG(tp_LocElm, LocElm)
+   tp_LocElm LocElm
    )
-   GMC_DCL(tp_LocElm, LocElm)
+   
 {
    tp_FilElm FilElm, LeftFilElm, RiteFilElm;
    tp_ElmInf ElmInf;
@@ -330,9 +333,9 @@ Alloc_ElmInf()
 
 void
 DeAlloc_ElmInf(
-   GMC_ARG(tp_LocElm, LocElm)
+   tp_LocElm LocElm
    )
-   GMC_DCL(tp_LocElm, LocElm)
+   
 {
    tp_FilElm FilElm;
    tp_ElmInf ElmInf;
@@ -381,9 +384,9 @@ FilElms_InUse()
 
 tp_LocHdr
 FilElm_LocHdr(
-   GMC_ARG(tp_FilElm, FilElm)
+   tp_FilElm FilElm
    )
-   GMC_DCL(tp_FilElm, FilElm)
+   
 {
    if (FilElm == ERROR) return ERROR;
    return FilElm->ElmInf.LocHdr;
@@ -392,9 +395,9 @@ FilElm_LocHdr(
 
 tp_FilHdr
 FilElm_FilHdr(
-   GMC_ARG(tp_FilElm, FilElm)
+   tp_FilElm FilElm
    )
-   GMC_DCL(tp_FilElm, FilElm)
+   
 {
    tp_FilHdr FilHdr;
 
@@ -408,9 +411,9 @@ FilElm_FilHdr(
 
 tp_LocHdr
 FilElm_ListLocHdr(
-   GMC_ARG(tp_FilElm, FilElm)
+   tp_FilElm FilElm
    )
-   GMC_DCL(tp_FilElm, FilElm)
+   
 {
    return FilElm->ElmInf.ListLocHdr;
    }/*FilElm_ListLocHdr*/
@@ -418,9 +421,9 @@ FilElm_ListLocHdr(
 
 tp_FilHdr
 FilElm_ListFilHdr(
-   GMC_ARG(tp_FilElm, FilElm)
+   tp_FilElm FilElm
    )
-   GMC_DCL(tp_FilElm, FilElm)
+   
 {
    tp_FilHdr FilHdr;
 
@@ -431,9 +434,9 @@ FilElm_ListFilHdr(
 
 tp_FilPrm
 FilElm_FilPrm(
-   GMC_ARG(tp_FilElm, FilElm)
+   tp_FilElm FilElm
    )
-   GMC_DCL(tp_FilElm, FilElm)
+   
 {
    FORBIDDEN(FilElm == ERROR);
    if (FilElm->FilPrm == NIL) FilElm->FilPrm = LocPrm_FilPrm(FilElm->ElmInf.LocPrm);
@@ -444,9 +447,9 @@ FilElm_FilPrm(
 
 tp_LocElm
 FilElm_Next(
-   GMC_ARG(tp_FilElm, FilElm)
+   tp_FilElm FilElm
    )
-   GMC_DCL(tp_FilElm, FilElm)
+   
 {
    FORBIDDEN(FilElm == ERROR);
    return FilElm->ElmInf.Next;
@@ -455,9 +458,9 @@ FilElm_Next(
 
 tp_FilElm
 FilElm_NextFilElm(
-   GMC_ARG(tp_FilElm, FilElm)
+   tp_FilElm FilElm
    )
-   GMC_DCL(tp_FilElm, FilElm)
+   
 {
    tp_LocElm LocElm;
 
@@ -470,9 +473,9 @@ FilElm_NextFilElm(
 
 tp_LocElm
 FilElm_Link(
-   GMC_ARG(tp_FilElm, FilElm)
+   tp_FilElm FilElm
    )
-   GMC_DCL(tp_FilElm, FilElm)
+   
 {
    return FilElm->ElmInf.Link;
    }/*FilElm_Link*/
@@ -480,13 +483,13 @@ FilElm_Link(
 
 tp_LocElm
 Make_LocElm(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilPrm, FilPrm),
-   GMC_ARG(tp_FilHdr, ListFilHdr)
+   tp_FilHdr FilHdr,
+   tp_FilPrm FilPrm,
+   tp_FilHdr ListFilHdr
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilPrm, FilPrm)
-   GMC_DCL(tp_FilHdr, ListFilHdr)
+   
+   
+   
 {
    tp_FilElm FilElm;
    tp_ElmInf ElmInf;
@@ -516,13 +519,13 @@ Make_LocElm(
 
 void
 Chain_LocElms(
-   GMC_ARG(tp_LocElm*, FirstLEPtr),
-   GMC_ARG(tp_LocElm*, LastLEPtr),
-   GMC_ARG(tp_LocElm, LocElm)
+   tp_LocElm* FirstLEPtr,
+   tp_LocElm* LastLEPtr,
+   tp_LocElm LocElm
    )
-   GMC_DCL(tp_LocElm*, FirstLEPtr)
-   GMC_DCL(tp_LocElm*, LastLEPtr)
-   GMC_DCL(tp_LocElm, LocElm)
+   
+   
+   
 {
    tp_FilElm PrvFilElm;
 
@@ -542,11 +545,11 @@ Chain_LocElms(
 
 bool
 IsEquiv_LocElms(
-   GMC_ARG(tp_LocElm, LocElm1),
-   GMC_ARG(tp_LocElm, LocElm2)
+   tp_LocElm LocElm1,
+   tp_LocElm LocElm2
    )
-   GMC_DCL(tp_LocElm, LocElm1)
-   GMC_DCL(tp_LocElm, LocElm2)
+   
+   
 {
    tp_FilElm FilElm1, FilElm2;
    tp_FilPrm FilPrm1, FilPrm2;

@@ -16,6 +16,7 @@ geoff@boulder.colorado.edu
 #include <gmc/gmc.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
 #include <odin/inc/ExecSpc.h>
 #include <odin/inc/Job.h>
 #include <odin/inc/LogLevel_.h>
@@ -25,13 +26,13 @@ geoff@boulder.colorado.edu
 
 void
 ExecInternal(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Status, DepStatus),
-   GMC_ARG(tp_Date, DepModDate)
+   tp_FilHdr FilHdr,
+   tp_Status DepStatus,
+   tp_Date DepModDate
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Status, DepStatus)
-   GMC_DCL(tp_Date, DepModDate)
+   
+   
+   
 {
    tps_ExecSpc _ExecSpc; tp_ExecSpc ExecSpc = &_ExecSpc;
    tp_Job Job;

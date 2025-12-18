@@ -1,4 +1,4 @@
-!!/*client*/ /*notice*/
+/*client*/ /*notice*/
 Add_BuildArg(FileName)
    /*in*/ /*str*/ tp_FileName FileName;
 {

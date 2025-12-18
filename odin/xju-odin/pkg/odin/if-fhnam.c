@@ -20,8 +20,9 @@ geoff@boulder.colorado.edu
 #include <gmc/gmc.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
 #include <dg/inc/FKind_.h>
-#include <dg/inc/FilHdr.h>
+#include <odin/inc/FilHdr.h>
 
 
 void

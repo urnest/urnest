@@ -1,7 +1,7 @@
-!!#ifndef TPS_FILSRC
+#ifndef TPS_FILSRC
 #define TPS_FILSRC
 
-#include "InpInf.h"
+#include <odin/inc/InpInf.h>
 
 typedef struct _tps_FilInp {
    tp_LocInp LocInp;

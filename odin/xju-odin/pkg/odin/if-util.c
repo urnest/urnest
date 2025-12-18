@@ -17,10 +17,11 @@ geoff@boulder.colorado.edu
 #include <gmc/gmc.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
 #include <odin/inc/FilElm.h>
 #include <odin/inc/FilHdr.h>
 #include <odin/inc/FilInp.h>
-#include <odin/inc/FKind_.h>
+#include <dg/inc/FKind_.h>
 #include <odin/inc/HdrInf.h>
 #include <odin/inc/LogLevel_.h>
 #include <odin/inc/ModKind_.h>
@@ -28,6 +29,8 @@ geoff@boulder.colorado.edu
 #include <odin/inc/Outputs.h>
 #include <odin/inc/Status_.h>
 #include <sys/time.h>
+#include <string.h>
+#include <stdio.h>
 
 
 extern int	num_FHLstS;
@@ -51,9 +54,9 @@ static tp_FilDsc	DebugFD = NIL;
 
 static void
 Local_Redo1(
-   GMC_ARG(tp_FilHdr, FilHdr)
+   tp_FilHdr FilHdr
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
+   
 {
    tp_FilHdr TmpFilHdr;
 
@@ -81,9 +84,9 @@ Local_Redo1(
 
 void
 Local_Redo(
-   GMC_ARG(tp_Str, OdinExpr)
+   tp_Str OdinExpr
    )
-   GMC_DCL(tp_Str, OdinExpr)
+   
 {
    tp_FilHdr FilHdr;
 
@@ -95,11 +98,11 @@ Local_Redo(
 
 void
 Local_OdinExpr_ID(
-   GMC_ARG(int*, IDPtr),
-   GMC_ARG(tp_Str, OdinExpr)
+   int* IDPtr,
+   tp_Str OdinExpr
    )
-   GMC_DCL(int*, IDPtr)
-   GMC_DCL(tp_Str, OdinExpr)
+   
+   
 {
    tp_FilHdr FilHdr;
 
@@ -114,11 +117,11 @@ Local_OdinExpr_ID(
 
 void
 Local_ID_OdinExpr(
-   GMC_ARG(tp_Str, OdinExpr),
-   GMC_ARG(int, ID)
+   tp_Str OdinExpr,
+   int ID
    )
-   GMC_DCL(tp_Str, OdinExpr)
-   GMC_DCL(int, ID)
+   
+   
 {
    tp_FilHdr FilHdr;
 
@@ -133,11 +136,11 @@ Local_ID_OdinExpr(
 
 void
 Local_ID_LongOdinExpr(
-   GMC_ARG(tp_Str, OdinExpr),
-   GMC_ARG(int, ID)
+   tp_Str OdinExpr,
+   int ID
    )
-   GMC_DCL(tp_Str, OdinExpr)
-   GMC_DCL(int, ID)
+   
+   
 {
    tp_FilHdr FilHdr;
 
@@ -182,13 +185,10 @@ void SPrint_Status(tp_Str To, tp_Str Leader, tp_Status Status, tp_Str Trailer){
 
 void
 Do_Log(
-   GMC_ARG(const char*, Message),
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_LogLevel, LogLevel)
+   const char* Message,
+   tp_FilHdr FilHdr,
+   tp_LogLevel LogLevel
    )
-   GMC_DCL(const char*, Message)
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_LogLevel, LogLevel)
 {
    tps_Str StrBuf;
    struct timeval now;
@@ -209,9 +209,9 @@ Do_Log(
 
 tp_FilHdr
 OdinExpr_FilHdr(
-   GMC_ARG(const char*, OdinExpr)
+   const char* OdinExpr
    )
-   GMC_DCL(char*, OdinExpr)
+   
 {
    tp_Nod DS_Nod;
    tp_PrmFHdr PrmFHdr;
@@ -228,13 +228,13 @@ OdinExpr_FilHdr(
 
 void
 WritePrmOdinExpr(
-   GMC_ARG(tp_FilDsc, FilDsc),
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilPrm, FilPrm)
+   tp_FilDsc FilDsc,
+   tp_FilHdr FilHdr,
+   tp_FilPrm FilPrm
    )
-   GMC_DCL(tp_FilDsc, FilDsc)
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilPrm, FilPrm)
+   
+   
+   
 {
    Print_FilHdr(FilDsc, (tp_Str)NIL, FilHdr);
    Print_FilPrm(FilDsc, (tp_Str)NIL, FilPrm);
@@ -244,9 +244,9 @@ WritePrmOdinExpr(
 
 void
 Local_Set_Debug(
-   GMC_ARG(tp_Str, DebugName)
+   tp_Str DebugName
    )
-   GMC_DCL(tp_Str, DebugName)
+   
 {
    tps_FileName DebugFileName;
 
@@ -279,13 +279,13 @@ Local_Set_Debug(
 
 void
 Local_Get_Status(
-   GMC_ARG(tp_Status*, StatusPtr),
-   GMC_ARG(tp_Status*, ElmStatusPtr),
-   GMC_ARG(int, ID)
+   tp_Status* StatusPtr,
+   tp_Status* ElmStatusPtr,
+   int ID
    )
-   GMC_DCL(tp_Status*, StatusPtr)
-   GMC_DCL(tp_Status*, ElmStatusPtr)
-   GMC_DCL(int, ID)
+   
+   
+   
 {
    tp_FilHdr FilHdr;
 
@@ -302,9 +302,9 @@ Local_Get_Status(
 
 static void
 Print_ElmLink(
-   GMC_ARG(tp_LocHdr, LocHdr)
+   tp_LocHdr LocHdr
    )
-   GMC_DCL(tp_LocHdr, LocHdr)
+   
 {
    tp_FilHdr FilHdr;
    tp_LocElm LocElmLink, FirstElmLink, NxtLocElmLink;
@@ -329,9 +329,9 @@ Print_ElmLink(
 
 static void
 Print_LocElm(
-   GMC_ARG(tp_LocHdr, LocHdr)
+   tp_LocHdr LocHdr
    )
-   GMC_DCL(tp_LocHdr, LocHdr)
+   
 {
    tp_FilHdr FilHdr, TgtValFilHdr;
    tp_FilElm FilElm;
@@ -361,9 +361,9 @@ Print_LocElm(
 
 static void
 Print_InpLink(
-   GMC_ARG(tp_LocHdr, LocHdr)
+   tp_LocHdr LocHdr
    )
-   GMC_DCL(tp_LocHdr, LocHdr)
+   
 {
    tp_FilHdr FilHdr;
    tp_LocInp LocInpLink, FirstInpLink, NxtLocInpLink;
@@ -388,9 +388,9 @@ Print_InpLink(
 
 static void
 Print_LocInp(
-   GMC_ARG(tp_LocHdr, LocHdr)
+   tp_LocHdr LocHdr
    )
-   GMC_DCL(tp_LocHdr, LocHdr)
+   
 {
    tp_FilHdr FilHdr;
    tp_FilInp FilInp;
@@ -409,9 +409,9 @@ Print_LocInp(
 
 void
 Local_Get_Elements(
-   GMC_ARG(int, ID)
+   int ID
    )
-   GMC_DCL(int, ID)
+   
 {
    if (ID <= 0) {
       SystemError("Bad object reference.\n");
@@ -422,9 +422,9 @@ Local_Get_Elements(
 
 void
 Local_Get_ElementsOf(
-   GMC_ARG(int, ID)
+   int ID
    )
-   GMC_DCL(int, ID)
+   
 {
    if (ID <= 0) {
       SystemError("Bad object reference.\n");
@@ -435,9 +435,9 @@ Local_Get_ElementsOf(
 
 void
 Local_Get_Inputs(
-   GMC_ARG(int, ID)
+   int ID
    )
-   GMC_DCL(int, ID)
+   
 {
    if (ID <= 0) {
       SystemError("Bad object reference.\n");
@@ -448,9 +448,9 @@ Local_Get_Inputs(
 
 void
 Local_Get_Outputs(
-   GMC_ARG(int, ID)
+   int ID
    )
-   GMC_DCL(int, ID)
+   
 {
    if (ID <= 0) {
       SystemError("Bad object reference.\n");
@@ -461,11 +461,11 @@ Local_Get_Outputs(
 
 void
 Debug_Alloc_ElmInf(
-   GMC_ARG(tp_LocElm, LocElm),
-   GMC_ARG(tp_LocElm, FreeLocElm)
+   tp_LocElm LocElm,
+   tp_LocElm FreeLocElm
    )
-   GMC_DCL(tp_LocElm, LocElm)
-   GMC_DCL(tp_LocElm, FreeLocElm)
+   
+   
 {
    Unwind(DebugFD);
    WriteInt(DebugFD, (int)LocElm);
@@ -478,9 +478,9 @@ Debug_Alloc_ElmInf(
 
 void
 Debug_Ret_ElmInf(
-   GMC_ARG(tp_LocElm, LocElm)
+   tp_LocElm LocElm
    )
-   GMC_DCL(tp_LocElm, LocElm)
+   
 {
    Unwind(DebugFD);
    WriteInt(DebugFD, (int)LocElm);
@@ -492,11 +492,11 @@ Debug_Ret_ElmInf(
 
 void
 Validate_LocElm(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_LocElm, LocElm)
+   tp_FilHdr FilHdr,
+   tp_LocElm LocElm
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_LocElm, LocElm)
+   
+   
 {
    tp_LocHdr LocHdr;
    tp_FilElm FilElm;
@@ -511,11 +511,11 @@ Validate_LocElm(
 
 void
 Print_OdinExpr(
-   GMC_ARG(tp_LocHdr, LocHdr),
-   GMC_ARG(tp_FilPrm, FilPrm)
+   tp_LocHdr LocHdr,
+   tp_FilPrm FilPrm
    )
-   GMC_DCL(tp_LocHdr, LocHdr)
-   GMC_DCL(tp_FilPrm, FilPrm)
+   
+   
 {
    tp_FilHdr FilHdr;
    tps_Str OdinExpr;
@@ -535,9 +535,9 @@ Print_OdinExpr(
 /*for debugging*/
 void
 printte(
-   GMC_ARG(tp_LocHdr, LocHdr)
+   tp_LocHdr LocHdr
    )
-   GMC_DCL(tp_LocHdr, LocHdr)
+   
 {
    tp_FilHdr FilHdr;
 

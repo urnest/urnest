@@ -299,6 +299,10 @@ int main(int argc, char* argv[])
   auto const stubs{hcp_ast::findChildrenOfType<Stub>(root)};
   std::ostringstream inStubs;
   inStubs << "#include <gmc/gmc.h>" << "\n";
+  inStubs << "#include <odin/inc/Type.hh>" << "\n";
+  inStubs << "#include <odin/inc/Func.hh>" << "\n";
+  inStubs << "#include <odin/inc/Var.hh>" << "\n";
+  inStubs << "#include <string.h>" << "\n";
     
   inStubs << "extern bool IPC_Do_Return;" << "\n";
   inStubs << "extern int *IPC_IArg1, *IPC_IArg2, *IPC_IArg3;" << "\n";
@@ -620,13 +624,6 @@ int main(int argc, char* argv[])
         }
         inStubs << xju::format::join(x.begin(), x.end(), ",\n") << "\n";
         inStubs << "   )\n";
-        for(auto const& arg: hcp_ast::findChildrenOfType<OutArgDecl>(serverStub)){
-          auto const paramType(
-            hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<hcp_ast::TypeRef>(arg)));
-          auto const paramName(
-            hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(arg)));
-          inStubs << "   " << stripParamType(paramType) << " " << paramName << "\n";
-        }
         inStubs << "{\n";
         inStubs << "   bool IPC_Abort;\n\n";
         inStubs << "   if (IsServer && Is_LocalClient(CurrentClient)) {\n";
@@ -674,7 +671,7 @@ int main(int argc, char* argv[])
   inStubs << "void\n";
   inStubs << "IPC_Do_Msg(\n";
   inStubs << "   bool* IPC_AbortPtr,\n";
-  inStubs << "   int, MsgType)\n";
+  inStubs << "   int MsgType)\n";
   inStubs << "{\n";
   inStubs << "   switch (MsgType) {\n";
   inStubs << "      case 1: {\n";

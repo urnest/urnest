@@ -13,9 +13,13 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <gmc/gmc.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
 #include <dg/inc/FKind_.h>
 #include <odin/inc/Job.h>
 #include <odin/inc/Status_.h>
@@ -24,13 +28,13 @@ geoff@boulder.colorado.edu
 
 static void
 Set_UpToDate(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Status, Status),
-   GMC_ARG(tp_Date, DepModDate)
+   tp_FilHdr FilHdr,
+   tp_Status Status,
+   tp_Date DepModDate
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Status, Status)
-   GMC_DCL(tp_Date, DepModDate)
+   
+   
+   
 {
    FORBIDDEN(Status <= STAT_Unknown);
    Set_Status(FilHdr, Status);
@@ -41,15 +45,15 @@ Set_UpToDate(
 
 static void
 Update_File(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Status, Status),
-   GMC_ARG(tp_Date, DepModDate),
-   GMC_ARG(tp_FileName, WorkFileName)
+   tp_FilHdr FilHdr,
+   tp_Status Status,
+   tp_Date DepModDate,
+   tp_FileName WorkFileName
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Status, Status)
-   GMC_DCL(tp_Date, DepModDate)
-   GMC_DCL(tp_FileName, WorkFileName)
+   
+   
+   
+   
 {
    tp_Status NewStatus;
    int NewSize;
@@ -115,13 +119,13 @@ done:;
 
 static void
 Update_Struct(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Status, Status),
-   GMC_ARG(tp_Date, DepModDate)
+   tp_FilHdr FilHdr,
+   tp_Status Status,
+   tp_Date DepModDate
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Status, Status)
-   GMC_DCL(tp_Date, DepModDate)
+   
+   
+   
 {
    FORBIDDEN(FilHdr == ERROR || !IsStruct(FilHdr));
    Set_ModDate(FilHdr);
@@ -131,15 +135,15 @@ Update_Struct(
 
 static void
 Do_DrvDir(
-   GMC_ARG(tp_Status*, StatusPtr),
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Date, DepModDate),
-   GMC_ARG(tp_Job, Job)
+   tp_Status* StatusPtr,
+   tp_FilHdr FilHdr,
+   tp_Date DepModDate,
+   tp_Job Job
    )
-   GMC_DCL(tp_Status*, StatusPtr)
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Date, DepModDate)
-   GMC_DCL(tp_Job, Job)
+   
+   
+   
+   
 {
    tps_FileName WorkFileName;
    tp_FilHdr ElmFilHdr;
@@ -191,21 +195,21 @@ Do_DrvDir(
 
 void
 Do_Update(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_OutFilHdrs, OutFilHdrs),
-   GMC_ARG(int, NumOuts),
-   GMC_ARG(tp_Job, Job),
-   GMC_ARG(tp_Status, Status),
-   GMC_ARG(tp_Date, DepModDate),
-   GMC_ARG(bool, IsInternal)
+   tp_FilHdr FilHdr,
+   tp_OutFilHdrs OutFilHdrs,
+   int NumOuts,
+   tp_Job Job,
+   tp_Status Status,
+   tp_Date DepModDate,
+   bool IsInternal
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_OutFilHdrs, OutFilHdrs)
-   GMC_DCL(int, NumOuts)
-   GMC_DCL(tp_Job, Job)
-   GMC_DCL(tp_Status, Status)
-   GMC_DCL(tp_Date, DepModDate)
-   GMC_DCL(bool, IsInternal)
+   
+   
+   
+   
+   
+   
+   
 {
    tp_Date NewDepModDate;
    tp_Status NewStatus;
@@ -244,9 +248,9 @@ Do_Update(
 
 void
 Validate_IsPntr(
-   GMC_ARG(tp_FilHdr, FilHdr)
+   tp_FilHdr FilHdr
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
+   
 {
    tp_FilElm FilElm;
 
@@ -265,13 +269,13 @@ Validate_IsPntr(
 
 void
 Update_RefFile(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Status, Status),
-   GMC_ARG(tp_Date, DepModDate)
+   tp_FilHdr FilHdr,
+   tp_Status Status,
+   tp_Date DepModDate
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Status, Status)
-   GMC_DCL(tp_Date, DepModDate)
+   
+   
+   
 {
    FORBIDDEN(Status < STAT_Busy);
    if (!IsEquiv_LocElms(FilHdr_OldLocElm(FilHdr), FilHdr_LocElm(FilHdr))) {
@@ -284,11 +288,11 @@ Update_RefFile(
 
 void
 Set_DrvDirConfirm(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Status, Status)
+   tp_FilHdr FilHdr,
+   tp_Status Status
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Status, Status)
+   
+   
 {
    tp_FilElm FilElm;
    tp_FilHdr ElmFilHdr;
@@ -312,11 +316,11 @@ Set_DrvDirConfirm(
 
 void
 Set_ListStatus(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_Status, Status)
+   tp_FilHdr FilHdr,
+   tp_Status Status
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_Status, Status)
+   
+   
 {
    tp_FilElm FilElm;
    tp_FilHdr ElmFilHdr;

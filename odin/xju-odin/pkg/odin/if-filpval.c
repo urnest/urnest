@@ -13,12 +13,17 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
 #include <gmc/gmc.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
-#include <odin/inc/InpKind_.h>
+#include <odin/inc/Var.hh>
+#include <dg/inc/InpKind_.h>
 #include <odin/inc/FilPVal.h>
-#include <odin/inc/FKind_.h>
+#include <dg/inc/FKind_.h>
 #include <odin/inc/Flag_.h>
 
 
@@ -27,9 +32,9 @@ int		num_FilPValS = 0;
 
 static void
 WriteFilPVal(
-   GMC_ARG(tp_FilPVal, FilPVal)
+   tp_FilPVal FilPVal
    )
-   GMC_DCL(tp_FilPVal, FilPVal)
+   
 {
    WritePValInf(&FilPVal->PValInf, FilPVal->LocPVal);
    }/*WriteFilPVal*/
@@ -69,9 +74,9 @@ New_FilPVal()
 
 bool
 IsRootFilPVal(
-   GMC_ARG(tp_FilPVal, FilPVal)
+   tp_FilPVal FilPVal
    )
-   GMC_DCL(tp_FilPVal, FilPVal)
+   
 {
    return (FilPVal->Father == NIL);
    }/*IsRootFilPVal*/
@@ -79,11 +84,11 @@ IsRootFilPVal(
 
 static tp_FilPVal
 Read_PValLayer(
-   GMC_ARG(tp_LocPVal, LocPVal),
-   GMC_ARG(tp_FilPVal, FatherFilPVal)
+   tp_LocPVal LocPVal,
+   tp_FilPVal FatherFilPVal
    )
-   GMC_DCL(tp_LocPVal, LocPVal)
-   GMC_DCL(tp_FilPVal, FatherFilPVal)
+   
+   
 {
    tps_PValInf _PValInf; tp_PValInf PValInf = &_PValInf;
    tp_FilPVal FilPVal;
@@ -104,13 +109,13 @@ Read_PValLayer(
 
 tp_FilPVal
 Add_PValInf(
-   GMC_ARG(tp_FilPVal, FilPVal),
-   GMC_ARG(tp_LocHdr, LocHdr),
-   GMC_ARG(tp_LocPVal, LocPVal)
+   tp_FilPVal FilPVal,
+   tp_LocHdr LocHdr,
+   tp_LocPVal LocPVal
    )
-   GMC_DCL(tp_FilPVal, FilPVal)
-   GMC_DCL(tp_LocHdr, LocHdr)
-   GMC_DCL(tp_LocPVal, LocPVal)
+   
+   
+   
 {
    tp_FilPVal TmpFPV;
 
@@ -134,13 +139,13 @@ Add_PValInf(
 
 tp_FilPVal
 Append_PValInf(
-   GMC_ARG(tp_FilPVal, FilPVal),
-   GMC_ARG(tp_LocHdr, LocHdr),
-   GMC_ARG(tp_LocPVal, ValLocPVal)
+   tp_FilPVal FilPVal,
+   tp_LocHdr LocHdr,
+   tp_LocPVal ValLocPVal
    )
-   GMC_DCL(tp_FilPVal, FilPVal)
-   GMC_DCL(tp_LocHdr, LocHdr)
-   GMC_DCL(tp_LocPVal, ValLocPVal)
+   
+   
+   
 {
    tp_FilPVal TmpFPV;
 
@@ -158,11 +163,11 @@ Append_PValInf(
 
 tp_FilPVal
 Append_FilPVal(
-   GMC_ARG(tp_FilPVal, FilPVal1),
-   GMC_ARG(tp_FilPVal, FilPVal2)
+   tp_FilPVal FilPVal1,
+   tp_FilPVal FilPVal2
    )
-   GMC_DCL(tp_FilPVal, FilPVal1)
-   GMC_DCL(tp_FilPVal, FilPVal2)
+   
+   
 {
    if (FilPVal1 == ERROR || FilPVal2 == ERROR) return ERROR;
    if (IsRootFilPVal(FilPVal1)) {
@@ -177,9 +182,9 @@ Append_FilPVal(
 
 tp_LocPVal
 FilPVal_LocPVal(
-   GMC_ARG(tp_FilPVal, FilPVal)
+   tp_FilPVal FilPVal
    )
-   GMC_DCL(tp_FilPVal, FilPVal)
+   
 {
    if (FilPVal == ERROR) {
       return ERROR; }/*if*/;
@@ -197,9 +202,9 @@ FilPVal_LocPVal(
 
 static tp_FilPVal
 Lookup_FilPVal(
-   GMC_ARG(tp_LocPVal, LocPVal)
+   tp_LocPVal LocPVal
    )
-   GMC_DCL(tp_LocPVal, LocPVal)
+   
 {
    return (tp_FilPVal)Lookup_Item(LocPVal);
    }/*Lookup_FilPVal*/
@@ -207,9 +212,9 @@ Lookup_FilPVal(
 
 tp_FilPVal
 LocPVal_FilPVal(
-   GMC_ARG(tp_LocPVal, LocPVal)
+   tp_LocPVal LocPVal
    )
-   GMC_DCL(tp_LocPVal, LocPVal)
+   
 {
    tp_FilPVal FilPVal, FatherFilPVal;
    tps_PValInf _PValInf; tp_PValInf PValInf = &_PValInf;
@@ -240,13 +245,13 @@ LocPVal_FilPVal(
 
 static void
 Print_FilPValLocHdr(
-   GMC_ARG(tp_FilDsc, FilDsc),
-   GMC_ARG(tp_Str, Str),
-   GMC_ARG(tp_LocHdr, LocHdr)
+   tp_FilDsc FilDsc,
+   tp_Str Str,
+   tp_LocHdr LocHdr
    )
-   GMC_DCL(tp_FilDsc, FilDsc)
-   GMC_DCL(tp_Str, Str)
-   GMC_DCL(tp_LocHdr, LocHdr)
+   
+   
+   
 {
    tp_FilHdr FilHdr;
 
@@ -273,13 +278,13 @@ Print_FilPValLocHdr(
 
 static void
 Print_ValFilPVal(
-   GMC_ARG(tp_FilDsc, FilDsc),
-   GMC_ARG(tp_Str, Str),
-   GMC_ARG(tp_FilPVal, FilPVal)
+   tp_FilDsc FilDsc,
+   tp_Str Str,
+   tp_FilPVal FilPVal
    )
-   GMC_DCL(tp_FilDsc, FilDsc)
-   GMC_DCL(tp_Str, Str)
-   GMC_DCL(tp_FilPVal, FilPVal)
+   
+   
+   
 {
    FORBIDDEN(IsRootFilPVal(FilPVal));
 
@@ -296,15 +301,15 @@ Print_ValFilPVal(
 
 static void
 Print_FilPVal1(
-   GMC_ARG(tp_FilDsc, FilDsc),
-   GMC_ARG(tp_Str, Str),
-   GMC_ARG(tp_PrmTyp, PrmTyp),
-   GMC_ARG(tp_FilPVal, FilPVal)
+   tp_FilDsc FilDsc,
+   tp_Str Str,
+   tp_PrmTyp PrmTyp,
+   tp_FilPVal FilPVal
    )
-   GMC_DCL(tp_FilDsc, FilDsc)
-   GMC_DCL(tp_Str, Str)
-   GMC_DCL(tp_PrmTyp, PrmTyp)
-   GMC_DCL(tp_FilPVal, FilPVal)
+   
+   
+   
+   
 {
    tp_Str TailStr;
    tp_FilHdr FilHdr;
@@ -363,15 +368,15 @@ Print_FilPVal1(
 
 void
 Print_FilPVal(
-   GMC_ARG(tp_FilDsc, FilDsc),
-   GMC_ARG(tp_Str, Str),
-   GMC_ARG(tp_PrmTyp, PrmTyp),
-   GMC_ARG(tp_FilPVal, FilPVal)
+   tp_FilDsc FilDsc,
+   tp_Str Str,
+   tp_PrmTyp PrmTyp,
+   tp_FilPVal FilPVal
    )
-   GMC_DCL(tp_FilDsc, FilDsc)
-   GMC_DCL(tp_Str, Str)
-   GMC_DCL(tp_PrmTyp, PrmTyp)
-   GMC_DCL(tp_FilPVal, FilPVal)
+   
+   
+   
+   
 {
    FORBIDDEN((FilDsc == NIL) == (Str == NIL));
    FORBIDDEN(PrmTyp == ERROR || FilPVal == ERROR);
@@ -392,9 +397,9 @@ Print_FilPVal(
 
 tp_LocHdr
 FilPVal_LocHdr(
-   GMC_ARG(tp_FilPVal, FilPVal)
+   tp_FilPVal FilPVal
    )
-   GMC_DCL(tp_FilPVal, FilPVal)
+   
 {
    if (FilPVal == ERROR) {
       return ERROR; }/*if*/;
@@ -404,9 +409,9 @@ FilPVal_LocHdr(
 
 tp_LocPVal
 FilPVal_ValLocPVal(
-   GMC_ARG(tp_FilPVal, FilPVal)
+   tp_FilPVal FilPVal
    )
-   GMC_DCL(tp_FilPVal, FilPVal)
+   
 {
    if (FilPVal == ERROR) {
       return ERROR; }/*if*/;
@@ -416,11 +421,11 @@ FilPVal_ValLocPVal(
 
 void
 Set_FilPVal_DataLocHdr(
-   GMC_ARG(tp_FilPVal, FilPVal),
-   GMC_ARG(tp_LocHdr, LocHdr)
+   tp_FilPVal FilPVal,
+   tp_LocHdr LocHdr
    )
-   GMC_DCL(tp_FilPVal, FilPVal)
-   GMC_DCL(tp_LocHdr, LocHdr)
+   
+   
 {
    FORBIDDEN(FilPVal == ERROR);
    if (FilPVal->PValInf.DataLocHdr != LocHdr) {
@@ -431,9 +436,9 @@ Set_FilPVal_DataLocHdr(
 
 tp_LocHdr
 FilPVal_DataLocHdr(
-   GMC_ARG(tp_FilPVal, FilPVal)
+   tp_FilPVal FilPVal
    )
-   GMC_DCL(tp_FilPVal, FilPVal)
+   
 {
    if (FilPVal == ERROR) {
       return ERROR; }/*if*/;
@@ -443,9 +448,9 @@ FilPVal_DataLocHdr(
 
 tp_FilPVal
 FilPVal_Father(
-   GMC_ARG(tp_FilPVal, FilPVal)
+   tp_FilPVal FilPVal
    )
-   GMC_DCL(tp_FilPVal, FilPVal)
+   
 {
    if (FilPVal == ERROR) {
       return ERROR; }/*if*/;
@@ -455,11 +460,11 @@ FilPVal_Father(
 
 static tp_FilPVal
 Add_FilHdr_DerefPrmVal(
-   GMC_ARG(tp_FilPVal, FilPVal),
-   GMC_ARG(tp_FilHdr, FilHdr)
+   tp_FilPVal FilPVal,
+   tp_FilHdr FilHdr
    )
-   GMC_DCL(tp_FilPVal, FilPVal)
-   GMC_DCL(tp_FilHdr, FilHdr)
+   
+   
 {
    tp_FilPVal NewFilPVal;
    tp_FilElm FilElm;
@@ -487,9 +492,9 @@ Add_FilHdr_DerefPrmVal(
 
 static tp_FilPVal
 ValFilPVal_DerefPrmVal(
-   GMC_ARG(tp_FilPVal, FilPVal)
+   tp_FilPVal FilPVal
    )
-   GMC_DCL(tp_FilPVal, FilPVal)
+   
 {
    tp_FilHdr FilHdr;
    tp_FilPVal ValFilPVal;
@@ -511,11 +516,11 @@ ValFilPVal_DerefPrmVal(
 
 tp_FilPVal
 FilPVal_DerefPrmVal(
-   GMC_ARG(tp_FilPVal, FilPVal),
-   GMC_ARG(tp_PrmTyp, PrmTyp)
+   tp_FilPVal FilPVal,
+   tp_PrmTyp PrmTyp
    )
-   GMC_DCL(tp_FilPVal, FilPVal)
-   GMC_DCL(tp_PrmTyp, PrmTyp)
+   
+   
 {
    tp_FilHdr FilHdr;
    tp_FilPVal ValFilPVal, NewFilPVal;
@@ -551,15 +556,15 @@ FilPVal_DerefPrmVal(
 
 void
 Chain_FilPVal_DerefPrmVal(
-   GMC_ARG(tp_LocInp*, FirstLIPtr),
-   GMC_ARG(tp_LocInp*, LastLIPtr),
-   GMC_ARG(tp_FilPVal, FilPVal),
-   GMC_ARG(tp_FilHdr, OutFilHdr)
+   tp_LocInp* FirstLIPtr,
+   tp_LocInp* LastLIPtr,
+   tp_FilPVal FilPVal,
+   tp_FilHdr OutFilHdr
    )
-   GMC_DCL(tp_LocInp*, FirstLIPtr)
-   GMC_DCL(tp_LocInp*, LastLIPtr)
-   GMC_DCL(tp_FilPVal, FilPVal)
-   GMC_DCL(tp_FilHdr, OutFilHdr)
+   
+   
+   
+   
 {
    tp_FilPVal TmpFPV;
    tp_FilHdr FilHdr;

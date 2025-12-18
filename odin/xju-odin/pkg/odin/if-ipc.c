@@ -29,6 +29,8 @@ geoff@boulder.colorado.edu
 #include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
+#include <string.h>
 
 
 time_t time();
@@ -48,7 +50,7 @@ bool		IsClient = false;
 bool		IPC_Do_Return = false;
 static int	IPC_Nesting = 0;
 
-void		(*IPC_Action)(int *, char *);
+void		(*IPC_Action)(bool *, char *);
 
 static int	ListenFD = -1;
 static int	ServerFD = -1;

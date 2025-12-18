@@ -497,7 +497,7 @@ extern bool IsExec_FilTyp(tp_FilTyp);
 extern bool IsVoid_FilTyp(tp_FilTyp);
 extern bool IsAtmc_FilTyp(tp_FilTyp);
 extern bool IsPntr_FilTyp(tp_FilTyp);
-extern int IsList_FilTyp(tp_FilTyp);
+extern bool IsList_FilTyp(tp_FilTyp);
 extern bool IsDrvDir_FilTyp(tp_FilTyp);
 extern bool IsStruct_FilTyp(tp_FilTyp);
 extern bool IsStructMem_FilTyp(tp_FilTyp);

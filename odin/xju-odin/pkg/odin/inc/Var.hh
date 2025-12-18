@@ -1,6 +1,9 @@
 #ifndef ODIN_VAR_H
 #define ODIN_VAR_H
 
+#include <gmc/gmc.h>
+#include <odin/inc/Type.hh>
+
 extern tp_Str		RBS_Cmd;
 extern bool		ShortCacheNameFlag;
 extern bool		LocalIPCFlag;
@@ -85,6 +88,6 @@ extern tp_Tool		PntrHoTool;
 extern tp_Tool		PntrElmTool;
 extern tp_Tool		InternalPntrTool;
 extern tp_Tool		TextDefTool;
-extern void		(*IPC_Action)(bool* tp_Str);
+extern void		(*IPC_Action)(bool*, tp_Str);
 
 #endif

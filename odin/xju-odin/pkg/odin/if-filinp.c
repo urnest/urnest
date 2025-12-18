@@ -16,13 +16,13 @@ geoff@boulder.colorado.edu
 #include <gmc/gmc.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
-#include <dg/inc/FilInp.h>
+#include <odin/inc/FilInp.h>
 #include <dg/inc/FKind_.h>
 #include <odin/inc/InpSpc.h>
 #include <odin/inc/InpInf.h>
-#include <odin/inc/InpKind_.h>
+#include <dg/inc/InpKind_.h>
 #include <odin/inc/Inputs.h>
-#include <odin/inc/ISKind_.h>
+#include <dg/inc/ISKind_.h>
 #include <odin/inc/NodTyp_.h>
 
 
@@ -52,11 +52,11 @@ Init_FilInps()
 
 static void
 Transfer_FilInp(
-   GMC_ARG(tp_FilInp, FilInp),
-   GMC_ARG(tp_FilInp, FilInpLst)
+   tp_FilInp FilInp,
+   tp_FilInp FilInpLst
    )
-   GMC_DCL(tp_FilInp, FilInp)
-   GMC_DCL(tp_FilInp, FilInpLst)
+   
+   
 {
    FilInp->PrevFree->NextFree = FilInp->NextFree;
    FilInp->NextFree->PrevFree = FilInp->PrevFree;
@@ -69,9 +69,9 @@ Transfer_FilInp(
 
 static tp_FilInp
 Copy_FilInp(
-   GMC_ARG(tp_FilInp, FilInp)
+   tp_FilInp FilInp
    )
-   GMC_DCL(tp_FilInp, FilInp)
+   
 {
    if (FilInp == ERROR) return ERROR;
    if (FilInp->Cnt == 0) {
@@ -83,9 +83,9 @@ Copy_FilInp(
 
 void
 Ret_FilInp(
-   GMC_ARG(tp_FilInp, FilInp)
+   tp_FilInp FilInp
    )
-   GMC_DCL(tp_FilInp, FilInp)
+   
 {
    if (FilInp == ERROR) return;
    FilInp->Cnt -= 1;
@@ -109,9 +109,9 @@ Free_FilInps()
 
 static void
 UnHash_FilInp(
-   GMC_ARG(tp_FilInp, FilInp)
+   tp_FilInp FilInp
    )
-   GMC_DCL(tp_FilInp, FilInp)
+   
 {
    UnHash_Item((tp_Item)FilInp);
    }/*UnHash_FilInp*/
@@ -119,9 +119,9 @@ UnHash_FilInp(
 
 static tp_FilInp
 New_FilInp(
-   GMC_ARG(tp_LocInp, LocInp)
+   tp_LocInp LocInp
    )
-   GMC_DCL(tp_LocInp, LocInp)
+   
 {
    tp_FilInp FilInp;
    tp_InpInf InpInf;
@@ -159,9 +159,9 @@ New_FilInp(
 
 static tp_FilInp
 Lookup_FilInp(
-   GMC_ARG(tp_LocInp, LocInp)
+   tp_LocInp LocInp
    )
-   GMC_DCL(tp_LocInp, LocInp)
+   
 {
    return Copy_FilInp((tp_FilInp)Lookup_Item(LocInp));
    }/*Lookup_FilInp*/
@@ -169,9 +169,9 @@ Lookup_FilInp(
 
 tp_FilInp
 LocInp_FilInp(
-   GMC_ARG(tp_LocInp, LocInp)
+   tp_LocInp LocInp
    )
-   GMC_DCL(tp_LocInp, LocInp)
+   
 {
    tp_FilInp FilInp;
    tp_InpInf InpInf;
@@ -192,9 +192,9 @@ LocInp_FilInp(
 
 static void
 SetFilInpModified(
-   GMC_ARG(tp_FilInp, FilInp)
+   tp_FilInp FilInp
    )
-   GMC_DCL(tp_FilInp, FilInp)
+   
 {
    if (FilInp->Modified) return;
    FilInp->Modified = true;
@@ -205,9 +205,9 @@ SetFilInpModified(
 
 static void
 WriteFilInp(
-   GMC_ARG(tp_FilInp, FilInp)
+   tp_FilInp FilInp
    )
-   GMC_DCL(tp_FilInp, FilInp)
+   
 {
    WriteInpInf(&(FilInp->InpInf), FilInp->LocInp);
    }/*WriteFilInp*/
@@ -251,9 +251,9 @@ FilInps_InUse()
 
 tp_FilHdr
 FilInp_FilHdr(
-   GMC_ARG(tp_FilInp, FilInp)
+   tp_FilInp FilInp
    )
-   GMC_DCL(tp_FilInp, FilInp)
+   
 {
    tp_FilHdr FilHdr;
 
@@ -266,9 +266,9 @@ FilInp_FilHdr(
 
 tp_LocHdr
 FilInp_OutLocHdr(
-   GMC_ARG(tp_FilInp, FilInp)
+   tp_FilInp FilInp
    )
-   GMC_DCL(tp_FilInp, FilInp)
+   
 {
    return FilInp->InpInf.OutLocHdr;
    }/*FilInp_OutLocHdr*/
@@ -276,9 +276,9 @@ FilInp_OutLocHdr(
 
 int
 FilInp_IArg(
-   GMC_ARG(tp_FilInp, FilInp)
+   tp_FilInp FilInp
    )
-   GMC_DCL(tp_FilInp, FilInp)
+   
 {
    return FilInp->InpInf.IArg;
    }/*FilInp_IArg*/
@@ -286,9 +286,9 @@ FilInp_IArg(
 
 tp_InpKind
 FilInp_InpKind(
-   GMC_ARG(tp_FilInp, FilInp)
+   tp_FilInp FilInp
    )
-   GMC_DCL(tp_FilInp, FilInp)
+   
 {
    return FilInp->InpInf.InpKind;
    }/*FilInp_InpKind*/
@@ -296,9 +296,9 @@ FilInp_InpKind(
 
 tp_FilInp
 FilInp_NextFilInp(
-   GMC_ARG(tp_FilInp, FilInp)
+   tp_FilInp FilInp
    )
-   GMC_DCL(tp_FilInp, FilInp)
+   
 {
    tp_LocInp LocInp;
 
@@ -311,9 +311,9 @@ FilInp_NextFilInp(
 
 tp_LocInp
 FilInp_Link(
-   GMC_ARG(tp_FilInp, FilInp)
+   tp_FilInp FilInp
    )
-   GMC_DCL(tp_FilInp, FilInp)
+   
 {
    return FilInp->InpInf.Link;
    }/*FilInp_Link*/
@@ -321,11 +321,11 @@ FilInp_Link(
 
 static void
 Link_LocInp(
-   GMC_ARG(tp_LocInp, LocInp),
-   GMC_ARG(tp_FilHdr, FilHdr)
+   tp_LocInp LocInp,
+   tp_FilHdr FilHdr
    )
-   GMC_DCL(tp_LocInp, LocInp)
-   GMC_DCL(tp_FilHdr, FilHdr)
+   
+   
 {
    tp_FilInp FilInp, RiteFilInp, LeftFilInp;
    tp_InpInf InpInf;
@@ -364,15 +364,15 @@ Link_LocInp(
 
 tp_LocInp
 Make_LocInp(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(int, IArg),
-   GMC_ARG(tp_InpKind, InpKind),
-   GMC_ARG(tp_FilHdr, OutFilHdr)
+   tp_FilHdr FilHdr,
+   int IArg,
+   tp_InpKind InpKind,
+   tp_FilHdr OutFilHdr
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(int, IArg)
-   GMC_DCL(tp_InpKind, InpKind)
-   GMC_DCL(tp_FilHdr, OutFilHdr)
+   
+   
+   
+   
 {
    tp_FilInp FilInp;
    tp_InpInf InpInf;
@@ -405,13 +405,13 @@ Make_LocInp(
 
 void
 Chain_LocInps(
-   GMC_ARG(tp_LocInp*, FirstLocInpPtr),
-   GMC_ARG(tp_LocInp*, LastLocInpPtr),
-   GMC_ARG(tp_LocInp, LocInp)
+   tp_LocInp* FirstLocInpPtr,
+   tp_LocInp* LastLocInpPtr,
+   tp_LocInp LocInp
    )
-   GMC_DCL(tp_LocInp*, FirstLocInpPtr)
-   GMC_DCL(tp_LocInp*, LastLocInpPtr)
-   GMC_DCL(tp_LocInp, LocInp)
+   
+   
+   
 {
    tp_FilInp PrvFilInp;
 
@@ -431,9 +431,9 @@ Chain_LocInps(
 
 static tp_Str
 Expand_InpSpcStr(
-   GMC_ARG(tp_InpSpc, InpSpc)
+   tp_InpSpc InpSpc
    )
-   GMC_DCL(tp_InpSpc, InpSpc)
+   
 {
    tp_Str Str;
 
@@ -450,21 +450,21 @@ Expand_InpSpcStr(
 
 static void
 Get_InpSpc_PrmVals(
-   GMC_ARG(tp_LocHdr*, LocHdrPtr),
-   GMC_ARG(tp_LocPVal*, LocPValPtr),
-   GMC_ARG(tp_InpSpc, InpSpc),
-   GMC_ARG(tp_Str, Str),
-   GMC_ARG(tp_FilHdr, BaseFilHdr),
-   GMC_ARG(tp_FilPrm, InhFilPrm),
-   GMC_ARG(tp_Tool, Tool)
+   tp_LocHdr* LocHdrPtr,
+   tp_LocPVal* LocPValPtr,
+   tp_InpSpc InpSpc,
+   tp_Str Str,
+   tp_FilHdr BaseFilHdr,
+   tp_FilPrm InhFilPrm,
+   tp_Tool Tool
    )
-   GMC_DCL(tp_LocHdr*, LocHdrPtr)
-   GMC_DCL(tp_LocPVal*, LocPValPtr)
-   GMC_DCL(tp_InpSpc, InpSpc)
-   GMC_DCL(tp_Str, Str)
-   GMC_DCL(tp_FilHdr, BaseFilHdr)
-   GMC_DCL(tp_FilPrm, InhFilPrm)
-   GMC_DCL(tp_Tool, Tool)
+   
+   
+   
+   
+   
+   
+   
 {
    tp_FilHdr PrmValFilHdr;
    tp_InpSpc ValInpSpc;
@@ -505,15 +505,15 @@ Get_InpSpc_PrmVals(
 
 static tp_FilHdr
 Do_InpSpc(
-   GMC_ARG(tp_FilHdr, BaseFilHdr),
-   GMC_ARG(tp_FilPrm, InhFilPrm),
-   GMC_ARG(tp_InpSpc, InpSpc),
-   GMC_ARG(tp_Tool, Tool)
+   tp_FilHdr BaseFilHdr,
+   tp_FilPrm InhFilPrm,
+   tp_InpSpc InpSpc,
+   tp_Tool Tool
    )
-   GMC_DCL(tp_FilHdr, BaseFilHdr)
-   GMC_DCL(tp_FilPrm, InhFilPrm)
-   GMC_DCL(tp_InpSpc, InpSpc)
-   GMC_DCL(tp_Tool, Tool)
+   
+   
+   
+   
 {
    tp_InpSpc OpInpSpc;
    tp_FilHdr FilHdr;
@@ -602,9 +602,9 @@ Do_InpSpc(
 
 tp_LocInp
 Get_LocInp(
-   GMC_ARG(tp_FilHdr, FilHdr)
+   tp_FilHdr FilHdr
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
+   
 {
    tp_LocInp FirstLI, LastLI;
    tp_FilHdr ToolFilHdr, BaseFilHdr, InpFilHdr;

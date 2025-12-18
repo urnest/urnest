@@ -4,6 +4,7 @@
 /* VerifyDate for SrcFilHdr when Verify is when HFS last checked */
 /* TransStatus is the minimum status of all element files */
 /* TransModDate is the maximum mod. date of all element files */
+#include <odin/inc/Type.hh>
 
 typedef struct _tps_HdrInf {
    tp_LocHdr LocHdr;

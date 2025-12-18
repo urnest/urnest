@@ -13,13 +13,14 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
+#include <odin/inc/Var.hh>
 #include <gmc/gmc.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
 #include <odin/inc/Client.h>
 #include <odin/inc/Flag_.h>
 #include <odin/inc/Status_.h>
-#include <odin/inc/InpKind_.h>
+#include <dg/inc/InpKind_.h>
 
 
 void

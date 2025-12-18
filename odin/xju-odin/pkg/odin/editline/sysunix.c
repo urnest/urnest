@@ -3,14 +3,16 @@
 */
 #include "editline.h"
 
+#include <string.h>
+
 #ifdef HAVE_TERMIOS_H
 #include <termios.h>
 
 void
 rl_ttyset(
-  GMC_ARG(int, Reset)
+  int Reset
   )
-  GMC_DCL(int, Reset)
+  
 {
     static struct termios	old;
     struct termios		newval;
@@ -43,9 +45,9 @@ rl_ttyset(
 
 void
 rl_ttyset(
-  GMC_ARG(int, Reset)
+  int Reset
   )
-  GMC_DCL(int, Reset)
+  
 {
     static struct termio	old;
     struct termio		newval;

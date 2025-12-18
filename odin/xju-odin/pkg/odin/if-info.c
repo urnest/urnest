@@ -19,12 +19,16 @@ geoff@boulder.colorado.edu
 #include <odin/inc/Func.hh>
 #include <odin/inc/Var.hh>
 #include <odin/inc/ElmInf.h>
-#include <dg/inc/FilHdr.h>
+#include <odin/inc/FilHdr.h>
 #include <odin/inc/HdrInf.h>
 #include <odin/inc/Item.h>
 #include <odin/inc/PrmInf.h>
 #include <odin/inc/PValInf.h>
 #include <odin/inc/InpInf.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
 
 
 static tp_FilDsc	InfoFD;

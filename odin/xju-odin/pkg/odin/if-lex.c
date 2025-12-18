@@ -17,6 +17,9 @@ geoff@boulder.colorado.edu
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
 #include <odin/inc/TokTyp_.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdio.h>
 
 
 bool		IsCmdLex;
@@ -29,9 +32,9 @@ tp_Str		ParseStr;
 
 void
 FileError(
-   GMC_ARG(tp_Str, Str)
+   tp_Str Str
    )
-   GMC_DCL(tp_Str, Str)
+   
 {
    if (ParseFN == NIL) {
       FORBIDDEN(ParseLNPtr != NIL);
@@ -46,9 +49,9 @@ FileError(
 
 void
 ParseError(
-   GMC_ARG(tp_Str, Str)
+   tp_Str Str
    )
-   GMC_DCL(tp_Str, Str)
+   
 {
    FileError(Str);
    SystemError(" at <%s>.\n", PrevParseStr);
@@ -71,13 +74,13 @@ EndLex()
 
 static void
 ExpandVar(
-   GMC_ARG(bool*, AbortPtr),
-   GMC_ARG(tp_Str*, RestStrPtr),
-   GMC_ARG(tp_Str, Str)
+   bool* AbortPtr,
+   tp_Str* RestStrPtr,
+   tp_Str Str
    )
-   GMC_DCL(bool*, AbortPtr)
-   GMC_DCL(tp_Str*, RestStrPtr)
-   GMC_DCL(tp_Str, Str)
+   
+   
+   
 {
    tp_Str TmpStr, VarStr, ValStr;
    tps_Str VarStrBuf;
@@ -103,11 +106,11 @@ ExpandVar(
 
 static void
 ExpandHome(
-   GMC_ARG(bool*, AbortPtr),
-   GMC_ARG(tp_Str, Str)
+   bool* AbortPtr,
+   tp_Str Str
    )
-   GMC_DCL(bool*, AbortPtr)
-   GMC_DCL(tp_Str, Str)
+   
+   
 {
    tp_Str TmpStr, HomeStr, ValStr;
    tps_Str HomeStrBuf;
@@ -223,7 +226,7 @@ Lex()
 	    Str[iStr] = 0;
 	    Sym = Str_Sym(Str);
 	    Push_SymStack(Sym);
-	    return HOSTWD;
+	    return SCAN_HOSTWD;
 	    break;}/*case*/;
 	 case '$': {
 	    ExpandVar(&Abort, &RestStr, ParseStr);
@@ -250,7 +253,7 @@ Lex()
 	       Str[iStr] = 0;
 	       Sym = Str_Sym(Str);
 	       Push_SymStack(Sym);
-	       return OBJTID; }/*if*/;
+	       return SCAN_OBJTID; }/*if*/;
 	    while (true) {
 	       /*select*/{
 		  if (IsWordChr(*ParseStr)) {
@@ -303,9 +306,9 @@ Lex()
 
 bool
 IsWordChr(
-   GMC_ARG(char, Chr)
+   char Chr
    )
-   GMC_DCL(char, Chr)
+   
 {
    switch (Chr) {
       case '\0': case ' ': case '\t': case '\n': case '#':
@@ -322,11 +325,11 @@ IsWordChr(
 
 void
 Unlex(
-   GMC_ARG(tp_Str, OutStr),
-   GMC_ARG(tp_Str, InStr)
+   tp_Str OutStr,
+   tp_Str InStr
    )
-   GMC_DCL(tp_Str, OutStr)
-   GMC_DCL(tp_Str, InStr)
+   
+   
 {
    if (*InStr == 0) {
       (void)strcpy(OutStr, "''");
@@ -342,11 +345,11 @@ Unlex(
 
 void
 Print_Unlex(
-   GMC_ARG(tp_FilDsc, FilDsc),
-   GMC_ARG(tp_Str, InStr)
+   tp_FilDsc FilDsc,
+   tp_Str InStr
    )
-   GMC_DCL(tp_FilDsc, FilDsc)
-   GMC_DCL(tp_Str, InStr)
+   
+   
 {
    if (*InStr == 0) {
       Write(FilDsc, "''");

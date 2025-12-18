@@ -1,8 +1,9 @@
 #include <gmc/gmc.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
-
-extern boolean IPC_Do_Return;
+#include <odin/inc/Var.hh>
+#include <string.h>
+extern bool IPC_Do_Return;
 extern int *IPC_IArg1, *IPC_IArg2, *IPC_IArg3;
 extern tp_Str IPC_SArg1, IPC_SArg2, IPC_SArg3;
 
@@ -10,9 +11,7 @@ extern tp_Str IPC_SArg1, IPC_SArg2, IPC_SArg3;
 #ifndef SERVER_ONLY
 static void
 Add_BuildArg_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    tps_Str FileName;
 
@@ -26,9 +25,7 @@ Add_BuildArg_Msg(
 #ifndef SERVER_ONLY
 static void
 Do_Build_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    int JobID;
    tps_Str JobDirName;
@@ -48,9 +45,7 @@ Do_Build_Msg(
 #ifndef SERVER_ONLY
 static void
 Abort_Build_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    int JobID;
 
@@ -64,9 +59,7 @@ Abort_Build_Msg(
 #ifndef SERVER_ONLY
 static void
 Do_MakeReadOnly_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    tps_Str FileName;
 
@@ -80,9 +73,7 @@ Do_MakeReadOnly_Msg(
 #ifndef SERVER_ONLY
 static void
 ErrMessage_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    tps_Str Message;
 
@@ -96,9 +87,7 @@ ErrMessage_Msg(
 #ifndef SERVER_ONLY
 static void
 LogMessage_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    tps_Str Message;
 
@@ -112,9 +101,7 @@ LogMessage_Msg(
 #ifndef SERVER_ONLY
 static void
 FileErrMessage_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    tps_Str FileName;
 
@@ -128,9 +115,7 @@ FileErrMessage_Msg(
 #ifndef SERVER_ONLY
 static void
 Next_OdinFile_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    tps_Str OdinExpr;
    int ID;
@@ -148,9 +133,7 @@ Next_OdinFile_Msg(
 #ifndef CLIENT_ONLY
 static void
 Get_UseCount_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    int CountPtr;
 
@@ -166,9 +149,7 @@ Get_UseCount_Msg(
 #ifndef CLIENT_ONLY
 static void
 Get_CurSize_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    int SizePtr;
 
@@ -184,9 +165,7 @@ Get_CurSize_Msg(
 #ifndef CLIENT_ONLY
 static void
 ShutDown_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
 
    *IPC_AbortPtr = false;
@@ -197,9 +176,7 @@ ShutDown_Msg(
 #ifndef CLIENT_ONLY
 static void
 Get_Banner_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    tps_Str Str;
 
@@ -215,9 +192,7 @@ Get_Banner_Msg(
 #ifndef CLIENT_ONLY
 static void
 Do_Interrupt_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    int InterruptFlag;
 
@@ -231,9 +206,7 @@ Do_Interrupt_Msg(
 #ifndef CLIENT_ONLY
 static void
 Do_Alias_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    tps_Str FileName;
    int ForceFlag;
@@ -250,9 +223,7 @@ Do_Alias_Msg(
 #ifndef CLIENT_ONLY
 static void
 Get_Alias_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    tps_Str OutFileName;
    tps_Str FileName;
@@ -271,9 +242,7 @@ Get_Alias_Msg(
 #ifndef CLIENT_ONLY
 static void
 Job_Done_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    int JobID;
    int Abort;
@@ -290,9 +259,7 @@ Job_Done_Msg(
 #ifndef CLIENT_ONLY
 static void
 Test_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    tps_Str FileName;
 
@@ -308,9 +275,7 @@ Test_Msg(
 #ifndef CLIENT_ONLY
 static void
 Test_All_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
 
    *IPC_AbortPtr = false;
@@ -323,9 +288,7 @@ Test_All_Msg(
 #ifndef CLIENT_ONLY
 static void
 Get_OdinFile_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    tps_Str OdinExpr;
    int NeedsData;
@@ -339,15 +302,12 @@ Get_OdinFile_Msg(
 
 void
 LocalEnd_Get_OdinFile(
-   GMC_ARG(tp_FileName, FileName),
-   GMC_ARG(tp_Status, StatusPtr),
-   GMC_ARG(boolean, ExecFlagPtr)
+   tp_FileName FileName,
+   tp_Status StatusPtr,
+   bool ExecFlagPtr
    )
-   GMC_DCL(tp_FileName, FileName)
-   GMC_DCL(tp_Status, StatusPtr)
-   GMC_DCL(boolean, ExecFlagPtr)
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
    if (IsServer && Is_LocalClient(CurrentClient)) {
       (void)strcpy(IPC_SArg1, FileName);
@@ -373,9 +333,7 @@ LocalEnd_Get_OdinFile(
 #ifndef CLIENT_ONLY
 static void
 Set_CWD_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    tps_Str FileName;
 
@@ -391,9 +349,7 @@ Set_CWD_Msg(
 #ifndef CLIENT_ONLY
 static void
 Push_Context_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    tps_Str DirName;
    tps_Str FileName;
@@ -412,9 +368,7 @@ Push_Context_Msg(
 #ifndef CLIENT_ONLY
 static void
 Pop_Context_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    tps_Str DirName;
 
@@ -430,9 +384,7 @@ Pop_Context_Msg(
 #ifndef CLIENT_ONLY
 static void
 Set_KeepGoing_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    int Flag;
 
@@ -448,9 +400,7 @@ Set_KeepGoing_Msg(
 #ifndef CLIENT_ONLY
 static void
 Set_ErrLevel_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    int ErrLevel;
 
@@ -466,9 +416,7 @@ Set_ErrLevel_Msg(
 #ifndef CLIENT_ONLY
 static void
 Set_WarnLevel_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    int WarnLevel;
 
@@ -484,9 +432,7 @@ Set_WarnLevel_Msg(
 #ifndef CLIENT_ONLY
 static void
 Set_LogLevel_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    int LogLevel;
 
@@ -502,9 +448,7 @@ Set_LogLevel_Msg(
 #ifndef CLIENT_ONLY
 static void
 Set_HelpLevel_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    int HelpLevel;
 
@@ -520,9 +464,7 @@ Set_HelpLevel_Msg(
 #ifndef CLIENT_ONLY
 static void
 Set_Debug_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    tps_Str DebugName;
 
@@ -538,9 +480,7 @@ Set_Debug_Msg(
 #ifndef CLIENT_ONLY
 static void
 Set_MaxJobs_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    int MaxJobs;
 
@@ -556,9 +496,7 @@ Set_MaxJobs_Msg(
 #ifndef CLIENT_ONLY
 static void
 Redo_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    tps_Str OdinExpr;
 
@@ -574,9 +512,7 @@ Redo_Msg(
 #ifndef CLIENT_ONLY
 static void
 OdinExpr_ID_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    int IDPtr;
    tps_Str OdinExpr;
@@ -595,9 +531,7 @@ OdinExpr_ID_Msg(
 #ifndef CLIENT_ONLY
 static void
 ID_OdinExpr_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    tps_Str OdinExpr;
    int ID;
@@ -616,9 +550,7 @@ ID_OdinExpr_Msg(
 #ifndef CLIENT_ONLY
 static void
 ID_LongOdinExpr_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    tps_Str OdinExpr;
    int ID;
@@ -637,9 +569,7 @@ ID_LongOdinExpr_Msg(
 #ifndef CLIENT_ONLY
 static void
 Get_Status_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    int StatusPtr;
    int ElmStatusPtr;
@@ -661,9 +591,7 @@ Get_Status_Msg(
 #ifndef CLIENT_ONLY
 static void
 Get_Elements_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    int ID;
 
@@ -679,9 +607,7 @@ Get_Elements_Msg(
 #ifndef CLIENT_ONLY
 static void
 Get_ElementsOf_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    int ID;
 
@@ -697,9 +623,7 @@ Get_ElementsOf_Msg(
 #ifndef CLIENT_ONLY
 static void
 Get_Inputs_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    int ID;
 
@@ -715,9 +639,7 @@ Get_Inputs_Msg(
 #ifndef CLIENT_ONLY
 static void
 Get_Outputs_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    int ID;
 
@@ -733,9 +655,7 @@ Get_Outputs_Msg(
 #ifndef CLIENT_ONLY
 static void
 Get_DPath_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
+   bool* IPC_AbortPtr)
 {
    tps_Str OdinExpr;
 
@@ -749,11 +669,8 @@ Get_DPath_Msg(
 #endif
 void
 IPC_Do_Msg(
-   GMC_ARG(boolean*, IPC_AbortPtr),
-   GMC_ARG(int, MsgType)
-   )
-   GMC_DCL(boolean*, IPC_AbortPtr)
-   GMC_DCL(int, MsgType)
+   bool* IPC_AbortPtr,
+   int MsgType)
 {
    switch (MsgType) {
       case 1: {

@@ -14,6 +14,7 @@ geoff@boulder.colorado.edu
 */
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <gmc/gmc.h>
 #include <odin/inc/Type.hh>

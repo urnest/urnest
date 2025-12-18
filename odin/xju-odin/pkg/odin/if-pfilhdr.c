@@ -17,7 +17,7 @@ geoff@boulder.colorado.edu
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
 #include <odin/inc/PrmFHdr.h>
-
+#include <stdlib.h>
 
 int			num_PrmFHdrS = 0;
 
@@ -30,11 +30,11 @@ static tp_PrmFHdr	FreePrmFHdr = NIL;
 
 tp_PrmFHdr
 New_PrmFHdr(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilPrm, FilPrm)
+   tp_FilHdr FilHdr,
+   tp_FilPrm FilPrm
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilPrm, FilPrm)
+   
+   
 {
    tp_PrmFHdr PrmFHdr;
 
@@ -61,9 +61,9 @@ New_PrmFHdr(
 
 static void
 Rls_PrmFHdr(
-   GMC_ARG(tp_PrmFHdr, PrmFHdr)
+   tp_PrmFHdr PrmFHdr
    )
-   GMC_DCL(tp_PrmFHdr, PrmFHdr)
+   
 {
    FORBIDDEN(PrmFHdr == ERROR);
    PrmFHdr->Next = FreePrmFHdr;
@@ -77,13 +77,13 @@ Rls_PrmFHdr(
 
 void
 Use_PrmFHdr(
-   GMC_ARG(tp_FilHdr*, FilHdrPtr),
-   GMC_ARG(tp_FilPrm*, FilPrmPtr),
-   GMC_ARG(tp_PrmFHdr, PrmFHdr)
+   tp_FilHdr* FilHdrPtr,
+   tp_FilPrm* FilPrmPtr,
+   tp_PrmFHdr PrmFHdr
    )
-   GMC_DCL(tp_FilHdr*, FilHdrPtr)
-   GMC_DCL(tp_FilPrm*, FilPrmPtr)
-   GMC_DCL(tp_PrmFHdr, PrmFHdr)
+   
+   
+   
 {
    if (PrmFHdr == ERROR) {
       *FilHdrPtr = ERROR;

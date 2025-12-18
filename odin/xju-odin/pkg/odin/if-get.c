@@ -16,6 +16,7 @@ geoff@boulder.colorado.edu
 #include <gmc/gmc.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
 #include <odin/inc/Flag_.h>
 #include <dg/inc/InpKind_.h>
 #include <odin/inc/LogLevel_.h>
@@ -32,9 +33,9 @@ static void GetReqs(tp_FilHdr, bool, bool, int *);
 
 static bool
 Is_CopyDone(
-   GMC_ARG(tp_FilHdr, FilHdr)
+   tp_FilHdr FilHdr
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
+   
 {
    tp_FilHdr OrigFilHdr, DestFilHdr;
    bool OK;
@@ -212,9 +213,9 @@ done:;
   
 static void
 GetFile(
-   GMC_ARG(tp_FilHdr, FilHdr)
+   tp_FilHdr FilHdr
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
+   
 {
    if (IsUpToDate(FilHdr)) {
       return; }/*if*/;
@@ -227,11 +228,11 @@ GetFile(
 
 static void
 ClearAll_SCC(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(bool, DataFlag)
+   tp_FilHdr FilHdr,
+   bool DataFlag
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(bool, DataFlag)
+   
+   
 {
    tp_FilElm FilElm;
    tp_FilHdr SCC_FilHdr, ElmFilHdr;
@@ -272,15 +273,15 @@ ClearAll_SCC(
 
 static void
 GetReqs(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(bool, NameFlag),
-   GMC_ARG(bool, DataFlag),
-   GMC_ARG(int*, ETPtr)
+   tp_FilHdr FilHdr,
+   bool NameFlag,
+   bool DataFlag,
+   int* ETPtr
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(bool, NameFlag)
-   GMC_DCL(bool, DataFlag)
-   GMC_DCL(int*, ETPtr)
+   
+   
+   
+   
 {
    bool DepthSet, ListFlag, ViewSpecFlag;
    int ElmTagInit, ElmTag, *ElmTagPtr;
@@ -463,11 +464,11 @@ done:;
 
 void
 GetAllReqs(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_InpKind, InpKind)
+   tp_FilHdr FilHdr,
+   tp_InpKind InpKind
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_InpKind, InpKind)
+   
+   
 {
    bool DataFlag, NameFlag;
 

@@ -17,6 +17,7 @@ geoff@boulder.colorado.edu
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
 #include <odin/inc/Var.hh>
+#include <string.h>
 
 
 tp_Str		Author = "odin-build-users@lists.sourceforge.net";

@@ -1,19 +1,17 @@
-#include <gmc/gmc.h>
-#include <odin/inc/Type.hh>
-#include <odin/inc/Func.hh>
+#include "inc/GMC.h"
 
-extern boolean IPC_Do_Return;
+extern bool IPC_Do_Return;
 extern int *IPC_IArg1, *IPC_IArg2, *IPC_IArg3;
 extern tp_Str IPC_SArg1, IPC_SArg2, IPC_SArg3;
 
 #ifndef CLIENT_ONLY
 void
 Add_BuildArg(
-   GMC_ARG(tp_FileName, FileName)
+   tp_FileName FileName
    )
-   GMC_DCL(tp_FileName, FileName)
+   tp_FileName FileName
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
 #ifndef SERVER_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -33,15 +31,15 @@ Add_BuildArg(
 #ifndef CLIENT_ONLY
 void
 Do_Build(
-   GMC_ARG(tp_JobID, JobID),
-   GMC_ARG(tp_FileName, JobDirName),
-   GMC_ARG(tp_FileName, LogFileName)
+   tp_JobID JobID,
+   tp_FileName JobDirName,
+   tp_FileName LogFileName
    )
-   GMC_DCL(tp_JobID, JobID)
-   GMC_DCL(tp_FileName, JobDirName)
-   GMC_DCL(tp_FileName, LogFileName)
+   tp_JobID JobID
+   tp_FileName JobDirName
+   tp_FileName LogFileName
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
 #ifndef SERVER_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -65,11 +63,11 @@ Do_Build(
 #ifndef CLIENT_ONLY
 void
 Abort_Build(
-   GMC_ARG(tp_JobID, JobID)
+   tp_JobID JobID
    )
-   GMC_DCL(tp_JobID, JobID)
+   tp_JobID JobID
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
 #ifndef SERVER_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -89,11 +87,11 @@ Abort_Build(
 #ifndef CLIENT_ONLY
 void
 Do_MakeReadOnly(
-   GMC_ARG(tp_FileName, FileName)
+   tp_FileName FileName
    )
-   GMC_DCL(tp_FileName, FileName)
+   tp_FileName FileName
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
 #ifndef SERVER_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -113,11 +111,11 @@ Do_MakeReadOnly(
 #ifndef CLIENT_ONLY
 void
 ErrMessage(
-   GMC_ARG(char*, Message)
+   char* Message
    )
-   GMC_DCL(char*, Message)
+   char* Message
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
 #ifndef SERVER_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -137,11 +135,11 @@ ErrMessage(
 #ifndef CLIENT_ONLY
 void
 LogMessage(
-   GMC_ARG(char*, Message)
+   char* Message
    )
-   GMC_DCL(char*, Message)
+   char* Message
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
 #ifndef SERVER_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -161,11 +159,11 @@ LogMessage(
 #ifndef CLIENT_ONLY
 void
 FileErrMessage(
-   GMC_ARG(tp_FileName, FileName)
+   tp_FileName FileName
    )
-   GMC_DCL(tp_FileName, FileName)
+   tp_FileName FileName
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
 #ifndef SERVER_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -185,13 +183,13 @@ FileErrMessage(
 #ifndef CLIENT_ONLY
 void
 Next_OdinFile(
-   GMC_ARG(tp_Str, OdinExpr),
-   GMC_ARG(int, ID)
+   tp_Str OdinExpr,
+   int ID
    )
-   GMC_DCL(tp_Str, OdinExpr)
-   GMC_DCL(int, ID)
+   tp_Str OdinExpr
+   int ID
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
 #ifndef SERVER_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -213,13 +211,13 @@ Next_OdinFile(
 #ifndef SERVER_ONLY
 void
 Get_UseCount(
-   GMC_ARG(int*, CountPtr)
+   int* CountPtr
    )
-   GMC_DCL(int*, CountPtr)
+   int* CountPtr
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
-   boolean IPC_Cmd_Abort;
+   bool IPC_Cmd_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -243,13 +241,13 @@ Get_UseCount(
 #ifndef SERVER_ONLY
 void
 Get_CurSize(
-   GMC_ARG(int*, SizePtr)
+   int* SizePtr
    )
-   GMC_DCL(int*, SizePtr)
+   int* SizePtr
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
-   boolean IPC_Cmd_Abort;
+   bool IPC_Cmd_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -274,7 +272,7 @@ Get_CurSize(
 void
 ShutDown()
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -292,13 +290,13 @@ ShutDown()
 #ifndef SERVER_ONLY
 void
 Get_Banner(
-   GMC_ARG(tp_Str, Str)
+   tp_Str Str
    )
-   GMC_DCL(tp_Str, Str)
+   tp_Str Str
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
-   boolean IPC_Cmd_Abort;
+   bool IPC_Cmd_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -322,11 +320,11 @@ Get_Banner(
 #ifndef SERVER_ONLY
 void
 Do_Interrupt(
-   GMC_ARG(boolean, InterruptFlag)
+   bool InterruptFlag
    )
-   GMC_DCL(boolean, InterruptFlag)
+   bool InterruptFlag
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -346,13 +344,13 @@ Do_Interrupt(
 #ifndef SERVER_ONLY
 void
 Do_Alias(
-   GMC_ARG(tp_FileName, FileName),
-   GMC_ARG(boolean, ForceFlag)
+   tp_FileName FileName,
+   bool ForceFlag
    )
-   GMC_DCL(tp_FileName, FileName)
-   GMC_DCL(boolean, ForceFlag)
+   tp_FileName FileName
+   bool ForceFlag
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -374,15 +372,15 @@ Do_Alias(
 #ifndef SERVER_ONLY
 void
 Get_Alias(
-   GMC_ARG(tp_FileName, OutFileName),
-   GMC_ARG(tp_FileName, FileName)
+   tp_FileName OutFileName,
+   tp_FileName FileName
    )
-   GMC_DCL(tp_FileName, OutFileName)
-   GMC_DCL(tp_FileName, FileName)
+   tp_FileName OutFileName
+   tp_FileName, FileName
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
-   boolean IPC_Cmd_Abort;
+   bool IPC_Cmd_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -408,13 +406,13 @@ Get_Alias(
 #ifndef SERVER_ONLY
 void
 Job_Done(
-   GMC_ARG(tp_JobID, JobID),
-   GMC_ARG(boolean, Abort)
+   tp_JobID JobID,
+   bool Abort
    )
-   GMC_DCL(tp_JobID, JobID)
-   GMC_DCL(boolean, Abort)
+   tp_JobID JobID
+   bool Abort
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -436,13 +434,13 @@ Job_Done(
 #ifndef SERVER_ONLY
 void
 Test(
-   GMC_ARG(tp_FileName, FileName)
+   tp_FileName FileName
    )
-   GMC_DCL(tp_FileName, FileName)
+   tp_FileName, FileName
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
-   boolean IPC_Cmd_Abort;
+   bool IPC_Cmd_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -467,9 +465,9 @@ Test(
 void
 Test_All()
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
-   boolean IPC_Cmd_Abort;
+   bool IPC_Cmd_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -491,21 +489,15 @@ Test_All()
 #ifndef SERVER_ONLY
 void
 Get_OdinFile(
-   GMC_ARG(tp_FileName, FileName),
-   GMC_ARG(tp_Status*, StatusPtr),
-   GMC_ARG(boolean*, ExecFlagPtr),
-   GMC_ARG(tp_Str, OdinExpr),
-   GMC_ARG(boolean, NeedsData)
-   )
-   GMC_DCL(tp_FileName, FileName)
-   GMC_DCL(tp_Status*, StatusPtr)
-   GMC_DCL(boolean*, ExecFlagPtr)
-   GMC_DCL(tp_Str, OdinExpr)
-   GMC_DCL(boolean, NeedsData)
+   tp_FileName FileName,
+   tp_Status* StatusPtr,
+   bool* ExecFlagPtr,
+   tp_Str OdinExpr,
+   bool NeedsData)
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
-   boolean IPC_Cmd_Abort;
+   bool IPC_Cmd_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -552,13 +544,13 @@ Get_OdinFile(
 #ifndef SERVER_ONLY
 void
 Set_CWD(
-   GMC_ARG(tp_FileName, FileName)
+   tp_FileName FileName
    )
-   GMC_DCL(tp_FileName, FileName)
+   tp_FileName, FileName
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
-   boolean IPC_Cmd_Abort;
+   bool IPC_Cmd_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -582,15 +574,15 @@ Set_CWD(
 #ifndef SERVER_ONLY
 void
 Push_Context(
-   GMC_ARG(tp_FileName, DirName),
-   GMC_ARG(tp_FileName, FileName)
+   tp_FileName DirName,
+   tp_FileName FileName
    )
-   GMC_DCL(tp_FileName, DirName)
-   GMC_DCL(tp_FileName, FileName)
+   tp_FileName DirName
+   tp_FileName, FileName
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
-   boolean IPC_Cmd_Abort;
+   bool IPC_Cmd_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -616,13 +608,13 @@ Push_Context(
 #ifndef SERVER_ONLY
 void
 Pop_Context(
-   GMC_ARG(tp_FileName, DirName)
+   tp_FileName DirName
    )
-   GMC_DCL(tp_FileName, DirName)
+   tp_FileName DirName
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
-   boolean IPC_Cmd_Abort;
+   bool IPC_Cmd_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -646,13 +638,13 @@ Pop_Context(
 #ifndef SERVER_ONLY
 void
 Set_KeepGoing(
-   GMC_ARG(int, Flag)
+   int Flag
    )
-   GMC_DCL(int, Flag)
+   int, Flag
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
-   boolean IPC_Cmd_Abort;
+   bool IPC_Cmd_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -676,13 +668,13 @@ Set_KeepGoing(
 #ifndef SERVER_ONLY
 void
 Set_ErrLevel(
-   GMC_ARG(int, ErrLevel)
+   int ErrLevel
    )
-   GMC_DCL(int, ErrLevel)
+   int, ErrLevel
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
-   boolean IPC_Cmd_Abort;
+   bool IPC_Cmd_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -706,13 +698,13 @@ Set_ErrLevel(
 #ifndef SERVER_ONLY
 void
 Set_WarnLevel(
-   GMC_ARG(int, WarnLevel)
+   int WarnLevel
    )
-   GMC_DCL(int, WarnLevel)
+   int, WarnLevel
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
-   boolean IPC_Cmd_Abort;
+   bool IPC_Cmd_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -736,13 +728,13 @@ Set_WarnLevel(
 #ifndef SERVER_ONLY
 void
 Set_LogLevel(
-   GMC_ARG(tp_LogLevel, LogLevel)
+   tp_LogLevel LogLevel
    )
-   GMC_DCL(tp_LogLevel, LogLevel)
+   tp_LogLevel, LogLevel
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
-   boolean IPC_Cmd_Abort;
+   bool IPC_Cmd_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -766,13 +758,13 @@ Set_LogLevel(
 #ifndef SERVER_ONLY
 void
 Set_HelpLevel(
-   GMC_ARG(int, HelpLevel)
+   int HelpLevel
    )
-   GMC_DCL(int, HelpLevel)
+   int, HelpLevel
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
-   boolean IPC_Cmd_Abort;
+   bool IPC_Cmd_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -796,13 +788,13 @@ Set_HelpLevel(
 #ifndef SERVER_ONLY
 void
 Set_Debug(
-   GMC_ARG(tp_Str, DebugName)
+   tp_Str DebugName
    )
-   GMC_DCL(tp_Str, DebugName)
+   tp_Str, DebugName
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
-   boolean IPC_Cmd_Abort;
+   bool IPC_Cmd_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -826,13 +818,13 @@ Set_Debug(
 #ifndef SERVER_ONLY
 void
 Set_MaxJobs(
-   GMC_ARG(int, MaxJobs)
+   int MaxJobs
    )
-   GMC_DCL(int, MaxJobs)
+   int, MaxJobs
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
-   boolean IPC_Cmd_Abort;
+   bool IPC_Cmd_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -856,13 +848,13 @@ Set_MaxJobs(
 #ifndef SERVER_ONLY
 void
 Redo(
-   GMC_ARG(tp_Str, OdinExpr)
+   tp_Str OdinExpr
    )
-   GMC_DCL(tp_Str, OdinExpr)
+   tp_Str, OdinExpr
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
-   boolean IPC_Cmd_Abort;
+   bool IPC_Cmd_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -886,15 +878,15 @@ Redo(
 #ifndef SERVER_ONLY
 void
 OdinExpr_ID(
-   GMC_ARG(int*, IDPtr),
-   GMC_ARG(tp_Str, OdinExpr)
+   int* IDPtr,
+   tp_Str OdinExpr
    )
-   GMC_DCL(int*, IDPtr)
-   GMC_DCL(tp_Str, OdinExpr)
+   int* IDPtr
+   tp_Str, OdinExpr
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
-   boolean IPC_Cmd_Abort;
+   bool IPC_Cmd_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -920,15 +912,15 @@ OdinExpr_ID(
 #ifndef SERVER_ONLY
 void
 ID_OdinExpr(
-   GMC_ARG(tp_Str, OdinExpr),
-   GMC_ARG(int, ID)
+   tp_Str OdinExpr,
+   int ID
    )
-   GMC_DCL(tp_Str, OdinExpr)
-   GMC_DCL(int, ID)
+   tp_Str OdinExpr
+   int, ID
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
-   boolean IPC_Cmd_Abort;
+   bool IPC_Cmd_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -954,15 +946,15 @@ ID_OdinExpr(
 #ifndef SERVER_ONLY
 void
 ID_LongOdinExpr(
-   GMC_ARG(tp_Str, OdinExpr),
-   GMC_ARG(int, ID)
+   tp_Str OdinExpr,
+   int ID
    )
-   GMC_DCL(tp_Str, OdinExpr)
-   GMC_DCL(int, ID)
+   tp_Str OdinExpr
+   int, ID
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
-   boolean IPC_Cmd_Abort;
+   bool IPC_Cmd_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -988,17 +980,17 @@ ID_LongOdinExpr(
 #ifndef SERVER_ONLY
 void
 Get_Status(
-   GMC_ARG(tp_Status*, StatusPtr),
-   GMC_ARG(tp_Status*, ElmStatusPtr),
-   GMC_ARG(int, ID)
+   tp_Status* StatusPtr,
+   tp_Status* ElmStatusPtr,
+   int ID
    )
-   GMC_DCL(tp_Status*, StatusPtr)
-   GMC_DCL(tp_Status*, ElmStatusPtr)
-   GMC_DCL(int, ID)
+   tp_Status* StatusPtr
+   tp_Status* ElmStatusPtr
+   int, ID
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
-   boolean IPC_Cmd_Abort;
+   bool IPC_Cmd_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -1026,13 +1018,13 @@ Get_Status(
 #ifndef SERVER_ONLY
 void
 Get_Elements(
-   GMC_ARG(int, ID)
+   int ID
    )
-   GMC_DCL(int, ID)
+   int, ID
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
-   boolean IPC_Cmd_Abort;
+   bool IPC_Cmd_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -1056,13 +1048,13 @@ Get_Elements(
 #ifndef SERVER_ONLY
 void
 Get_ElementsOf(
-   GMC_ARG(int, ID)
+   int ID
    )
-   GMC_DCL(int, ID)
+   int, ID
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
-   boolean IPC_Cmd_Abort;
+   bool IPC_Cmd_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -1086,13 +1078,13 @@ Get_ElementsOf(
 #ifndef SERVER_ONLY
 void
 Get_Inputs(
-   GMC_ARG(int, ID)
+   int ID
    )
-   GMC_DCL(int, ID)
+   int, ID
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
-   boolean IPC_Cmd_Abort;
+   bool IPC_Cmd_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -1116,13 +1108,13 @@ Get_Inputs(
 #ifndef SERVER_ONLY
 void
 Get_Outputs(
-   GMC_ARG(int, ID)
+   int ID
    )
-   GMC_DCL(int, ID)
+   int, ID
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
-   boolean IPC_Cmd_Abort;
+   bool IPC_Cmd_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -1146,13 +1138,13 @@ Get_Outputs(
 #ifndef SERVER_ONLY
 void
 Get_DPath(
-   GMC_ARG(tp_Str, OdinExpr)
+   tp_Str OdinExpr
    )
-   GMC_DCL(tp_Str, OdinExpr)
+   tp_Str, OdinExpr
 {
-   boolean IPC_Abort;
+   bool IPC_Abort;
 
-   boolean IPC_Cmd_Abort;
+   bool IPC_Cmd_Abort;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {

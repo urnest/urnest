@@ -13,10 +13,12 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 #include <stdlib.h>
+#include <string.h>
 
 #include <gmc/gmc.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
 #include <dg/inc/DPType_.h>
 #include <odin/inc/DrvSpc.h>
 #include <dg/inc/FKind_.h>
@@ -53,9 +55,9 @@ New_DrvSpc()
 
 static void
 Ret_DrvSpc(
-   GMC_ARG(tp_DrvSpc, DrvSpc)
+   tp_DrvSpc DrvSpc
    )
-   GMC_DCL(tp_DrvSpc, DrvSpc)
+   
 {
    tp_DrvSpc DrvSpcElm, LastDrvSpc;
 
@@ -75,9 +77,9 @@ Ret_DrvSpc(
 
 static tp_DrvSpc
 Last_DrvSpc(
-   GMC_ARG(tp_DrvSpc, DrvSpc)
+   tp_DrvSpc DrvSpc
    )
-   GMC_DCL(tp_DrvSpc, DrvSpc)
+   
 {
    tp_DrvSpc LastDrvSpc;
 
@@ -90,11 +92,11 @@ Last_DrvSpc(
 
 static void
 ShiftLeft_DrvSpc(
-   GMC_ARG(tp_DrvSpc, LeftDrvSpc),
-   GMC_ARG(tp_DrvSpc*, RiteDrvSpcPtr)
+   tp_DrvSpc LeftDrvSpc,
+   tp_DrvSpc* RiteDrvSpcPtr
    )
-   GMC_DCL(tp_DrvSpc, LeftDrvSpc)
-   GMC_DCL(tp_DrvSpc*, RiteDrvSpcPtr)
+   
+   
 {
    tp_DrvSpc LastDrvSpc;
 
@@ -110,13 +112,13 @@ ShiftLeft_DrvSpc(
 
 static void
 Print_DrvSpc(
-   GMC_ARG(tp_FilDsc, FilDsc),
-   GMC_ARG(tp_Str, Str),
-   GMC_ARG(tp_DrvSpc, DrvSpc)
+   tp_FilDsc FilDsc,
+   tp_Str Str,
+   tp_DrvSpc DrvSpc
    )
-   GMC_DCL(tp_FilDsc, FilDsc)
-   GMC_DCL(tp_Str, Str)
-   GMC_DCL(tp_DrvSpc, DrvSpc)
+   
+   
+   
 {
    tp_Str OprStr, Word;
 
@@ -157,9 +159,9 @@ Print_DrvSpc(
 
 static tp_DrvSpc
 FilHdr_DrvSpc(
-   GMC_ARG(tp_FilHdr, FilHdr)
+   tp_FilHdr FilHdr
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
+   
 {
    tp_FilHdr TmpFilHdr;
    tp_DrvSpc DrvSpc, NewDrvSpc;
@@ -188,15 +190,15 @@ FilHdr_DrvSpc(
 
 static bool
 CheckCompact(
-   GMC_ARG(tp_DrvSpc, DrvSpc),
-   GMC_ARG(tp_DrvSpc, NextDrvSpc),
-   GMC_ARG(tp_DrvPth, DrvPth),
-   GMC_ARG(tp_FilPrm, FilPrm)
+   tp_DrvSpc DrvSpc,
+   tp_DrvSpc NextDrvSpc,
+   tp_DrvPth DrvPth,
+   tp_FilPrm FilPrm
    )
-   GMC_DCL(tp_DrvSpc, DrvSpc)
-   GMC_DCL(tp_DrvSpc, NextDrvSpc)
-   GMC_DCL(tp_DrvPth, DrvPth)
-   GMC_DCL(tp_FilPrm, FilPrm)
+   
+   
+   
+   
 {
    tp_DrvSpc DrvSpcElm;
    tp_DrvPth DrvPthElm, GroupingDrvPthElm;
@@ -234,13 +236,13 @@ CheckCompact(
 
 static bool
 CanCompact(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_DrvSpc, DrvSpc),
-   GMC_ARG(tp_DrvSpc, NextDrvSpc)
+   tp_FilHdr FilHdr,
+   tp_DrvSpc DrvSpc,
+   tp_DrvSpc NextDrvSpc
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_DrvSpc, DrvSpc)
-   GMC_DCL(tp_DrvSpc, NextDrvSpc)
+   
+   
+   
 {
    tp_DrvPth DrvPth;
    tp_FilPrm FilPrm;
@@ -270,13 +272,13 @@ CanCompact(
 
 void
 Print_FilHdr(
-   GMC_ARG(tp_FilDsc, FilDsc),
-   GMC_ARG(tp_Str, Str),
-   GMC_ARG(tp_FilHdr, FilHdr)
+   tp_FilDsc FilDsc,
+   tp_Str Str,
+   tp_FilHdr FilHdr
    )
-   GMC_DCL(tp_FilDsc, FilDsc)
-   GMC_DCL(tp_Str, Str)
-   GMC_DCL(tp_FilHdr, FilHdr)
+   
+   
+   
 {
    tps_Str StrBuf;
    tp_FilHdr TmpFilHdr;
@@ -347,11 +349,11 @@ Print_FilHdr(
 
 void
 SPrint_FilHdr(
-   GMC_ARG(tp_Str, OdinExpr),
-   GMC_ARG(tp_FilHdr, FilHdr)
+   tp_Str OdinExpr,
+   tp_FilHdr FilHdr
    )
-   GMC_DCL(tp_Str, OdinExpr)
-   GMC_DCL(tp_FilHdr, FilHdr)
+   
+   
 {
    Print_FilHdr((tp_FilDsc)NIL, OdinExpr, FilHdr);
    }/*SPrint_FilHdr*/
@@ -359,11 +361,11 @@ SPrint_FilHdr(
 
 void
 VerboseSPrint_FilHdr(
-   GMC_ARG(tp_Str, OdinExpr),
-   GMC_ARG(tp_FilHdr, FilHdr)
+   tp_Str OdinExpr,
+   tp_FilHdr FilHdr
    )
-   GMC_DCL(tp_Str, OdinExpr)
-   GMC_DCL(tp_FilHdr, FilHdr)
+   
+   
 {
    tp_FilHdr SrcFilHdr;
    tp_DrvSpc HeadDrvSpc, DrvSpc;

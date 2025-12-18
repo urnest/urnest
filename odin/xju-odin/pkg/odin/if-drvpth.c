@@ -53,11 +53,11 @@ New_DrvPth()
 
 void
 AppendDrvPth(
-   GMC_ARG(tp_DrvPth*, DrvPthPtr),
-   GMC_ARG(tp_DrvPth, AddDrvPth)
+   tp_DrvPth* DrvPthPtr,
+   tp_DrvPth AddDrvPth
    )
-   GMC_DCL(tp_DrvPth*, DrvPthPtr)
-   GMC_DCL(tp_DrvPth, AddDrvPth)
+   
+   
 {
    tp_DrvPth DrvPth;
 
@@ -74,9 +74,9 @@ AppendDrvPth(
 
 tp_DrvPth
 FilTyp_Cast_DrvPth(
-   GMC_ARG(tp_FilTyp, FilTyp)
+   tp_FilTyp FilTyp
    )
-   GMC_DCL(tp_FilTyp, FilTyp)
+   
 {
    tp_DrvPth DrvPth;
 
@@ -90,9 +90,9 @@ FilTyp_Cast_DrvPth(
 
 tp_DrvPth
 FilTyp_Eqv_DrvPth(
-   GMC_ARG(tp_FilTyp, FilTyp)
+   tp_FilTyp FilTyp
    )
-   GMC_DCL(tp_FilTyp, FilTyp)
+   
 {
    tp_DrvPth DrvPth;
 
@@ -106,11 +106,11 @@ FilTyp_Eqv_DrvPth(
 
 tp_DrvPth
 FilTyp_Drv_DrvPth(
-   GMC_ARG(tp_FilTyp, FilTyp),
-   GMC_ARG(tp_DrvEdg, DrvEdg)
+   tp_FilTyp FilTyp,
+   tp_DrvEdg DrvEdg
    )
-   GMC_DCL(tp_FilTyp, FilTyp)
-   GMC_DCL(tp_DrvEdg, DrvEdg)
+   
+   
 {
    tp_DrvPth DrvPth;
 
@@ -125,9 +125,9 @@ FilTyp_Drv_DrvPth(
 
 void
 Ret_DrvPth(
-   GMC_ARG(tp_DrvPth, DrvPth)
+   tp_DrvPth DrvPth
    )
-   GMC_DCL(tp_DrvPth, DrvPth)
+   
 {
    tp_DrvPth TmpDrvPth;
 
@@ -146,9 +146,9 @@ Ret_DrvPth(
 
 tp_DPType
 DrvPth_DPType(
-   GMC_ARG(tp_DrvPth, DrvPth)
+   tp_DrvPth DrvPth
    )
-   GMC_DCL(tp_DrvPth, DrvPth)
+   
 {
    return DrvPth->DPType;
    }/*DrvPth_DPType*/
@@ -156,9 +156,9 @@ DrvPth_DPType(
 
 tp_FKind
 DrvPth_FKind(
-   GMC_ARG(tp_DrvPth, DrvPth)
+   tp_DrvPth DrvPth
    )
-   GMC_DCL(tp_DrvPth, DrvPth)
+   
 {
    return DrvPth->FKind;
    }/*DrvPth_FKind*/
@@ -166,9 +166,9 @@ DrvPth_FKind(
 
 tp_FilTyp
 DrvPth_FilTyp(
-   GMC_ARG(tp_DrvPth, DrvPth)
+   tp_DrvPth DrvPth
    )
-   GMC_DCL(tp_DrvPth, DrvPth)
+   
 {
    return DrvPth->FilTyp;
    }/*DrvPth_FilTyp*/
@@ -176,9 +176,9 @@ DrvPth_FilTyp(
 
 tp_DrvEdg
 DrvPth_DrvEdg(
-   GMC_ARG(tp_DrvPth, DrvPth)
+   tp_DrvPth DrvPth
    )
-   GMC_DCL(tp_DrvPth, DrvPth)
+   
 {
    return DrvPth->DrvEdg;
    }/*DrvPth_DrvEdg*/
@@ -186,9 +186,9 @@ DrvPth_DrvEdg(
 
 tp_DrvPth
 DrvPth_Next(
-   GMC_ARG(tp_DrvPth, DrvPth)
+   tp_DrvPth DrvPth
    )
-   GMC_DCL(tp_DrvPth, DrvPth)
+   
 {
    return DrvPth->Next;
    }/*DrvPth_Next*/

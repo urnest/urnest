@@ -10,9 +10,9 @@
 */
 char *
 strdup(
-  GMC_ARG(char*, p)
+  char* p
   )
-  GMC_DCL(char*, p)
+  
 {
     char	*newval
 

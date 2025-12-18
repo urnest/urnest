@@ -16,20 +16,25 @@ geoff@boulder.colorado.edu
 #include <gmc/gmc.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
 #include <dg/inc/FKind_.h>
 #include <odin/inc/Flag_.h>
 #include <odin/inc/LogLevel_.h>
 #include <odin/inc/NodTyp_.h>
 #include <odin/inc/Status_.h>
 #include <odin/inc/LookupPlainAbsPath.h>
+#include <string.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 void
 WriteCat(
-   GMC_ARG(tp_FilDsc, FilDsc),
-   GMC_ARG(tp_FilHdr, FilHdr)
+   tp_FilDsc FilDsc,
+   tp_FilHdr FilHdr
    )
-   GMC_DCL(tp_FilDsc, FilDsc)
-   GMC_DCL(tp_FilHdr, FilHdr)
+   
+   
 {
    tp_FilElm FilElm;
    tp_FilDsc InFD;
@@ -67,11 +72,11 @@ WriteCat(
 
 void
 WriteFlat(
-   GMC_ARG(tp_FilDsc, FilDsc),
-   GMC_ARG(tp_FilHdr, FilHdr)
+   tp_FilDsc FilDsc,
+   tp_FilHdr FilHdr
    )
-   GMC_DCL(tp_FilDsc, FilDsc)
-   GMC_DCL(tp_FilHdr, FilHdr)
+   
+   
 {
    tp_FilElm FilElm;
    tps_FileName FileName;
@@ -99,13 +104,13 @@ WriteFlat(
 
 void
 WriteNames(
-   GMC_ARG(tp_FilDsc, FilDsc),
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilPrm, FilPrm)
+   tp_FilDsc FilDsc,
+   tp_FilHdr FilHdr,
+   tp_FilPrm FilPrm
    )
-   GMC_DCL(tp_FilDsc, FilDsc)
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilPrm, FilPrm)
+   
+   
+   
 {
    tp_FilElm FilElm;
    tp_FilHdr ElmFilHdr;
@@ -131,11 +136,11 @@ WriteNames(
 
 void
 WriteLabels(
-   GMC_ARG(tp_FilDsc, FilDsc),
-   GMC_ARG(tp_FilHdr, FilHdr)
+   tp_FilDsc FilDsc,
+   tp_FilHdr FilHdr
    )
-   GMC_DCL(tp_FilDsc, FilDsc)
-   GMC_DCL(tp_FilHdr, FilHdr)
+   
+   
 {
    tp_FilElm FilElm;
    tp_FilHdr ElmFilHdr;
@@ -162,17 +167,17 @@ WriteLabels(
 
 static void
 Get_Union(
-   GMC_ARG(tp_LocElm*, FirstLEPtr),
-   GMC_ARG(tp_LocElm*, LastLEPtr),
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilPrm, FilPrm),
-   GMC_ARG(tp_FilHdr, ListFilHdr)
+   tp_LocElm* FirstLEPtr,
+   tp_LocElm* LastLEPtr,
+   tp_FilHdr FilHdr,
+   tp_FilPrm FilPrm,
+   tp_FilHdr ListFilHdr
    )
-   GMC_DCL(tp_LocElm*, FirstLEPtr)
-   GMC_DCL(tp_LocElm*, LastLEPtr)
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilPrm, FilPrm)
-   GMC_DCL(tp_FilHdr, ListFilHdr)
+   
+   
+   
+   
+   
 {
    tp_FilHdr ElmFilHdr;
    tp_LocElm LocElm;
@@ -199,11 +204,11 @@ Get_Union(
 
 tp_LocElm
 Make_UnionLocElm(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilHdr, ListFilHdr)
+   tp_FilHdr FilHdr,
+   tp_FilHdr ListFilHdr
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilHdr, ListFilHdr)
+   
+   
 {
    tp_LocElm FirstLE, LastLE;
 
@@ -216,9 +221,9 @@ Make_UnionLocElm(
 
 void
 Clr_UnionFlags(
-   GMC_ARG(tp_FilHdr, FilHdr)
+   tp_FilHdr FilHdr
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
+   
 {
    tp_FilElm FilElm;
    tp_FilHdr ElmFilHdr;
@@ -237,11 +242,11 @@ Clr_UnionFlags(
 
 static bool
 TagStrCmp(
-   GMC_ARG(tp_Str, Str),
-   GMC_ARG(tp_Str, Tag)
+   tp_Str Str,
+   tp_Str Tag
    )
-   GMC_DCL(tp_Str, Str)
-   GMC_DCL(tp_Str, Tag)
+   
+   
 {
    if (strcmp(Tag, "") == 0) {
       while (*Str == ' ' || *Str == '\t') {
@@ -252,19 +257,19 @@ TagStrCmp(
 
 static void
 Get_DefInfo(
-   GMC_ARG(tp_Str*, NamePtr),
-   GMC_ARG(bool*, CmdFlagPtr),
-   GMC_ARG(bool*, ExecFlagPtr),
-   GMC_ARG(tp_Str*, TagStrPtr),
-   GMC_ARG(tp_Nod*, TgtNodPtr),
-   GMC_ARG(tp_Nod, Nod)
+   tp_Str* NamePtr,
+   bool* CmdFlagPtr,
+   bool* ExecFlagPtr,
+   tp_Str* TagStrPtr,
+   tp_Nod* TgtNodPtr,
+   tp_Nod Nod
    )
-   GMC_DCL(tp_Str*, NamePtr)
-   GMC_DCL(bool*, CmdFlagPtr)
-   GMC_DCL(bool*, ExecFlagPtr)
-   GMC_DCL(tp_Str*, TagStrPtr)
-   GMC_DCL(tp_Nod*, TgtNodPtr)
-   GMC_DCL(tp_Nod, Nod)
+   
+   
+   
+   
+   
+   
 {
    tp_Nod ValNod;
 
@@ -285,9 +290,9 @@ Get_DefInfo(
    }/*Get_DefInfo*/
 
 int IsPlainAbsPath(
-    GMC_ARG(tp_Nod,DS_Nod)
+    tp_Nod DS_Nod
   )
-   GMC_DCL(tp_Nod, DS_Nod)
+   
 {
   return
     Nod_NodTyp(DS_Nod)==8 && //DRVFIL
@@ -303,15 +308,15 @@ int IsPlainAbsPath(
 
 void
 Exec_List(
-   GMC_ARG(tp_FilHdr, ListFilHdr),
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilPrm, FilPrm),
-   GMC_ARG(bool, IsOdinfile)
+   tp_FilHdr ListFilHdr,
+   tp_FilHdr FilHdr,
+   tp_FilPrm FilPrm,
+   bool IsOdinfile
    )
-   GMC_DCL(tp_FilHdr, ListFilHdr)
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilPrm, FilPrm)
-   GMC_DCL(bool, IsOdinfile)
+   
+   
+   
+   
 {
    tps_FileName FileName;
    tp_LocElm FirstLE, LastLE;
@@ -418,11 +423,11 @@ Exec_List(
 
 void
 Exec_TargetsPtr(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilHdr, InFilHdr)
+   tp_FilHdr FilHdr,
+   tp_FilHdr InFilHdr
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilHdr, InFilHdr)
+   
+   
 {
    tp_LocElm LocElm;
    tp_FilHdr ElmFilHdr;
@@ -447,11 +452,11 @@ Exec_TargetsPtr(
 
 void
 Exec_Targets(
-   GMC_ARG(tp_FilDsc, OutFD),
-   GMC_ARG(tp_FileName, FileName)
+   tp_FilDsc OutFD,
+   tp_FileName FileName
    )
-   GMC_DCL(tp_FilDsc, OutFD)
-   GMC_DCL(tp_FileName, FileName)
+   
+   
 {
    tp_FilDsc InFD;
    tp_Str Str, Name, TagStr;
@@ -518,13 +523,13 @@ Exec_Targets(
 
 void
 WriteSrcNames(
-   GMC_ARG(tp_FilDsc, OutFD),
-   GMC_ARG(tp_FileName, FileName),
-   GMC_ARG(bool, OpFlag)
+   tp_FilDsc OutFD,
+   tp_FileName FileName,
+   bool OpFlag
    )
-   GMC_DCL(tp_FilDsc, OutFD)
-   GMC_DCL(tp_FileName, FileName)
-   GMC_DCL(bool, OpFlag)
+   
+   
+   
 {
    tp_FilDsc InFD;
    tp_Str Str, TailStr;
@@ -576,9 +581,9 @@ WriteSrcNames(
 
 void
 Validate_ViewSpec(
-   GMC_ARG(tp_FilHdr, FilHdr)
+   tp_FilHdr FilHdr
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
+   
 {
    tp_FilElm FilElm;
    tp_FilHdr ElmFilHdr;
@@ -599,9 +604,9 @@ Validate_ViewSpec(
 
 tp_FilElm
 FilElm_NextStrFilElm(
-   GMC_ARG(tp_FilElm, FilElm)
+   tp_FilElm FilElm
    )
-   GMC_DCL(tp_FilElm, FilElm)
+   
 {
    tp_FilElm StrFilElm;
    tp_FilHdr StrFilHdr;
@@ -619,13 +624,13 @@ FilElm_NextStrFilElm(
 
 void
 Exec_CmptView(
-   GMC_ARG(bool*, ErrPtr),
-   GMC_ARG(tp_FilHdr, OutFilHdr),
-   GMC_ARG(tp_FilHdr, InpFilHdr)
+   bool* ErrPtr,
+   tp_FilHdr OutFilHdr,
+   tp_FilHdr InpFilHdr
    )
-   GMC_DCL(bool*, ErrPtr)
-   GMC_DCL(tp_FilHdr, OutFilHdr)
-   GMC_DCL(tp_FilHdr, InpFilHdr)
+   
+   
+   
 {
    tp_LocElm FirstLE, LastLE;
    tp_FilElm FilElm;
@@ -663,9 +668,9 @@ Exec_CmptView(
 
 void
 Install_ActTgt(
-   GMC_ARG(tp_FilHdr, ActTgtFilHdr)
+   tp_FilHdr ActTgtFilHdr
    )
-   GMC_DCL(tp_FilHdr, ActTgtFilHdr)
+   
 {
    tp_FilHdr FilHdr;
    tps_Str StrBuf;
@@ -696,9 +701,9 @@ Install_ActTgt(
 
 void
 Uninstall_ActTgt(
-   GMC_ARG(tp_FilHdr, ActTgtFilHdr)
+   tp_FilHdr ActTgtFilHdr
    )
-   GMC_DCL(tp_FilHdr, ActTgtFilHdr)
+   
 {
    tp_FilHdr FilHdr;
    tps_Str StrBuf;
@@ -729,17 +734,17 @@ Uninstall_ActTgt(
 
 void
 WriteTextDef(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilDsc, OutFD),
-   GMC_ARG(tp_FileName, OutFileName),
-   GMC_ARG(tp_FilDsc, InFD),
-   GMC_ARG(tp_FileName, InFileName)
+   tp_FilHdr FilHdr,
+   tp_FilDsc OutFD,
+   tp_FileName OutFileName,
+   tp_FilDsc InFD,
+   tp_FileName InFileName
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilDsc, OutFD)
-   GMC_DCL(tp_FileName, OutFileName)
-   GMC_DCL(tp_FilDsc, InFD)
-   GMC_DCL(tp_FileName, InFileName)
+   
+   
+   
+   
+   
 {
    bool CmdFlag, ExecFlag, Found, NeedLastEOL, NeedEOL;
    tp_Key Key;
@@ -802,17 +807,17 @@ WriteTextDef(
 
 tp_LocElm
 Make_TargetsLocElm(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilDsc, InFD),
-   GMC_ARG(tp_FileName, InFileName),
-   GMC_ARG(tp_Date, DepModDate),
-   GMC_ARG(bool, VirFlag)
+   tp_FilHdr FilHdr,
+   tp_FilDsc InFD,
+   tp_FileName InFileName,
+   tp_Date DepModDate,
+   bool VirFlag
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilDsc, InFD)
-   GMC_DCL(tp_FileName, InFileName)
-   GMC_DCL(tp_Date, DepModDate)
-   GMC_DCL(bool, VirFlag)
+   
+   
+   
+   
+   
 {
    tp_Nod Nod, TgtNod;
    tps_Str StrBuf;
@@ -889,11 +894,11 @@ Make_TargetsLocElm(
 
 void
 Exec_VirDir(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilHdr, InpFilHdr)
+   tp_FilHdr FilHdr,
+   tp_FilHdr InpFilHdr
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilHdr, InpFilHdr)
+   
+   
 {
    tps_FileName FileName, ToFileName, ElmFileName;
    tps_Str KeyBuf;
@@ -930,15 +935,15 @@ Exec_VirDir(
 
 void
 FilPVal_LocElm(
-   GMC_ARG(tp_LocElm*, FirstLEPtr),
-   GMC_ARG(tp_LocElm*, LastLEPtr),
-   GMC_ARG(tp_FilPVal, FilPVal),
-   GMC_ARG(tp_FilHdr, FilHdr)
+   tp_LocElm* FirstLEPtr,
+   tp_LocElm* LastLEPtr,
+   tp_FilPVal FilPVal,
+   tp_FilHdr FilHdr
    )
-   GMC_DCL(tp_LocElm*, FirstLEPtr)
-   GMC_DCL(tp_LocElm*, LastLEPtr)
-   GMC_DCL(tp_FilPVal, FilPVal)
-   GMC_DCL(tp_FilHdr, FilHdr)
+   
+   
+   
+   
 {
    tp_LocPVal ValLocPVal;
    tp_LocElm LocElm;
@@ -961,11 +966,11 @@ FilPVal_LocElm(
 
 tp_LocElm
 Make_PntrHoLocElm(
-   GMC_ARG(tp_FilHdr, InFilHdr),
-   GMC_ARG(tp_FilHdr, FilHdr)
+   tp_FilHdr InFilHdr,
+   tp_FilHdr FilHdr
    )
-   GMC_DCL(tp_FilHdr, InFilHdr)
-   GMC_DCL(tp_FilHdr, FilHdr)
+   
+   
 {
    tp_LocElm LocElm;
    tp_FilElm FilElm;
@@ -995,9 +1000,9 @@ Make_PntrHoLocElm(
 
 static tp_FilTyp
 FilHdr_ArgFilTyp(
-   GMC_ARG(tp_FilHdr, FilHdr)
+   tp_FilHdr FilHdr
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
+   
 {
    return FilTyp_ArgFilTyp(FilHdr_FilTyp(FilHdr));
    }/*FilHdr_ArgFilTyp*/
@@ -1005,19 +1010,19 @@ FilHdr_ArgFilTyp(
 
 static void
 Get_Recurse(
-   GMC_ARG(tp_LocElm*, FirstLEPtr),
-   GMC_ARG(tp_LocElm*, LastLEPtr),
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilPrm, FilPrm),
-   GMC_ARG(tp_FilTyp, FilTyp),
-   GMC_ARG(tp_FilHdr, ListFilHdr)
+   tp_LocElm* FirstLEPtr,
+   tp_LocElm* LastLEPtr,
+   tp_FilHdr FilHdr,
+   tp_FilPrm FilPrm,
+   tp_FilTyp FilTyp,
+   tp_FilHdr ListFilHdr
    )
-   GMC_DCL(tp_LocElm*, FirstLEPtr)
-   GMC_DCL(tp_LocElm*, LastLEPtr)
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilPrm, FilPrm)
-   GMC_DCL(tp_FilTyp, FilTyp)
-   GMC_DCL(tp_FilHdr, ListFilHdr)
+   
+   
+   
+   
+   
+   
 {
    tp_FilHdr ElmFilHdr;
    tp_DrvPth DrvPth;
@@ -1059,11 +1064,11 @@ Get_Recurse(
 
 tp_LocElm
 Make_RecurseLocElm(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilHdr, ListFilHdr)
+   tp_FilHdr FilHdr,
+   tp_FilHdr ListFilHdr
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilHdr, ListFilHdr)
+   
+   
 {
    tp_FilTyp FilTyp;
    tp_FilPrm FilPrm;
@@ -1083,11 +1088,11 @@ Make_RecurseLocElm(
 
 tp_LocElm
 Make_DerefPrmValLocElm(
-   GMC_ARG(tp_FilHdr, InFilHdr),
-   GMC_ARG(tp_FilHdr, FilHdr)
+   tp_FilHdr InFilHdr,
+   tp_FilHdr FilHdr
    )
-   GMC_DCL(tp_FilHdr, InFilHdr)
-   GMC_DCL(tp_FilHdr, FilHdr)
+   
+   
 {
    tp_FilTyp FilTyp;
    tp_FilHdr ElmFilHdr;
@@ -1108,21 +1113,21 @@ Make_DerefPrmValLocElm(
 
 static void
 Get_ExDel(
-   GMC_ARG(tp_LocElm*, FirstLEPtr),
-   GMC_ARG(tp_LocElm*, LastLEPtr),
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilPrm, FilPrm),
-   GMC_ARG(tp_FilTyp, FilTyp),
-   GMC_ARG(tp_FilHdr, ListFilHdr),
-   GMC_ARG(bool, ExFlag)
+   tp_LocElm* FirstLEPtr,
+   tp_LocElm* LastLEPtr,
+   tp_FilHdr FilHdr,
+   tp_FilPrm FilPrm,
+   tp_FilTyp FilTyp,
+   tp_FilHdr ListFilHdr,
+   bool ExFlag
    )
-   GMC_DCL(tp_LocElm*, FirstLEPtr)
-   GMC_DCL(tp_LocElm*, LastLEPtr)
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilPrm, FilPrm)
-   GMC_DCL(tp_FilTyp, FilTyp)
-   GMC_DCL(tp_FilHdr, ListFilHdr)
-   GMC_DCL(bool, ExFlag)
+   
+   
+   
+   
+   
+   
+   
 {
    tp_LocElm LocElm;
    tp_FilElm FilElm;
@@ -1152,13 +1157,13 @@ Get_ExDel(
 
 tp_LocElm
 Make_ExDelLocElm(
-   GMC_ARG(tp_FilHdr, FilHdr),
-   GMC_ARG(tp_FilHdr, ListFilHdr),
-   GMC_ARG(bool, ExFlag)
+   tp_FilHdr FilHdr,
+   tp_FilHdr ListFilHdr,
+   bool ExFlag
    )
-   GMC_DCL(tp_FilHdr, FilHdr)
-   GMC_DCL(tp_FilHdr, ListFilHdr)
-   GMC_DCL(bool, ExFlag)
+   
+   
+   
 {
    tp_LocElm FirstLE, LastLE;
    tp_FilTyp FilTyp;
