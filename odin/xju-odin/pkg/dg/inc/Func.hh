@@ -160,7 +160,6 @@ extern bool IsPipe_FilTyp(tp_FilTyp);
 /* if-lvl.c */
 extern bool IsSubType(tp_FilTyp, tp_FilTyp);
 extern void Do_Search(tp_DrvPth *, bool *, tp_FKind, tp_FilTyp, tp_FilTyp);
-/* extern void Get_FileInfo(tp_SKind *, int *, tp_FileName); */
 extern void MakePlnFile(bool *, tp_FileName);
 extern void MakeDirFile(bool *, tp_FileName);
 extern void GetWorkingDir(bool *, tp_FileName);

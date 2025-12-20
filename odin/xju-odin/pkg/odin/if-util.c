@@ -15,6 +15,9 @@ geoff@boulder.colorado.edu
 */
 
 #include <gmc/gmc.h>
+#include <odin/inc/NodTyp_.h>
+#include <odin/inc/TokTyp_.h>
+#include <gmc/nod.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
 #include <odin/inc/Var.hh>
@@ -25,7 +28,6 @@ geoff@boulder.colorado.edu
 #include <odin/inc/HdrInf.h>
 #include <odin/inc/LogLevel_.h>
 #include <odin/inc/ModKind_.h>
-#include <odin/inc/NodTyp_.h>
 #include <odin/inc/Outputs.h>
 #include <odin/inc/Status_.h>
 #include <sys/time.h>

@@ -2,7 +2,6 @@
 #define TPS_NOD
 
 #include <gmc/gmc.h>
-#include "inc/NodTyp_.h"  /* module specific */
 
 extern void EndLex(); /* supplied by *-yylex.c */
 

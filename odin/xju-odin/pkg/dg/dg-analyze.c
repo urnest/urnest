@@ -17,6 +17,8 @@ geoff@boulder.colorado.edu
 
 #include <gmc/gmc.h>
 #include <dg/inc/Type.hh>
+#include <dg/inc/NodTyp_.h>
+#include <dg/inc/TokTyp_.h>
 #include <gmc/nod.h>
 #include <dg/inc/CastEdg.h>
 #include <dg/inc/DPType_.h>

@@ -14,10 +14,12 @@ geoff@boulder.colorado.edu
 */
 
 #include <gmc/gmc.h>
+#include <odin/inc/NodTyp_.h>
+#include <odin/inc/TokTyp_.h>
+#include <gmc/nod.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
 #include <odin/inc/Var.hh>
-#include <odin/inc/NodTyp_.h>
 #include <string.h>
 
 
@@ -71,7 +73,7 @@ YY_Unparse(tp_Str Str,tp_Nod Nod)
       case WORD: {
 	 Unlex(Str, Sym_Str(Nod_Sym(Nod)));
 	 break; }/*case*/;
-      case SCAN_HOSTWD: {
+      case HOSTWD: {
 	 (void)strcpy(Str, "!");
 	 Unlex(Tail(Str), Sym_Str(Nod_Sym(Nod)));
 	 break; }/*case*/;
@@ -81,7 +83,7 @@ YY_Unparse(tp_Str Str,tp_Nod Nod)
       case ARTFIL: {
 	 (void)strcpy(Str, "/");
 	 break; }/*case*/;
-      case SCAN_OBJTID: {
+      case OBJTID: {
 	 (void)strcpy(Str, "\0");
 	 Unlex(Tail(Str), Sym_Str(Nod_Sym(Nod)));
 	 break; }/*case*/;

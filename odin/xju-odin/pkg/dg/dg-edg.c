@@ -19,8 +19,10 @@ geoff@boulder.colorado.edu
 #include <stdlib.h>
 #include <string.h>
 #include <gmc/gmc.h>
-#include <dg/inc/Type.hh>
+#include <dg/inc/NodTyp_.h>
+#include <dg/inc/TokTyp_.h>
 #include <gmc/nod.h>
+#include <dg/inc/Type.hh>
 #include <dg/inc/Func.hh>
 #include <dg/inc/Var.hh>
 #include <dg/inc/CastEdg.h>

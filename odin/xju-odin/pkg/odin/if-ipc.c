@@ -14,6 +14,9 @@ geoff@boulder.colorado.edu
 */
 
 #include <gmc/gmc.h>
+#include <odin/inc/NodTyp_.h>
+#include <odin/inc/TokTyp_.h>
+#include <gmc/nod.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
 #include <odin/inc/Var.hh>
@@ -42,6 +45,7 @@ char *ctime();
 bool		IsAny_ReadyServerAction = false;
 
 int *IPC_IArg1, *IPC_IArg2, *IPC_IArg3;
+bool *IPC_BArg1, *IPC_BArg2, *IPC_BArg3;
 tp_Str IPC_SArg1, IPC_SArg2, IPC_SArg3;
 
 bool		IsServer = false;
@@ -558,7 +562,44 @@ IPC_Write_Int(bool* AbortPtr,int Int)
 
 
 void
+IPC_Write_Bool(bool* AbortPtr,bool Int)
+{
+   int fd, cc;
+
+   fd = ServerFD;
+
+   if (IsServer) {
+      if (!Is_ActiveClient(CurrentClient)) {
+	 *AbortPtr = true;
+	 return; }/*if*/;
+      FORBIDDEN(Is_LocalClient(CurrentClient));
+      fd = Client_FD(CurrentClient); }/*if*/;
+   cc = write(fd, (char *)&Int, sizeof(Int));
+   *AbortPtr = (cc != sizeof(Int));
+   }/*IPC_Write_Int*/
+
+
+void
 IPC_Read_Int(bool* AbortPtr,int* IntPtr)
+{
+   int fd, cc;
+
+   fd = ServerFD;
+
+   if (IsServer) {
+      if (!Is_ActiveClient(CurrentClient)) {
+	 *AbortPtr = true;
+	 return; }/*if*/;
+      FORBIDDEN(Is_LocalClient(CurrentClient));
+      fd = Client_FD(CurrentClient); }/*if*/;
+
+   cc = IPC_Read(fd, (char *)IntPtr, sizeof(*IntPtr));
+   *AbortPtr = (cc != sizeof(*IntPtr));
+   }/*IPC_Read_Int*/
+
+
+void
+IPC_Read_Bool(bool* AbortPtr,bool* IntPtr)
 {
    int fd, cc;
 

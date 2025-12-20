@@ -1,37 +1,39 @@
 #ifndef TP_OCNODTYP
 #define TP_OCNODTYP
 
-#define CMANDS 1
-#define NULLCD 2
-#define DISPLY 3
-#define COPYTR 4
-#define EDIT 5
-#define COPYTL 6
-#define EXECUT 7
-#define UTILTY 8
-#define VARVAL 9
-#define VARSET 10
-#define HELP 11
-#define EPHELP 12
-#define SFHELP 13
-#define PFHELP 14
-#define DRVFIL 15
-#define EMPFIL 16
-#define ARTFIL 17
-#define ABSFIL 18
-#define PRMOPR 19
-#define APLOPR 20
-#define DRVOPR 21
-#define HODOPR 22
-#define ELMOPR 23
-#define DIROPR 24
-#define SEGOPR 25
-#define OPRTNS 26
-#define PRMVLS 27
-#define PVLFIL 28
-#define STRING 29
-#define HOSTWD 30
-#define WORD 31
-#define OBJTID 32
+typedef enum NodTyp {
+  CMANDS=1,
+  NULLCD=2,
+  DISPLY=3,
+  COPYTR=4,
+  EDIT=5,
+  COPYTL=6,
+  EXECUT=7,
+  UTILTY=8,
+  VARVAL=9,
+  VARSET=10,
+  HELP=11,
+  EPHELP=12,
+  SFHELP=13,
+  PFHELP=14,
+  DRVFIL=15,
+  EMPFIL=16,
+  ARTFIL=17,
+  ABSFIL=18,
+  PRMOPR=19,
+  APLOPR=20,
+  DRVOPR=21,
+  HODOPR=22,
+  ELMOPR=23,
+  DIROPR=24,
+  SEGOPR=25,
+  OPRTNS=26,
+  PRMVLS=27,
+  PVLFIL=28,
+  STRING=29,
+  HOSTWD=30,
+  WORD=31,
+  OBJTID=32
+} tp_NodTyp;
 
 #endif

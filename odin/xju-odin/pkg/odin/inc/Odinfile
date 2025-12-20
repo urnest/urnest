@@ -6,12 +6,16 @@
 %check.ls==<<
 %check_tok_typ_h
 %check_nod_typ_h
+%check_oc_nod_typ_h
+%check_oc_tok_typ_h
 
 %check_tok_typ_h==(TokTyp_.h)+cmd=diff (%ygt/tok.h) (TokTyp_.h):stdout
 %check_nod_typ_h==(NodTyp_.h)+cmd=diff (%ygt/nod.h) (NodTyp_.h):stdout
+%check_oc_nod_typ_h==(OC_NodTyp_.h)+cmd=diff (../boot%client-ygt/nod.h) (OC_NodTyp_.h):stdout
+%check_oc_tok_typ_h==(OC_TokTyp_.h)+cmd=diff (../boot%client-ygt/tok.h) (OC_TokTyp_.h):stdout
 
 
-%ygt==()+cmd=(%ygt.sh) (../../tregrm/ygt.sh) (%fsys.ygi) (../../tregrm%exe) 'oc':output
+%ygt==()+cmd=(%ygt.sh) (../../tregrm/ygt.sh) (%fsys.ygi) (../../tregrm%exe):output
 
 %fsys.ygi==(%cast-to.ygi)+cmd=(%keep-double-slash.sh) (../fsys.ygi,c:cpp):stdout
 

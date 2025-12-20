@@ -1,7 +1,6 @@
 #ifndef TREGRM_FUNC_H
 #define TREGRM_FUNC_H
 
-#include <gmc/nod.h>
 #include <tregrm/inc/Type.hh>
 
 /* tg.anal.c */
@@ -53,7 +52,6 @@ extern tp_Nod YY_Parse(void);
 extern void yyerror(char *);
 extern int yylex(void);
 extern int yyparse(void);
-/* extern void Get_FileInfo(tp_SKind *, int *, tp_FileName); */
 extern void MakePlnFile(bool *, tp_FileName);
 extern void MakeDirFile(bool *, tp_FileName);
 extern void GetWorkingDir(bool *, tp_FileName);

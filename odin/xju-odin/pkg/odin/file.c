@@ -1,4 +1,7 @@
-#include "file.h"
+#include <odin/file.h>
+#include <sys/stat.h>
+#include <odin/inc/NodTyp_.h>
+#include <odin/inc/Func.hh>
 
 void Get_FileInfo(tp_SKind* SKindPtr,int* SysModTimePtr,tp_FileName FileName)
 {

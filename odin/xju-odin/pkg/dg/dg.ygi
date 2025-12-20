@@ -1,7 +1,7 @@
 #	Copyright (c) 1991 Geoffrey M. Clemm
 #	geoff@boulder.colorado.edu
 
-INCLUDE "gmc/gmc.h" "gmc/nod.h" "dg/inc/Func.hh"
+INCLUDE "gmc/gmc.h" "dg/inc/NodTyp_.h" "gmc/nod.h" "dg/inc/Func.hh"
 
 SCANNER
 

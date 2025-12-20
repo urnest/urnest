@@ -14,10 +14,11 @@ geoff@boulder.colorado.edu
 */
 
 #include <gmc/gmc.h>
+#include <tregrm/inc/NodTyp_.h>
+#include <tregrm/inc/TokTyp_.h>
+#include <gmc/nod.h>
 #include <tregrm/inc/AttTyp_.h>
 #include <tregrm/inc/MarkTyp_.h>
-#include <gmc/nod.h>
-#include <gmc/nod.h>
 #include <tregrm/inc/Type.hh>
 #include <tregrm/inc/Func.hh>
 

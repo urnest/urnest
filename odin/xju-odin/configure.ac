@@ -4,7 +4,7 @@
 AC_PREREQ([2.63])
 AC_INIT([xju-odin], [1.2.1], [https://github.com/urnest/urnest/])
 AC_CONFIG_SRCDIR([pkg])
-AC_CONFIG_HEADERS([pkg/odin/inc/config.hh])
+AC_CONFIG_HEADERS([pkg/config/config.hh])
 
 # Checks for programs.
 AC_PROG_CC

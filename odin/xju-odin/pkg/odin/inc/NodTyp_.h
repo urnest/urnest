@@ -1,5 +1,5 @@
-#ifndef TP_OCNODTYP
-#define TP_OCNODTYP
+#ifndef TP_YYNODTYP
+#define TP_YYNODTYP
 
 typedef enum NodTyp {
   NSTDEF=1,
@@ -23,9 +23,9 @@ typedef enum NodTyp {
   OPRTNS=19,
   PRMVLS=20,
   STRING=21,
-  SCAN_HOSTWD=22,
+  HOSTWD=22,
   WORD=23,
-  SCAN_OBJTID=24
+  OBJTID=24
 } tp_NodTyp;
 
 #endif

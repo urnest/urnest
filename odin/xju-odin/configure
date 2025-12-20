@@ -2806,7 +2806,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-ac_config_headers="$ac_config_headers pkg/odin/inc/config.hh"
+ac_config_headers="$ac_config_headers pkg/config/config.hh"
 
 
 # Checks for programs.
@@ -6188,7 +6188,7 @@ cat >>$CONFIG_STATUS <<\_ACEOF || ac_write_fail=1
 for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
-    "pkg/odin/inc/config.hh") CONFIG_HEADERS="$CONFIG_HEADERS pkg/odin/inc/config.hh" ;;
+    "pkg/config/config.hh") CONFIG_HEADERS="$CONFIG_HEADERS pkg/config/config.hh" ;;
     "pkg/config/boot.sh") CONFIG_FILES="$CONFIG_FILES pkg/config/boot.sh" ;;
     "pkg/config/config.dg") CONFIG_FILES="$CONFIG_FILES pkg/config/config.dg" ;;
     "pkg/config/version") CONFIG_FILES="$CONFIG_FILES pkg/config/version" ;;

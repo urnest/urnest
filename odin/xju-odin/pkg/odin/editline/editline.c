@@ -5,6 +5,7 @@
 #include <signal.h>
 #include <ctype.h>
 #include <string.h>
+#include <unistd.h>
 
 /*
 **  Manifest constants.

@@ -1,6 +1,7 @@
 /*  
 **  Unix system-dependant routines for editline library.
 */
+#include <config/config.hh>
 #include "editline.h"
 
 #include <string.h>

@@ -1,10 +1,13 @@
 #include <gmc/gmc.h>
+#include <odin/inc/NodTyp_.h>
+#include <gmc/nod.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
 #include <odin/inc/Var.hh>
 #include <string.h>
 extern bool IPC_Do_Return;
 extern int *IPC_IArg1, *IPC_IArg2, *IPC_IArg3;
+extern bool *IPC_BArg1, *IPC_BArg2, *IPC_BArg3;
 extern tp_Str IPC_SArg1, IPC_SArg2, IPC_SArg3;
 
 
@@ -194,10 +197,10 @@ static void
 Do_Interrupt_Msg(
    bool* IPC_AbortPtr)
 {
-   int InterruptFlag;
+   bool InterruptFlag;
 
    *IPC_AbortPtr = false;
-   IPC_Read_Int(IPC_AbortPtr, &InterruptFlag);
+   IPC_Read_Bool(IPC_AbortPtr, &InterruptFlag);
    if (*IPC_AbortPtr) return;
    Local_Do_Interrupt(InterruptFlag);
 }
@@ -209,12 +212,12 @@ Do_Alias_Msg(
    bool* IPC_AbortPtr)
 {
    tps_Str FileName;
-   int ForceFlag;
+   bool ForceFlag;
 
    *IPC_AbortPtr = false;
    IPC_Read_Str(IPC_AbortPtr, FileName);
    if (*IPC_AbortPtr) return;
-   IPC_Read_Int(IPC_AbortPtr, &ForceFlag);
+   IPC_Read_Bool(IPC_AbortPtr, &ForceFlag);
    if (*IPC_AbortPtr) return;
    Local_Do_Alias(FileName, ForceFlag);
 }
@@ -245,12 +248,12 @@ Job_Done_Msg(
    bool* IPC_AbortPtr)
 {
    int JobID;
-   int Abort;
+   bool Abort;
 
    *IPC_AbortPtr = false;
    IPC_Read_Int(IPC_AbortPtr, &JobID);
    if (*IPC_AbortPtr) return;
-   IPC_Read_Int(IPC_AbortPtr, &Abort);
+   IPC_Read_Bool(IPC_AbortPtr, &Abort);
    if (*IPC_AbortPtr) return;
    Local_Job_Done(JobID, Abort);
 }
@@ -291,11 +294,11 @@ Get_OdinFile_Msg(
    bool* IPC_AbortPtr)
 {
    tps_Str OdinExpr;
-   int NeedsData;
+   bool NeedsData;
 
    IPC_Read_Str(IPC_AbortPtr, OdinExpr);
    if (*IPC_AbortPtr) return;
-   IPC_Read_Int(IPC_AbortPtr, &NeedsData);
+   IPC_Read_Bool(IPC_AbortPtr, &NeedsData);
    if (*IPC_AbortPtr) return;
    Local_Get_OdinFile(OdinExpr, NeedsData);
 }
@@ -312,7 +315,7 @@ LocalEnd_Get_OdinFile(
    if (IsServer && Is_LocalClient(CurrentClient)) {
       (void)strcpy(IPC_SArg1, FileName);
       *IPC_IArg2 = StatusPtr;
-      *IPC_IArg3 = ExecFlagPtr;
+      *IPC_BArg3 = ExecFlagPtr;
       FORBIDDEN(IPC_Do_Return);
 
       IPC_Do_Return = true;

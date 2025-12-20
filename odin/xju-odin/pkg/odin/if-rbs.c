@@ -14,6 +14,9 @@ geoff@boulder.colorado.edu
 */
 
 #include <gmc/gmc.h>
+#include <odin/inc/NodTyp_.h>
+#include <odin/inc/TokTyp_.h>
+#include <gmc/nod.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
 #include <odin/inc/Var.hh>
@@ -183,14 +186,49 @@ RBS_Write_Int(
 
 
 static void
+RBS_Write_Bool(
+   bool* AbortPtr,
+   tp_Host Host,
+   bool Int
+   )
+{
+   int cc;
+
+   if (Host->FD < 0) {
+      *AbortPtr = true;
+      return; }/*if*/;
+   cc = write(Host->FD, (char *)&Int, sizeof(Int));
+   *AbortPtr = (cc != sizeof(Int));
+   if (*AbortPtr) {
+      RBS_Close(Host); }/*if*/;
+   }/*RBS_Write_Int*/
+
+
+static void
 RBS_Read_Int(
    bool* AbortPtr,
    tp_Host Host,
    int* IntPtr
    )
-   
-   
-   
+{
+   int cc;
+
+   if (Host->FD < 0) {
+      *AbortPtr = true;
+      return; }/*if*/;
+   cc = IPC_Read(Host->FD, (char *)IntPtr, sizeof(*IntPtr));
+   *AbortPtr = (cc != sizeof(*IntPtr));
+   if (*AbortPtr) {
+      RBS_Close(Host); }/*if*/;
+   }/*RBS_Read_Int*/
+
+
+static void
+RBS_Read_Bool(
+   bool* AbortPtr,
+   tp_Host Host,
+   bool* IntPtr
+   )
 {
    int cc;
 
@@ -263,7 +301,7 @@ RBS_Get_Msg(
 
    RBS_Read_Int(&RBS_Abort, Host, &JobID);
    if (RBS_Abort) return;
-   RBS_Read_Int(&RBS_Abort, Host, &Abort);
+   RBS_Read_Bool(&RBS_Abort, Host, &Abort);
    if (RBS_Abort) return;
    Build_Done(JobID_Build(JobID), Abort);
    }/*RBS_Get_Msg*/

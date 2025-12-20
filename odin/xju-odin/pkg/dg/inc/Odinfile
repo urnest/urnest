@@ -10,7 +10,7 @@
 %check_tok_typ_h==(TokTyp_.h)+cmd=diff (%ygt/tok.h) (TokTyp_.h):stdout
 %check_nod_typ_h==(NodTyp_.h)+cmd=diff (%ygt/nod.h) (NodTyp_.h):stdout
 
-%ygt==()+cmd=(%ygt.sh) (../../tregrm/ygt.sh) (../drvgrf.ygi) (../../tregrm%exe):output
+%ygt==()+cmd=(%ygt.sh) (../../tregrm/ygt.sh) (../dg.ygi) (../../tregrm%exe):output
 
 %ygt.sh==!<<
 #!/bin/sh -e

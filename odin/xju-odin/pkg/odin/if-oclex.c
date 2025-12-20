@@ -15,10 +15,12 @@ geoff@boulder.colorado.edu
 
 #include <string.h>
 #include <gmc/gmc.h>
+#include <odin/inc/OC_NodTyp_.h>
+#include <odin/inc/TokTyp_.h>
+#include <gmc/nod.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
 #include <odin/inc/Var.hh>
-#include <odin/inc/OC_NodTyp_.h>
 
 
 extern tp_Str		PrevParseStr;

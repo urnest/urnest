@@ -14,6 +14,8 @@ geoff@boulder.colorado.edu
 */
 
 #include <gmc/gmc.h>
+#include <xxx/inc/NodTyp_.h>
+#include <xxx/inc/TokTyp_.h>
 #include <gmc/nod.h>
 #include <stdlib.h>
 

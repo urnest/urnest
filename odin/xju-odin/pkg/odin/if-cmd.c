@@ -14,11 +14,13 @@ geoff@boulder.colorado.edu
 */
 
 #include <gmc/gmc.h>
+#include <odin/inc/OC_NodTyp_.h>
+#include <odin/inc/TokTyp_.h>
+#include <gmc/nod.h>
 #include <string.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
 #include <odin/inc/LogLevel_.h>
-#include <odin/inc/OC_NodTyp_.h>
 #include <odin/inc/Status_.h>
 #include <odin/inc/Var.hh>
 
@@ -365,7 +367,7 @@ Do_Execute(bool* AbortPtr,tp_Nod Root,bool Interactive)
 	 Execute(AbortPtr, FileName, OdinExpr, Interactive);
 	 goto done; }/*if*/; }/*if*/;
 
-   FORBIDDEN(Nod_NodTyp(CmdNod) != SCAN_HOSTWD);
+   FORBIDDEN(Nod_NodTyp(CmdNod) != HOSTWD);
    Cmd = Sym_Str(Nod_Sym(CmdNod));
    (void)strcpy(CmdStr, Cmd);
    if (TgtNod != NIL) {
@@ -475,7 +477,7 @@ Do_SetVar(bool* AbortPtr,tp_Nod Root)
 
    VarStr = Sym_Str(Nod_Sym(Nod_Son(1, Root)));
    ValNod = Nod_Son(2, Root);
-   if (Nod_NodTyp(ValNod) == SCAN_HOSTWD) {
+   if (Nod_NodTyp(ValNod) == HOSTWD) {
       Set_HostVar(AbortPtr, VarStr, Sym_Str(Nod_Sym(ValNod)));
       return; }/*if*/;
    OC_Unparse(ValBuf, ValNod);

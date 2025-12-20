@@ -27,9 +27,7 @@ int main()
 
    DumpCore = (getenv("DUMPCORE") != 0);
 
-   Init_IO();
-   Init_Err();
-
+   Init_Gmc();
    Root = YY_Parse();
    if (Num_Errors() > 0) return 101;
 

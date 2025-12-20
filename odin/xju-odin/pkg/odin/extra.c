@@ -18,6 +18,7 @@ geoff@boulder.colorado.edu
 int errno;
 
 extern int *IPC_IArg1, *IPC_IArg2, *IPC_IArg3;
+extern bool *IPC_BArg1, *IPC_BArg2, *IPC_BArg3;
 extern tp_Str IPC_SArg1, IPC_SArg2, IPC_SArg3;
 extern int yydebug, ocdebug;
 

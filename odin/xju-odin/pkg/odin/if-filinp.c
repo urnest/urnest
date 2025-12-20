@@ -12,10 +12,13 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 geoff@boulder.colorado.edu
 */
+#include <stdlib.h>
 
 #include <gmc/gmc.h>
+#include <odin/inc/NodTyp_.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
 #include <odin/inc/FilInp.h>
 #include <dg/inc/FKind_.h>
 #include <odin/inc/InpSpc.h>
@@ -23,7 +26,6 @@ geoff@boulder.colorado.edu
 #include <dg/inc/InpKind_.h>
 #include <odin/inc/Inputs.h>
 #include <dg/inc/ISKind_.h>
-#include <odin/inc/NodTyp_.h>
 
 
 int		num_FilInpS = 0;

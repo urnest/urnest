@@ -1,11 +1,9 @@
-INCLUDE "gmc/nod.h"
-
 SCANNER
   EOF		= EOFTOK
   ERR		= ERRTOK
   "Word"	= WORDTK	=> "WORD"
-  "EPString"	= SCAN_HOSTWD	=> "SCAN_HOSTWD"
-  "ObjectID"	= SCAN_OBJTID	=> "SCAN_OBJTID"
+  "EPString"	= SCAN_HOSTWD	=> "HOSTWD"
+  "ObjectID"	= SCAN_OBJTID	=> "OBJTID"
   '!'		= EXCLPT
   ';'		= SCOLON
   '?'		= QUESMK

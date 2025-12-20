@@ -26,9 +26,12 @@ inc%check
    dg-analyze.c; dg-build.c; dg-edg.c; dg-envvar.c; dg-filtyp.c
    dg-main.c; dg-prmtyp.c; dg-tool.c; dg-valid.c; dg-yylex.c
    dg-yacc.c; if-drvpth.c; if-ft.c; if-lvl.c
-   ../gmc/err-no-ipc.c; ../gmc/gmc.c; ../gmc/nod.c
+   ../gmc/err-no-ipc.c; ../gmc/gmc.c;
    tc-map-prm-info.cxx
    assert.cxx; ../gmc/inotify-stub.c
+   %nod.c
+
+%nod.c==../gmc/xxx-nod.c+cmd=sed -e 's=xxx/inc=dg/inc=g':stdout
 
 %dg-lint.c.sm == <<
    dg-analyze.c; dg-build.c; dg-edg.c; dg-envvar.c; dg-filtyp.c

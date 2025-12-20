@@ -14,9 +14,11 @@ geoff@boulder.colorado.edu
 */
 
 #include <gmc/gmc.h>
+#include <odin/inc/NodTyp_.h>
+#include <odin/inc/TokTyp_.h>
+#include <gmc/nod.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
-#include <odin/inc/TokTyp_.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -226,7 +228,7 @@ Lex()
 	    Str[iStr] = 0;
 	    Sym = Str_Sym(Str);
 	    Push_SymStack(Sym);
-	    return SCAN_HOSTWD;
+	    return HOSTWD;
 	    break;}/*case*/;
 	 case '$': {
 	    ExpandVar(&Abort, &RestStr, ParseStr);
@@ -253,7 +255,7 @@ Lex()
 	       Str[iStr] = 0;
 	       Sym = Str_Sym(Str);
 	       Push_SymStack(Sym);
-	       return SCAN_OBJTID; }/*if*/;
+	       return OBJTID; }/*if*/;
 	    while (true) {
 	       /*select*/{
 		  if (IsWordChr(*ParseStr)) {

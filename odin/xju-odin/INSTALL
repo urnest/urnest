@@ -22,7 +22,7 @@ echo "Installing odin man page into $ODINMAN."
 
 if [ ! -d $ODINPKGS ] ; then mkdir $ODINPKGS || exit 1; fi
 
-(cd ./pkg/odin; make CC=$ODIN_CC CFLAGS="$ODIN_CC_FLAGS" CXX=$ODIN_CXX CXXFLAGS="$ODIN_CXX_FLAGS") || exit 1
+(cd ./pkg/odin; make CC=$ODIN_CC CFLAGS="$ODIN_CC_FLAGS -I.." CXX=$ODIN_CXX CXXFLAGS="$ODIN_CXX_FLAGS -I..") || exit 1
 
 rm -rf $ODINPKS $ODINBIN $ODINMAN
 

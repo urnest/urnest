@@ -2,9 +2,9 @@
 #define ODIN_FUNC_H
 
 #include <gmc/gmc.h>
-#include <gmc/nod.h>
 #include <odin/inc/Type.hh>
 #include <sys/select.h>
+#include <odin/file.h>
 
 /* if-bcast.c */
 extern void Broadcast(tp_FilHdr FilHdr, tp_Status Status);
@@ -166,7 +166,6 @@ extern void Init_CWD();
 extern void DeadServerExit();
 extern void Exit(int);
 /* if-err.c */
-extern void Init_Err();
 extern void Set_IPC_Err(bool);
 extern void Set_ErrFile(tp_FileName, bool, tp_FilDsc);
 extern void Save_ErrFile(tp_FileName *, bool *, tp_FilDsc *);
@@ -352,7 +351,6 @@ extern void Set_OrigModDate(tp_FilHdr, tp_Date);
 extern tp_Date FilHdr_OrigModDate(tp_FilHdr);
 /* if-file.c */
 extern void Set_ModeMask(tp_FileName);
-extern void Get_FileInfo(tp_SKind *, int *, tp_FileName);
 extern void MakePlnFile(bool *, tp_FileName);
 extern void MakeDirFile(bool *, tp_FileName);
 extern void GetWorkingDir(bool *, tp_Str);
@@ -533,7 +531,6 @@ extern void Init_Info(bool *);
 extern void Close_Info();
 extern void Update_Info();
 /* if-io.c */
-extern void Init_IO();
 extern bool GetIsTTY();
 extern tp_FilDsc FileName_CFilDsc(tp_FileName);
 extern tp_FilDsc FileName_WFilDsc(tp_FileName, bool);
@@ -561,7 +558,9 @@ extern void IPC_Init();
 extern int IPC_Read(int, char *, int);
 extern void IPC_Get_Commands(bool *, char *);
 extern void IPC_Write_Int(bool *, int);
+extern void IPC_Write_Bool(bool *, bool);
 extern void IPC_Read_Int(bool *, int *);
+extern void IPC_Read_Bool(bool *, bool *);
 extern void IPC_Write_Str(bool *, const char *);
 extern void IPC_Read_Str(bool *, char *);
 extern void IPC_Do_Abort();

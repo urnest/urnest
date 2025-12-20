@@ -1,5 +1,5 @@
-#ifndef TP_YYTOKTYP
-#define TP_YYTOKTYP
+#ifndef TP_OCTOKTYP
+#define TP_OCTOKTYP
 
 #define EOFTOK 0
 #define ERRTOK 1

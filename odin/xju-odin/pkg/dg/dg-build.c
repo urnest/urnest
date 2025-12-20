@@ -15,8 +15,10 @@ geoff@boulder.colorado.edu
 
 #include <stdio.h>
 #include <gmc/gmc.h>
-#include <dg/inc/Type.hh>
+#include <dg/inc/NodTyp_.h>
+#include <dg/inc/TokTyp_.h>
 #include <gmc/nod.h>
+#include <dg/inc/Type.hh>
 #include <dg/inc/Func.hh>
 #include <dg/inc/Var.hh>
 #include <dg/inc/DG_Version.h>
@@ -647,7 +649,8 @@ Write_DerivationGraph()
    (void)fprintf(DG_C_FILE, "char *DG_Version = \"%s\";\n", DG_VERSION_STR);
    (void)fprintf(DRVGRF_FILE, ".%s\1\n", Banner);
    (void)fprintf(DG_C_FILE, "char *Banner = \"%s\";\n", Banner);
-   (void)fprintf(DG_C_FILE, "#include \"inc/GMC.h\"\n");
+   (void)fprintf(DG_C_FILE, "#include \"gmc/gmc.h\"\n");
+   (void)fprintf(DG_C_FILE, "#include \"dg/inc/Type.hh\"\n");
    DG_HEAD(SrcTyp);
    DG_HEAD(FilTyp);
    DG_HEAD(PrmTyp);

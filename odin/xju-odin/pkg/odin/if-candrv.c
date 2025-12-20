@@ -14,6 +14,9 @@ geoff@boulder.colorado.edu
 */
 
 #include <gmc/gmc.h>
+#include <odin/inc/NodTyp_.h>
+#include <odin/inc/TokTyp_.h>
+#include <gmc/nod.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
 #include <odin/inc/Var.hh>
@@ -22,7 +25,6 @@ geoff@boulder.colorado.edu
 #include <odin/inc/Flag_.h>
 #include <dg/inc/InpKind_.h>
 #include <odin/inc/LogLevel_.h>
-#include <odin/inc/NodTyp_.h>
 #include <odin/inc/Status_.h>
 #include <string.h>
 
@@ -538,7 +540,7 @@ Nod_PrmFHdr(tp_Nod Nod)
       case ARTFIL: {
 	 FilHdr = Copy_FilHdr(RootFilHdr);
 	 break; }/*case*/;
-      case SCAN_OBJTID: {
+      case OBJTID: {
 	 FilHdr = LocHdr_FilHdr
 	  ((tp_LocHdr)Str_PosInt(Sym_Str(Nod_Sym(RootNod))));
 	 break; }/*case*/;

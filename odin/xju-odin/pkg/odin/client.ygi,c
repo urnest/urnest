@@ -1,6 +1,8 @@
 /*	Copyright (c) 1991 Geoffrey M. Clemm */
 /*	geoff@boulder.colorado.edu */
 
+INCLUDE "gmc/gmc.h" "odin/inc/OC_NodTyp_.h" "gmc/nod.h" "odin/inc/Func.hh"
+
 #include "scan.h"
 
 NODES
@@ -9,7 +11,7 @@ NODES
 
    "DRVFIL" "EMPFIL" "ARTFIL" "ABSFIL"
    "PRMOPR" "APLOPR" "DRVOPR" "HODOPR" "ELMOPR" "DIROPR" "SEGOPR"
-   "OPRTNS" "PRMVLS" "PVLFIL" "STRING" "SCAN_HOSTWD" "WORD"   "SCAN_OBJTID"
+   "OPRTNS" "PRMVLS" "PVLFIL" "STRING" "HOSTWD" "WORD"   "OBJTID"
 
 RULES
 

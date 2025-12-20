@@ -1,7 +1,14 @@
-#include "inc/GMC.h"
+#include <gmc/gmc.h>
+#include <odin/inc/NodTyp_.h>
+#include <gmc/nod.h>
+#include <odin/inc/Type.hh>
+#include <odin/inc/Func.hh>
+#include <odin/inc/Var.hh>
+#include <string.h>
 
 extern bool IPC_Do_Return;
 extern int *IPC_IArg1, *IPC_IArg2, *IPC_IArg3;
+extern bool *IPC_BArg1, *IPC_BArg2, *IPC_BArg3;
 extern tp_Str IPC_SArg1, IPC_SArg2, IPC_SArg3;
 
 #ifndef CLIENT_ONLY
@@ -9,7 +16,6 @@ void
 Add_BuildArg(
    tp_FileName FileName
    )
-   tp_FileName FileName
 {
    bool IPC_Abort;
 
@@ -35,9 +41,6 @@ Do_Build(
    tp_FileName JobDirName,
    tp_FileName LogFileName
    )
-   tp_JobID JobID
-   tp_FileName JobDirName
-   tp_FileName LogFileName
 {
    bool IPC_Abort;
 
@@ -65,7 +68,6 @@ void
 Abort_Build(
    tp_JobID JobID
    )
-   tp_JobID JobID
 {
    bool IPC_Abort;
 
@@ -89,7 +91,6 @@ void
 Do_MakeReadOnly(
    tp_FileName FileName
    )
-   tp_FileName FileName
 {
    bool IPC_Abort;
 
@@ -113,7 +114,6 @@ void
 ErrMessage(
    char* Message
    )
-   char* Message
 {
    bool IPC_Abort;
 
@@ -137,7 +137,6 @@ void
 LogMessage(
    char* Message
    )
-   char* Message
 {
    bool IPC_Abort;
 
@@ -161,7 +160,6 @@ void
 FileErrMessage(
    tp_FileName FileName
    )
-   tp_FileName FileName
 {
    bool IPC_Abort;
 
@@ -186,8 +184,6 @@ Next_OdinFile(
    tp_Str OdinExpr,
    int ID
    )
-   tp_Str OdinExpr
-   int ID
 {
    bool IPC_Abort;
 
@@ -213,7 +209,6 @@ void
 Get_UseCount(
    int* CountPtr
    )
-   int* CountPtr
 {
    bool IPC_Abort;
 
@@ -243,7 +238,6 @@ void
 Get_CurSize(
    int* SizePtr
    )
-   int* SizePtr
 {
    bool IPC_Abort;
 
@@ -292,7 +286,6 @@ void
 Get_Banner(
    tp_Str Str
    )
-   tp_Str Str
 {
    bool IPC_Abort;
 
@@ -322,7 +315,6 @@ void
 Do_Interrupt(
    bool InterruptFlag
    )
-   bool InterruptFlag
 {
    bool IPC_Abort;
 
@@ -333,7 +325,7 @@ Do_Interrupt(
 #endif
    IPC_Write_Int(&IPC_Abort, 14);
    if (IPC_Abort) IPC_Do_Abort();
-   IPC_Write_Int(&IPC_Abort, InterruptFlag);
+   IPC_Write_Bool(&IPC_Abort, InterruptFlag);
    if (IPC_Abort) IPC_Do_Abort();
 #ifndef CLIENT_ONLY
    };
@@ -347,8 +339,6 @@ Do_Alias(
    tp_FileName FileName,
    bool ForceFlag
    )
-   tp_FileName FileName
-   bool ForceFlag
 {
    bool IPC_Abort;
 
@@ -361,7 +351,7 @@ Do_Alias(
    if (IPC_Abort) IPC_Do_Abort();
    IPC_Write_Str(&IPC_Abort, FileName);
    if (IPC_Abort) IPC_Do_Abort();
-   IPC_Write_Int(&IPC_Abort, ForceFlag);
+   IPC_Write_Bool(&IPC_Abort, ForceFlag);
    if (IPC_Abort) IPC_Do_Abort();
 #ifndef CLIENT_ONLY
    };
@@ -375,8 +365,6 @@ Get_Alias(
    tp_FileName OutFileName,
    tp_FileName FileName
    )
-   tp_FileName OutFileName
-   tp_FileName, FileName
 {
    bool IPC_Abort;
 
@@ -409,8 +397,6 @@ Job_Done(
    tp_JobID JobID,
    bool Abort
    )
-   tp_JobID JobID
-   bool Abort
 {
    bool IPC_Abort;
 
@@ -423,7 +409,7 @@ Job_Done(
    if (IPC_Abort) IPC_Do_Abort();
    IPC_Write_Int(&IPC_Abort, JobID);
    if (IPC_Abort) IPC_Do_Abort();
-   IPC_Write_Int(&IPC_Abort, Abort);
+   IPC_Write_Bool(&IPC_Abort, Abort);
    if (IPC_Abort) IPC_Do_Abort();
 #ifndef CLIENT_ONLY
    };
@@ -436,7 +422,6 @@ void
 Test(
    tp_FileName FileName
    )
-   tp_FileName, FileName
 {
    bool IPC_Abort;
 
@@ -506,8 +491,8 @@ Get_OdinFile(
       IPC_SArg1 = FileName;
       FORBIDDEN(IPC_IArg2 != NIL);
       IPC_IArg2 = StatusPtr;
-      FORBIDDEN(IPC_IArg3 != NIL);
-      IPC_IArg3 = ExecFlagPtr;
+      FORBIDDEN(IPC_BArg3 != NIL);
+      IPC_BArg3 = ExecFlagPtr;
       Local_Get_OdinFile(OdinExpr, NeedsData);
       if (!IPC_Do_Return) {
          IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
@@ -516,7 +501,7 @@ Get_OdinFile(
       IPC_Do_Return = false;
       IPC_SArg1 = NIL;
       IPC_IArg2 = NIL;
-      IPC_IArg3 = NIL;
+      IPC_BArg3 = NIL;
    }else{
 #endif
    IPC_Write_Int(&IPC_Abort, 20);
@@ -533,7 +518,7 @@ Get_OdinFile(
    if (IPC_Abort) IPC_Do_Abort();
    IPC_Read_Int(&IPC_Abort, StatusPtr);
    if (IPC_Abort) IPC_Do_Abort();
-   IPC_Read_Int(&IPC_Abort, ExecFlagPtr);
+   IPC_Read_Bool(&IPC_Abort, ExecFlagPtr);
    if (IPC_Abort) IPC_Do_Abort();
 #ifndef CLIENT_ONLY
    };
@@ -546,7 +531,6 @@ void
 Set_CWD(
    tp_FileName FileName
    )
-   tp_FileName, FileName
 {
    bool IPC_Abort;
 
@@ -577,8 +561,6 @@ Push_Context(
    tp_FileName DirName,
    tp_FileName FileName
    )
-   tp_FileName DirName
-   tp_FileName, FileName
 {
    bool IPC_Abort;
 
@@ -610,7 +592,6 @@ void
 Pop_Context(
    tp_FileName DirName
    )
-   tp_FileName DirName
 {
    bool IPC_Abort;
 
@@ -640,7 +621,6 @@ void
 Set_KeepGoing(
    int Flag
    )
-   int, Flag
 {
    bool IPC_Abort;
 
@@ -670,7 +650,6 @@ void
 Set_ErrLevel(
    int ErrLevel
    )
-   int, ErrLevel
 {
    bool IPC_Abort;
 
@@ -700,7 +679,6 @@ void
 Set_WarnLevel(
    int WarnLevel
    )
-   int, WarnLevel
 {
    bool IPC_Abort;
 
@@ -730,7 +708,6 @@ void
 Set_LogLevel(
    tp_LogLevel LogLevel
    )
-   tp_LogLevel, LogLevel
 {
    bool IPC_Abort;
 
@@ -760,7 +737,6 @@ void
 Set_HelpLevel(
    int HelpLevel
    )
-   int, HelpLevel
 {
    bool IPC_Abort;
 
@@ -790,7 +766,6 @@ void
 Set_Debug(
    tp_Str DebugName
    )
-   tp_Str, DebugName
 {
    bool IPC_Abort;
 
@@ -820,7 +795,6 @@ void
 Set_MaxJobs(
    int MaxJobs
    )
-   int, MaxJobs
 {
    bool IPC_Abort;
 
@@ -850,7 +824,6 @@ void
 Redo(
    tp_Str OdinExpr
    )
-   tp_Str, OdinExpr
 {
    bool IPC_Abort;
 
@@ -881,8 +854,6 @@ OdinExpr_ID(
    int* IDPtr,
    tp_Str OdinExpr
    )
-   int* IDPtr
-   tp_Str, OdinExpr
 {
    bool IPC_Abort;
 
@@ -915,8 +886,6 @@ ID_OdinExpr(
    tp_Str OdinExpr,
    int ID
    )
-   tp_Str OdinExpr
-   int, ID
 {
    bool IPC_Abort;
 
@@ -949,8 +918,6 @@ ID_LongOdinExpr(
    tp_Str OdinExpr,
    int ID
    )
-   tp_Str OdinExpr
-   int, ID
 {
    bool IPC_Abort;
 
@@ -984,9 +951,6 @@ Get_Status(
    tp_Status* ElmStatusPtr,
    int ID
    )
-   tp_Status* StatusPtr
-   tp_Status* ElmStatusPtr
-   int, ID
 {
    bool IPC_Abort;
 
@@ -1020,7 +984,6 @@ void
 Get_Elements(
    int ID
    )
-   int, ID
 {
    bool IPC_Abort;
 
@@ -1050,7 +1013,6 @@ void
 Get_ElementsOf(
    int ID
    )
-   int, ID
 {
    bool IPC_Abort;
 
@@ -1080,7 +1042,6 @@ void
 Get_Inputs(
    int ID
    )
-   int, ID
 {
    bool IPC_Abort;
 
@@ -1110,7 +1071,6 @@ void
 Get_Outputs(
    int ID
    )
-   int, ID
 {
    bool IPC_Abort;
 
@@ -1140,7 +1100,6 @@ void
 Get_DPath(
    tp_Str OdinExpr
    )
-   tp_Str, OdinExpr
 {
    bool IPC_Abort;
 

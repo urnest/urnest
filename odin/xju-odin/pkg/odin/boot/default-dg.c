@@ -1,6 +1,7 @@
 char *DG_Version = "1.16.10";
 char *Banner = "";
-#include "inc/GMC.h"
+#include "gmc/gmc.h"
+#include "dg/inc/Type.hh"
 #include "inc/SrcTyp.h"
 extern tps_SrcTyp _SrcTypS [];
 #include "inc/FilTyp.h"

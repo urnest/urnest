@@ -267,6 +267,9 @@ std::string mapParamType(std::string const& x)
   else if (x=="int"){
     return "int";
   }
+  else if (x=="bool"){
+    return "bool";
+  }
   std::ostringstream s;
   s << "unknown param type " << xju::format::quote(x)
     << " (expected \"str\" or \"int)\"";
@@ -299,6 +302,8 @@ int main(int argc, char* argv[])
   auto const stubs{hcp_ast::findChildrenOfType<Stub>(root)};
   std::ostringstream inStubs;
   inStubs << "#include <gmc/gmc.h>" << "\n";
+  inStubs << "#include <odin/inc/NodTyp_.h>" << "\n";
+  inStubs << "#include <gmc/nod.h>" << "\n";
   inStubs << "#include <odin/inc/Type.hh>" << "\n";
   inStubs << "#include <odin/inc/Func.hh>" << "\n";
   inStubs << "#include <odin/inc/Var.hh>" << "\n";
@@ -306,6 +311,7 @@ int main(int argc, char* argv[])
     
   inStubs << "extern bool IPC_Do_Return;" << "\n";
   inStubs << "extern int *IPC_IArg1, *IPC_IArg2, *IPC_IArg3;" << "\n";
+  inStubs << "extern bool *IPC_BArg1, *IPC_BArg2, *IPC_BArg3;" << "\n";
   inStubs << "extern tp_Str IPC_SArg1, IPC_SArg2, IPC_SArg3;" << "\n";
   inStubs << "" << "\n\n";
 
@@ -338,6 +344,9 @@ int main(int argc, char* argv[])
         }
         else if (paramType == "int"){
           inStubs << "   IPC_Read_Int(IPC_AbortPtr, &" << paramName << ");" << "\n";
+        }
+        else if (paramType == "bool"){
+          inStubs << "   IPC_Read_Bool(IPC_AbortPtr, &" << paramName << ");" << "\n";
         }
         else{
           xju::assert_never_reached();
@@ -384,6 +393,9 @@ int main(int argc, char* argv[])
           if (paramType == "int"){
             inStubs << "   IPC_Read_Int(IPC_AbortPtr, &" << paramName << ");\n";
           }
+          else if (paramType == "bool"){
+            inStubs << "   IPC_Read_Bool(IPC_AbortPtr, &" << paramName << ");\n";
+          }
           else if (paramType == "str"){
             inStubs << "   IPC_Read_Str(IPC_AbortPtr, " << paramName << ");\n";
           }
@@ -405,6 +417,9 @@ int main(int argc, char* argv[])
             if (paramType == "int"){
               localParams.push_back(std::string("&"+paramName));
             }
+            else if (paramType == "bool"){
+              localParams.push_back(std::string("&"+paramName));
+            }
             else if (paramType == "str"){
               localParams.push_back(paramName);
             }
@@ -414,6 +429,9 @@ int main(int argc, char* argv[])
           }
           for(auto& arg: hcp_ast::findChildrenOfType<InArgDecl>(inOrOutArg)){
             if (paramType == "int"){
+              localParams.push_back(std::string(paramName));
+            }
+            else if (paramType == "bool"){
               localParams.push_back(std::string(paramName));
             }
             else if (paramType == "str"){
@@ -437,6 +455,9 @@ int main(int argc, char* argv[])
               hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(arg)));
             if (paramType == "int"){
               inStubs << "   IPC_Write_Int(IPC_AbortPtr, " << paramName << ");\n";
+            }
+            else if (paramType == "bool"){
+              inStubs << "   IPC_Write_Bool(IPC_AbortPtr, " << paramName << ");\n";
             }
             else if (paramType == "str"){
               inStubs << "   IPC_Write_Str(IPC_AbortPtr, " << paramName << ");\n";
@@ -480,6 +501,9 @@ int main(int argc, char* argv[])
           if (paramType == "int"){
             inStubs << "   IPC_Read_Int(IPC_AbortPtr, &" << paramName << ");\n";
           }
+          else if (paramType == "bool"){
+            inStubs << "   IPC_Read_Bool(IPC_AbortPtr, &" << paramName << ");\n";
+          }
           else if (paramType == "str"){
             inStubs << "   IPC_Read_Str(IPC_AbortPtr, " << paramName << ");\n";
           }
@@ -501,6 +525,9 @@ int main(int argc, char* argv[])
             if (paramType == "int"){
               localParams.push_back(std::string("&"+paramName));
             }
+            else if (paramType == "bool"){
+              localParams.push_back(std::string("&"+paramName));
+            }
             else if (paramType == "str"){
               localParams.push_back(paramName);
             }
@@ -510,6 +537,9 @@ int main(int argc, char* argv[])
           }
           for(auto& arg: hcp_ast::findChildrenOfType<InArgDecl>(inOrOutArg)){
             if (paramType == "int"){
+              localParams.push_back(std::string(paramName));
+            }
+            else if (paramType == "bool"){
               localParams.push_back(std::string(paramName));
             }
             else if (paramType == "str"){
@@ -533,6 +563,9 @@ int main(int argc, char* argv[])
               hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(arg)));
             if (paramType == "int"){
               inStubs << "   IPC_Write_Int(IPC_AbortPtr, " << paramName << ");\n";
+            }
+            else if (paramType == "bool"){
+              inStubs << "   IPC_Write_Bool(IPC_AbortPtr, " << paramName << ");\n";
             }
             else if (paramType == "str"){
               inStubs << "   IPC_Write_Str(IPC_AbortPtr, " << paramName << ");\n";
@@ -568,6 +601,9 @@ int main(int argc, char* argv[])
           if (paramType == "int"){
             inStubs << "   IPC_Read_Int(IPC_AbortPtr, &" << paramName << ");\n";
           }
+          else if (paramType == "bool"){
+            inStubs << "   IPC_Read_Bool(IPC_AbortPtr, &" << paramName << ");\n";
+          }
           else if (paramType == "str"){
             inStubs << "   IPC_Read_Str(IPC_AbortPtr, " << paramName << ");\n";
           }
@@ -598,6 +634,9 @@ int main(int argc, char* argv[])
               hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(arg)));
             if (paramType == "int"){
               inStubs << "   IPC_Write_Int(IPC_AbortPtr, " << paramName << ");\n";
+            }
+            else if (paramType == "bool"){
+              inStubs << "   IPC_Write_Bool(IPC_AbortPtr, " << paramName << ");\n";
             }
             else if (paramType == "str"){
               inStubs << "   IPC_Write_Str(IPC_AbortPtr, " << paramName << ");\n";
@@ -636,8 +675,11 @@ int main(int argc, char* argv[])
           if (paramType=="str"){
             inStubs << "      (void)strcpy(IPC_SArg"<<i<<", " << paramName << ");\n";
           }
-          else{
+          else if (paramType=="int") {
             inStubs << "      *IPC_IArg"<<i<<" = " << paramName << ";\n";
+          }
+          else{
+            inStubs << "      *IPC_BArg"<<i<<" = " << paramName << ";\n";
           }
           ++i;
         }
@@ -712,10 +754,17 @@ int main(int argc, char* argv[])
     xju::file::Mode(0666));
 
   std::ostringstream outStubs;
-  outStubs << "#include \"inc/GMC.h\"\n";
+  outStubs << "#include <gmc/gmc.h>" << "\n";
+  outStubs << "#include <odin/inc/NodTyp_.h>" << "\n";
+  outStubs << "#include <gmc/nod.h>" << "\n";
+  outStubs << "#include <odin/inc/Type.hh>" << "\n";
+  outStubs << "#include <odin/inc/Func.hh>" << "\n";
+  outStubs << "#include <odin/inc/Var.hh>" << "\n";
+  outStubs << "#include <string.h>" << "\n";
   outStubs << "\n";
   outStubs << "extern bool IPC_Do_Return;\n";
   outStubs << "extern int *IPC_IArg1, *IPC_IArg2, *IPC_IArg3;\n";
+  outStubs << "extern bool *IPC_BArg1, *IPC_BArg2, *IPC_BArg3;\n";
   outStubs << "extern tp_Str IPC_SArg1, IPC_SArg2, IPC_SArg3;\n";
 
   int procId=1;
@@ -746,18 +795,6 @@ int main(int argc, char* argv[])
       }
       outStubs << xju::format::join(x.begin(), x.end(), ",\n") << "\n";
       outStubs << "   )\n";
-      for(auto const& arg: hcp_ast::findChildrenOfType<InArgDecl>(clientStub)){
-        auto const paramType(
-          hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<hcp_ast::TypeRef>(arg)));
-        auto const paramName(
-          hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(arg)));
-        if (paramType=="char *"){
-          outStubs << "   char* " << paramName << "\n";
-        }
-        else{
-          outStubs << "   " << stripParamType(paramType) << " " << paramName << "\n";
-        }
-      }
       outStubs << "{\n";
       outStubs << "   bool IPC_Abort;\n";
       outStubs << "\n";
@@ -778,6 +815,9 @@ int main(int argc, char* argv[])
         }
         else if (paramType=="int"){
           outStubs << "   IPC_Write_Int(&IPC_Abort, "<<paramName<<");\n";
+        }
+        else if (paramType=="bool"){
+          outStubs << "   IPC_Write_Bool(&IPC_Abort, "<<paramName<<");\n";
         }
         else{
           xju::assert_never_reached();
@@ -832,7 +872,6 @@ int main(int argc, char* argv[])
           outStubs << procName <<"(\n";
           outStubs << xju::format::join(x.begin(), x.end(), ",\n") << "\n";
           outStubs << "   )\n";
-          outStubs << xju::format::join(y.begin(), y.end(), "");
         }
         else{
           outStubs << procName <<"()\n";
@@ -860,6 +899,9 @@ int main(int argc, char* argv[])
           else if (paramType=="int"){
             outStubs << "   IPC_Write_Int(&IPC_Abort, "<<paramName<<");\n";
           }
+          else if (paramType=="bool"){
+            outStubs << "   IPC_Write_Bool(&IPC_Abort, "<<paramName<<");\n";
+          }
           else{
             xju::assert_never_reached();
           }
@@ -879,6 +921,9 @@ int main(int argc, char* argv[])
           }
           else if (paramType=="int"){
             outStubs << "   IPC_Read_Int(&IPC_Abort, "<<paramName<<");\n";
+          }
+          else if (paramType=="bool"){
+            outStubs << "   IPC_Read_Bool(&IPC_Abort, "<<paramName<<");\n";
           }
           else{
             xju::assert_never_reached();
@@ -924,27 +969,6 @@ int main(int argc, char* argv[])
           }
           outStubs << xju::format::join(x.begin(), x.end(), ",\n");
           outStubs << "\n   )\n";
-          for(auto const& arg: hcp_ast::findChildrenOfType<InArgDecl>(serverStub)){
-            auto const paramType(
-              hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<hcp_ast::TypeRef>(arg)));
-            auto const paramName(
-              hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(arg)));
-            if (paramType=="tp_Str "){
-              outStubs << "   tp_Str " << paramName << "\n";
-            }
-            else if (paramType=="tp_JobID "){
-              outStubs << "   tp_JobID " << paramName << "\n";
-            }
-            else if (paramType=="tp_FileName "){
-              outStubs << "   tp_FileName " << paramName << "\n";
-            }
-            else if (paramType=="bool "){
-              outStubs << "   bool " << paramName << "\n";
-            }
-            else{
-              xju::assert_never_reached();
-            }
-          }
         }
         else{
           outStubs << procName << "()\n";
@@ -967,6 +991,9 @@ int main(int argc, char* argv[])
             hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(arg)));
           if (paramType=="int"){
             outStubs << "   IPC_Write_Int(&IPC_Abort, "<<paramName<<");\n";
+          }
+          else if (paramType=="bool"){
+            outStubs << "   IPC_Write_Bool(&IPC_Abort, "<<paramName<<");\n";
           }
           else if (paramType=="str"){
             outStubs << "   IPC_Write_Str(&IPC_Abort, "<<paramName<<");\n";
@@ -1005,8 +1032,8 @@ int main(int argc, char* argv[])
         outStubs << "      IPC_SArg1 = FileName;\n";
         outStubs << "      FORBIDDEN(IPC_IArg2 != NIL);\n";
         outStubs << "      IPC_IArg2 = StatusPtr;\n";
-        outStubs << "      FORBIDDEN(IPC_IArg3 != NIL);\n";
-        outStubs << "      IPC_IArg3 = ExecFlagPtr;\n";
+        outStubs << "      FORBIDDEN(IPC_BArg3 != NIL);\n";
+        outStubs << "      IPC_BArg3 = ExecFlagPtr;\n";
         outStubs << "      Local_Get_OdinFile(OdinExpr, NeedsData);\n";
         outStubs << "      if (!IPC_Do_Return) {\n";
         outStubs << "         IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);\n";
@@ -1015,7 +1042,7 @@ int main(int argc, char* argv[])
         outStubs << "      IPC_Do_Return = false;\n";
         outStubs << "      IPC_SArg1 = NIL;\n";
         outStubs << "      IPC_IArg2 = NIL;\n";
-        outStubs << "      IPC_IArg3 = NIL;\n";
+        outStubs << "      IPC_BArg3 = NIL;\n";
         outStubs << "   }else{\n";
         outStubs << "#endif\n";
         outStubs << "   IPC_Write_Int(&IPC_Abort, "<<procId<<");\n";
@@ -1032,7 +1059,7 @@ int main(int argc, char* argv[])
         outStubs << "   if (IPC_Abort) IPC_Do_Abort();\n";
         outStubs << "   IPC_Read_Int(&IPC_Abort, StatusPtr);\n";
         outStubs << "   if (IPC_Abort) IPC_Do_Abort();\n";
-        outStubs << "   IPC_Read_Int(&IPC_Abort, ExecFlagPtr);\n";
+        outStubs << "   IPC_Read_Bool(&IPC_Abort, ExecFlagPtr);\n";
         outStubs << "   if (IPC_Abort) IPC_Do_Abort();\n";
         outStubs << "#ifndef CLIENT_ONLY\n";
         outStubs << "   };\n";

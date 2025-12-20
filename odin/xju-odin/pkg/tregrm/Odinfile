@@ -32,7 +32,9 @@ inc%check
    ../gmc/gmc.c
    ../gmc/err-no-ipc.c
    ../gmc/inotify-stub.c
-   ../gmc/nod.c
+   %nod.c
+
+%nod.c==../gmc/xxx-nod.c+cmd=sed -e 's=xxx/inc=tregrm/inc=g':stdout
 
 # as a sanity check, verify that we can regenerate our own tregrm-yacc.c unaltered
 # we don't overwrite the committed files automatically as they should not normally change

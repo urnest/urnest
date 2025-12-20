@@ -68,7 +68,10 @@
 
 /* First part of user prologue.  */
 
+#include "gmc/gmc.h"
+#include "odin/inc/NodTyp_.h"
 #include "gmc/nod.h"
+#include "odin/inc/Func.hh"
 extern int num_ParseErrors;
 tp_Nod YY_Parse() {tp_Nod Nod;
 num_ParseErrors = 0; Init_Lex(); Init_ConstructTree();
@@ -605,12 +608,12 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    33,    33,    35,    39,    43,    47,    51,    53,    58,
-      67,    69,    73,    77,    79,    83,    91,    93,    98,   100,
-     104,   105,   109,   113,   115,   118,   124,   127,   129,   131,
-     133,   136,   139,   142,   147,   151,   156,   159,   165,   168,
-     170,   176,   178,   182,   187,   190,   194,   196,   202,   206,
-     208,   212
+       0,    36,    36,    38,    42,    46,    50,    54,    56,    61,
+      70,    72,    76,    80,    82,    86,    94,    96,   101,   103,
+     107,   108,   112,   116,   118,   121,   127,   130,   132,   134,
+     136,   139,   142,   145,   150,   154,   159,   162,   168,   171,
+     173,   179,   181,   185,   190,   193,   197,   199,   205,   209,
+     211,   215
 };
 #endif
 

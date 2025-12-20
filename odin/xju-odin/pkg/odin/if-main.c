@@ -14,6 +14,9 @@ geoff@boulder.colorado.edu
 */
 
 #include <gmc/gmc.h>
+#include <odin/inc/NodTyp_.h>
+#include <odin/inc/TokTyp_.h>
+#include <gmc/nod.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
 #include <odin/inc/Var.hh>
@@ -70,8 +73,7 @@ c_main(int argc,char** argv)
    bool Abort, NewFlag;
    int i;
 
-   Init_IO();
-   Init_Err();
+   Init_Gmc();
    Init_Env();
    Init_Sigs(false);
    IPC_Init();

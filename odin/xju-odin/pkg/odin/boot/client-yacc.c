@@ -68,7 +68,10 @@
 
 /* First part of user prologue.  */
 
+#include "gmc/gmc.h"
+#include "odin/inc/OC_NodTyp_.h"
 #include "gmc/nod.h"
+#include "odin/inc/Func.hh"
 extern int num_ParseErrors;
 tp_Nod OC_Parse() {tp_Nod Nod;
 num_ParseErrors = 0; Init_Lex(); Init_ConstructTree();
@@ -605,13 +608,13 @@ static const octype_int8 octranslate[] =
 /* OCRLINE[OCN] -- Source line where rule number OCN was defined.  */
 static const octype_uint8 ocrline[] =
 {
-       0,    33,    33,    37,    41,    44,    46,    48,    50,    52,
-      56,    60,    63,    65,    68,    70,    75,    81,    85,    89,
-      92,    97,   100,   104,   110,   114,   116,   119,   125,   128,
-     130,   132,   134,   137,   140,   143,   146,   149,   154,   158,
-     163,   166,   172,   175,   177,   183,   185,   189,   194,   197,
-     201,   203,   209,   213,   217,   219,   223,   226,   228,   230,
-     232
+       0,    36,    36,    40,    44,    47,    49,    51,    53,    55,
+      59,    63,    66,    68,    71,    73,    78,    84,    88,    92,
+      95,   100,   103,   107,   113,   117,   119,   122,   128,   131,
+     133,   135,   137,   140,   143,   146,   149,   152,   157,   161,
+     166,   169,   175,   178,   180,   186,   188,   192,   197,   200,
+     204,   206,   212,   216,   220,   222,   226,   229,   231,   233,
+     235
 };
 #endif
 

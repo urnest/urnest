@@ -18,10 +18,10 @@ geoff@boulder.colorado.edu
 #include <stdio.h>
 #include <string.h>
 #include <gmc/gmc.h>
+#include <dg/inc/NodTyp_.h>
+#include <dg/inc/TokTyp_.h>
 #include <gmc/nod.h>
 #include <dg/inc/Func.hh>
-#include <dg/inc/TokTyp_.h>
-#include <dg/inc/NodTyp_.h>
 
 
 tp_FileName	ParseFN;
