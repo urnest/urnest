@@ -31,7 +31,7 @@ import builtins
 import sys
 from dataclasses import dataclass, Field, MISSING
 from inspect import getmro
-from typing import NewType
+from typing import NewType,NamedTuple
 from xju.time import Timestamp
 from xju.xn import Xn,in_context,in_function_context,readable_repr, AllFailed
 from typing import TypeVar, Generic, Type, cast, Any, Protocol, Self, Callable, get_type_hints
@@ -2326,7 +2326,7 @@ class EnumCodecImpl:
             pass
         typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
-        tt=self.typescript_type()
+        tt=typescript_fqn[-1]
         if tt not in target_namespace.defs:
             enum_value_codec:EnumValueCodecImpl
             target_namespace.defs[tt]=TypeScriptSourceCode(
@@ -2448,7 +2448,7 @@ class LiteralEnumCodecImpl:
             pass
         typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
-        tt=self.typescript_type()
+        tt=typescript_fqn[-1]
         if tt not in target_namespace.defs:
             enum_value_codec:EnumValueCodecImpl
             target_namespace.defs[tt]=TypeScriptSourceCode(
@@ -2739,6 +2739,10 @@ def as_key_of_expression(type_fqn:str) -> TypeScriptSourceCode:
     return TypeScriptSourceCode('.'.join(parts[0:-1]+[f"_asKeyOf{parts[-1]}"]))
 
 def get_default_value(cls, attr_name: str) -> None | tuple[Any]:
+    if hasattr(cls, '_field_defaults'):  # NamedTuple
+        if attr_name in cls._field_defaults:
+            return (cls._field_defaults[attr_name],)
+        return None
     if hasattr(cls, "__dataclass_fields__") and attr_name in cls.__dataclass_fields__:
         field: Field = cls.__dataclass_fields__[attr_name]
         if field.default_factory is not MISSING:

@@ -911,5 +911,75 @@ const _isInstanceOfEncodableKeyTypes = xju.json_codec.isInstanceOfClass('Encodab
     )}
 ]);
 
+namespace a_module {
+    export type NTA = a_module.NT;
+    export type NT = {
+        x: number;
+        y: xju.misc.ByteCount;
+    };
+    export function asInstanceOfNT(v:any): a_module.NT
+    {
+        _asInstanceOfNT.f(v).applyDefaults();
+        return v as a_module.NT;
+    }
+    
+    export function isInstanceOfNT(v:any): v is a_module.NT
+    {
+        const r:false|xju.json_codec.ApplyDefaults=_isInstanceOfNT(v);
+        return r && r.applyDefaults();
+    }
+    
+    export const _asInstanceOfNT = xju.json_codec.asInstanceOfClass('a_module.NT', [
+        {propertyName: 'x', asInstance: xju.json_codec.asInstanceOfInt('int')},
+        {propertyName: 'y', asInstance: xju.misc._asInstanceOfByteCount}
+    ]);
+    
+    export const _isInstanceOfNT = xju.json_codec.isInstanceOfClass('a_module.NT', [
+        {propertyName:'x', isInstance:xju.json_codec.isInstanceOfInt},
+        {propertyName:'y', isInstance:xju.json_codec.isInstanceOfInt}
+    ]);
+    
+    export function asInstanceOfNTA(v:any):NTA {
+        a_module._asInstanceOfNT.f(v).applyDefaults();
+        return v as NTA;
+    }
+    export function isInstanceOfNTA(v:any):v is NTA {
+        const r=a_module._isInstanceOfNT(v);
+        return r&&r.applyDefaults();
+    }
+    export enum ET {
+        a = "fred",
+        b = "jock"
+    };
+    
+    export function asInstanceOfET(v: any): ET
+    {
+        const r=_asInstanceOfET.f(v);
+        r.applyDefaults();
+        return v as ET;
+    }
+    export function isInstanceOfET(v:any): v is string
+    {
+        const r:false|xju.json_codec.ApplyDefaults=_isInstanceOfET(v);
+        return r&&r.applyDefaults();
+    }
+    export const _asInstanceOfET = xju.json_codec.asInstanceOfUnion([
+            xju.json_codec.asInstanceOfLiteral(a_module.ET.a),
+        xju.json_codec.asInstanceOfLiteral(a_module.ET.b)
+    ]);
+    export const _isInstanceOfET = xju.json_codec.isInstanceOfUnion([
+            xju.json_codec.isInstanceOfLiteral(a_module.ET.a),
+        xju.json_codec.isInstanceOfLiteral(a_module.ET.b)
+    ]);
+    export const _asKeyOfET = xju.json_codec.asKeyOfUnion([
+            xju.json_codec.asKeyOfLiteral(a_module.ET.a),
+        xju.json_codec.asKeyOfLiteral(a_module.ET.b)
+    ]);
+    export const _isKeyOfET = xju.json_codec.isKeyOfUnion([
+            xju.json_codec.isKeyOfLiteral(a_module.ET.a),
+        xju.json_codec.isKeyOfLiteral(a_module.ET.b)
+    ]);
+}
+
 const good_encodable_data=() => ({"an_int": 7, "a_float": 9.2, "a_str": "fred", "a_new_int": 22, "an_xju_int": 88, "a_new_float": 2.2, "an_xju_float": 18.2, "a_new_str": "red", "an_xju_str": "ally", "a_null": null, "a_boolean": true, "a_union": "walker", "a_list": [1, 2, 3], "any_list": [1, null, "a"], "a_set": [4, 5, 6], "any_set": [null, 2], "a_frozen_set": [7], "any_frozen_set": [2, 4.6], "some_bytes": [10, 11, 12], "a_tuple": [8, "jock", "fred"], "a_literal_str": "mai", "a_literal_int": 7, "a_literal_bool": true, "a_class": {"first_name": "fran", "middle_names": ["jan"], "last_name": "lan", "class": "Upper"}, "a_dont_encode": {"y": "yyy"}, "fred_7_false": false, "a_recurse_self": {"defs": {}}, "a_timestamp": 45000.0, "an_enum": "fred", "a_mixed_in_enum": {"k": 2, "v": "jock"}, "a_recursive": {"a": [{"o": ["1", "2", ["7"]]}, "3", [{"a": ["4", "6", ["8"]]}]]}, "an_enum_value": "fred", "a_json": 9.0, "a_custom_encoded": 2975337473, "another_custom_encoded": "177.88.12.0/22", "non_key_custom_encoded": 3, "a_custom_generic": "fred", "a_custom_generic_usable_as_key": "fred"});
 const good_encodable_key_types=() => ({"str_key": {"fred": 3}, "int_key": {"1": 4}, "more_keys": {"9": 2, "null": 1, "5.5": 3, "true": 4}, "duration_key": {"77.2": 1}, "timestamp_key": {"88.1": 1}, "non_str_literal_key": {"10": 1, "true": 2}, "str_literal_key": {"a\n\"nail\"'s tip": 3, "fred": 4, "rooster": 5}, "enum_key": {"fred": 1, "jock": 2}, "custom_key": {"3221751809": 1}, "alt_custom_key": {"192.8.8.1/24": 1}, "newstr_key": {"red": 1, "green": 2}, "xjustr_key": {"ally": 9}, "newfloat_key": {"22.0": 1}, "xjufloat_key": {"22.5": 1}, "newint_key": {"7": 1}, "newbool_key": {"false": 1}, "any_key": {"8": 1, "fred": 2, "null": 3, "7.6": 4, "true": 5}, "a_custom_generic_key": {"fred": true}});

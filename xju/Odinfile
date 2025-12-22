@@ -98,7 +98,7 @@ mypy-error-tests%all.tree:leaves
 (newtype.py.test)+(%py-opts):py3.exec.cov
 (stub.py.test)+(%py-opts):py3.exec.cov
 (time.py.test)+(%py-opts):py3.exec.cov
-(make-json-codec-ts-test)+(%py-opts):py3.exec.cov
+(make-json-codec-ts-test)+(%py-opts)+py_sp=(%py-vir-dir):py3.exec.cov
 
 %py-opts==<<
 +(%py-opts-no-mypy-plugins)
@@ -456,5 +456,25 @@ test-assert.ts+ts_root_dir=(..):ts.cov
 test-json_codec.ts+ts_root_dir=(..):ts.cov
 test-json-codec-typescript.ts+ts_root_dir=(..):ts.cov
 
-%json-codec-ts-test==make-json-codec-ts-test+(%py-opts):py3.exec.files
+%json-codec-ts-test==make-json-codec-ts-test+(%py-opts)+py_sp=(%py-vir-dir):py3.exec.files
 json_codec_typescript_test.ts==%json-codec-ts-test+member='json_codec_typescript_test.ts':extract_file
+
+
+%py-vir-dir==%py.vir_spec:vir_dir
+
+%py.vir_spec==<<
+%a_module.py==./Odinfile%a_module.py
+
+%a_module.py==<<
+from typing import NamedTuple
+from xju.misc import ByteCount
+from enum import StrEnum
+class NT(NamedTuple):
+  x: int
+  y: ByteCount
+  z: float = 2.3
+  pass
+NTA = NT
+class ET(StrEnum):
+  a="fred"
+  b="jock"

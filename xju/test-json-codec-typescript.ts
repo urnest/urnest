@@ -1099,4 +1099,12 @@
   xju.assert.assertEqual(asInstanceOfMixedEnum({"k": 2, "v": "jock"}),{"k": 2, "v": "jock"});
   xju.assert.assertEqual(isInstanceOfMixedEnum({"k": 2, "v": "jock"}),true);
 
+  xju.assert.assertEqual(a_module.asInstanceOfNT({x:1,y:44}), {x:1,y:44,z:2.3} as a_module.NT);
+  xju.assert.assertEqual(a_module.isInstanceOfNT({x:1,y:44}), true);
+
+  xju.assert.assertEqual(a_module.asInstanceOfNTA({x:1,y:44}), {x:1,y:44,z:2.3} as a_module.NTA);
+  xju.assert.assertEqual(a_module.isInstanceOfNTA({x:1,y:44}), true);
+
+  xju.assert.assertEqual(a_module.asInstanceOfET("fred"), a_module.ET.a);
+  xju.assert.assertEqual(a_module.isInstanceOfET("fred"), true);
 })();
