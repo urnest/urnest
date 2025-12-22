@@ -191,6 +191,8 @@ mkdir xju-$rev/src/xju/typescript
 touch xju-$rev/src/xju/py.typed
 tests=$(cd xju-$rev/src/xju && find . -name '*.py.test')
 tests_package_data=$(for t in $tests; do echo -n "\"$t\","; done)
+typescript=$(cd xju-$rev/src/xju && find typescript -type f)
+typescript_package_data=$(for t in $typescript; do echo -n "\"$t\","; done)
 cat > xju-$rev/pyproject.toml <<EOF
 [build-system]
 requires = ["setuptools>=61.0.0", "wheel"]
@@ -217,7 +219,7 @@ include = ["xju","xju.*","xju.cmc.*"]  # package names should match these glob p
 exclude = []  # exclude packages matching these glob patterns (empty by default)
 namespaces = true  # to disable scanning PEP 420 namespaces (true by default)
 [tool.setuptools.package-data]
-xju = [ $tests_package_data "py.typed"]
+xju = [ $tests_package_data $typescript_package_data "py.typed"]
 EOF
 cp $licence xju-$rev/MIT-LICENCE
 cp $readme xju-$rev/README.rst
