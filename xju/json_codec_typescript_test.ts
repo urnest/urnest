@@ -459,6 +459,29 @@ const _isInstanceOfAnd = xju.json_codec.isInstanceOfClass('And', [
     ])}
 ]);
 
+type TA = Array<number|null>;
+function asInstanceOfTA(v:any): TA
+{
+    _asInstanceOfTA.f(v).applyDefaults();
+    return v as TA;
+}
+
+function isInstanceOfTA(v:any): v is TA
+{
+    const r:false|xju.json_codec.ApplyDefaults=_isInstanceOfTA(v);
+    return r && r.applyDefaults();
+}
+
+const _asInstanceOfTA = xju.json_codec.asInstanceOfList(xju.json_codec.asInstanceOfUnion([
+    xju.json_codec.asInstanceOfInt('int'),
+    xju.json_codec.asInstanceOfNull
+]));
+
+const _isInstanceOfTA = xju.json_codec.isInstanceOfList(xju.json_codec.isInstanceOfUnion([
+    xju.json_codec.isInstanceOfInt,
+    xju.json_codec.isInstanceOfNull
+]));
+
 type EncodableData = {
     an_int: number;
     a_float: number;
@@ -498,6 +521,7 @@ type EncodableData = {
     non_key_custom_encoded: number /* Even.value/2! */;
     a_custom_generic: string /* G<<class 'int'>,<class '__main__.GT'>> */;
     a_custom_generic_usable_as_key: string /* GK<C,T> */;
+    a_type_alias: TA;
 };
 function asInstanceOfEncodableData(v:any): EncodableData
 {
@@ -597,7 +621,8 @@ const _asInstanceOfEncodableData = xju.json_codec.asInstanceOfClass('EncodableDa
         }
     })},
     {propertyName: 'a_custom_generic', asInstance: xju.json_codec.asInstanceOfString('G<int,GT>')},
-    {propertyName: 'a_custom_generic_usable_as_key', asInstance: xju.json_codec.asInstanceOfString('GK<int,GT>')}
+    {propertyName: 'a_custom_generic_usable_as_key', asInstance: xju.json_codec.asInstanceOfString('GK<int,GT>')},
+    {propertyName: 'a_type_alias', asInstance: _asInstanceOfTA}
 ]);
 
 const _isInstanceOfEncodableData = xju.json_codec.isInstanceOfClass('EncodableData', [
@@ -684,7 +709,8 @@ const _isInstanceOfEncodableData = xju.json_codec.isInstanceOfClass('EncodableDa
         return r;
     }},
     {propertyName:'a_custom_generic', isInstance:xju.json_codec.isInstanceOfString},
-    {propertyName:'a_custom_generic_usable_as_key', isInstance:xju.json_codec.isInstanceOfString}
+    {propertyName:'a_custom_generic_usable_as_key', isInstance:xju.json_codec.isInstanceOfString},
+    {propertyName:'a_type_alias', isInstance:_isInstanceOfTA}
 ]);
 
 type EncodableKeyTypes = {
@@ -916,6 +942,7 @@ namespace a_module {
     export type NT = {
         x: number;
         y: xju.misc.ByteCount;
+        z: number;
     };
     export function asInstanceOfNT(v:any): a_module.NT
     {
@@ -931,12 +958,14 @@ namespace a_module {
     
     export const _asInstanceOfNT = xju.json_codec.asInstanceOfClass('a_module.NT', [
         {propertyName: 'x', asInstance: xju.json_codec.asInstanceOfInt('int')},
-        {propertyName: 'y', asInstance: xju.misc._asInstanceOfByteCount}
+        {propertyName: 'y', asInstance: xju.misc._asInstanceOfByteCount},
+        {propertyName: 'z', asInstance: xju.json_codec.asInstanceOfFloat('float'), defaultValue: 2.3}
     ]);
     
     export const _isInstanceOfNT = xju.json_codec.isInstanceOfClass('a_module.NT', [
         {propertyName:'x', isInstance:xju.json_codec.isInstanceOfInt},
-        {propertyName:'y', isInstance:xju.json_codec.isInstanceOfInt}
+        {propertyName:'y', isInstance:xju.json_codec.isInstanceOfInt},
+        {propertyName:'z', isInstance:xju.json_codec.isInstanceOfFloat, defaultValue: 2.3}
     ]);
     
     export function asInstanceOfNTA(v:any):NTA {
@@ -981,5 +1010,5 @@ namespace a_module {
     ]);
 }
 
-const good_encodable_data=() => ({"an_int": 7, "a_float": 9.2, "a_str": "fred", "a_new_int": 22, "an_xju_int": 88, "a_new_float": 2.2, "an_xju_float": 18.2, "a_new_str": "red", "an_xju_str": "ally", "a_null": null, "a_boolean": true, "a_union": "walker", "a_list": [1, 2, 3], "any_list": [1, null, "a"], "a_set": [4, 5, 6], "any_set": [null, 2], "a_frozen_set": [7], "any_frozen_set": [2, 4.6], "some_bytes": [10, 11, 12], "a_tuple": [8, "jock", "fred"], "a_literal_str": "mai", "a_literal_int": 7, "a_literal_bool": true, "a_class": {"first_name": "fran", "middle_names": ["jan"], "last_name": "lan", "class": "Upper"}, "a_dont_encode": {"y": "yyy"}, "fred_7_false": false, "a_recurse_self": {"defs": {}}, "a_timestamp": 45000.0, "an_enum": "fred", "a_mixed_in_enum": {"k": 2, "v": "jock"}, "a_recursive": {"a": [{"o": ["1", "2", ["7"]]}, "3", [{"a": ["4", "6", ["8"]]}]]}, "an_enum_value": "fred", "a_json": 9.0, "a_custom_encoded": 2975337473, "another_custom_encoded": "177.88.12.0/22", "non_key_custom_encoded": 3, "a_custom_generic": "fred", "a_custom_generic_usable_as_key": "fred"});
+const good_encodable_data=() => ({"an_int": 7, "a_float": 9.2, "a_str": "fred", "a_new_int": 22, "an_xju_int": 88, "a_new_float": 2.2, "an_xju_float": 18.2, "a_new_str": "red", "an_xju_str": "ally", "a_null": null, "a_boolean": true, "a_union": "walker", "a_list": [1, 2, 3], "any_list": [1, null, "a"], "a_set": [4, 5, 6], "any_set": [null, 2], "a_frozen_set": [7], "any_frozen_set": [2, 4.6], "some_bytes": [10, 11, 12], "a_tuple": [8, "jock", "fred"], "a_literal_str": "mai", "a_literal_int": 7, "a_literal_bool": true, "a_class": {"first_name": "fran", "middle_names": ["jan"], "last_name": "lan", "class": "Upper"}, "a_dont_encode": {"y": "yyy"}, "fred_7_false": false, "a_recurse_self": {"defs": {}}, "a_timestamp": 45000.0, "an_enum": "fred", "a_mixed_in_enum": {"k": 2, "v": "jock"}, "a_recursive": {"a": [{"o": ["1", "2", ["7"]]}, "3", [{"a": ["4", "6", ["8"]]}]]}, "an_enum_value": "fred", "a_json": 9.0, "a_custom_encoded": 2975337473, "another_custom_encoded": "177.88.12.0/22", "non_key_custom_encoded": 3, "a_custom_generic": "fred", "a_custom_generic_usable_as_key": "fred", "a_type_alias": [7]});
 const good_encodable_key_types=() => ({"str_key": {"fred": 3}, "int_key": {"1": 4}, "more_keys": {"9": 2, "null": 1, "5.5": 3, "true": 4}, "duration_key": {"77.2": 1}, "timestamp_key": {"88.1": 1}, "non_str_literal_key": {"10": 1, "true": 2}, "str_literal_key": {"a\n\"nail\"'s tip": 3, "fred": 4, "rooster": 5}, "enum_key": {"fred": 1, "jock": 2}, "custom_key": {"3221751809": 1}, "alt_custom_key": {"192.8.8.1/24": 1}, "newstr_key": {"red": 1, "green": 2}, "xjustr_key": {"ally": 9}, "newfloat_key": {"22.0": 1}, "xjufloat_key": {"22.5": 1}, "newint_key": {"7": 1}, "newbool_key": {"false": 1}, "any_key": {"8": 1, "fred": 2, "null": 3, "7.6": 4, "true": 5}, "a_custom_generic_key": {"fred": true}});

@@ -147,3 +147,7 @@ assert not issubclass(IpAddrWithPrefix, CustomStringKeyClassCodec)
 assert not issubclass(IpAddrWithPrefix, CustomNonStringKeyClassCodec)
 
 codec(dict[IpAddrWithPrefix,int])  # invalid dict key
+
+type PL[T,U] = list[tuple[T,U]]
+codec(PL[int,str])  # ok
+codec(PL)  # unresolved type vars

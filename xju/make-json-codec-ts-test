@@ -561,6 +561,8 @@ class MixedEnum(MixedEnumValue, Enum):
     b = MixedEnumValue(2, 'jock')
     pass
 
+type TA[T] = list[T | None]
+
 @dataclass(kw_only=True)
 class EncodableData:
     an_int: int
@@ -603,8 +605,7 @@ class EncodableData:
     a_custom_generic: G[int,GT]
     a_custom_generic_usable_as_key: GK[int,GT]
 
-    # dictionary key encodings (json object keys must be strings; various python
-    # dict key types are supported and encoded to/from strings)
+    a_type_alias: TA[int]
 
     cl: ClassVar[int] = 3
 
@@ -615,6 +616,9 @@ codec(int|str).add_typescript_alias(namespace, [TypeScriptUQN('xju'),TypeScriptU
 
 @dataclass
 class EncodableKeyTypes:
+    # dictionary key encodings (json object keys must be strings; various python
+    # dict key types are supported and encoded to/from strings)
+
     str_key: dict[str,int]
     int_key: dict[int,int]
     more_keys: dict[None|ByteCount|float|bool,int]
@@ -676,7 +680,8 @@ good_encodable_data=json.loads('''{
         "another_custom_encoded":"177.88.12.0/22",
         "non_key_custom_encoded":3,
         "a_custom_generic":"fred",
-        "a_custom_generic_usable_as_key":"fred"
+        "a_custom_generic_usable_as_key":"fred",
+        "a_type_alias":[7]
     }''')
 
 good_encodable_key_types=EncodableKeyTypes(

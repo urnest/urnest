@@ -1364,6 +1364,30 @@ class AnIntEnum(IntEnum):
     a = 7
     b = auto()
 
+# aliases
+AY = int|str
+AX = AY
+ac=codec(AX)
+a1 = (ac.encode(7),
+      ac.encode("fred"))
+ra1:AX = ac.decode(7)
+ra1 = ac.decode("fred")
+
+type TY = int|str
+TZ = TY
+type TX = TZ
+tc=codec(TX)
+Assert((tc.encode(7), tc.encode("fred")))==(7,'fred')
+ta1:TX = tc.decode(7)
+Assert(ta1)==7
+Assert(tc.decode("fred")), 'fred'
+
+# note can create codec on generic alias instance where all parameters are known
+type PL[T,U] = list[tuple[T,U]]
+Assert(codec(PL[int,str]).encode([(7,'fred')]))==[[7,'fred']]
+Assert(codec(PL[int,str]).decode([[7,'fred']]))==[(7,'fred')]
+
+
 try:
     import jsonschema # type: ignore
 except:
@@ -1473,6 +1497,8 @@ else:
     else:
         assert False
     pass
+    jsonschema.validate(7,tc.get_json_schema())
+    jsonschema.validate('fred',tc.get_json_schema())
 
 # internal: codecs' encode()s must verify correct type passed in, otherwise
 # UnionCodec encode try-each algorithm is invalid
@@ -1741,16 +1767,6 @@ def c1(t: Type[ArgType], g: Callable[[JsonType],None])->Callable[[ArgType],None]
     return result
 
 c1(int, lambda j: None)(7)
-
-# aliases
-AY = int|str
-AX = AY
-ac=codec(AX)
-a1 = (ac.encode(7),
-      ac.encode("fred"))
-ra1:AX = ac.decode(7)
-ra1 = ac.decode("fred")
-
 
 # note on mypy handling of generic type used without params:
 Q=TypeVar('Q')
@@ -2194,6 +2210,22 @@ try:
     codec(IpV4Addr).encode('nine')  # type: ignore
 except Exception as e:
     Assert(readable_repr(e)).contains("'nine' (of type <class 'str'>) is not a <class '__main__.IpV4Addr'>.")
+else:
+    assert False
+    pass
+
+# coverage
+try:
+    tc.encode(None) 
+except Exception as e:
+    Assert(readable_repr(e)).contains("None is not a <class 'str'>")
+else:
+    assert False
+    pass
+try:
+    tc.decode(None) 
+except Exception as e:
+    Assert(readable_repr(e)).contains("failed to decode as <class 'int'> because\n  None (of type <class 'NoneType'>) is not a <class 'int'>; and\n- failed to decode as <class 'str'> because\n  None (of type <class 'NoneType'>) is not a <class 'str'>")
 else:
     assert False
     pass

@@ -39,7 +39,7 @@ from typing import Sequence, Literal, NewType, Final, Mapping
 from typing import _LiteralGenericAlias  # type: ignore  # mypy 1.1.1
 from typing import _UnionGenericAlias  # type: ignore  # mypy 1.1.1
 from typing import _GenericAlias,_SpecialForm  # type: ignore  # mypy 1.2.0
-from typing import get_origin,get_args, runtime_checkable
+from typing import get_origin,get_args, runtime_checkable, TypeAliasType
 from types import GenericAlias, UnionType, NoneType
 import xju.newtype
 from enum import Enum, EnumType, EnumMeta
@@ -2496,6 +2496,80 @@ class LiteralEnumCodecImpl:
 assert not isinstance(LiteralEnumCodecImpl, UsableAsKeyProto)
 
 @dataclass
+class TypeAliasCodecImpl:
+    t:type
+    value_codec:CodecImplProto
+
+    def encode(self,x) -> JsonType:
+        'encode {x} as a {self.t}'
+        try:
+            return self.value_codec.encode(x)
+        except Exception:
+            raise in_function_context(TypeAliasCodecImpl.encode,vars()) from None
+        pass
+    def decode(self,x) -> object:
+        'decode {x} as a {self.t}'
+        try:
+            return self.value_codec.decode(x)
+        except Exception:
+            raise in_function_context(TypeAliasCodecImpl.decode,vars()) from None
+        pass
+    def get_type_fqn(self):
+        '''get the fully qualified name of {self.t}'''
+        return get_type_fqn(self.t)
+    def get_json_schema(self, definitions:dict[str,dict]) -> dict:
+        fqn=self.get_type_fqn()
+        self_ref=f'#/definitions/{fqn}'
+        if not fqn in definitions:
+            definitions[fqn]=self.value_codec.get_json_schema(definitions)
+            pass
+        return {
+            '$ref': self_ref
+        }
+    def typescript_type(self) -> TypeScriptSourceCode:
+        return TypeScriptSourceCode(self.get_type_fqn())
+    def ensure_typescript_defs(self,namespace)->None:
+        '''ensure {namespace} has a typescript definition for {self.get_type_fqn()}'''
+        typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
+        target_namespace=namespace.get_namespace_of(typescript_fqn)
+        typescript_type_name=typescript_fqn[-1]
+        tt=self.typescript_type()
+        self.value_codec.ensure_typescript_defs(namespace)
+        if typescript_type_name not in target_namespace.defs:
+            target_namespace.defs[typescript_type_name]=TypeScriptSourceCode(
+                f"type {typescript_type_name} = {indent(4,self.value_codec.typescript_type())};")
+            target_namespace.defs[TypeScriptUQN(f"asInstanceOf{typescript_type_name}")]=TypeScriptSourceCode(
+                f"function asInstanceOf{typescript_type_name}(v:any): {tt}\n"
+                f"{{\n"
+                f"    _asInstanceOf{typescript_type_name}.f(v).applyDefaults();\n"
+                f"    return v as {tt};\n"
+                f"}}\n")
+            target_namespace.defs[TypeScriptUQN(f"isInstanceOf{typescript_type_name}")]=TypeScriptSourceCode(
+                f"function isInstanceOf{typescript_type_name}(v:any): v is {tt}\n"
+                f"{{\n"
+                f"    const r:false|xju.json_codec.ApplyDefaults=_isInstanceOf{typescript_type_name}(v);\n"
+                f"    return r && r.applyDefaults();\n"
+                f"}}\n")
+            target_namespace.defs[TypeScriptUQN(f"_asInstanceOf{typescript_type_name}")]=TypeScriptSourceCode(
+                f"const _asInstanceOf{typescript_type_name} = {self.value_codec.get_typescript_asa(namespace)};\n")
+            target_namespace.defs[TypeScriptUQN(f"_isInstanceOf{typescript_type_name}")]=TypeScriptSourceCode(
+                f"const _isInstanceOf{typescript_type_name} = {self.value_codec.get_typescript_isa(namespace)};\n")
+            pass
+        pass
+    def get_typescript_isa(self,
+                           namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        self.ensure_typescript_defs(namespace)
+        return is_instance_of_expression(self.get_type_fqn())
+
+    def get_typescript_asa(self,
+                           namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        self.ensure_typescript_defs(namespace)
+        return as_instance_of_expression(self.get_type_fqn())
+    pass
+    
+assert not isinstance(ClassCodecImpl, UsableAsKeyProto)
+
+@dataclass
 class BackRefCodecImpl:
     codec: CodecImplProto | None
     def encode(self,x:Any)->JsonType:
@@ -2608,7 +2682,7 @@ def _explodeSchemaRec(
                                   {at:_explodeSchema(at, type_var_map,codec_backrefs) for at in get_args(t)})
         # note t Self is handled in _explodeSchema
 
-        if type(t) is _GenericAlias:
+        if type(t) is _GenericAlias or type(t) is GenericAlias:
             if type(get_origin(t)) is _SpecialForm and str(get_origin(t))=="typing.Final":
                 return _explodeSchema(get_args(t)[0],type_var_map,codec_backrefs)
             local_type_var_map={
@@ -2633,6 +2707,8 @@ def _explodeSchemaRec(
                 EnumCodecImpl(t,value_codecs) if use_typescript_enum
                 else LiteralEnumCodecImpl(t,value_codecs)
             )
+        if type(t) is TypeAliasType:
+            return TypeAliasCodecImpl(t, _explodeSchema(t.__value__,type_var_map,codec_backrefs))
         assert isinstance(t,type), (type(t), t)
         if issubclass(t,xju.newtype.Int):
             return NewIntCodecImpl(t)

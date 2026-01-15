@@ -421,6 +421,8 @@ def verify_type_encodable(
                 raise CodecParamInvalid(f"unexpected type alias target None")
             if not isinstance(t.alias.target, (LiteralType,UnionType,Instance,TypeAliasType,TupleType,NoneType,TypeVarType,AnyType)):
                 raise CodecParamInvalid(f"unexpected type alias target type {t.alias.target}")
+            if len(t.args) < len(t.alias.alias_tvars):
+                raise CodecParamInvalid(f"not enough type arguments to resolve type vars {t.alias.alias_tvars}")
             verify_type_encodable(t.alias.target,checker_api,seen)
             return True
 

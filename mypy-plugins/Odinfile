@@ -86,6 +86,7 @@ FILE:89: error: dict keys must be str,xju.newtype.Str or any union of int, float
 FILE:98: error: dict keys must be str,xju.newtype.Str or any union of int, float, bool, None, xju.newtype.Int, xju.newtype.Float, xju.newtype.Bool (not json_codec_errors.FullName)  [misc]
 FILE:102: error: NewType json_codec_errors.FullerName is not based on str, int, bool or float and so cannot be used as a dictionary key  [misc]
 FILE:149: error: json_codec_errors.IpAddrWithPrefix has custom encoding but is neither a CustomStringKeyClassCodec nor a CustomNonStringKeyClassCodec: json_codec_errors.IpAddrWithPrefix must implement one of these if it is to be used as a dictionary key  [misc]
+FILE:153: error: not enough type arguments to resolve type vars [T`1, U`2]  [misc]
 
 %test_json_codec_errors.errors==test_data/json_codec_errors.py+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(json_codec_mypy_plugin.py):main.mypy3:err
 
