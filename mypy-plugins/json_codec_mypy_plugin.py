@@ -13,6 +13,23 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
+
+"""
+mypy plugin that verifies that parameter T in xju.json_codec(T) calls is valid, i.e.
+is encodable by xju.json_codec
+
+note that T is a type or union of types and note that "type" here might be a concrete
+instance of a generic type including type aliases, e.g.:
+
+codec(int)  # T is concrete type int
+codec(list[int])  # T is concrete instance of list type
+type L = list[int]
+codec(L[int])  # T is concrete instance of type alias
+codec(int | L[int])  # T is union of "types"
+
+... see xju/json_codec.py.test for full range of valid Ts
+"""
+
 from typing import Callable, Final, Self, TypeGuard, overload, Sequence, NewType, Literal
 from mypy.plugin import (
     Plugin, FunctionSigContext, FunctionContext, Expression, MethodContext,
