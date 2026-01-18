@@ -883,7 +883,9 @@ class Even:
     
     # xju.json_codec.CustomClassCodec:
     @staticmethod
-    def xju_json_codec_encode(x:"Even") -> JsonType:
+    def xju_json_codec_encode(x:"Even") -> int:
+        """note the specific return type (int not JsonType) lets
+           json_codec_mypy_plugin refine the encoded type (to int)"""
         return Even.__xju_json_codec.encode(int(x.value/2))
     @staticmethod
     def xju_json_codec_decode(x:JsonType) -> "Even":
@@ -919,8 +921,8 @@ class Even:
             ,f"    }}"
             ,f"}})"]))
 
-assert isinstance(Even,CustomClassCodec)
-assert not isinstance(Even,(CustomStringKeyClassCodec,CustomNonStringKeyClassCodec))
+assert issubclass(Even,CustomClassCodec)
+assert not issubclass(Even,(CustomStringKeyClassCodec,CustomNonStringKeyClassCodec))
 
 class IpV4Addr(IPv4Address):
     def __eq__(self, b) -> bool:

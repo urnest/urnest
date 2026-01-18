@@ -29,7 +29,7 @@ codec(int | L[int])  # T is union of "types"
 
 ... see xju/json_codec.py.test for full range of valid Ts
 """
-
+import sys
 from typing import Callable, Final, Self, TypeGuard, overload, Sequence, NewType, Literal
 from mypy.plugin import (
     Plugin, FunctionSigContext, FunctionContext, Expression, MethodContext,
@@ -86,17 +86,17 @@ def adjust_codec_signature(s: FunctionSigContext) -> FunctionLike:
 class CodecParamInvalid(Exception):
     pass
     
+KnownExpressionType = ( LiteralType | UnionType | Instance | TypeAliasType | TupleType |
+                        NoneType | TypeVarType | AnyType )
+
 def infer_codec_value_type_from_args(arg_exprs: list[Expression],
-                                     checker_api:CheckerPluginInterface) -> Type:
+                                     checker_api:CheckerPluginInterface) -> KnownExpressionType:
     assert len(arg_exprs)==1, "expected one argument to codec(), got "+str(len(arg_exprs))
     assert isinstance(checker_api, TypeChecker), (type(checker_api), checker_api)
     result=infer_type_from_expr(arg_exprs[0],checker_api)
     verify_type_encodable(result, checker_api,[])
     return result
     
-KnownExpressionType = ( LiteralType | UnionType | Instance | TypeAliasType | TupleType |
-                        NoneType | TypeVarType | AnyType )
-
 def infer_type_from_expr(
         expr: Expression,
         checker_api:CheckerPluginInterface) -> KnownExpressionType:
@@ -476,7 +476,7 @@ def verify_dict_key_type(
                         raise CodecParamInvalid(f"unexpected enum member {t.value} type {n.type}")
                     verify_type_encodable(n.type,checker_api,seen)
                     return verify_dict_key_type(n.type,checker_api,seen)
-            raise CodecParamInvalid(f"Literal[{t.value}] not valid as parameter to xju.json_codec.code()")
+            raise CodecParamInvalid(f"Literal[{t.value}] not valid as parameter to xju.json_codec.codec()")
         case UnionType():
             string_args=list[KnownExpressionType]()
             non_string_args=list[KnownExpressionType]()
@@ -577,13 +577,93 @@ def adjust_codec_return_type(x: FunctionContext) -> Type:
     try:
         arg_exprs=x.args[0]
         inferred_codec_type = infer_codec_value_type_from_args(arg_exprs, x.api)
-        if isinstance(inferred_codec_type, UninhabitedType):
-            arg_type=x.arg_types[0]
-            x.api.fail(f"type {arg_type} is not supported by {CODEC_FQN}(). Note codec() parameter must be a type, not an instance.", x.context)
-            return AnyType(TypeOfAny.from_error)
         assert isinstance(x.default_return_type, Instance), x.default_return_type
         x.default_return_type.args=(inferred_codec_type, )
         return x.default_return_type
+    except CodecParamInvalid as e:
+        x.api.fail(str(e), x.context)
+        return AnyType(TypeOfAny.from_error)
+    pass
+
+def infer_encoded_type_from_t(t: KnownExpressionType,
+                              checker_api:CheckerPluginInterface) -> Type:
+    assert isinstance(checker_api, TypeChecker)
+    # verify_type_encodable has already checked all items, so
+    # we can cast safely
+    def known(t: Type) -> KnownExpressionType:
+        assert isinstance(t, KnownExpressionType), (type(t), t)
+        return t
+    match t:
+        case NoneType():
+            return t
+        case TypeVarType():
+            # should only be after already flagged error
+            pass
+        case AnyType():
+            # should only be after already flagged error
+            pass
+        case LiteralType():
+            # can only encode str, int, bool, and enumerations of those
+            match t.fallback.type._fullname:
+                case 'builtins.str':
+                    return builtin_type(checker_api, 'str')
+                case 'builtins.int':
+                    return builtin_type(checker_api, 'float')
+                case 'builtins.bool':
+                    return builtin_type(checker_api, 'bool')
+            if is_enum(t.fallback.type) and isinstance(t.value,str):
+                n=t.fallback.type.names[t.value].node
+                if isinstance(n,Var):
+                    if not isinstance(n.type, Instance):
+                        raise CodecParamInvalid(f"unexpected enum member {t.value} type {n.type}")
+                    return infer_encoded_type_from_t(n.type,checker_api)
+            raise CodecParamInvalid(f"Literal[{t.value}] not valid as parameter to xju.json_codec.code()")
+        case TupleType():
+            return builtin_type(checker_api, 'list')
+        case UnionType():
+            return UnionType([infer_encoded_type_from_t(known(alt), checker_api) for alt in t.items])
+        case Instance():
+            match t.type.fullname:
+                case 'builtins.str':
+                    return builtin_type(checker_api, 'str')
+                case 'builtins.bytes':
+                    return builtin_type(checker_api, 'bytes')
+                case 'builtins.int':
+                    return builtin_type(checker_api, 'float')
+                case 'builtins.bool':
+                    return builtin_type(checker_api, 'bool')
+                case 'builtins.float':
+                    return builtin_type(checker_api, 'float')
+                case 'builtins.set':
+                    return builtin_type(checker_api, 'set')
+                case 'builtins.list':
+                    return builtin_type(checker_api, 'list')
+                case 'builtins.dict':
+                    return builtin_type(checker_api, 'dict')
+
+            assert isinstance(checker_api, TypeChecker), checker_api
+            if not is_subtype(t, get_custom_class_codec_type(checker_api)):
+                return builtin_type(checker_api, 'dict')
+            # pdb_trace() # use t.encode's return type
+
+        case TypeAliasType():
+            assert t.alias is not None, (type(t), t)
+            return infer_encoded_type_from_t(known(t.alias.target),checker_api)
+
+    # pdb_trace()
+    return get_json_type_type(checker_api)
+
+def adjust_encode_return_type(x: MethodContext) -> Type:
+    """
+    assuming x is a call to xju.json_codec.Codec.encode, adjust the return type
+    to the specific encoded type
+    """
+    try:
+        assert isinstance(x.type, Instance), (type(x.type), x.type)
+        t=x.type.args[0]
+        assert isinstance(t, KnownExpressionType)
+        encoded_type = infer_encoded_type_from_t(t, x.api)
+        return encoded_type
     except CodecParamInvalid as e:
         x.api.fail(str(e), x.context)
         return AnyType(TypeOfAny.from_error)
@@ -600,6 +680,8 @@ class JsonCodecPlugin(Plugin):
     def get_method_hook(self, fullname: str) -> Callable[[MethodContext], Type] | None:
         if fullname == '__or__ of type':
             return adjust_type_or_type_return_type
+        if fullname == 'xju.json_codec.CodecProto.encode':
+            return adjust_encode_return_type
         return None
 
     def get_function_hook(self, fullname: str) -> Callable[[FunctionContext], Type] | None:

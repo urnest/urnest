@@ -1,3 +1,31 @@
+- source files are softlinked into dg because dg has different defs for some types
+
+lrwxrwxrwx 1 xju xju      19 Jul 23  2022 dg/if-drvpth.c -> ../odin/if-drvpth.c
+lrwxrwxrwx 1 xju xju      15 Jul 23  2022 dg/if-ft.c -> ../odin/if-ft.c
+lrwxrwxrwx 1 xju xju      16 Jul 23  2022 dg/if-lvl.c -> ../odin/if-lvl.c
+... lots of differences:
+
+CastEdg.h
+DrvEdg.h
+EnvVar.h
+EnvVarLst.h
+EqvEdg.h
+FilTyp.h
+InpEdg.h
+InpSpc.h
+MemEdg.h
+NodTyp_.h
+PrmTyp.h
+PrmTypLst.h
+SrcTyp.h
+TokTyp_.h
+Tool.h
+
+... need to make sure dg does not pick up any of those from odin and vice-versa
+
+how?
+
+
 - .tree:leaves error masking:
   - had a couple of levels of
     %all==%all.tree:leaves
