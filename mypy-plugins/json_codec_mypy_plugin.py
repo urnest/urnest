@@ -345,6 +345,33 @@ def get_custom_non_string_key_class_codec_type(chk: TypeChecker) -> Type:
     assert isinstance(result, TypeInfo)
     return Instance(result, [])
 
+def get_custom_generic_class_codec_type(chk: TypeChecker) -> Type:
+    # you'd think we could do checker_api.named_type("xju.json_codec.CustomGenericClassCodec")):
+    # but no, it looks for module xju, finds it but it is empty... the top level
+    # has a module called xju.json_codec though...
+    json_codec_module=chk.modules["xju.json_codec"]
+    result = json_codec_module.names["CustomGenericClassCodec"].node
+    assert isinstance(result, TypeInfo)
+    return Instance(result, [])
+
+def get_custom_string_key_generic_class_codec_type(chk: TypeChecker) -> Type:
+    # you'd think we could do checker_api.named_type("xju.json_codec.CustomStringKeyGenericClassCodec")):
+    # but no, it looks for module xju, finds it but it is empty... the top level
+    # has a module called xju.json_codec though...
+    json_codec_module=chk.modules["xju.json_codec"]
+    result = json_codec_module.names["CustomStringKeyGenericClassCodec"].node
+    assert isinstance(result, TypeInfo)
+    return Instance(result, [])
+
+def get_custom_non_string_key_generic_class_codec_type(chk: TypeChecker) -> Type:
+    # you'd think we could do checker_api.named_type("xju.json_codec.CustomNonStringKeyGenericClassCodec")):
+    # but no, it looks for module xju, finds it but it is empty... the top level
+    # has a module called xju.json_codec though...
+    json_codec_module=chk.modules["xju.json_codec"]
+    result = json_codec_module.names["CustomNonStringKeyGenericClassCodec"].node
+    assert isinstance(result, TypeInfo)
+    return Instance(result, [])
+
 def get_json_type_type(chk: TypeChecker) -> Type:
     # you'd think we could do checker_api.named_type("xju.json_codec.JsonType")):
     # but no, it looks for module xju, finds it but it is empty... the top level
@@ -598,10 +625,10 @@ def infer_encoded_type_from_t(t: KnownExpressionType,
             return t
         case TypeVarType():
             # should only be after already flagged error
-            pass
+            return get_json_type_type(checker_api)
         case AnyType():
             # should only be after already flagged error
-            pass
+            return get_json_type_type(checker_api)
         case LiteralType():
             # can only encode str, int, bool, and enumerations of those
             match t.fallback.type._fullname:
@@ -642,16 +669,16 @@ def infer_encoded_type_from_t(t: KnownExpressionType,
                     return builtin_type(checker_api, 'dict')
 
             assert isinstance(checker_api, TypeChecker), checker_api
+            #pdb_trace()
             if not is_subtype(t, get_custom_class_codec_type(checker_api)):
                 return builtin_type(checker_api, 'dict')
-            # pdb_trace() # use t.encode's return type
+            f=t.type.names['xju_json_codec_encode'].type
+            assert isinstance(f, CallableType)  # assured by is_subtype
+            return f.ret_type
 
         case TypeAliasType():
             assert t.alias is not None, (type(t), t)
             return infer_encoded_type_from_t(known(t.alias.target),checker_api)
-
-    # pdb_trace()
-    return get_json_type_type(checker_api)
 
 def adjust_encode_return_type(x: MethodContext) -> Type:
     """
@@ -673,8 +700,113 @@ def adjust_encode_return_type(x: MethodContext) -> Type:
 def show_return_type(x: FunctionContext) -> Type:
     return_type=get_proper_type(x.default_return_type)
     typeof_return_type=type(return_type)
-    pdb_trace()
     return return_type
+
+def verify_type_is_custom_class_codec(x: FunctionContext) -> Type:
+    """
+    assuming x is a call to xju.json_codec.VerifyTypeIsCustomClassCodec,
+    verify that the parameter is proper subclass of CustomClassCodec
+    (this feature is necessary because run-time issubclass(t, CustomClassCodec)
+    does not catch all negative cases, e.g. it does not catch incorrect type
+    of encode() parameter which is rejected by mypy)
+    """
+    try:
+        arg_exprs=x.args[0]
+        t = infer_codec_value_type_from_args(arg_exprs, x.api)
+        checker_api = x.api
+        assert isinstance(checker_api, TypeChecker), checker_api
+        if not is_subtype(t, get_custom_class_codec_type(checker_api)):
+            raise CodecParamInvalid(f"type {t} does not implement CustomClassCodec")
+        return x.default_return_type
+    except CodecParamInvalid as e:
+        x.api.fail(str(e), x.context)
+        return AnyType(TypeOfAny.from_error)
+    pass
+
+def verify_type_is_custom_string_key_class_codec(x: FunctionContext) -> Type:
+    """
+    ... like verify_type_is_custom_class_codec above
+    """
+    try:
+        arg_exprs=x.args[0]
+        t = infer_codec_value_type_from_args(arg_exprs, x.api)
+        checker_api = x.api
+        assert isinstance(checker_api, TypeChecker), checker_api
+        if not is_subtype(t, get_custom_string_key_class_codec_type(checker_api)):
+            raise CodecParamInvalid(f"type {t} does not implement CustomStringKeyClassCodec")
+        return x.default_return_type
+    except CodecParamInvalid as e:
+        x.api.fail(str(e), x.context)
+        return AnyType(TypeOfAny.from_error)
+    pass
+
+def verify_type_is_custom_non_string_key_class_codec(x: FunctionContext) -> Type:
+    """
+    ... like verify_type_is_custom_class_codec above
+    """
+    try:
+        arg_exprs=x.args[0]
+        t = infer_codec_value_type_from_args(arg_exprs, x.api)
+        checker_api = x.api
+        assert isinstance(checker_api, TypeChecker), checker_api
+        if not is_subtype(t, get_custom_non_string_key_class_codec_type(checker_api)):
+            raise CodecParamInvalid(f"type {t} does not implement CustomNonStringKeyClassCodec")
+        return x.default_return_type
+    except CodecParamInvalid as e:
+        x.api.fail(str(e), x.context)
+        return AnyType(TypeOfAny.from_error)
+    pass
+
+def verify_type_is_custom_generic_class_codec(x: FunctionContext) -> Type:
+    """
+    ... like verify_type_is_custom_class_codec above
+    """
+    try:
+        arg_exprs=x.args[0]
+        t = infer_codec_value_type_from_args(arg_exprs, x.api)
+        checker_api = x.api
+        assert isinstance(checker_api, TypeChecker), checker_api
+        if not is_subtype(t, get_custom_generic_class_codec_type(checker_api)):
+            raise CodecParamInvalid(f"type {t} does not implement CustomGenericClassCodec")
+        return x.default_return_type
+    except CodecParamInvalid as e:
+        x.api.fail(str(e), x.context)
+        return AnyType(TypeOfAny.from_error)
+    pass
+
+def verify_type_is_custom_string_key_generic_class_codec(x: FunctionContext) -> Type:
+    """
+    ... like verify_type_is_custom_class_codec above
+    """
+    try:
+        arg_exprs=x.args[0]
+        t = infer_codec_value_type_from_args(arg_exprs, x.api)
+        checker_api = x.api
+        assert isinstance(checker_api, TypeChecker), checker_api
+        if not is_subtype(t, get_custom_string_key_generic_class_codec_type(checker_api)):
+            raise CodecParamInvalid(f"type {t} does not implement CustomStringKeyGeneicClassCodec")
+        return x.default_return_type
+    except CodecParamInvalid as e:
+        x.api.fail(str(e), x.context)
+        return AnyType(TypeOfAny.from_error)
+    pass
+
+def verify_type_is_custom_non_string_key_generic_class_codec(x: FunctionContext) -> Type:
+    """
+    ... like verify_type_is_custom_class_codec above
+    """
+    try:
+        arg_exprs=x.args[0]
+        t = infer_codec_value_type_from_args(arg_exprs, x.api)
+        checker_api = x.api
+        assert isinstance(checker_api, TypeChecker), checker_api
+        if not is_subtype(t, get_custom_non_string_key_generic_class_codec_type(checker_api)):
+            raise CodecParamInvalid(f"type {t} does not implement CustomNonStringKeyGenericClassCodec")
+        return x.default_return_type
+    except CodecParamInvalid as e:
+        x.api.fail(str(e), x.context)
+        return AnyType(TypeOfAny.from_error)
+    pass
 
 class JsonCodecPlugin(Plugin):
     def get_method_hook(self, fullname: str) -> Callable[[MethodContext], Type] | None:
@@ -689,6 +821,18 @@ class JsonCodecPlugin(Plugin):
             return adjust_codec_return_type
         if fullname=="xju.json_codec._xxx":
             return show_return_type
+        if fullname=="xju.json_codec.VerifyTypeIsCustomClassCodec":
+            return verify_type_is_custom_class_codec
+        if fullname=="xju.json_codec.VerifyTypeIsCustomStringKeyClassCodec":
+            return verify_type_is_custom_string_key_class_codec
+        if fullname=="xju.json_codec.VerifyTypeIsCustomNonStringKeyClassCodec":
+            return verify_type_is_custom_non_string_key_class_codec
+        if fullname=="xju.json_codec.VerifyTypeIsCustomGenericClassCodec":
+            return verify_type_is_custom_generic_class_codec
+        if fullname=="xju.json_codec.VerifyTypeIsCustomStringKeyGenericClassCodec":
+            return verify_type_is_custom_string_key_generic_class_codec
+        if fullname=="xju.json_codec.VerifyTypeIsCustomNonStringKeyGenericClassCodec":
+            return verify_type_is_custom_non_string_key_generic_class_codec
         return None
     
     def get_function_signature_hook(

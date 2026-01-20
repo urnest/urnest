@@ -1609,6 +1609,13 @@ class CustomClassCodec(Protocol):
         return TypeScriptSourceCode('')
     pass
 
+def VerifyTypeIsCustomClassCodec(t: type):
+    """use this function to let json_codec_mypy_plugin verify
+    that t implements the CustomClassCodec protocol correctly
+    (issubclass(t, CustomClassCodec) does not catch all incorrect
+    implementations)"""
+    pass
+
 @runtime_checkable
 class CustomStringKeyClassCodec(Protocol):
     '''
@@ -1641,6 +1648,14 @@ class CustomStringKeyClassCodec(Protocol):
         assert False  #pragma NO COVER
         return TypeScriptSourceCode('')
     pass
+
+def VerifyTypeIsCustomStringKeyClassCodec(t: type):
+    """use this function to let json_codec_mypy_plugin verify
+    that t implements the CustomStringKeyClassCodec protocol correctly
+    (issubclass(t, CustomStringKeyClassCodec) does not catch all incorrect
+    implementations)"""
+    pass
+
 
 @runtime_checkable
 class CustomNonStringKeyClassCodec(Protocol):
@@ -1675,6 +1690,14 @@ class CustomNonStringKeyClassCodec(Protocol):
         assert False  #pragma NO COVER
         return TypeScriptSourceCode('')
     pass
+
+def VerifyTypeIsCustomNonStringKeyClassCodec(t: type):
+    """use this function to let json_codec_mypy_plugin verify
+    that t implements the CustomNonStringKeyClassCodec protocol correctly
+    (issubclass(t, CustomNonStringKeyClassCodec) does not catch all incorrect
+    implementations)"""
+    pass
+
 
 @runtime_checkable
 class CustomGenericClassCodec(Protocol):
@@ -1727,6 +1750,13 @@ class CustomGenericClassCodec(Protocol):
         return TypeScriptSourceCode('')
     pass
 
+def VerifyTypeIsCustomGenericClassCodec(t: type):
+    """use this function to let json_codec_mypy_plugin verify
+    that t implements the CustomGenericClassCodec protocol correctly
+    (issubclass(t, CustomGenericClassCodec) does not catch all incorrect
+    implementations)"""
+    pass
+
 @runtime_checkable
 class CustomStringKeyGenericClassCodec(Protocol):
     '''
@@ -1764,6 +1794,13 @@ class CustomStringKeyGenericClassCodec(Protocol):
            - may add any supporting definitions to namespace, e.g. type for T itself'''
         assert False  #pragma NO COVER
         return TypeScriptSourceCode('')
+    pass
+
+def VerifyTypeIsCustomStringKeyGenericClassCodec(t: type):
+    """use this function to let json_codec_mypy_plugin verify
+    that t implements the CustomStringKeyGenericClassCodec protocol correctly
+    (issubclass(t, CustomStringKeyGenericClassCodec) does not catch all incorrect
+    implementations)"""
     pass
 
 assert not issubclass(CustomStringKeyClassCodec, CustomStringKeyGenericClassCodec)
@@ -1805,6 +1842,13 @@ class CustomNonStringKeyGenericClassCodec(Protocol):
            - may add any supporting definitions to namespace, e.g. type for T itself'''
         assert False  #pragma NO COVER
         return TypeScriptSourceCode('')
+    pass
+
+def VerifyTypeIsCustomNonStringKeyGenericClassCodec(t: type):
+    """use this function to let json_codec_mypy_plugin verify
+    that t implements the CustomNonStringKeyGenericClassCodec protocol correctly
+    (issubclass(t, CustomNonStringKeyGenericClassCodec) does not catch all incorrect
+    implementations)"""
     pass
 
 assert not issubclass(CustomNonStringKeyClassCodec, CustomNonStringKeyGenericClassCodec)
