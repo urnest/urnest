@@ -185,9 +185,24 @@ Various modules implemented to some broad principles:
 
 Release History
 
-- 5.0.0 mypy 1.19 support
+- 5.0.0 support python 3.12 "type X = " syntax in xju.json_codec and plugins
 
-- 5.0.0 xju.json_codec - add default attribute value support to generated typescript
+- 5.0.0 mypy 1.19 support
+      Drops support for older mypy versions, because mypy broke its plugin api.
+
+- 5.0.0 json_codec_mypy_plugin now refines type of xju.json_codec.Codec.encode()
+    - e.g. plugin will give codec(list[int]).encode() return type "list" rather
+      than JsonType (because a list is always encoded as a json list)
+    - custom codecs may specify their precise encoded type as the return type
+      of xju_json_codec_encode/xju_json_codec_encode_generic
+    - see mypy_plugins/test_data/json_codec_errors.py for examples
+
+- 5.0.0 json_codec/json_codec_mypy_plugin adds custom-encoder type check
+    utilities VerifyTypeIs* to overcome the differences between python issubclass
+    and mypy subclass checking - see json_codec.py.test for use
+
+- 5.0.0 xju.json_codec - generated typescript changes
+    - add default attribute value support to generated typescript
       So for a python class like:
         class X:
           a: int
@@ -195,10 +210,13 @@ Release History
       ... the generated typescript will insert the default value when b is missing:
         asInstanceOfX({a: 2}) => {a:2, b:"fred"}
         x={a: 2}; isInstanceOfX({a: 2}) => true; x => {a:2, b:"fred"}
+
     - factor common code out of generated typescript, giving smaller
       and cleaner generated code
-      Generated code now requires supporting function that are supplied
-      in the python site-packages xju/typescript/ directory
+      Generated code now requires supporting functions that are supplied
+      by the .ts files in the python site-packages xju/typescript/ directory. These
+      are not imported or included automatically: use your build tools to do that.
+
     - remove generally unused generated functions
 
 - 5.0.0 xju.json_codec - new custom encoding interface
