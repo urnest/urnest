@@ -417,44 +417,50 @@ def verify_type_encodable(
                     'enum.auto'):
                 return True
             assert isinstance(checker_api, TypeChecker), checker_api
-            if not is_subtype(t, get_custom_class_codec_type(checker_api)):
-                for arg in t.args:
-                    if not isinstance(arg, KnownExpressionType.__args__):
-                        raise CodecParamInvalid(f"unexpected generic type arg type {arg}")
-                    verify_type_encodable(arg,checker_api,seen)
-                if t.type.fullname in ('builtins.set','builtins.list'):
-                    return True
-                if t.type.fullname in ('builtins.dict'):
-                    # valid key types: str, int, float, bool, None
-                    # or any union of int, float, bool, None
-                    assert isinstance(t.args[0], KnownExpressionType.__args__)
-                    verify_dict_key_type(t.args[0],checker_api,seen)
-                    return True
-                for base in t.type.bases:
-                    if base.type._fullname != 'builtins.object':
-                        if not isinstance(base, (LiteralType,UnionType,Instance,TypeAliasType,TupleType,NoneType,TypeVarType,AnyType)):
-                            raise CodecParamInvalid(f"unexpected base class type {base.type}")
-                        verify_type_encodable(base,checker_api,seen)
-                for attr_name, attr_node in t.type.names.items():
-                    if attr_name not in (
-                        '__init__', '__match_args__', '__dataclass_fields__', '__mypy-replace', '__doc__',
-                        '_DT',
-                    ):
-                        match attr_node.node:
-                            case SymbolNode() if isinstance(attr_node.node, Var) and attr_node.node.is_classvar:
-                                pass
-                            case SymbolNode() if isinstance(attr_node.node, Var) and attr_node.node.type is not None:
-                                if not isinstance(attr_node.node.type, KnownExpressionType.__args__):
-                                    raise CodecParamInvalid(f"{t.type._fullname}.{attr_name} type ({attr_node.node.type}) is not encodable")
-                                verify_type_encodable(attr_node.node.type,checker_api,seen)
-                                
-                            case SymbolNode() if isinstance(attr_node.node, TypeInfo):
-                                # e.g. nested class def
-                                pass
-                            case SymbolNode() if not isinstance(attr_node.node, (FuncDef, OverloadedFuncDef, Decorator) ):
-                                raise CodecParamInvalid(f"{t.type._fullname}.{attr_name} unexpected {attr_node.node}")
-                            case None:
-                                raise CodecParamInvalid(f"{t.type._fullname}.{attr_name} type is unknown")
+            if is_subtype(t, get_custom_class_codec_type(checker_api)):
+                return True
+            if is_subtype(t, get_custom_generic_class_codec_type(checker_api)):
+                return True
+
+            # non-special class class (including generic instance), verify all type vars,
+            # base classes and attrs are encodable
+            for arg in t.args:
+                if not isinstance(arg, KnownExpressionType.__args__):
+                    raise CodecParamInvalid(f"unexpected generic type arg type {arg}")
+                verify_type_encodable(arg,checker_api,seen)
+            if t.type.fullname in ('builtins.set','builtins.list'):
+                return True
+            if t.type.fullname in ('builtins.dict'):
+                # valid key types: str, int, float, bool, None
+                # or any union of int, float, bool, None
+                assert isinstance(t.args[0], KnownExpressionType.__args__)
+                verify_dict_key_type(t.args[0],checker_api,seen)
+                return True
+            for base in t.type.bases:
+                if base.type._fullname != 'builtins.object':
+                    if not isinstance(base, (LiteralType,UnionType,Instance,TypeAliasType,TupleType,NoneType,TypeVarType,AnyType)):
+                        raise CodecParamInvalid(f"unexpected base class type {base.type}")
+                    verify_type_encodable(base,checker_api,seen)
+            for attr_name, attr_node in t.type.names.items():
+                if attr_name not in (
+                    '__init__', '__match_args__', '__dataclass_fields__', '__mypy-replace', '__doc__',
+                    '_DT',
+                ):
+                    match attr_node.node:
+                        case SymbolNode() if isinstance(attr_node.node, Var) and attr_node.node.is_classvar:
+                            pass
+                        case SymbolNode() if isinstance(attr_node.node, Var) and attr_node.node.type is not None:
+                            if not isinstance(attr_node.node.type, KnownExpressionType.__args__):
+                                raise CodecParamInvalid(f"{t.type._fullname}.{attr_name} type ({attr_node.node.type}) is not encodable")
+                            verify_type_encodable(attr_node.node.type,checker_api,seen)
+
+                        case SymbolNode() if isinstance(attr_node.node, TypeInfo):
+                            # e.g. nested class def
+                            pass
+                        case SymbolNode() if not isinstance(attr_node.node, (FuncDef, OverloadedFuncDef, Decorator) ):
+                            raise CodecParamInvalid(f"{t.type._fullname}.{attr_name} unexpected {attr_node.node}")
+                        case None:
+                            raise CodecParamInvalid(f"{t.type._fullname}.{attr_name} type is unknown")
             return True
         case TypeAliasType():
             for arg in t.args:
@@ -566,6 +572,12 @@ def verify_dict_key_type(
                 if is_subtype(t, get_custom_non_string_key_class_codec_type(checker_api)):
                     return 'NonString'
                 raise CodecParamInvalid(f"{t.type.fullname} has custom encoding but is neither a CustomStringKeyClassCodec nor a CustomNonStringKeyClassCodec: {t.type.fullname} must implement one of these if it is to be used as a dictionary key")
+            if is_subtype(t, get_custom_generic_class_codec_type(checker_api)):
+                if is_subtype(t, get_custom_string_key_generic_class_codec_type(checker_api)):
+                    return 'String'
+                if is_subtype(t, get_custom_non_string_key_generic_class_codec_type(checker_api)):
+                    return 'NonString'
+                raise CodecParamInvalid(f"{t.type.fullname} has custom encoding but is neither a CustomStringKeyGenericClassCodec nor a CustomNonStringKeyGenericClassCodec: {t.type.fullname} must implement one of these if it is to be used as a dictionary key")
             if t.type.is_newtype:
                 if t.type.bases[0].type.fullname == 'builtins.str':
                     return 'String'
@@ -634,7 +646,7 @@ def infer_encoded_type_from_t(t: KnownExpressionType,
             match t.fallback.type._fullname:
                 case 'builtins.str':
                     return builtin_type(checker_api, 'str')
-                case 'builtins.int':
+                case 'builtins.int' | 'xju.time.Timestamp':
                     return builtin_type(checker_api, 'float')
                 case 'builtins.bool':
                     return builtin_type(checker_api, 'bool')
@@ -650,11 +662,20 @@ def infer_encoded_type_from_t(t: KnownExpressionType,
         case UnionType():
             return UnionType([infer_encoded_type_from_t(known(alt), checker_api) for alt in t.items])
         case Instance():
+            if is_xju_newtype(t.type):
+                match t.type.bases[0].type._fullname:
+                    case 'xju.newtype.Str':
+                        return builtin_type(checker_api, 'str')
+                    case 'xju.newtype.Int' | 'xju.newtype.Float':
+                        return builtin_type(checker_api, 'float')
+                    case 'xju.newtype.Bool':
+                        return builtin_type(checker_api, 'bool')
+
             match t.type.fullname:
                 case 'builtins.str':
                     return builtin_type(checker_api, 'str')
                 case 'builtins.bytes':
-                    return builtin_type(checker_api, 'bytes')
+                    return builtin_type(checker_api, 'list')
                 case 'builtins.int':
                     return builtin_type(checker_api, 'float')
                 case 'builtins.bool':
@@ -662,19 +683,49 @@ def infer_encoded_type_from_t(t: KnownExpressionType,
                 case 'builtins.float':
                     return builtin_type(checker_api, 'float')
                 case 'builtins.set':
-                    return builtin_type(checker_api, 'set')
+                    return builtin_type(checker_api, 'list')
                 case 'builtins.list':
                     return builtin_type(checker_api, 'list')
                 case 'builtins.dict':
                     return builtin_type(checker_api, 'dict')
+                case 'builtins.frozenset':
+                    return builtin_type(checker_api, 'list')
+                case 'builtins.tuple':
+                    return builtin_type(checker_api, 'list')
+                case 'xju.time.Timestamp':
+                    return builtin_type(checker_api, 'float')
 
+            if t.type.is_newtype:
+                return infer_encoded_type_from_t(t.type.bases[0], checker_api)
+            if is_enum(t.type):
+                if t.type.has_base('enum.StrEnum'):
+                    return builtin_type(checker_api, 'str')
+                if t.type.has_base('enum.IntEnum'):
+                    return builtin_type(checker_api, 'float')
+                if t.type.has_base('enum.Enum'):
+                    def assure_type(t: Type | None) -> Type:
+                        assert t is not None
+                        return t
+                    return UnionType([
+                        infer_encoded_type_from_t(known(assure_type(t.type.names[name].type)),
+                                                  checker_api)
+                        for name in t.type.enum_members])
+                
             assert isinstance(checker_api, TypeChecker), checker_api
             #pdb_trace()
-            if not is_subtype(t, get_custom_class_codec_type(checker_api)):
-                return builtin_type(checker_api, 'dict')
-            f=t.type.names['xju_json_codec_encode'].type
-            assert isinstance(f, CallableType)  # assured by is_subtype
-            return f.ret_type
+            if is_subtype(t, get_custom_class_codec_type(checker_api)):
+                # use return type of custom method xju_json_codec_encode
+                f=t.type.names['xju_json_codec_encode'].type
+                assert isinstance(f, CallableType)  # assured by is_subtype
+                return f.ret_type
+            if is_subtype(t, get_custom_generic_class_codec_type(checker_api)):
+                # use return type of custom method xju_json_codec_encode
+                f=t.type.names['xju_json_codec_encode_generic'].type
+                assert isinstance(f, CallableType)  # assured by is_subtype
+                return f.ret_type
+
+            # non-special class encodes to dict
+            return builtin_type(checker_api, 'dict')
 
         case TypeAliasType():
             assert t.alias is not None, (type(t), t)
