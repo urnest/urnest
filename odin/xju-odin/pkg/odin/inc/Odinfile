@@ -9,8 +9,8 @@
 %check_oc_nod_typ_h
 %check_oc_tok_typ_h
 
-%check_tok_typ_h==(TokTyp_.h)+cmd=diff (%ygt/tok.h) (TokTyp_.h):stdout
-%check_nod_typ_h==(NodTyp_.h)+cmd=diff (%ygt/nod.h) (NodTyp_.h):stdout
+%check_tok_typ_h==(OdinTokTyp_.h)+cmd=diff (%ygt/tok.h) (OdinTokTyp_.h):stdout
+%check_nod_typ_h==(OdinNodTyp_.h)+cmd=diff (%ygt/nod.h) (OdinNodTyp_.h):stdout
 %check_oc_nod_typ_h==(OC_NodTyp_.h)+cmd=diff (../boot%client-ygt/nod.h) (OC_NodTyp_.h):stdout
 %check_oc_tok_typ_h==(OC_TokTyp_.h)+cmd=diff (../boot%client-ygt/tok.h) (OC_TokTyp_.h):stdout
 

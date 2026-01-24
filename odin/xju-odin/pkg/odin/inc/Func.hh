@@ -92,7 +92,7 @@ extern void Local_Set_KeepGoing(bool);
 extern void Local_Set_ErrLevel(int);
 extern void Local_Set_WarnLevel(int);
 extern void Local_Set_LogLevel(tp_LogLevel);
-extern void Local_Set_HelpLevel(int);
+extern void Local_Set_HelpLevel(tp_LogLevel);
 extern void Local_Set_MaxJobs(int);
 extern int Local_Get_NumJobs();
 extern void Local_Get_UseCount(int *);

@@ -1,21 +1,23 @@
 #ifndef TP_STATUS
 #define TP_STATUS
 
-#define				STAT_Unknown 1
-#define				STAT_Pending 2
+enum Status {
+  STAT_Unknown=1,
+  STAT_Pending=2,
 
 // Ready to perform its update action:
-#define				STAT_Ready 3
+  STAT_Ready=3,
 
 // Its update action is in progress
-#define				STAT_Busy 4
-#define				STAT_SysAbort 5
-#define				STAT_NoFile 6
-#define				STAT_Circular 7
-#define				STAT_ElmCircular 8
-#define				STAT_Error 9
-#define				STAT_TgtValError 10
-#define				STAT_Warning 11
-#define				STAT_OK 12
+  STAT_Busy=4,
+  STAT_SysAbort=5,
+  STAT_NoFile=6,
+  STAT_Circular=7,
+  STAT_ElmCircular=8,
+  STAT_Error=9,
+  STAT_TgtValError=10,
+  STAT_Warning=11,
+  STAT_OK=12
+};
 
 #endif

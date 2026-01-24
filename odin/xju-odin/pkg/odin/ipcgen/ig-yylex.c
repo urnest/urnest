@@ -17,7 +17,7 @@ geoff@boulder.colorado.edu
 
 #include "inc/GMC.h"
 #include "inc/Str.h"
-#include "inc/TokTyp_.h"
+#include "dg/inc/TokTyp_.h"
 
 
 int	LineNum;

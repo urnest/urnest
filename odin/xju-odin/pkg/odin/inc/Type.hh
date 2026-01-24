@@ -2,21 +2,19 @@
 #define ODIN_TYPE_H
 
 #include <gmc/gmc.h>
+#include <dg/inc/Type.hh>
+#include <odin/inc/SKind_.h>
+#include <odin/inc/LogLevel_.h>
+#include <odin/inc/Status_.h>
+#include <odin/inc/ModKind_.h>
 
-typedef int		tp_LogLevel;
-typedef int		tp_ISKind;
-typedef int		tp_DPType;
-typedef int		tp_FKind;
-typedef int		tp_SKind;
+typedef enum Status	tp_Status;
+typedef enum LogLevel	tp_LogLevel;
+typedef enum SKind	tp_SKind;
 typedef int		tp_Flag;
-typedef int		tp_FTClass;
 typedef int		tp_ParseKind;
 typedef int		tp_PrmClass;
-typedef int		tp_PType;
-typedef int		tp_InpKind;
-typedef int		tp_Status;
-typedef int		tp_TClass;
-typedef int		tp_ModKind;
+typedef enum ModKind	tp_ModKind;
 
 typedef int		tp_JobID;
 typedef int		tp_BuildID;
@@ -70,18 +68,8 @@ typedef struct _tps_InpInf *	tp_InpInf;
 typedef struct _tps_Sym *	tp_Sym;
 typedef struct _tps_Tool *	tp_Tool;
 
-typedef char *		tp_Pattern;
-typedef char *		tp_Package;
-typedef char *		tp_CmdFilName;
-typedef char *		tp_Desc;
-typedef char *		tp_FileName;
-typedef char *		tp_PTName;
-typedef char *		tp_FTName;
 typedef char *		tp_HostName;
-typedef char *		tp_Key;
 typedef char *		tp_Label;
-typedef char *		tp_Ident;
-typedef char *		tp_Str;
 
 typedef struct _tps_FilHdr *	tp_FilHdr;
 typedef struct _tps_HdrInf *	tp_HdrInf;

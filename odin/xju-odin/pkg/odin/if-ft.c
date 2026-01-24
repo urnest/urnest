@@ -14,17 +14,17 @@ geoff@boulder.colorado.edu
 */
 
 #include <gmc/gmc.h>
-#include <odin/inc/NodTyp_.h>
-#include <odin/inc/TokTyp_.h>
+#include <dg/inc/NodTyp_.h>
+#include <dg/inc/TokTyp_.h>
 #include <gmc/nod.h>
 #include <odin/inc/Func.hh>
 #include <odin/inc/Type.hh>
-#include <odin/inc/FilTyp.h>
+#include <dg/inc/FilTyp.h>
 #include <dg/inc/FKind_.h>
 #include <dg/inc/FTClass_.h>
-#include <odin/inc/SrcTyp.h>
+#include <dg/inc/SrcTyp.h>
 #include <dg/inc/TClass_.h>
-#include <odin/inc/Tool.h>
+#include <dg/inc/Tool.h>
 #include <string.h>
 
 

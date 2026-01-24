@@ -45,7 +45,7 @@ version == \
 %c-opts==<<
 +inc_sp=(.)
 +inc_sp=(..)
-
++define=BUILDING_DG
 
 %test-tc-map-prm-info.result==()+cmd=(%test-tc-map-prm-info):stdout
 %test-tc-map-prm-info==%test-tc-map-prm-info.cxx.sm+inc_sp=(.):exe

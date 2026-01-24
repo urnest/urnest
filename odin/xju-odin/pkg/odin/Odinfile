@@ -2,6 +2,7 @@
 
 %all.ls == <<
 %exe
+%rbs-exe
 inc%check
 boot%check
 
@@ -60,8 +61,8 @@ main.cc;
 if-nod.c==../gmc/xxx-nod.c+cmd=sed -e 's=xxx/inc/NodTyp_.h=odin/inc/OC_NodTyp_.h=g' -e 's=xxx/inc/TokTyp_.h=odin/inc/OC_TokTyp_.h=g':stdout
 
 %rbs.c.sm == <<
-   rbs.c; if-dir.c; ../gmc/if-err-no-ipc.c
-   if-system.c; ../gmc/inotify-stub.c
+   rbs.c; if-dir.c; ../gmc/gmc.c
+   if-system.c; ../gmc/inotify-stub.c; file.c; ../gmc/err-no-ipc.c
 
 version == \
    inc/Version.h  +cmd='sed \'s/^.*VERSION_STR "\\(.*\\)"/\\1/\'' :stdout
@@ -69,3 +70,4 @@ version == \
 %c-opts==<<
 +inc_sp=(.)
 +inc_sp=(..)
++define=BUILDING_ODIN

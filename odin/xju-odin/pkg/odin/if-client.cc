@@ -15,8 +15,8 @@ geoff@boulder.colorado.edu
 extern "C"
 {
 #include <gmc/gmc.h>
-#include <odin/inc/NodTyp_.h>
-#include <odin/inc/TokTyp_.h>
+#include <dg/inc/NodTyp_.h>
+#include <dg/inc/TokTyp_.h>
 #include <gmc/nod.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
@@ -246,8 +246,8 @@ New_Client(tp_ClientID ClientID)
    Client->KeepGoing = false;
    Client->ErrLevel = 0;
    Client->WarnLevel = 0;
-   Client->LogLevel = 0;
-   Client->HelpLevel = 0;
+   Client->LogLevel = LOGLEVEL_Init;
+   Client->HelpLevel = LOGLEVEL_Init;
    Client->CWDFilHdrS = NIL;
    Client->FilHdr = NIL;
    Client->ToDo = NIL;
@@ -912,7 +912,7 @@ Local_Set_LogLevel(tp_LogLevel LogLevel)
 
 
 void
-Local_Set_HelpLevel(int HelpLevel)
+Local_Set_HelpLevel(tp_LogLevel HelpLevel)
 {
    CurrentClient->HelpLevel = HelpLevel;
    }/*Local_Set_HelpLevel*/

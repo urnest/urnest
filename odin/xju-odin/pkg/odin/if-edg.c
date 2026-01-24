@@ -14,16 +14,16 @@ geoff@boulder.colorado.edu
 */
 
 #include <gmc/gmc.h>
-#include <odin/inc/NodTyp_.h>
-#include <odin/inc/TokTyp_.h>
+#include <dg/inc/NodTyp_.h>
+#include <dg/inc/TokTyp_.h>
 #include <gmc/nod.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
-#include <odin/inc/CastEdg.h>
-#include <odin/inc/DrvEdg.h>
-#include <odin/inc/EqvEdg.h>
-#include <odin/inc/MemEdg.h>
-#include <odin/inc/InpEdg.h>
+#include <dg/inc/CastEdg.h>
+#include <dg/inc/DrvEdg.h>
+#include <dg/inc/EqvEdg.h>
+#include <dg/inc/MemEdg.h>
+#include <dg/inc/InpEdg.h>
 #include <dg/inc/InpKind_.h>
 
 

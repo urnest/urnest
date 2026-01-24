@@ -20,13 +20,13 @@ geoff@boulder.colorado.edu
 #include <string.h>
 
 #include <gmc/gmc.h>
-#include <odin/inc/NodTyp_.h>
-#include <odin/inc/TokTyp_.h>
+#include <dg/inc/NodTyp_.h>
+#include <dg/inc/TokTyp_.h>
 #include <gmc/nod.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
 #include <odin/inc/Var.hh>
-#include <odin/inc/EnvVar.h>
+#include <dg/inc/EnvVar.h>
 #include <odin/inc/Job.h>
 #include <odin/inc/LookupPlainAbsPath.h>
 

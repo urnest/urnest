@@ -2,31 +2,31 @@ char *DG_Version = "1.16.10";
 char *Banner = "";
 #include "gmc/gmc.h"
 #include "dg/inc/Type.hh"
-#include "inc/SrcTyp.h"
+#include "dg/inc/SrcTyp.h"
 extern tps_SrcTyp _SrcTypS [];
-#include "inc/FilTyp.h"
+#include "dg/inc/FilTyp.h"
 extern tps_FilTyp _FilTypS [];
-#include "inc/PrmTyp.h"
+#include "dg/inc/PrmTyp.h"
 extern tps_PrmTyp _PrmTypS [];
-#include "inc/EnvVar.h"
+#include "dg/inc/EnvVar.h"
 extern tps_EnvVar _EnvVarS [];
-#include "inc/EnvVarLst.h"
+#include "dg/inc/EnvVarLst.h"
 extern tps_EnvVarLst _EnvVarLstS [];
-#include "inc/Tool.h"
+#include "dg/inc/Tool.h"
 extern tps_Tool _ToolS [];
-#include "inc/InpEdg.h"
+#include "dg/inc/InpEdg.h"
 extern tps_InpEdg _InpEdgS [];
-#include "inc/MemEdg.h"
+#include "dg/inc/MemEdg.h"
 extern tps_MemEdg _MemEdgS [];
-#include "inc/EqvEdg.h"
+#include "dg/inc/EqvEdg.h"
 extern tps_EqvEdg _EqvEdgS [];
-#include "inc/CastEdg.h"
+#include "dg/inc/CastEdg.h"
 extern tps_CastEdg _CastEdgS [];
-#include "inc/DrvEdg.h"
+#include "dg/inc/DrvEdg.h"
 extern tps_DrvEdg _DrvEdgS [];
-#include "inc/PrmTypLst.h"
+#include "dg/inc/PrmTypLst.h"
 extern tps_PrmTypLst _PrmTypLstS [];
-#include "inc/InpSpc.h"
+#include "dg/inc/InpSpc.h"
 extern tps_InpSpc _InpSpcS [];
 int num_SrcTypS = 61;
 tps_SrcTyp _SrcTypS [61] = {

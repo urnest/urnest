@@ -18,6 +18,7 @@ geoff@boulder.colorado.edu
 #include <string.h>
 #include <stdio.h>
 #include <gmc/gmc.h>
+#include <dg/inc/NodTyp_.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
 #include <odin/inc/Var.hh>

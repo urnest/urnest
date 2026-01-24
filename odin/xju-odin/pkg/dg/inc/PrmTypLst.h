@@ -1,6 +1,6 @@
 #ifndef TPS_PRMTYPLST
 #define TPS_PRMTYPLST
-
+#ifdef BUILDING_DG
 typedef struct _tps_PrmTypLst {
    tp_PrmTyp PrmTyp;
    tp_PrmTypLst Next;
@@ -9,5 +9,16 @@ typedef struct _tps_PrmTypLst {
    int Index;
    tp_PrmTypLst Link;
    }				tps_PrmTypLst;
+
+#endif
+#ifdef BUILDING_ODIN
+
+
+typedef struct _tps_PrmTypLst {
+   tp_PrmTyp PrmTyp;
+   tp_PrmTypLst Next;
+   }				tps_PrmTypLst;
+
+#endif
 
 #endif

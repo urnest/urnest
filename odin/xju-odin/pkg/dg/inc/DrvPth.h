@@ -1,7 +1,7 @@
 #ifndef TPS_DRVPTH
 #define TPS_DRVPTH
 
-#include <odin/inc/Type.hh>
+#include <dg/inc/Type.hh>
 
 typedef struct _tps_DrvPth {
    tp_DPType DPType;

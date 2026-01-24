@@ -1,11 +1,18 @@
 #ifndef DG_INC_TYPE_H
 #define DG_INC_TYPE_H
 
-typedef int			tp_FTClass;
-typedef int			tp_InpKind;
-typedef int			tp_ISKind;
-typedef int			tp_Status;
-typedef int			tp_TClass;
+#include <dg/inc/FKind_.h>
+#include <dg/inc/InpKind_.h>
+#include <dg/inc/ISKind_.h>
+#include <dg/inc/DPType_.h>
+#include <dg/inc/FTClass_.h>
+#include <dg/inc/PType_.h>
+#include <dg/inc/TClass_.h>
+
+typedef enum FTClass		tp_FTClass;
+typedef enum InpKind		tp_InpKind;
+typedef enum ISKind		tp_ISKind;
+typedef enum TClass		tp_TClass;
 
 typedef char *			tp_Pattern;
 typedef char *			tp_Package;
@@ -39,9 +46,9 @@ typedef struct _tps_Tool *	tp_Tool;
 
 /* for if.lvl.c */
 
-typedef int		tp_DPType;
-typedef int		tp_FKind;
-typedef int		tp_PType;
+typedef enum DPType	tp_DPType;
+typedef enum FKind	tp_FKind;
+typedef enum PType      tp_PType;
 
 typedef struct _tps_Pos *	tp_Pos;
 

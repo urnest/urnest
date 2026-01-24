@@ -7,8 +7,8 @@
 %check_tok_typ_h
 %check_nod_typ_h
 
-%check_tok_typ_h==(TokTyp_.h)+cmd=diff (%ygt/tok.h) (TokTyp_.h):stdout
-%check_nod_typ_h==(NodTyp_.h)+cmd=diff (%ygt/nod.h) (NodTyp_.h):stdout
+%check_tok_typ_h==(DgTokTyp_.h)+cmd=diff (%ygt/tok.h) (DgTokTyp_.h):stdout
+%check_nod_typ_h==(DgNodTyp_.h)+cmd=diff (%ygt/nod.h) (DgNodTyp_.h):stdout
 
 %ygt==()+cmd=(%ygt.sh) (../../tregrm/ygt.sh) (../dg.ygi) (../../tregrm%exe):output
 

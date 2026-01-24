@@ -1,5 +1,5 @@
 #include <gmc/gmc.h>
-#include <odin/inc/NodTyp_.h>
+#include <dg/inc/NodTyp_.h>
 #include <gmc/nod.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
@@ -328,7 +328,7 @@ LocalEnd_Get_OdinFile(
    if (IPC_Abort) IPC_Do_Abort();
    IPC_Write_Int(&IPC_Abort, StatusPtr);
    if (IPC_Abort) IPC_Do_Abort();
-   IPC_Write_Int(&IPC_Abort, ExecFlagPtr);
+   IPC_Write_Bool(&IPC_Abort, ExecFlagPtr);
    if (IPC_Abort) IPC_Do_Abort();
 }
 #endif

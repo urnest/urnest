@@ -6,7 +6,7 @@ typedef char tps_EntryStr [20];
 
 #define DG_HEAD(x) \
  (void)fprintf(DRVGRF_FILE, "%d ",num_##x##S); \
- (void)fprintf(DG_C_FILE, "#include \"inc/" #x ".h\"\n"); \
+ (void)fprintf(DG_C_FILE, "#include \"dg/inc/" #x ".h\"\n"); \
  (void)fprintf(DG_C_FILE, "extern tps_" #x " _" #x "S [];\n")
 
 #define DG_FOREACH(x) \
@@ -29,7 +29,7 @@ typedef char tps_EntryStr [20];
 
 #define DG_HEAD(x) \
  (void)fprintf(DRVGRF_FILE, "%d ",num_/**/x/**/S); \
- (void)fprintf(DG_C_FILE, "#include \"inc/x.h\"\n"); \
+ (void)fprintf(DG_C_FILE, "#include \"dg/inc/x.h\"\n"); \
  (void)fprintf(DG_C_FILE, "extern tps_%s _%sS [];\n", "x", "x")
 
 #define DG_FOREACH(x) \

@@ -1,9 +1,11 @@
 #ifndef TP_PTYPE
 #define TP_PTYPE
 
-#define				PT_Inp 1
-#define				PT_Cast 2
-#define				PT_Eqv 3
-#define				PT_Drv 4
+enum PType {
+  PT_Inp=1,
+  PT_Cast=2,
+  PT_Eqv=3,
+  PT_Drv=4
+};
 
 #endif

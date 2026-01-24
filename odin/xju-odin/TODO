@@ -1,29 +1,3 @@
-- source files are softlinked into dg because dg has different defs for some types
-
-lrwxrwxrwx 1 xju xju      19 Jul 23  2022 dg/if-drvpth.c -> ../odin/if-drvpth.c
-lrwxrwxrwx 1 xju xju      15 Jul 23  2022 dg/if-ft.c -> ../odin/if-ft.c
-lrwxrwxrwx 1 xju xju      16 Jul 23  2022 dg/if-lvl.c -> ../odin/if-lvl.c
-... lots of differences:
-
-CastEdg.h
-DrvEdg.h
-EnvVar.h
-EnvVarLst.h
-EqvEdg.h
-FilTyp.h
-InpEdg.h
-InpSpc.h
-MemEdg.h
-NodTyp_.h
-PrmTyp.h
-PrmTypLst.h
-SrcTyp.h
-TokTyp_.h
-Tool.h
-
-... need to make sure dg does not pick up any of those from odin and vice-versa
-
-how?
 
 
 - .tree:leaves error masking:
@@ -44,8 +18,9 @@ how?
   * avoid instantiating filhdrs on change notification, we end up traversing entire
     file system:
       Local_Test >> Noify_Change
+              * and what does Local_Test do with the found FilHdr?
       OdinExpr_FilHdr >> OdinExpr_Closest_Existing_Src_FilHdr  ... but do we have to touch it
-      if it is not the leaf?
+      if it is not the leaf? No.
       Nod_PrmFHdr >> Nod_Closest_Existing_Src_PrmFHdr
         /tmp/x/a:
 if-candrv.c
@@ -73,7 +48,7 @@ if-candrv.c
 255           return Get_KeyDrv(FilHdr, FK_SrcReg, Key); }/*if*/;
             - non-existing
                 -> Extend_FilHdr
-                
+
   - custom parse path to handle e.g. embedded ';' instead of ignoring such files
      
 - get dg.exe to escape "s in help strings then remove \\s from 

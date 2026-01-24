@@ -1,16 +1,18 @@
 #ifndef TP_FTCLASS
 #define TP_FTCLASS
 
-#define	FTC_None 1
-#define	FTC_Atmc 2
-#define	FTC_List 3
-#define	FTC_Void 4
-#define	FTC_Pntr 5
-#define	FTC_Exec 6
-#define	FTC_Generic 7
-#define	FTC_Pipe 8
-#define	FTC_DrvDir 9
-#define	FTC_Struct 10
-#define	FTC_ViewSpec 11
+enum FTClass {
+  FTC_None=1,
+  FTC_Atmc=2,
+  FTC_List=3,
+  FTC_Void=4,
+  FTC_Pntr=5,
+  FTC_Exec=6,
+  FTC_Generic=7,
+  FTC_Pipe=8,
+  FTC_DrvDir=9,
+  FTC_Struct=10,
+  FTC_ViewSpec=11
+};
 
 #endif

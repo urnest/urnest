@@ -302,7 +302,7 @@ int main(int argc, char* argv[])
   auto const stubs{hcp_ast::findChildrenOfType<Stub>(root)};
   std::ostringstream inStubs;
   inStubs << "#include <gmc/gmc.h>" << "\n";
-  inStubs << "#include <odin/inc/NodTyp_.h>" << "\n";
+  inStubs << "#include <dg/inc/NodTyp_.h>" << "\n";
   inStubs << "#include <gmc/nod.h>" << "\n";
   inStubs << "#include <odin/inc/Type.hh>" << "\n";
   inStubs << "#include <odin/inc/Func.hh>" << "\n";
@@ -699,6 +699,9 @@ int main(int argc, char* argv[])
           if (paramType=="str"){
             inStubs << "   IPC_Write_Str(&IPC_Abort, " << paramName << ");\n";
           }
+          else if (paramType=="bool"){
+            inStubs << "   IPC_Write_Bool(&IPC_Abort, " << paramName << ");\n";
+          }
           else{
             inStubs << "   IPC_Write_Int(&IPC_Abort, " << paramName << ");\n";
           }
@@ -755,7 +758,7 @@ int main(int argc, char* argv[])
 
   std::ostringstream outStubs;
   outStubs << "#include <gmc/gmc.h>" << "\n";
-  outStubs << "#include <odin/inc/NodTyp_.h>" << "\n";
+  outStubs << "#include <dg/inc/NodTyp_.h>" << "\n";
   outStubs << "#include <gmc/nod.h>" << "\n";
   outStubs << "#include <odin/inc/Type.hh>" << "\n";
   outStubs << "#include <odin/inc/Func.hh>" << "\n";
@@ -854,6 +857,10 @@ int main(int argc, char* argv[])
             if (paramType=="int *"){
               s << "   int* " << paramName << "";
               t << "   int* " << paramName << "\n";
+            }
+            else if (paramType=="bool *"){
+              s << "   bool* " << paramName << "";
+              t << "   bool* " << paramName << "\n";
             }
             else if (paramType=="tp_Status *"){
               s << "   tp_Status* " << paramName << "";
@@ -1049,7 +1056,7 @@ int main(int argc, char* argv[])
         outStubs << "   if (IPC_Abort) IPC_Do_Abort();\n";
         outStubs << "   IPC_Write_Str(&IPC_Abort, OdinExpr);\n";
         outStubs << "   if (IPC_Abort) IPC_Do_Abort();\n";
-        outStubs << "   IPC_Write_Int(&IPC_Abort, NeedsData);\n";
+        outStubs << "   IPC_Write_Bool(&IPC_Abort, NeedsData);\n";
         outStubs << "   if (IPC_Abort) IPC_Do_Abort();\n";
         outStubs << "   IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);\n";
         outStubs << "   FORBIDDEN(IPC_Cmd_Abort);\n";

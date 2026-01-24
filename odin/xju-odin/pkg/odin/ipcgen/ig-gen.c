@@ -14,7 +14,7 @@ geoff@boulder.colorado.edu
 */
 
 #include "inc/GMC.h"
-#include "inc/NodTyp_.h"
+#include "dg/inc/NodTyp_.h"
 
 
 Gen_InStub(FilDsc, Root)

@@ -69,7 +69,7 @@
 /* First part of user prologue.  */
 
 #include "gmc/gmc.h"
-#include "odin/inc/NodTyp_.h"
+#include "dg/inc/NodTyp_.h"
 #include "gmc/nod.h"
 #include "odin/inc/Func.hh"
 extern int num_ParseErrors;

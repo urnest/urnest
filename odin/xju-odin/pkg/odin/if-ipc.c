@@ -14,8 +14,8 @@ geoff@boulder.colorado.edu
 */
 
 #include <gmc/gmc.h>
-#include <odin/inc/NodTyp_.h>
-#include <odin/inc/TokTyp_.h>
+#include <dg/inc/NodTyp_.h>
+#include <dg/inc/TokTyp_.h>
 #include <gmc/nod.h>
 #include <odin/inc/Type.hh>
 #include <odin/inc/Func.hh>
@@ -562,7 +562,7 @@ IPC_Write_Int(bool* AbortPtr,int Int)
 
 
 void
-IPC_Write_Bool(bool* AbortPtr,bool Int)
+IPC_Write_Bool(bool* AbortPtr,bool Bool)
 {
    int fd, cc;
 
@@ -574,9 +574,9 @@ IPC_Write_Bool(bool* AbortPtr,bool Int)
 	 return; }/*if*/;
       FORBIDDEN(Is_LocalClient(CurrentClient));
       fd = Client_FD(CurrentClient); }/*if*/;
-   cc = write(fd, (char *)&Int, sizeof(Int));
-   *AbortPtr = (cc != sizeof(Int));
-   }/*IPC_Write_Int*/
+   cc = write(fd, (char *)&Bool, sizeof(Bool));
+   *AbortPtr = (cc != sizeof(Bool));
+   }/*IPC_Write_Bool*/
 
 
 void
@@ -599,7 +599,7 @@ IPC_Read_Int(bool* AbortPtr,int* IntPtr)
 
 
 void
-IPC_Read_Bool(bool* AbortPtr,bool* IntPtr)
+IPC_Read_Bool(bool* AbortPtr,bool* BoolPtr)
 {
    int fd, cc;
 
@@ -612,9 +612,9 @@ IPC_Read_Bool(bool* AbortPtr,bool* IntPtr)
       FORBIDDEN(Is_LocalClient(CurrentClient));
       fd = Client_FD(CurrentClient); }/*if*/;
 
-   cc = IPC_Read(fd, (char *)IntPtr, sizeof(*IntPtr));
-   *AbortPtr = (cc != sizeof(*IntPtr));
-   }/*IPC_Read_Int*/
+   cc = IPC_Read(fd, (char *)BoolPtr, sizeof(*BoolPtr));
+   *AbortPtr = (cc != sizeof(*BoolPtr));
+   }/*IPC_Read_Bool*/
 
 
 void
