@@ -73,7 +73,7 @@ GetNotUpToDateFile(tp_FilHdr FilHdr)
       Set_PndFlag(FilHdr, false);
       if (!IsTgtValUpToDate(FilHdr)) {
         // REVISIT: why do this conditionally? It means we won't update
-        // its verify date even though we just verified it at the currnet date?
+        // its verify date even though we just verified it at the current date?
 	 Set_TgtValStatus(FilHdr, FilHdr_TgtValStatus(FilHdr));
 	 Set_TgtValPndFlag(FilHdr, false); }/*if*/;
       Push_ToDo(Copy_FilHdr(FilHdr));

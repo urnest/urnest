@@ -104,6 +104,26 @@ Local_Test(tp_FileName FileName)
 
 
 void
+Notify_Change(tp_FileName FileName)
+{
+   tp_FilHdr FilHdr, SymLinkFH;
+   
+   bool exists = OdinExpr_Existing_Src_FilHdr(FileName, &FilHdr);
+   if (!exists) {
+     return;
+   }
+   if (FilHdr == ERROR) {
+      return; }/*if*/;
+   if (IsSource(FilHdr)) {
+      SymLinkFH = Deref_SymLink(Copy_FilHdr(FilHdr));
+      Set_Status(SymLinkFH, STAT_Unknown);
+      Ret_FilHdr(SymLinkFH);
+      Update_SrcFilHdr(FilHdr, false); }/*if*/;
+   Ret_FilHdr(FilHdr);
+   }/*Local_Test*/
+
+
+void
 Local_Test_All()
 {
    tp_Client OldCurrentClient;

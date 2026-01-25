@@ -253,6 +253,56 @@ Do_Key(tp_FilHdr FilHdr,tp_Key Key)
    }/*Do_Key*/
 
 
+bool
+Do_Existing_Src_Key(tp_FilHdr FilHdr,tp_Key Key, tp_FilHdr* Result)
+{
+   tp_FilHdr DirFilHdr, DirSymFilHdr, SymDirFilHdr;
+   tp_FilTyp FilTyp;
+   tp_FKind FKind;
+
+   if (FilHdr == ERROR || Key == ERROR) {
+      Ret_FilHdr(FilHdr);
+      return ERROR; }/*if*/;
+
+   if (strcmp(Key, ".") == 0) {
+      return FilHdr; }/*if*/;
+
+   if (strcmp(Key, "") == 0
+       && !(FilHdr == RootFilHdr || FilHdr == NetRootFilHdr)) {
+      *Result = FilHdr;
+      return true; }/*if*/;
+
+   if (IsSource(FilHdr)) {
+      if (strcmp(Key, "..") == 0) {
+	 if (FilHdr == RootFilHdr) {
+	    *Result = FilHdr;
+            return true;}/*if*/;
+	 DirFilHdr = FilHdr_Father(Copy_FilHdr(FilHdr));
+	 if (DirFilHdr == NetRootFilHdr) {
+	    Ret_FilHdr(DirFilHdr);
+	    *Result = FilHdr;
+            return true; }/*if*/;
+	 DirSymFilHdr = FilHdr_Father(Deref_SymLink(Copy_FilHdr(FilHdr)));
+	 SymDirFilHdr = Deref_SymLink(Copy_FilHdr(DirFilHdr));
+	 Ret_FilHdr(FilHdr);
+	 if (DirSymFilHdr == SymDirFilHdr) {
+	    Ret_FilHdr(DirSymFilHdr); Ret_FilHdr(SymDirFilHdr);
+	    *Result = DirFilHdr;
+            return true; }/*if*/;
+	 Ret_FilHdr(DirFilHdr); Ret_FilHdr(SymDirFilHdr);
+	 *Result = FilHdr_AliasFilHdr(DirSymFilHdr);
+         return true; }/*if*/;
+
+      if (FilHdr == CacheDirFilHdr) {
+	 Ret_FilHdr(FilHdr);
+         return false; }/*if*/;
+
+      return Get_Existing_Src_KeyDrv(FilHdr, FK_SrcReg, Key, Result); }/*if*/;
+
+   return false;
+   }/*Do_Key*/
+
+
 tp_FilHdr
 Str_FilHdr(tp_Str Str,tp_PrmTyp PrmTyp)
 {
@@ -510,6 +560,45 @@ Apply_OprNods(tp_FilHdr FilHdr,tp_FilPrm FilPrm,tp_Nod OprNod)
    }/*Apply_OprNods*/
 
 
+static bool
+Apply_Existing_Src_OprNods(tp_FilHdr FilHdr,tp_FilPrm FilPrm,tp_Nod OprNod, tp_PrmFHdr* Result)
+{
+   tp_Nod ElmNod;
+   tp_NodTyp NodTyp;
+   tp_FilTyp FilTyp;
+   tp_LocHdr LocHdr;
+   tp_LocPVal LocPVal;
+
+   if (FilHdr == ERROR || FilPrm == ERROR) return ERROR;
+
+   bool exists = false;
+   while (OprNod != NIL) {
+      NodTyp = Nod_NodTyp(OprNod);
+      switch (NodTyp) {
+	 case ELMOPR: {
+	    ElmNod = Nod_Son(1, OprNod);
+	    FilPrm = RootFilPrm;
+	    FilHdr = Do_Key(FilHdr, "");
+	    exists = Do_Existing_Src_Keys(FilHdr, Sym_Str(Nod_Sym(ElmNod)), &FilHdr);
+	    if (FilHdr == ERROR) {
+	       return ERROR; }/*if*/;
+	    break;}/*case*/;
+	 default: {
+	    FATALERROR("Apply_Existing_Src_OprNods bad operator node type"); };}/*switch*/;
+      OprNod = Nod_Brother(OprNod); }/*while*/;
+
+   if (exists) {
+     if (!IsSource(FilHdr)){
+       Ret_FilHdr(FilHdr);
+       return false;
+     }
+     // note should not have any FilPrm but anyway...
+     *Result = New_PrmFHdr(FilHdr, FilPrm);
+   }
+   return exists;
+   }/*Apply_OprNods*/
+
+
 tp_PrmFHdr
 Nod_PrmFHdr(tp_Nod Nod)
 {
@@ -571,6 +660,40 @@ Nod_PrmFHdr(tp_Nod Nod)
 	 FATALERROR("Unexpected node type.\n"); };}/*switch*/;
 
    return Apply_OprNods(FilHdr, RootFilPrm, OprNod);
+   }/*Nod_PrmFHdr*/
+
+
+bool
+Nod_Existing_Src_PrmFHdr(tp_Nod Nod, tp_PrmFHdr* Result)
+{
+  tp_FilHdr FilHdr;
+   tp_Nod RootNod, OprNod;
+   tp_Key Key;
+
+   if (Nod == ERROR) return ERROR;
+
+   switch (Nod_NodTyp(Nod)) {
+      case DRVFIL: {
+	 break; }/*case*/;
+      default: {
+	 FATALERROR("Nod_Existing_Src_PrmFHdr Unexpected node type.\n"); };}/*switch*/;
+
+   RootNod = Nod_Son(1, Nod);
+   OprNod = Nod_Brother(RootNod);
+   bool exists;
+   switch (Nod_NodTyp(RootNod)) {
+      case ABSFIL: {
+	 Key = Sym_Str(Nod_Sym(Nod_Son(1, RootNod)));
+	 exists = Do_Existing_Src_Keys(Copy_FilHdr(RootFilHdr), Key, &FilHdr);
+	 break; }/*case*/;
+      default: {
+	 FATALERROR("Nod_Existing_Src_PrmFHdr Unexpected node type.\n"); };}/*switch*/;
+
+   if (exists) {
+     exists = Apply_Existing_Src_OprNods(FilHdr, RootFilPrm, OprNod, Result);
+   }
+   return exists;
+
    }/*Nod_PrmFHdr*/
 
 

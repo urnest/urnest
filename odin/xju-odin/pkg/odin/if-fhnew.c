@@ -127,6 +127,51 @@ Extend_FilHdr(tp_FilHdr BaseFilHdr,tp_FKind FKind,tp_FilTyp FilTyp,tp_FilPrm Fil
    }/*Extend_FilHdr*/
 
 
+bool
+Extend_Existing_Src_FilHdr(tp_FilHdr BaseFilHdr,tp_FKind FKind,tp_FilTyp FilTyp,tp_FilPrm FilPrm,tp_Str IdentStr, tp_FilHdr* Result)
+{
+   tp_FilHdr FilHdr;
+   tp_LocHdr LocHdr;
+   tp_Ident Ident;
+
+   FilHdr = ERROR;
+   if (BaseFilHdr == ERROR || FilTyp == ERROR || FilPrm == ERROR) {
+      Ret_FilHdr(BaseFilHdr);
+      return FilHdr; }/*if*/;
+
+   Ident = Sym_Str(Str_Sym(IdentStr));
+   if (HasKey_FKind(FKind) && Ident == NIL) {
+      FilHdr_Error("Element of <%s> must have a key.\n", BaseFilHdr);
+      Ret_FilHdr(BaseFilHdr);
+      return FilHdr; }/*if*/;
+
+   for (FilHdr = LocHdr_FilHdr(BaseFilHdr->HdrInf.Son);
+	FilHdr != NIL;
+	LocHdr = FilHdr->HdrInf.Brother, Ret_FilHdr(FilHdr),
+	 FilHdr = LocHdr_FilHdr(LocHdr)) {
+      if (FilHdr->FilTyp == FilTyp
+	  && (Ident == NIL || FilHdr->Ident == Ident)
+	  && (FilHdr->HdrInf.FKind == FKind
+	      || (IsSource_FKind(FilHdr->HdrInf.FKind)
+		  && IsSource_FKind(FKind))
+	      || (IsATgt_FKind(FilHdr->HdrInf.FKind)
+		  && IsATgt_FKind(FKind))
+	      || (IsVTgt_FKind(FilHdr->HdrInf.FKind)
+		  && IsVTgt_FKind(FKind))
+	      || (IsATgtText_FKind(FilHdr->HdrInf.FKind)
+		  && IsATgtText_FKind(FKind))
+	      || (IsVTgtText_FKind(FilHdr->HdrInf.FKind)
+		  && IsVTgtText_FKind(FKind)))
+	  && Equal_FilPrm(FilHdr->FilPrm, FilPrm)) {
+	 Ret_FilHdr(BaseFilHdr);
+	 * Result = FilHdr;
+         return true;
+      }/*if*/; }/*for*/;
+   Ret_FilHdr(BaseFilHdr);
+   return false;
+   }/*Extend_FilHdr*/
+
+
 tp_FilHdr
 Get_Drv(tp_FilHdr BaseFilHdr,tp_FKind FKind,tp_FilTyp FilTyp,tp_FilPrm FilPrm,tp_Ident Ident)
 {
@@ -162,10 +207,46 @@ Get_Drv(tp_FilHdr BaseFilHdr,tp_FKind FKind,tp_FilTyp FilTyp,tp_FilPrm FilPrm,tp
    }/*Get_Drv*/
 
 
+bool
+Get_Existing_Src_Drv(tp_FilHdr BaseFilHdr,tp_FKind FKind,tp_FilTyp FilTyp,tp_FilPrm FilPrm,tp_Ident Ident,tp_FilHdr* Result)
+{
+   tp_FilHdr FilHdr, PipeBaseFilHdr;
+   tps_Str NewIdent;
+   tp_FilTyp NewFilTyp;
+
+   if (BaseFilHdr==ERROR || FilTyp==ERROR || FilPrm==ERROR) {
+      Ret_FilHdr(BaseFilHdr);
+      return ERROR; }/*if*/;
+   FORBIDDEN(FKind == ERROR);
+
+   bool exists = Extend_Existing_Src_FilHdr(BaseFilHdr, FKind, FilTyp, FilPrm, Ident, &FilHdr);
+   if (!exists) {
+     return false;
+   }
+   if (IsGeneric(FilHdr)) {
+      FORBIDDEN(FilHdr->HdrInf.FKind != FK_User);
+      Key_InstanceLabel(NewIdent, FilHdr->Ident);
+      NewFilTyp = Key_FilTyp(NewIdent);
+      exists = Extend_Existing_Src_FilHdr(FilHdr, FK_Instance,
+                                          NewFilTyp, RootFilPrm, NewIdent, &FilHdr); }/*if*/;
+   if (exists) {
+     *Result = FilHdr;
+   }
+   return exists;
+   }/*Get_Drv*/
+
+
 tp_FilHdr
 Get_KeyDrv(tp_FilHdr FilHdr,tp_FKind FKind,tp_Key Key)
 {
    return Get_Drv(FilHdr, FKind, Key_FilTyp(Key), RootFilPrm, Key);
    }/*Get_KeyDrv*/
+
+
+bool
+Get_Existing_Src_KeyDrv(tp_FilHdr FilHdr,tp_FKind FKind,tp_Key Key, tp_FilHdr* Result)
+{
+  return Get_Existing_Src_Drv(FilHdr, FKind, Key_FilTyp(Key), RootFilPrm, Key, Result);
+}/*Get_KeyDrv*/
 
 

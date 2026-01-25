@@ -14,42 +14,29 @@
 - add file system private mounts (via unshare?) e.g. to allow neutralisation of
   uncontrolled areas
 
-- use inotify
-  * avoid instantiating filhdrs on change notification, we end up traversing entire
-    file system:
-      Local_Test >> Noify_Change
-              * and what does Local_Test do with the found FilHdr?
-      OdinExpr_FilHdr >> OdinExpr_Closest_Existing_Src_FilHdr  ... but do we have to touch it
-      if it is not the leaf? No.
-      Nod_PrmFHdr >> Nod_Closest_Existing_Src_PrmFHdr
-        /tmp/x/a:
-if-candrv.c
-612           case DRVFIL: {
+- how does a derivation set the target ModDate?
+  - use ~/tmp/b+cmd=cat:output as example, follow it through
+    ... want an exec that just produces one file
+    change x.py
+    x.py:main.py_import.view_desc
 
-633           case ABSFIL: {
-if-candrv.c
-565              case ELMOPR: {
+x use inotify
+  x avoid instantiating filhdrs on change notification, we end up traversing entire
+      tests:
+        
+        mkdir ~/tmp/d
+        echo "b" > ~/tmp/d/b
+        ~/tmp/a does not exist
+        odin ~/tmp/a+cmd=cat:stdout
+        ln -s ~/tmp/b ~/tmp/a
+        x ... should be notify_change for ~/tmp/a
+        odin ~/tmp/a+cmd=cat:stdout
+        echo "fred" > ~/tmp/b
+        x ... should be notify_change for ~/tmp/b
+        echo "c" > ~/tmp/d/b
+        x ... should not be any "notify_change" for b at all
 
-
-      Do_Keys >> Do_Keys_To_Closest_Existing:
-          while(K=NextKey(K) && NextFilHdr=Do_Existing_Key(FilHdr, K)) {
-              FilHdr=NextFileHdr;
-          }
-          return FilHdr;
-      
-      Do_Key >> Do_Existing_Key?
-         ... what paths are possible there? cases:
-            - symlink? /tmp/x/a-link
-255           return Get_KeyDrv(FilHdr, FKind=FK_SrcReg, Key); }/*if*/; Key "x"
-255           return Get_KeyDrv(FilHdr, FKind=FK_SrcReg, Key); }/*if*/; Key "a-link"
-            - non-existing symlink?
-            
-            - existing
-255           return Get_KeyDrv(FilHdr, FK_SrcReg, Key); }/*if*/;
-            - non-existing
-                -> Extend_FilHdr
-
-  - custom parse path to handle e.g. embedded ';' instead of ignoring such files
+- custom parse path to handle e.g. embedded ';' instead of ignoring such files
      
 - get dg.exe to escape "s in help strings then remove \\s from 
   hcp, java, run, py
@@ -415,7 +402,7 @@ x some internals:
 	        ... unless its VerifyDate == current VerifyDate
 	      and its status is known (i.e. not STAT_Unknown))
             - if req is ready or busy it goes straight onto ToDo and
-	      its verify date is set to current date and its pending flag is cleared
+	      its verify date is set to CurrentDate and its pending flag is cleared
 	      Why bother? It would work out to go via pending?
 	    - if source file updates on-the-fly, meaning simplisticly
 	      checking if file has changed since last looked (fstat mod time has
@@ -435,9 +422,16 @@ x some internals:
 	      Sets verify date to current date.
 	    - if not source... REVISIT
 
-... so break at if-get.c:83 and see what it does. Does it push tgtval to ToDo or
-pending? (Maybe instrument so we can see from trace.)
-		
+   ... so break at if-get.c:83 and see what it does. Does it push tgtval to ToDo or
+   pending? (Maybe instrument so we can see from trace.)
+
+   Do_1ToDo ... it's not called that anymore... should go through GetNotUpToDateFile
+     touch /tmp/x.py
+     odin /tmp/x.py
+     then debug GetNotUpToDateFile for odin '/tmp/x.py:main.py_import.view_desc'
+   * could we Push_ToDo a FilHdr while that FilHdr is being executed?
+   * also our Notify_Change needs to bump the ModDate of that target? Because
+   we might get 2x changes within the file modtime resolution? I think it does bump?
 
 	      
 x best way to debug:

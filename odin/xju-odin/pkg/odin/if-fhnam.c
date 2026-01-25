@@ -258,6 +258,25 @@ Do_Keys(tp_FilHdr FilHdr,tp_Key Key)
    }/*Do_Keys*/
 
 
+bool
+Do_Existing_Src_Keys(tp_FilHdr FilHdr,tp_Key Key, tp_FilHdr* Result)
+{
+   tps_Str SubKey;
+   int i, j;
+   for (i=0; Key[i] != 0; i += 1) {
+      for (j = 0; Key[i] != 0 && Key[i] != '/'; i += 1, j += 1) {
+	 SubKey[j] = Key[i]; }/*for*/;
+      SubKey[j] = 0;
+      const bool exists = Do_Existing_Src_Key(FilHdr, SubKey, &FilHdr);
+      if (!exists) {
+        return false;
+      }
+      if (Key[i] == 0) i -= 1; }/*for*/;
+   *Result = FilHdr;
+   return true;
+   }/*Do_Existing_Src_Keys*/
+
+
 tp_FilHdr
 CacheFileName_FilHdr(tp_FileName CacheFileName)
 {

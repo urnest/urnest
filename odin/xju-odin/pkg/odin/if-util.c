@@ -228,6 +228,27 @@ OdinExpr_FilHdr(
    }/*OdinExpr_FilHdr*/
 
 
+bool
+OdinExpr_Existing_Src_FilHdr(
+  const char* OdinExpr,
+  tp_FilHdr* FilHdr
+   )
+   
+{
+   tp_Nod DS_Nod;
+   tp_PrmFHdr PrmFHdr;
+   tp_FilPrm FilPrm;
+
+   DS_Nod = YY_Parser(OdinExpr, (tp_FileName)NIL, (int *)NIL);
+   const bool exists = Nod_Existing_Src_PrmFHdr(DS_Nod, &PrmFHdr);
+   Ret_Nod(DS_Nod);
+   if (exists) {
+     Use_PrmFHdr(FilHdr, &FilPrm, PrmFHdr);
+   }
+   return exists;
+   }/*OdinExpr_Existing_FilHdr*/
+
+
 void
 WritePrmOdinExpr(
    tp_FilDsc FilDsc,

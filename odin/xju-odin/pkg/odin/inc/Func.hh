@@ -29,14 +29,22 @@ extern tp_DrvPth Find_GroupingDrvPthElm(tp_DrvPth);
 extern tp_FilHdr Do_DrvPth(tp_FilHdr, tp_FilPrm, tp_FilPrm, tp_DrvPth);
 extern tp_FilHdr Do_Deriv(tp_FilHdr, tp_FilPrm, tp_FilPrm, tp_FilTyp);
 extern tp_FilHdr Do_Key(tp_FilHdr, tp_Key);
-extern tp_FilHdr Do_Keys(tp_FilHdr, tp_Key);
+// set *Result to existing FilHdr of specified Key, or return False
+// - note return true does not necessarily mean that Is_Source(*Result)
+//   (but does mean that key was already known)
+// - note will return false in some cases where the key is known but
+//   cannot be/lead to a source file
+extern bool Do_Existing_Src_Key(tp_FilHdr, tp_Key, tp_FilHdr* Result);
 extern tp_FilHdr Str_FilHdr(tp_Str, tp_PrmTyp);
 extern tp_FilHdr Do_VTgt(tp_FilHdr, tp_Key);
 extern void WriteDrvHelp(tp_FilDsc, tp_FilHdr);
 extern void WritePrmHelp(tp_FilDsc, tp_FilHdr, tp_FilPrm);
 extern void WriteNameDesc(tp_FilDsc, tp_Str, tp_Desc);
 extern tp_FilHdr Get_BaseVTgtFilHdr(tp_FilHdr);
+
 extern tp_PrmFHdr Nod_PrmFHdr(tp_Nod);
+extern bool Nod_Existing_Src_PrmFHdr(tp_Nod, tp_PrmFHdr* Result);
+
 extern tp_LocElm Make_ApplyLocElm(tp_FilHdr, tp_FilHdr, tp_FileName);
 extern tp_LocElm Make_MapLocElm(tp_FilHdr, tp_FilHdr);
 extern tp_LocElm Make_RecurseLocElm(tp_FilHdr, tp_FilHdr);
@@ -251,6 +259,9 @@ extern tp_Str FilHdr_Key(tp_Str, tp_FilHdr);
 extern tp_Label FilHdr_Label(tp_Str, tp_FilHdr, bool);
 extern tp_FilHdr FilHdr_ElmFilHdr(tp_FilHdr);
 /* if-fhnam.c */
+extern tp_FilHdr Do_Keys(tp_FilHdr, tp_Key);
+extern bool Do_Existing_Src_Keys(tp_FilHdr, tp_Key, tp_FilHdr* Result);
+
 extern void FilHdr_DataFileName(tp_FileName, tp_FilHdr);
 extern void FilHdr_ErrorFileName(tp_FileName, tp_FilHdr);
 extern void FilHdr_WarningFileName(tp_FileName, tp_FilHdr);
@@ -264,13 +275,16 @@ extern tp_FilHdr DataFileName_FilHdr(tp_FileName);
 extern void Make_RootHdrInf(tp_HdrInf, tp_LocHdr);
 extern tp_FilHdr Insert_FilHdr(tp_FilHdr, tp_FKind, tp_FilTyp, tp_FilPrm, tp_Ident);
 extern tp_FilHdr Extend_FilHdr(tp_FilHdr, tp_FKind, tp_FilTyp, tp_FilPrm, tp_Str);
+extern bool Extend_Exsiting_Src_FilHdr(tp_FilHdr, tp_FKind, tp_FilTyp, tp_FilPrm, tp_Str, tp_FilHdr* Result);
 extern tp_FilHdr Get_Drv(tp_FilHdr, tp_FKind, tp_FilTyp, tp_FilPrm, tp_Ident);
 extern tp_FilHdr Get_KeyDrv(tp_FilHdr, tp_FKind, tp_Key);
+extern bool Get_Existing_Src_KeyDrv(tp_FilHdr, tp_FKind, tp_Key, tp_FilHdr* Result);
 /* if-fhsrc.c */
 extern void Deref_Pntrs(tp_FilHdr *, tp_FilPrm *, tp_FilHdr, bool);
 extern tp_FilHdr Deref(tp_FilHdr);
 extern tp_FilHdr Deref_SymLink(tp_FilHdr);
 extern void Local_Test(tp_FileName);
+extern void Notify_Change(tp_FileName);
 extern void Local_Test_All();
 extern tp_FilHdr Get_Copy_DestFilHdr(tp_FilHdr);
 extern tp_LocElm Make_CopyLocElm(tp_FilHdr, tp_FilHdr, tp_FilHdr);
@@ -695,7 +709,13 @@ extern void Local_OdinExpr_ID(int *, tp_Str);
 extern void Local_ID_OdinExpr(tp_Str, int);
 extern void Local_ID_LongOdinExpr(tp_Str, int);
 extern void Do_Log(const char*, tp_FilHdr, tp_LogLevel);
+
 extern tp_FilHdr OdinExpr_FilHdr(const char *);
+// like OdinExpr_FilHdr but does not extend FilHdr tree, instead
+// return false if FilHdr not already known  or not a source file
+// (and leaves FilHdr alone)
+extern bool OdinExpr_Existing_Src_FilHdr(const char *, /*out*/ tp_FilHdr * FilHdr);
+
 extern void WritePrmOdinExpr(tp_FilDsc, tp_FilHdr, tp_FilPrm);
 extern void Local_Set_Debug(tp_Str);
 extern void Local_Get_Status(tp_Status *, tp_Status *, int);

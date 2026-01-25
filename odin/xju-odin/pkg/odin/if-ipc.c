@@ -499,7 +499,7 @@ IPC_Get_Commands(bool* AbortPtr,char* Prompt)
                 ... just ignore such files, being temporary there's no point
                 tracking them */
              if (strchr(fileName, ';')==0){
-               Local_Test((char*)fileName);
+               Notify_Change((char*)fileName);
              }
            }
          }
