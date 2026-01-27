@@ -169,7 +169,7 @@ COLLECT (:py_import :map=:py_import_all) (:py_import)
 EXEC (py3.pipe.run.sh) (:FILE) (+py) (+cmd :ls) (+py:dir)@ (+py_sp) NEEDS (+cmd) (+need) (+py:main.py_import.view_desc:py_import_all)
    => (:py3.stdout) (:py3.output);
 
-EXEC (py3.exec.sh) (:FILE) (+cmd :ls) (:env) (+stderr) (+py:dir)@ (+py_sp) (+py_nocov) (run-cov)
+EXEC (py3.exec.sh) (:FILE) (+cmd :ls) (:env) (:sh-profile) (+stderr) (+py:dir)@ (+py_sp) (+py_nocov) (run-cov)
   NEEDS (+cmd) (+need) (:FILE:main.py_import.view_desc:py_import_all)
         (:FILE:main.mypy3) (:FILE:main.stylecheck)
   => (:py3.exec);
