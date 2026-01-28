@@ -40,6 +40,13 @@ See also github.org/urnest/odin/xju-odin.
 
 Release History
 
+- 1.3.0 add env package; add +env support to py3.exec
+        to allow setting an environment variable explictly when running a
+        python script (mirroring that feature of pytest package)
+- 1.3.0 optimise inotify handling
+        ignores changes to files that have not yet been used in odin derivations
+        otherwise we essentially track every file in entire host
+- 1.2.0 add inotify support (use ODINVERIFYLEVEL=1 on server, ODINVERIFYLEVEL=0 on clients)
 - 1.1.0 py.dg use per-flags/path/environment mypy cache dirs
         - to avoid persistent incorrect results when changing
           mypy flags/path/environemtn variables
