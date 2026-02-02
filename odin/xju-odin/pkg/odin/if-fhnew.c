@@ -137,13 +137,13 @@ Extend_Existing_Src_FilHdr(tp_FilHdr BaseFilHdr,tp_FKind FKind,tp_FilTyp FilTyp,
    FilHdr = ERROR;
    if (BaseFilHdr == ERROR || FilTyp == ERROR || FilPrm == ERROR) {
       Ret_FilHdr(BaseFilHdr);
-      return FilHdr; }/*if*/;
+      return false; }/*if*/;
 
    Ident = Sym_Str(Str_Sym(IdentStr));
    if (HasKey_FKind(FKind) && Ident == NIL) {
       FilHdr_Error("Element of <%s> must have a key.\n", BaseFilHdr);
       Ret_FilHdr(BaseFilHdr);
-      return FilHdr; }/*if*/;
+      return false; }/*if*/;
 
    for (FilHdr = LocHdr_FilHdr(BaseFilHdr->HdrInf.Son);
 	FilHdr != NIL;
@@ -216,7 +216,7 @@ Get_Existing_Src_Drv(tp_FilHdr BaseFilHdr,tp_FKind FKind,tp_FilTyp FilTyp,tp_Fil
 
    if (BaseFilHdr==ERROR || FilTyp==ERROR || FilPrm==ERROR) {
       Ret_FilHdr(BaseFilHdr);
-      return ERROR; }/*if*/;
+      return false; }/*if*/;
    FORBIDDEN(FKind == ERROR);
 
    bool exists = Extend_Existing_Src_FilHdr(BaseFilHdr, FKind, FilTyp, FilPrm, Ident, &FilHdr);

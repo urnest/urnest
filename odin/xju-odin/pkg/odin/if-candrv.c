@@ -262,10 +262,10 @@ Do_Existing_Src_Key(tp_FilHdr FilHdr,tp_Key Key, tp_FilHdr* Result)
 
    if (FilHdr == ERROR || Key == ERROR) {
       Ret_FilHdr(FilHdr);
-      return ERROR; }/*if*/;
+      return false; }/*if*/;
 
    if (strcmp(Key, ".") == 0) {
-      return FilHdr; }/*if*/;
+      return false; }/*if*/;
 
    if (strcmp(Key, "") == 0
        && !(FilHdr == RootFilHdr || FilHdr == NetRootFilHdr)) {
@@ -569,7 +569,7 @@ Apply_Existing_Src_OprNods(tp_FilHdr FilHdr,tp_FilPrm FilPrm,tp_Nod OprNod, tp_P
    tp_LocHdr LocHdr;
    tp_LocPVal LocPVal;
 
-   if (FilHdr == ERROR || FilPrm == ERROR) return ERROR;
+   if (FilHdr == ERROR || FilPrm == ERROR) return false;
 
    bool exists = false;
    while (OprNod != NIL) {
@@ -581,7 +581,7 @@ Apply_Existing_Src_OprNods(tp_FilHdr FilHdr,tp_FilPrm FilPrm,tp_Nod OprNod, tp_P
 	    FilHdr = Do_Key(FilHdr, "");
 	    exists = Do_Existing_Src_Keys(FilHdr, Sym_Str(Nod_Sym(ElmNod)), &FilHdr);
 	    if (FilHdr == ERROR) {
-	       return ERROR; }/*if*/;
+	       return false; }/*if*/;
 	    break;}/*case*/;
 	 default: {
 	    FATALERROR("Apply_Existing_Src_OprNods bad operator node type"); };}/*switch*/;
@@ -670,7 +670,7 @@ Nod_Existing_Src_PrmFHdr(tp_Nod Nod, tp_PrmFHdr* Result)
    tp_Nod RootNod, OprNod;
    tp_Key Key;
 
-   if (Nod == ERROR) return ERROR;
+   if (Nod == ERROR) return false;
 
    switch (Nod_NodTyp(Nod)) {
       case DRVFIL: {

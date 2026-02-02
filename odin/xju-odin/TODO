@@ -20,6 +20,46 @@
     change x.py
     x.py:main.py_import.view_desc
 
+  - how does source ModDate work v Notify_Change and timestamps and NOTIFYLEVEL?
+    in theory
+    - the file has a timestamp
+    - if we find the timestamp has changed, we set ModDate to Now
+    NOTIFYLEVEL:
+      1: Notify_Change says the file really has changed, so can:
+         match stat(file):
+           OK:
+             Stat = SourceOK(stat.Timestamp, Type(f))
+           error:
+             Stat = SourceError(error)
+         if NewestDerivedDate == NewestSourceDate:
+           ++NewestSourceDate
+         ModDate = NewestSourceDate
+         CheckedPostStartup = StartupCount
+         Save
+         ... and stat to check for error, so we can set timestamp to stat.timestamp
+         
+         When we need the source file (e.g. as an input):
+             If CheckedPostStartup < StartupCount:
+               match stat(file):
+                 case OK:
+                   NewStat = SourceOK(stat.Timestamp, Type(f))
+                 case error:
+                   NewStat = Error(error)
+               if NewStat != Stat:
+                 if NewestDerivedDate == NewestSourceDate:
+                   ++NewestSourceDate
+                 ModDate = NewestSourceDate
+                 Stat = NewStat
+               CheckedPostStartup = StartupCount
+               Save
+               
+           NewestInputDate = max(Input.ModDate for Input in Inputs)
+           ... do derivation...
+           ModDate = NewestInputDate
+           If ModDate > NewestDerivedDate:
+             NewestDerivedDate = ModDate
+
+
 x use inotify
   x avoid instantiating filhdrs on change notification, we end up traversing entire
       tests:
@@ -48,11 +88,11 @@ x use inotify
 
   see ../../dion
   
-- merge xjupkg into pkg
-  - add missing version files (recover and bump version if old package had version)
-  - bump versions of changed packages
+~ merge xjupkg into pkg
+  ~ add missing version files (recover and bump version if old package had version)
+  ~ bump versions of changed packages
   x verify build and install odin from scratch
-  - test eli
+  ~ test eli
 
 - fedora rpm
   x add bild-rpm.sh
