@@ -24,6 +24,7 @@ geoff@boulder.colorado.edu
 #include <odin/inc/Flag_.h>
 #include <odin/inc/Status_.h>
 #include <dg/inc/InpKind_.h>
+#include <odin/inc/FilHdr.h>
 
 
 void
@@ -117,6 +118,7 @@ Notify_Change(tp_FileName FileName)
    if (IsSource(FilHdr)) {
       SymLinkFH = Deref_SymLink(Copy_FilHdr(FilHdr));
       Set_Status(SymLinkFH, STAT_Unknown);
+      SymLinkFH->HdrInf.SysModTime = 0;
       Ret_FilHdr(SymLinkFH);
       Update_SrcFilHdr(FilHdr, false); }/*if*/;
    Ret_FilHdr(FilHdr);
