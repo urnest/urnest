@@ -1,3 +1,12 @@
+autoconf
+configure.ac:13: warning: AC_PROG_LEX without either yywrap or noyywrap is obsolete
+./lib/autoconf/programs.m4:716: _AC_PROG_LEX is expanded from...
+./lib/autoconf/programs.m4:709: AC_PROG_LEX is expanded from...
+configure.ac:13: the top level
+configure.ac:45: warning: AC_FUNC_WAIT3: `wait3' has been removed from POSIX.
+configure.ac:45: Remove this `AC_FUNC_WAIT3' and adjust your code to use `waitpid' instead.
+./lib/autoconf/functions.m4:2053: AC_FUNC_WAIT3 is expanded from...
+configure.ac:45: the top level
 
 
 - .tree:leaves error masking:
@@ -59,6 +68,12 @@
            If ModDate > NewestDerivedDate:
              NewestDerivedDate = ModDate
 
+  VerifyLevel 1 just does Test_All on startup:
+   CurrentDate += 1;
+   VerifyDate = CurrentDate;
+   ... both are read and written to cache info file
+  VerifyLevel 2 does Test_All before every command
+   ... there is also PendingDate
 
 x use inotify
   x avoid instantiating filhdrs on change notification, we end up traversing entire
