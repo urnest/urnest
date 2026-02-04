@@ -583,6 +583,9 @@ Apply_Existing_Src_OprNods(tp_FilHdr FilHdr,tp_FilPrm FilPrm,tp_Nod OprNod, tp_P
 	    if (FilHdr == ERROR) {
 	       return false; }/*if*/;
 	    break;}/*case*/;
+	 case DIROPR: {
+	    FilHdr = Do_Key(FilHdr, "");
+	    break;}/*case*/;
 	 default: {
 	    FATALERROR("Apply_Existing_Src_OprNods bad operator node type"); };}/*switch*/;
       OprNod = Nod_Brother(OprNod); }/*while*/;

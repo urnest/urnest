@@ -2,13 +2,15 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.63])
-AC_INIT([xju-odin], [1.3.1], [https://github.com/urnest/urnest/])
+AC_INIT([xju-odin], [1.3.2], [https://github.com/urnest/urnest/])
 AC_CONFIG_SRCDIR([pkg])
 AC_CONFIG_HEADERS([pkg/config/config.hh])
 
 # Checks for programs.
+: ${CFLAGS="-g"}
 AC_PROG_CC
 AC_PROG_CPP
+: ${CXXFLAGS="-g"}
 AC_PROG_CXX
 AC_PROG_LEX
 AC_PROG_LN_S

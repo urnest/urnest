@@ -10,6 +10,8 @@ d=$(cd $(dirname "0") && pwd)
 
 TBD
 
+# update Release History in README
+
 # update version, update change history
 update version in configure.ac
 run autonconf

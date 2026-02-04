@@ -40,6 +40,9 @@ See also github.org/urnest/odin/xju-odin.
 
 Release History
 
+- 1.3.2 fix inotify handling crash
+- 1.3.2 turn off -O2 when building odin, turn on -g
+- 1.3.1 fix inotify handling crash
 - 1.3.0 add env package; add +env support to py3.exec
         to allow setting an environment variable explictly when running a
         python script (mirroring that feature of pytest package)
