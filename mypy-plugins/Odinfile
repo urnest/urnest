@@ -122,6 +122,12 @@ FILE:252: error: Argument 1 to "is_int" has incompatible type "dict[Any, Any]"; 
 FILE:254: error: Argument 1 to "is_int" has incompatible type "str"; expected "int"  [arg-type]
 FILE:335: error: Argument 1 to "is_int" has incompatible type "str"; expected "int"  [arg-type]
 FILE:432: error: Argument 1 to "is_int" has incompatible type "str"; expected "int"  [arg-type]
+FILE:435: error: Unexpected "..."  [misc]
+FILE:436: error: Unexpected "..."  [misc]
+FILE:436: error: tuple with ellipsis must have exactly one type parameter preceeding ellipsis  [misc]
+FILE:438: error: ellipsis is not valid as parameter to xju.json_codec.codec()  [misc]
+FILE:439: error: Unexpected "..."  [misc]
+FILE:439: error: ellipsis is not valid as parameter to xju.json_codec.codec()  [misc]
 
 %test_json_codec_errors.errors==test_data/json_codec_errors.py+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(json_codec_mypy_plugin.py):main.mypy3:err
 

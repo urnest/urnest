@@ -27,6 +27,9 @@ from xju.json_codec import (
     dont_encode_attr,
     TypeScriptSourceCode,
     TypeScriptNamespace,
+    TypeScriptUQN,
+    TypeScriptNamespaceFQN,
+    DependsOnTypeScriptNamespaces,
     CustomClassCodec,
     CustomStringKeyClassCodec,
     CustomNonStringKeyClassCodec,
@@ -45,6 +48,8 @@ from xju.json_codec import (
     VerifyTypeIsCustomGenericClassCodec,
     VerifyTypeIsCustomStringKeyGenericClassCodec,
     VerifyTypeIsCustomNonStringKeyGenericClassCodec,
+    format_typescript_defs,
+    sort_typescript_namespaces,
 )
 
 from typing import cast,Type,Literal,Any,Self,NewType,Generic,TypeVar,Callable,Union,Final,ClassVar
@@ -62,6 +67,8 @@ from xju.xn import readable_repr
 from xju.time import Timestamp
 import xju
 
+u:tuple[int, ...] = tuple()
+codec(tuple[int,str])
 x:Any
 
 # int,str,bool,float,None map directly
@@ -304,6 +311,10 @@ else:
     assert False, x
     pass
 
+# tuple[X, ...] support
+tt:tuple[int, ...] = (1,2,3)
+Assert(codec(tuple[int, ...]).encode((1,2,3)))==[1,2,3]
+Assert(codec(tuple[int, ...]).decode([1,2,3]))==(1,2,3)
 
 # dict with no type hints allows any keys with any value types (key must be string)
 Assert(codec(dict).decode({'fred':5, 'jock': 'nine'}))=={'fred':5, 'jock':'nine'}
@@ -1729,7 +1740,7 @@ Assert(codec(SetSurnamesMsg).decode({'msg_type':'set_new_values','new_values':['
 # codec.get_typescript_asa() and codec.get_typescript_isa(). For classes, codec
 # also generates functions in corresponding namespace, for example:
 
-typescript_namespace=TypeScriptNamespace({})
+typescript_namespace=TypeScriptNamespace(defs={})
 
 codec(O).ensure_typescript_defs(typescript_namespace)
 
@@ -2258,3 +2269,41 @@ except Exception as e:
 else:
     assert False
     pass
+
+
+# typescript defs
+Assert(format_typescript_defs(
+    (TypeScriptUQN('N1'),TypeScriptUQN('N1_1')),
+    {
+        TypeScriptUQN('A'): TypeScriptSourceCode("A;"),
+        TypeScriptUQN('B'): TypeScriptSourceCode("B;")
+    },
+    ''
+))=="""namespace N1 {
+    export namespace N1_1 {
+        export A;
+        export B;
+    }
+}"""
+
+#      /-------/D\
+#  N1.A-N1.N2.C   F
+#      \-N3.E/
+#  N3.G----/
+n_A=(TypeScriptUQN("N1"),TypeScriptUQN("A"))
+n_C=(TypeScriptUQN("N1"),TypeScriptUQN("N2"),TypeScriptUQN("C"))
+n_D=(TypeScriptUQN("D"),)
+n_E=(TypeScriptUQN("N3"),TypeScriptUQN("E"))
+n_F=(TypeScriptUQN("F"),)
+n_G=(TypeScriptUQN("N3"),TypeScriptUQN("G"))
+nodes: dict[TypeScriptNamespaceFQN, DependsOnTypeScriptNamespaces]={
+    n_E: [ n_C ],
+    n_A: [ n_D, n_E, n_C ],
+    n_F: [],
+    n_G: [ n_E ],
+    n_C: [ n_D ],
+    n_F: [],
+    n_D: [ n_F ]
+}
+# python set ordering is not deterministic
+Assert(sort_typescript_namespaces(nodes))==[n_F, n_D, n_C, n_E, n_A, n_G]

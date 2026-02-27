@@ -46,11 +46,13 @@ from mypy.nodes import (
     FuncDef,
     Decorator,
     OverloadedFuncDef,
+    EllipsisExpr
 )
 from mypy.types import (
     LITERAL_TYPE_NAMES,
     AnyType,
     CallableType,
+    EllipsisType,
     FunctionLike,
     Instance,
     NoneType,
@@ -87,7 +89,7 @@ class CodecParamInvalid(Exception):
     pass
     
 KnownExpressionType = ( LiteralType | UnionType | Instance | TypeAliasType | TupleType |
-                        NoneType | TypeVarType | AnyType )
+                        NoneType | TypeVarType | AnyType | EllipsisType)
 
 def infer_codec_value_type_from_args(arg_exprs: list[Expression],
                                      checker_api:CheckerPluginInterface) -> KnownExpressionType:
@@ -105,6 +107,8 @@ def infer_type_from_expr(
         case IndexExpr():
             return infer_type_from_index_expr(expr.base, expr.index, checker_api)
 
+        case EllipsisExpr():
+            return EllipsisType()
         case OpExpr() if expr.op == '|':
             return UnionType(
                 [
@@ -191,6 +195,17 @@ def infer_type_from_index_expr(
         else:
             index_types = [infer_type_from_expr(index, checker_api)]
         assert isinstance(checker_api, TypeChecker)
+        if not len(index_types):
+            raise CodecParamInvalid(f"tuple[] is not a valid type")
+        if isinstance(index_types[-1], EllipsisType):
+            if len(index_types)==0:
+                raise CodecParamInvalid(f"tuple[...] is not a valid type")
+            if len(index_types)>2:
+                raise CodecParamInvalid(f"tuple with ellipsis must have exactly one type parameter preceeding ellipsis")
+            index_types = index_types[:-1]
+            # mypy seems expect tuple[int, ...] to be represented as an Instance not
+            # a TupleType, but doesn't like tuple[int, str] as an Instance.. WT?
+            return Instance(checker_api.named_type('builtins.tuple').type, index_types)
         return TupleType(index_types, tuple_fallback(TupleType(
             index_types,
             checker_api.named_type('builtins.tuple'))))
@@ -393,6 +408,8 @@ def verify_type_encodable(
     match t:
         case NoneType() | TypeVarType() | AnyType():
             return True
+        case EllipsisType():
+            raise CodecParamInvalid(f"ellipsis is not valid as parameter to xju.json_codec.codec()")
         case LiteralType():
             # can only encode str, int, bool, and enumerations of those
             if t.fallback.type._fullname in ( 'builtins.str', 'builtins.int', 'builtins.bool'):
@@ -404,10 +421,18 @@ def verify_type_encodable(
                         raise CodecParamInvalid(f"unexpected enum member {t.value} type {n.type}")
                     verify_type_encodable(n.type,checker_api,seen)
                     return True
-            raise CodecParamInvalid(f"Literal[{t.value}] not valid as parameter to xju.json_codec.code()")
-        case UnionType() | TupleType():
+            raise CodecParamInvalid(f"Literal[{t.value}] not valid as parameter to xju.json_codec.codec()")
+        case UnionType():
             for arg in t.items:
                 if not isinstance(arg, KnownExpressionType.__args__):
+                    raise CodecParamInvalid(f"unexpected union/tuple item type {arg}")
+                verify_type_encodable(arg,checker_api,seen)
+            return True
+        case TupleType():
+            #for arg in t.items[0] if len(t.items)==2 and t.items[1] is Ellipsis else t.items:
+            for arg in t.items:
+                if not isinstance(arg, KnownExpressionType.__args__):
+                    #pdb_trace()
                     raise CodecParamInvalid(f"unexpected union/tuple item type {arg}")
                 verify_type_encodable(arg,checker_api,seen)
             return True
@@ -491,6 +516,8 @@ def verify_dict_key_type(
     match t:
         case NoneType():
             return 'NonString'
+        case EllipsisType():
+            raise CodecParamInvalid(f"ellipsis is not valid as dict key type")
         case TypeVarType():
             raise CodecParamInvalid("dict keys must be str,xju.newtype.Str or any union of int, float, bool, None, xju.newtype.Int, xju.newtype.Float, xju.newtype.Bool (not TypeVar)")
         case AnyType():
@@ -635,6 +662,8 @@ def infer_encoded_type_from_t(t: KnownExpressionType,
     match t:
         case NoneType():
             return t
+        case EllipsisType():
+            raise CodecParamInvalid(f"ellipsis is not valid as parameter to xju.json_codec.codec()")
         case TypeVarType():
             # should only be after already flagged error
             return get_json_type_type(checker_api)
@@ -656,7 +685,7 @@ def infer_encoded_type_from_t(t: KnownExpressionType,
                     if not isinstance(n.type, Instance):
                         raise CodecParamInvalid(f"unexpected enum member {t.value} type {n.type}")
                     return infer_encoded_type_from_t(n.type,checker_api)
-            raise CodecParamInvalid(f"Literal[{t.value}] not valid as parameter to xju.json_codec.code()")
+            raise CodecParamInvalid(f"Literal[{t.value}] not valid as parameter to xju.json_codec.codec()")
         case TupleType():
             return builtin_type(checker_api, 'list')
         case UnionType():
@@ -750,6 +779,7 @@ def adjust_encode_return_type(x: MethodContext) -> Type:
 # for development to figure out what return type should be in each case via pdb
 def show_return_type(x: FunctionContext) -> Type:
     return_type=get_proper_type(x.default_return_type)
+    #pdb_trace()
     typeof_return_type=type(return_type)
     return return_type
 

@@ -29,7 +29,7 @@
 #
 import builtins
 import sys
-from dataclasses import dataclass, Field, MISSING
+from dataclasses import dataclass, Field, MISSING, field
 from inspect import getmro
 from typing import NewType,NamedTuple
 from xju.time import Timestamp
@@ -49,8 +49,8 @@ from xju.assert_ import Assert
 
 # for development of mypy plugin, to see what return type should be for a case
 # see json_codec_mypy_plugin.show_return_type
-# def _xxx(x: Type[tuple[str, ...]]) -> tuple[str, ...] | None:
-#     return None
+#def _xxx(x: Type[tuple[str, ...]]) -> tuple[str, ...]:
+#    return ('a',)
 
 #_xxx(tuple[str, ...])
 
@@ -79,20 +79,25 @@ JsonType = None|bool|dict|list|float|str
 
 class TypeScriptUQNTag:pass
 class TypeScriptUQN(xju.newtype.Str[TypeScriptUQNTag]):pass
+type TypeScriptFQN=tuple[TypeScriptUQN, ...]
 
 class TypeScriptSourceCodeTag:pass
 class TypeScriptSourceCode(xju.newtype.Str[TypeScriptSourceCodeTag]):pass
 
-@dataclass
+type TypeScriptNamespaceFQN = TypeScriptFQN
+type DependsOnTypeScriptNamespaces = list[TypeScriptNamespaceFQN]
+
+@dataclass(kw_only=True)
 class TypeScriptNamespace:
     defs: dict[TypeScriptUQN, TypeScriptSourceCode | Self]
+    namespaces_this_namespace_depends_on: list[TypeScriptNamespaceFQN] = field(default_factory=list)
 
     def get_namespace_of(self,fqn:Sequence[TypeScriptUQN]) -> Self:
         match len(fqn):
             case 1:
                 return self
             case _:
-                m=self.defs.setdefault(fqn[0],self.__class__({}))
+                m=self.defs.setdefault(fqn[0],self.__class__(defs={}))
                 assert isinstance(m,self.__class__)
                 return m.get_namespace_of(fqn[1:])
         pass
@@ -101,20 +106,35 @@ class TypeScriptNamespace:
         '''get defs of this namespace as (possibly multi-level) namespace content
            - top level defs are exported or not per {export}
            - sub-level defs are always exported'''
-        result:list[TypeScriptSourceCode]=[]
-        for name, d in self.defs.items():
-            match d:
-                case TypeScriptSourceCode():
-                    result.append(TypeScriptSourceCode(f'{export}{d}'))
-                case TypeScriptNamespace:
-                    result.append(TypeScriptSourceCode(
-                        f"{export}namespace {name} {{\n"
-                        f"    {indent(4, d.get_formatted_defs(export='export '))}\n"
-                        f"}}\n"))
+        flat, deps = self.get_flat_defs(tuple[TypeScriptUQN]())
+        ordered = sort_typescript_namespaces(deps)
+        result:list[str]=[]
+        for ns_name in ordered:
+            result.append(format_typescript_defs(ns_name, flat[ns_name], export))
             pass
-        return TypeScriptSourceCode('\n'.join([_.value() for _ in result]))
-    pass
+        return TypeScriptSourceCode('\n'.join(result))
 
+    def get_flat_defs(self, parent: TypeScriptNamespaceFQN) -> tuple[
+            dict[TypeScriptNamespaceFQN, dict[TypeScriptUQN, TypeScriptSourceCode]],
+            dict[TypeScriptNamespaceFQN, DependsOnTypeScriptNamespaces]
+    ]:
+        src = {
+            parent: {
+                name: src for name, src in self.defs.items() if isinstance(src, TypeScriptSourceCode)
+            }
+        }
+        deps = { parent: self.namespaces_this_namespace_depends_on }
+        nested = [
+            ns.get_flat_defs(parent+(name,)) for name, ns in self.defs.items()
+            if isinstance(ns, TypeScriptNamespace)
+        ]
+        for s, d in nested:
+            src.update(s)
+            deps.update(d)
+            pass
+        return src, deps
+    pass
+    
 class CodecProto(Generic[T], Protocol):
     def encode(self,x:T) -> JsonType:
         'encode {self.t} {x} to json'
@@ -152,7 +172,11 @@ class CodecImplProto(Protocol):
         pass
     def typescript_type(self) -> TypeScriptSourceCode:
         pass
-    def ensure_typescript_defs(self, namespace) -> None:
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
+        """ensure typescript namespace {namespace} has our definitions
+
+        returns namespace we reside in (empty set for none)
+        """
         pass
     def get_typescript_isa(self, namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         '''returns an expression that evaluates to a xju.json_codec.IsInstance'''
@@ -218,7 +242,7 @@ class Codec(Generic[T]):
         })
         return result
     def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> None:
-        return self.codec.ensure_typescript_defs(namespace)
+        self.codec.ensure_typescript_defs(namespace)
     def add_typescript_alias(self, namespace:TypeScriptNamespace, fqn:Sequence[TypeScriptUQN]) -> None:
         '''add {fqn} as typescript alias for {self.t}'''
         assert len(fqn)>0
@@ -318,8 +342,8 @@ class NoopCodecImpl(Generic[Atom]):
         elif issubclass(self.t,float):
             return TypeScriptSourceCode('string /* float */')
 
-    def ensure_typescript_defs(self, namespace) -> None:
-        pass
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
+        return []
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         if issubclass(self.t,bool):
@@ -390,8 +414,8 @@ class NoneCodecImpl:
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         # python's json.dumps turns None into "null"
         return TypeScriptSourceCode('string /* null */')
-    def ensure_typescript_defs(self, namespace) -> None:
-        pass
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
+        return []
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         return TypeScriptSourceCode("xju.json_codec.isInstanceOfNull")
@@ -436,9 +460,8 @@ class ListCodecImpl:
         }
     def typescript_type(self)->TypeScriptSourceCode:
         return TypeScriptSourceCode(f"Array<{self.value_codec.typescript_type()}>")
-    def ensure_typescript_defs(self, namespace) -> None:
-        self.value_codec.ensure_typescript_defs(namespace)
-        pass
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
+        return self.value_codec.ensure_typescript_defs(namespace)
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(
@@ -471,8 +494,8 @@ class AnyListCodecImpl:
         }
     def typescript_type(self)->TypeScriptSourceCode:
         return TypeScriptSourceCode(f"Array<any>")
-    def ensure_typescript_defs(self, namespace) -> None:
-        pass
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
+        return []
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         return TypeScriptSourceCode("xju.json_codec.isInstanceOfAnyList")
@@ -515,9 +538,8 @@ class SetCodecImpl:
         }
     def typescript_type(self)->TypeScriptSourceCode:
         return TypeScriptSourceCode(f"Array<{self.value_codec.typescript_type()}> /* with unique elements */")
-    def ensure_typescript_defs(self, namespace) -> None:
-        self.value_codec.ensure_typescript_defs(namespace)
-        pass
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
+        return self.value_codec.ensure_typescript_defs(namespace)
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(f"xju.json_codec.isInstanceOfList({self.value_codec.get_typescript_isa(namespace)})")
@@ -560,8 +582,8 @@ class AnySetCodecImpl:
         }
     def typescript_type(self)->TypeScriptSourceCode:
         return TypeScriptSourceCode(f"Array<any> /* with unique elements */")
-    def ensure_typescript_defs(self, namespace) -> None:
-        pass
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
+        return []
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         return TypeScriptSourceCode("xju.json_codec.isInstanceOfAnyList")
@@ -604,9 +626,8 @@ class FrozenSetCodecImpl:
         }
     def typescript_type(self)->TypeScriptSourceCode:
         return TypeScriptSourceCode(f"Array<{self.value_codec.typescript_type()}> /* with unique elements */")
-    def ensure_typescript_defs(self, namespace) -> None:
-        self.value_codec.ensure_typescript_defs(namespace)
-        pass
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
+        return self.value_codec.ensure_typescript_defs(namespace)
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(f"xju.json_codec.isInstanceOfList({self.value_codec.get_typescript_isa(namespace)})")
@@ -648,8 +669,8 @@ class AnyFrozenSetCodecImpl:
         }
     def typescript_type(self)->TypeScriptSourceCode:
         return TypeScriptSourceCode(f"Array<any> /* with unique elements */")
-    def ensure_typescript_defs(self, namespace) -> None:
-        pass
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
+        return []
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         return TypeScriptSourceCode("xju.json_codec.isInstanceOfAnyList")
@@ -661,7 +682,8 @@ class AnyFrozenSetCodecImpl:
 assert not isinstance(AnyFrozenSetCodecImpl, UsableAsKeyProto)
 
 class TupleCodecImpl:
-    def __init__(self,value_codecs):
+    value_codecs:list[CodecImplProto]
+    def __init__(self,value_codecs:list[CodecImplProto]):
         self.value_codecs=value_codecs
         self.number_of_codecs=len(value_codecs)
         pass
@@ -670,6 +692,8 @@ class TupleCodecImpl:
         try:
             if type(x) is not tuple:
                 raise Exception(f'{x!r} is not a tuple')
+            if len(self.value_codecs)==1:
+                return [self.value_codecs[0].encode(v) for v in x]
             if len(x) != self.number_of_codecs:
                 l=len(x)
                 raise Exception(f'{x} does not have {self.number_of_codecs} items (it has {l} items)')
@@ -682,6 +706,8 @@ class TupleCodecImpl:
         try:
             if type(x) is not list:
                 raise Exception(f'{x!r} is not a list')
+            if len(self.value_codecs)==1:
+                return tuple([self.value_codecs[0].decode(v) for v in x])
             if len(x) != self.number_of_codecs:
                 l=len(x)
                 raise Exception(f'{x} does not have {self.number_of_codecs} items (it has {l} items)')
@@ -708,10 +734,11 @@ class TupleCodecImpl:
         }
     def typescript_type(self)->TypeScriptSourceCode:
         value_types=','.join([str(_.typescript_type()) for _ in self.value_codecs])
+        if len(self.value_codecs)==1:
+            return TypeScriptSourceCode(f"{value_types}[]")
         return TypeScriptSourceCode(f"[{value_types}]")
-    def ensure_typescript_defs(self, namespace) -> None:
-        for c in self.value_codecs: c.ensure_typescript_defs(namespace)
-        pass
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
+        return sum([c.ensure_typescript_defs(namespace) for c in self.value_codecs],[])
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         self.ensure_typescript_defs(namespace)
@@ -793,10 +820,8 @@ class UnionCodecImpl:
         return TypeScriptSourceCode(
             '|'.join([str(usable_as_key(c).typescript_as_object_key_type())
                       for _t,c in self.value_codecs.items()]))
-    def ensure_typescript_defs(self, namespace) -> None:
-        for _,c in self.value_codecs.items():
-            c.ensure_typescript_defs(namespace)
-        pass
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
+        return sum([c.ensure_typescript_defs(namespace) for c in self.value_codecs.values()],[])
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         self.ensure_typescript_defs(namespace)
@@ -899,10 +924,9 @@ class DictCodecImpl:
         }
     def typescript_type(self)->TypeScriptSourceCode:
         return TypeScriptSourceCode(f"{{ [key: {self.key_codec.typescript_as_object_key_type()}]: {self.value_codec.typescript_type()} }}")
-    def ensure_typescript_defs(self, namespace) -> None:
-        self.key_codec.ensure_typescript_defs(namespace)
-        self.value_codec.ensure_typescript_defs(namespace)
-        pass
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
+        return sum([self.key_codec.ensure_typescript_defs(namespace),
+                    self.value_codec.ensure_typescript_defs(namespace)],[])
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         self.ensure_typescript_defs(namespace)
@@ -955,8 +979,8 @@ class AnyDictCodecImpl:
         }
     def typescript_type(self)->TypeScriptSourceCode:
         return TypeScriptSourceCode(f"{{ [key: {self.key_codec.typescript_as_object_key_type()}]: {self.value_codec.typescript_type()} }}")
-    def ensure_typescript_defs(self, namespace) -> None:
-        pass
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
+        return []
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         return TypeScriptSourceCode("xju.json_codec.isInstanceOfAnyDict")
@@ -991,8 +1015,8 @@ class AnyJsonCodecImpl:
         }
     def typescript_type(self)->TypeScriptSourceCode:
         return TypeScriptSourceCode('any')
-    def ensure_typescript_defs(self, namespace) -> None:
-        pass
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
+        return []  #pragma NO COVER
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         return TypeScriptSourceCode("xju.json_codec.isInstanceOfAny")  #pragma NO COVER
@@ -1042,7 +1066,7 @@ class NewIntCodecImpl(Generic[NewInt]):
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         x=self.get_type_fqn().replace('/*','**').replace('*/','**')
         return TypeScriptSourceCode(f"string /* {x} */")
-    def ensure_typescript_defs(self, namespace) -> None:
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
         typescript_fqn=[TypeScriptUQN(_) for _ in self.typescript_type().split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
         tt=typescript_fqn[-1]
@@ -1064,7 +1088,7 @@ class NewIntCodecImpl(Generic[NewInt]):
                 f"const _asInstanceOf{tt} = xju.json_codec.asInstanceOfInt('{tt}');")
             target_namespace.defs[TypeScriptUQN(f"_asKeyOf{tt}")]=TypeScriptSourceCode(
                 f"const _asKeyOf{tt} = xju.json_codec.asKeyOfInt('{tt}');")
-        pass
+        return [tuple(typescript_fqn[:-1])]
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         self.ensure_typescript_defs(namespace)
@@ -1124,7 +1148,7 @@ class NewFloatCodecImpl(Generic[NewFloat]):
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         x=f"string /* {self.get_type_fqn().replace('/*','**').replace('*/','**')} */"
         return TypeScriptSourceCode(x)
-    def ensure_typescript_defs(self, namespace) -> None:
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
         typescript_fqn=[TypeScriptUQN(_) for _ in self.typescript_type().split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
         tt=typescript_fqn[-1]
@@ -1147,7 +1171,7 @@ class NewFloatCodecImpl(Generic[NewFloat]):
             target_namespace.defs[TypeScriptUQN(f"_asKeyOf{tt}")]=TypeScriptSourceCode(
                 f"const _asKeyOf{tt} = xju.json_codec.asKeyOfFloat('{tt}');")
             pass
-        pass
+        return [tuple(typescript_fqn[:-1])]
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         self.ensure_typescript_defs(namespace)
@@ -1218,7 +1242,7 @@ class NewStrCodecImpl(Generic[NewStr]):
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         x=f"string /* {self.get_type_fqn().replace('/*','**').replace('*/','**')} */"
         return TypeScriptSourceCode(x)
-    def ensure_typescript_defs(self, namespace) -> None:
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
         typescript_fqn=[TypeScriptUQN(_) for _ in self.typescript_type().split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
         tt=typescript_fqn[-1]
@@ -1255,7 +1279,7 @@ class NewStrCodecImpl(Generic[NewStr]):
                 target_namespace.defs[TypeScriptUQN(f"_asKeyOf{tt}")]=TypeScriptSourceCode(
                     f"const _asKeyOf{tt} = xju.json_codec.asKeyOfString('{tt}');")
             pass
-        pass
+        return [tuple(typescript_fqn[:-1])]
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         self.ensure_typescript_defs(namespace)
@@ -1312,7 +1336,7 @@ class TimestampCodecImpl:
         return TypeScriptSourceCode(self.get_type_fqn())
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         return TypeScriptSourceCode('string /* xju.time.Timestamp */')
-    def ensure_typescript_defs(self, namespace) -> None:
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
         typescript_fqn=[TypeScriptUQN(_) for _ in self.typescript_type().split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
         tt=typescript_fqn[-1]
@@ -1340,7 +1364,7 @@ class TimestampCodecImpl:
             target_namespace.defs[TypeScriptUQN(f"_asKeyOf{tt}")]=TypeScriptSourceCode(
                 f"const _asKeyOf{tt} = xju.json_codec.asKeyOfFloat('{tt}');")
             pass
-        pass
+        return [tuple(typescript_fqn[:-1])]
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         self.ensure_typescript_defs(namespace)
@@ -1398,8 +1422,8 @@ class LiteralStrCodecImpl:
         return TypeScriptSourceCode(json.dumps(self.value))
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(json.dumps(self.value))
-    def ensure_typescript_defs(self, namespace) -> None:
-        pass
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
+        return []
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
             return TypeScriptSourceCode(f"xju.json_codec.isInstanceOfLiteral({self.typescript_type()})")
@@ -1453,8 +1477,8 @@ class LiteralIntCodecImpl:
         return TypeScriptSourceCode(json.dumps(self.value))
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         return TypeScriptSourceCode("string")  # typescript does not allow json.dumps(str(self.typescript_type())) here
-    def ensure_typescript_defs(self, namespace) -> None:
-        pass
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
+        return []
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
             return TypeScriptSourceCode(f"xju.json_codec.isInstanceOfLiteral({self.typescript_type()})")
@@ -1508,8 +1532,8 @@ class LiteralBoolCodecImpl:
         return TypeScriptSourceCode(json.dumps(self.value))
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         return TypeScriptSourceCode("string")  # typescript does not allow json.dumps(str(self.typescript_type())) here
-    def ensure_typescript_defs(self, namespace) -> None:
-        pass
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
+        return []
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
             return TypeScriptSourceCode(f"xju.json_codec.isInstanceOfLiteral({self.typescript_type()})")
@@ -1555,8 +1579,8 @@ class BytesCodecImpl:
 
     def typescript_type(self)->TypeScriptSourceCode:
         return TypeScriptSourceCode(f"Array<number> /* bytes */")
-    def ensure_typescript_defs(self, namespace) -> None:
-        pass
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
+        return []
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(f"xju.json_codec.isInstanceOfBytes")
@@ -1935,9 +1959,9 @@ class CustomGenericClassCodecImpl:
         return self.t.xju_json_codec_get_json_schema_generic(definitions,self.type_var_map)
     def typescript_type(self) -> TypeScriptSourceCode:
         return self.t.xju_json_codec_get_typescript_type_generic(self.type_var_map)
-    def ensure_typescript_defs(self,namespace)->None:
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
         '''ensure {namespace} has a typescript definition for {self.get_type_fqn()}'''
-        return None
+        return []
     def get_typescript_isa(self,namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         return self.t.xju_json_codec_5_get_typescript_isa_generic(namespace,self.type_var_map)
 
@@ -1976,9 +2000,9 @@ class CustomClassCodecImpl:
         return self.t.xju_json_codec_get_json_schema(definitions)
     def typescript_type(self) -> TypeScriptSourceCode:
         return self.t.xju_json_codec_get_typescript_type()
-    def ensure_typescript_defs(self,namespace)->None:
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
         '''ensure {namespace} has a typescript definition for {self.get_type_fqn()}'''
-        return None
+        return []
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         return self.t.xju_json_codec_5_get_typescript_isa(namespace)
@@ -2055,14 +2079,15 @@ class ClassCodecImpl:
         }
     def typescript_type(self) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(self.get_type_fqn())
-    def ensure_typescript_defs(self,namespace)->None:
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
         '''ensure {namespace} has a typescript definition for {self.get_type_fqn()}'''
         typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
         typescript_type_name=typescript_fqn[-1]
         tt=self.typescript_type()
-        for attr_codec in self.attr_codecs.values():
-            attr_codec.codec.ensure_typescript_defs(namespace)
+        target_namespace.namespaces_this_namespace_depends_on.extend(
+            sum([attr_codec.codec.ensure_typescript_defs(namespace)
+                 for attr_codec in self.attr_codecs.values()], []))
         if typescript_type_name not in target_namespace.defs:
             target_namespace.defs[typescript_type_name]=TypeScriptSourceCode(
                 f"type {typescript_type_name} = {{\n"+
@@ -2101,7 +2126,7 @@ class ClassCodecImpl:
                 f"    {',\n    '.join(attrs)}\n"
                 f"]);\n")
             pass
-        pass
+        return [tuple(typescript_fqn[:-1])]
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         self.ensure_typescript_defs(namespace)
@@ -2151,9 +2176,9 @@ class GenericClassUsableAsObjectKeyCodecImpl:
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(
             f"string /* {self.t.xju_json_codec_get_typescript_type_generic(self.type_var_map).replace('/*','**').replace('*/','**')} */")
-    def ensure_typescript_defs(self,namespace)->None:
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
         '''ensure {namespace} has a typescript definition for {self.get_type_fqn()}'''
-        pass
+        return []
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         return self.t.xju_json_codec_5_get_typescript_isa_generic(namespace,self.type_var_map)
@@ -2207,9 +2232,9 @@ class ClassUsableAsObjectKeyCodecImpl:
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(
             f"string /* {self.t.xju_json_codec_get_typescript_type().replace('/*','**').replace('*/','**')} */")
-    def ensure_typescript_defs(self,namespace)->None:
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
         '''ensure {namespace} has a typescript definition for {self.get_type_fqn()}'''
-        pass
+        return []
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         return self.t.xju_json_codec_5_get_typescript_isa(namespace)
@@ -2286,8 +2311,8 @@ class EnumValueCodecImpl:
         return TypeScriptSourceCode(f'{self.get_type_fqn()}.{self.value.name}') if self.is_typescript_pod else self.typescript_value()
     def typescript_value(self) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(json.dumps(self.value_codec.encode(self.value.value)))
-    def ensure_typescript_defs(self,namespace: TypeScriptNamespace)->None:
-        pass
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
+        return []
     def get_typescript_isa(
             self,
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
@@ -2364,12 +2389,11 @@ class EnumCodecImpl:
         return TypeScriptSourceCode(self.get_type_fqn())
     def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(f"string /* {self.typescript_type().replace('/*','**').replace('*/','**')} */")
-    def ensure_typescript_defs(self, namespace) -> None:
-        for c in self.value_codecs.values():
-            c.ensure_typescript_defs(namespace)
-            pass
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
         typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
+        target_namespace.namespaces_this_namespace_depends_on.extend(
+            sum([c.ensure_typescript_defs(namespace) for c in self.value_codecs.values()],[]))
         tt=typescript_fqn[-1]
         if tt not in target_namespace.defs:
             enum_value_codec:EnumValueCodecImpl
@@ -2420,7 +2444,7 @@ class EnumCodecImpl:
                 f"]);")
 
             pass
-        pass
+        return [tuple(typescript_fqn[:-1])]
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         self.ensure_typescript_defs(namespace)
@@ -2486,12 +2510,11 @@ class LiteralEnumCodecImpl:
 
     def typescript_type(self)->TypeScriptSourceCode:
         return TypeScriptSourceCode(self.get_type_fqn())
-    def ensure_typescript_defs(self, namespace) -> None:
-        for c in self.value_codecs.values():
-            c.ensure_typescript_defs(namespace)
-            pass
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
         typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
+        target_namespace.namespaces_this_namespace_depends_on.extend(
+            sum([c.ensure_typescript_defs(namespace) for c in self.value_codecs.values()],[]))
         tt=typescript_fqn[-1]
         if tt not in target_namespace.defs:
             enum_value_codec:EnumValueCodecImpl
@@ -2526,7 +2549,8 @@ class LiteralEnumCodecImpl:
                 f"const _isInstanceOf{tt} = xju.json_codec.isInstanceOfUnion([\n"
                 f"    {',\n'.join(isas)}\n"
                 f"]);")
-        pass
+            pass
+        return [tuple(typescript_fqn[:-1])]
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         self.ensure_typescript_defs(namespace)
@@ -2572,13 +2596,14 @@ class TypeAliasCodecImpl:
         }
     def typescript_type(self) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(self.get_type_fqn())
-    def ensure_typescript_defs(self,namespace)->None:
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
         '''ensure {namespace} has a typescript definition for {self.get_type_fqn()}'''
         typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
         typescript_type_name=typescript_fqn[-1]
         tt=self.typescript_type()
-        self.value_codec.ensure_typescript_defs(namespace)
+        target_namespace.namespaces_this_namespace_depends_on.extend(
+            self.value_codec.ensure_typescript_defs(namespace))
         if typescript_type_name not in target_namespace.defs:
             target_namespace.defs[typescript_type_name]=TypeScriptSourceCode(
                 f"type {typescript_type_name} = {indent(4,self.value_codec.typescript_type())};")
@@ -2599,7 +2624,7 @@ class TypeAliasCodecImpl:
             target_namespace.defs[TypeScriptUQN(f"_isInstanceOf{typescript_type_name}")]=TypeScriptSourceCode(
                 f"const _isInstanceOf{typescript_type_name} = {self.value_codec.get_typescript_isa(namespace)};\n")
             pass
-        pass
+        return [tuple(typescript_fqn[:-1])]
     def get_typescript_isa(self,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         self.ensure_typescript_defs(namespace)
@@ -2634,8 +2659,8 @@ class BackRefCodecImpl:
     def typescript_type(self) -> TypeScriptSourceCode:
         assert self.codec is not None
         return self.codec.typescript_type()
-    def ensure_typescript_defs(self, namespace) -> None:
-        pass
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> DependsOnTypeScriptNamespaces:
+        return []
     def get_typescript_isa(self,namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         assert self.codec is not None
         return TypeScriptSourceCode(f"(x:any) => {self.codec.get_typescript_isa(namespace)}(x)")
@@ -2710,7 +2735,10 @@ def _explodeSchemaRec(
                                   {at:_explode_literal(at,type_var_map,codec_backrefs)
                                    for at in get_args(t)})
         if type(t) is GenericAlias and get_origin(t) is tuple:
-            return TupleCodecImpl([_explodeSchema(_,type_var_map,codec_backrefs) for _ in get_args(t)])
+            args=get_args(t)
+            if args[-1] is Ellipsis:
+                args=args[:-1]
+            return TupleCodecImpl([_explodeSchema(_,type_var_map,codec_backrefs) for _ in args])
         if t is dict:
             return AnyDictCodecImpl()
         if type(t) is GenericAlias and get_origin(t) is dict:
@@ -2890,3 +2918,58 @@ def make_attr_codec(
             return AttrCodecWithDefault(get_attr_encoded_name(getmro(t), PythonAttrName(attr_name)),
                                         _explodeSchema(nt,type_var_map,codec_backrefs),
                                         v[0])
+
+def sort_typescript_namespaces(
+        nodes: dict[TypeScriptFQN, DependsOnTypeScriptNamespaces]
+) -> list[TypeScriptFQN]:
+    '''sort typescript namespaces {nodes} into a depth-first order per each's depends-on'''
+    roots=set(nodes.keys())
+    for node,deps in nodes.items():
+        dep_set=set(deps)
+        if node in dep_set:
+            dep_set.remove(node)
+            pass
+        roots=roots.difference(dep_set)
+        pass
+    result = list[TypeScriptFQN]()
+    # stable order
+    for node in nodes:
+        if node in roots:
+            result.extend(walk_typescript_node_depth_first(node, nodes, set(result)))
+            pass
+        pass
+    return result
+
+def walk_typescript_node_depth_first(
+        node: TypeScriptFQN,
+        nodes: dict[TypeScriptFQN, DependsOnTypeScriptNamespaces],
+        seen: set[TypeScriptFQN]
+) -> list[TypeScriptFQN]:
+    '''walk {node}'s dependents returning them in a deepest-first order
+       - i.e. result[i] does not depend on any result[j] where j>i
+    '''
+    result = list[TypeScriptFQN]()
+    seen.add(node)
+    for dep in nodes[node]:
+        if not dep in seen:
+            result.extend(walk_typescript_node_depth_first(dep, nodes, seen))
+            pass
+        pass
+    result.append(node)
+    return result
+            
+def format_typescript_defs(
+        ns_name: TypeScriptFQN,
+        defs: dict[TypeScriptUQN,TypeScriptSourceCode],
+        export:Literal['']|Literal['export ']
+) -> str:
+    match ns_name:
+        case []:
+            return '\n'.join([f"{export}{v}" for v in defs.values()])
+        case [n, *rest]:
+            return (
+                f"{export}namespace {n} {{\n"  # needs to have each namespace
+                f"    {indent(4, TypeScriptSourceCode(format_typescript_defs(rest, defs, 'export ')))}\n"
+                f"}}"
+            )
+    pass

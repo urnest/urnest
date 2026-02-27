@@ -555,6 +555,23 @@ namespace xju {
 
     // tuple
     export function isInstanceOfTuple(items: Array<IsInstance>): IsInstance {
+      if (items.length == 1) {
+        return (x:any) => {
+          if (!Array.isArray(x)) return false;
+          const defaulters: Array<ApplyDefaults> = [];
+          for (let i=0; i != x.length; ++i) {
+            const r = items[0](x[i]);
+            if (r===false) return false;
+            defaulters.push(r);
+          }
+          return  {
+            applyDefaults: () => {
+              defaulters.forEach( (d) => d.applyDefaults() );
+              return true;
+            }
+          };
+        };
+      }
       return (x:any) => {
         if (!Array.isArray(x)) return false;
         if (x.length != items.length) return false;
@@ -573,6 +590,31 @@ namespace xju {
       };
     }
     export function asInstanceOfTuple(items: Array<AsInstance>): AsInstance {
+      if (items.length==1){
+        return asInstanceInContext({
+          typeName: `[${items[0].typeName},...]`,
+          f: (x: any): ApplyDefaults => {
+            if (!Array.isArray(x)) {
+              throw new Error(`not an array it is a ${typeof x}`);
+            }
+            const defaulters: Array<ApplyDefaults> = [];
+            x.forEach( (item, i) => {
+              try {
+                defaulters.push(items[0].f(item));
+              }
+              catch(e:any) {
+                throw xju.xn.inContext(`validate item ${i}`, e);
+              }
+            });
+            return {
+              applyDefaults: () => {
+                defaulters.forEach( (d) => d.applyDefaults() );
+                return true;
+              }
+            }
+          }
+        });
+      }
       return asInstanceInContext({
         typeName: `[${items.map(item=>item.typeName).join(',')}]`,
         f: (x: any): ApplyDefaults => {

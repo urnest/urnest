@@ -430,3 +430,10 @@ class GK[C, T: ShapeOfT]:
 VerifyTypeIsCustomStringKeyGenericClassCodec(GK)
 
 is_int(codec(GK[int,GT]).encode(GK(c=int, v=GT(x='fred'))))  # str (return type of G.xju_json_codec_encode_generic)
+
+# codec(tuple[])  # tuple[] is not a valid type, but is a python syntax error
+codec(tuple[...])  # tuple[...] is not a valid type
+codec(tuple[int, int, ...])  # not valid
+codec(tuple[int, ...])  # ok
+codec(...)  # not valid
+codec(dict[..., int])  # not valid

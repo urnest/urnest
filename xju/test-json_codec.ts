@@ -483,6 +483,39 @@ catch(e){
   xju.assert.assertXcontainsY(xju.str(e), 'Error: failed to verify [1,8.2] is a [int,Surname] because failed to validate item 1 because failed to verify 8.2 is a Surname because 8.2 is a number not a string');
 }
 
+// tuple[X, ...]
+var is=xju.json_codec.isInstanceOfTuple([
+  xju.json_codec.isInstanceOfInt,
+]);
+xju.assert.assertEqual((is([1,2]) as xju.json_codec.ApplyDefaults).applyDefaults(), true);
+xju.assert.assertEqual(is({}), false);
+xju.assert.assertEqual((is([1]) as xju.json_codec.ApplyDefaults).applyDefaults(), true);
+xju.assert.assertEqual((is([]) as xju.json_codec.ApplyDefaults).applyDefaults(), true);
+xju.assert.assertEqual(is([1,'fred',2]), false);
+xju.assert.assertEqual(is([1, 8.2]), false);
+
+var as=xju.json_codec.asInstanceOfTuple([
+  xju.json_codec.asInstanceOfInt('int'),
+]);
+as.f([1]).applyDefaults();
+as.f([]).applyDefaults();
+as.f([1,2]).applyDefaults();
+try{
+  as.f({}).applyDefaults();
+  xju.assert.assertNeverReached('[int,...]');
+}
+catch(e){
+  xju.assert.assertXcontainsY(xju.str(e), 'Error: failed to verify { } is a [int,...] because not an array it is a object');
+}
+try{
+  as.f([1, 8.2]).applyDefaults();
+  xju.assert.assertNeverReached('[int,string]');
+}
+catch(e){
+  xju.assert.assertXcontainsY(xju.str(e), 'Error: failed to verify [1,8.2] is a [int,...] because failed to validate item 1 because failed to verify 8.2 is a int because 8.2 is not a whole number');
+}
+
+// class
 var is=xju.json_codec.isInstanceOfClass('Fred',[
   {
     propertyName: 'a',

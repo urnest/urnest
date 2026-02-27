@@ -27,7 +27,7 @@ from dataclasses import dataclass
 from enum import Enum
 from a_module import NTA,ET
 
-namespace=TypeScriptNamespace({})
+namespace=TypeScriptNamespace(defs={})
 
 def indent(n: int, s:TypeScriptSourceCode)->str:
     lines=s.splitlines()
@@ -669,7 +669,7 @@ good_encodable_data=json.loads('''{
         "a_class": {"first_name":"fran","middle_names":["jan"],"last_name":"lan","class":"Upper"},
         "a_dont_encode":{"y":"yyy"},
         "fred_7_false":false,
-        "a_recurse_self":{"defs":{}},
+        "a_recurse_self":{"defs":{}, "namespaces_this_namespace_depends_on": [ ["xju", "misc"] ]},
         "a_timestamp":45000,
         "an_enum":"fred",
         "a_mixed_in_enum":{"k":2,"v":"jock"},
