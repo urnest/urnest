@@ -87,7 +87,7 @@ class TypeScriptSourceCode(xju.newtype.Str[TypeScriptSourceCodeTag]):pass
 type TypeScriptNamespaceFQN = TypeScriptFQN
 type DependsOnTypeScriptNamespaces = list[TypeScriptNamespaceFQN]
 
-@dataclass(kw_only=True)
+@dataclass
 class TypeScriptNamespace:
     defs: dict[TypeScriptUQN, TypeScriptSourceCode | Self]
     namespaces_this_namespace_depends_on: list[TypeScriptNamespaceFQN] = field(default_factory=list)
