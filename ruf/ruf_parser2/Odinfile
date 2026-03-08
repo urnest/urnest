@@ -1,0 +1,7 @@
+%all==%all.tree:leaves
+
+%all.tree==<<
+%test.output
+
+%test == test.rs+(..%rs-opts):exe
+%test.output == ()+cmd=RUST_BACKTRACE\=full (%test):exec.output
