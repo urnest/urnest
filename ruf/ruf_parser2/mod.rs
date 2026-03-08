@@ -108,7 +108,7 @@ impl<'parser> Ref<'parser>
 }
 impl<'parser> std::ops::Deref for Ref<'parser>
 {
-    type Target = dyn Parser+'parser;
+    type Target = dyn Parser+Sync+Send+'parser;
     fn deref(&self) -> &Self::Target { &*self.x }
 }
 

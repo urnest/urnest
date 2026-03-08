@@ -65,8 +65,9 @@ impl<'and> crate::Parser for And<'and>
                             matched: Some(matched),
                             components: _
                         }) => {
-                            rest = all_of(rest).after(matched);
+                            let t = all_of(rest).after(matched);
                             components.push( (crate::Goal{parser: term.deref(), text: rest},result_of_term) );
+                            rest = t;
                         }
                     }
                 }
