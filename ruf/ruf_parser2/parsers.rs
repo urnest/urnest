@@ -12,11 +12,14 @@ pub struct And<'parser>
 }
 impl<'and> crate::Parser for And<'and>
 {
-    fn parse_some_of<'text, 'parser>(self: &'parser Self, text: &'text str) ->
-        crate::ParseResult<'text, 'parser>
+    fn parse_some_of_<'text, 'parser>(
+        self: &'parser Self,
+        text: &'text str,
+        cache: &mut [crate::Cache<'text, 'parser>]
+    ) -> crate::ParseResult<'text, 'parser>
     where 'and: 'parser, 'text: 'parser
     {
-        let result_of_first_term = self.first_term.parse_some_of(text);
+        let result_of_first_term = self.first_term.parse_some_of(text, cache);
         match result_of_first_term {
             crate::ParseResult::Leaf(crate::LeafResult{
                 matched: _,
@@ -39,8 +42,9 @@ impl<'and> crate::Parser for And<'and>
                 let mut components = vec!( (crate::Goal{parser: self.first_term.deref(), text: text},
                                             result_of_first_term) );
                 let mut rest: &str = all_of(text).after(first_term_matched);
+                let mut cache = &mut cache[first_term_matched.len()..];
                 for term in self.other_terms.iter() {
-                    let result_of_term = term.parse_some_of(rest);
+                    let result_of_term = term.parse_some_of(rest, cache);
                     match result_of_term {
                         crate::ParseResult::Leaf(crate::LeafResult{
                             matched: _,
@@ -66,8 +70,10 @@ impl<'and> crate::Parser for And<'and>
                             components: _
                         }) => {
                             let t = all_of(rest).after(matched);
+                            let c = &mut cache[matched.len()..];
                             components.push( (crate::Goal{parser: term.deref(), text: rest},result_of_term) );
                             rest = t;
+                            cache = c;
                         }
                     }
                 }
@@ -87,11 +93,14 @@ pub struct Or<'parser>
 }
 impl<'or> crate::Parser for Or<'or>
 {
-    fn parse_some_of<'text, 'parser>(self: &'parser Self, text: &'text str) ->
-        crate::ParseResult<'text, 'parser>
+    fn parse_some_of_<'text, 'parser>(
+        self: &'parser Self,
+        text: &'text str,
+        cache: &mut [crate::Cache<'text, 'parser>]
+    ) -> crate::ParseResult<'text, 'parser>
     where 'text: 'parser, 'or: 'parser
     {
-        let result_of_first_term = self.first_term.parse_some_of(text);
+        let result_of_first_term = self.first_term.parse_some_of(text, cache);
         match result_of_first_term {
             crate::ParseResult::Leaf(crate::LeafResult{
                 matched,
@@ -114,7 +123,7 @@ impl<'or> crate::Parser for Or<'or>
             }) => {
                 let mut components = vec!( (crate::Goal{parser: self.first_term.deref(), text: text}, result_of_first_term) );
                 for term in self.other_terms.iter() {
-                    let result_of_term = term.parse_some_of(text);
+                    let result_of_term = term.parse_some_of(text, cache);
                     match result_of_term {
                         crate::ParseResult::Leaf(crate::LeafResult{
                             matched,
@@ -157,9 +166,11 @@ pub struct Literal<'literal> {
 
 impl<'literal> crate::Parser for Literal<'literal>
 {
-    // REVISIT: we should not need separate 'literal and 'parser? should be just 'literal?
-    fn parse_some_of<'text, 'parser>(self: &'parser Self, text: &'text str) ->
-        crate::ParseResult<'text, 'parser>
+    fn parse_some_of_<'text, 'parser>(
+        self: &'parser Self,
+        text: &'text str,
+        _cache: &mut [crate::Cache]
+    ) -> crate::ParseResult<'text, 'parser>
     where 'literal: 'parser, 'text: 'parser
     {
         // we would use starts_with but when it doesn't start with we want the longest
@@ -190,6 +201,32 @@ impl<'literal> crate::Parser for Literal<'literal>
                                                then: Some(crate::Unexpected::EndOfInput)})
                     }
                 }
+            }
+        }
+    }
+}
+
+pub struct EndOfInput {
+}
+
+impl crate::Parser for EndOfInput
+{
+    fn parse_some_of_<'text, 'parser>(
+        self: &'parser Self,
+        text: &'text str,
+        _cache: &mut [crate::Cache]
+    ) -> crate::ParseResult<'text, 'parser>
+    where 'text: 'parser
+    {
+        match text {
+            "" => {
+                return crate::ParseResult::<'text, 'parser>::Leaf(
+                    crate::LeafResult{ matched: text, then: None });
+            },
+            _ => {
+                return crate::ParseResult::<'text, 'parser>::Leaf(
+                    crate::LeafResult{ matched: &text[0..0],
+                                       then: Some(crate::Unexpected::Char)});
             }
         }
     }

@@ -17,6 +17,9 @@
 //        values of a and b, which can otherwise be difficult
 //        to deduce.
 //
+pub fn never_reached<T>(_: &T) {
+    ::std::process::abort();
+}
 pub fn equal<T>(a: &T, b: &T)
     where T: std::cmp::PartialEq
 {

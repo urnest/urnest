@@ -15,36 +15,53 @@ use ruf_parser2 as parser;
 use ruf_assert as assert;
 
 fn main() {
+    // end_of_input
+    let x = "";
+    assert::equal(&parser::parse_some_of(&*parser::end_of_input(), &x),
+                  &parser::ParseResult::Leaf(parser::LeafResult{
+                      matched: &x,
+                      then: None,  // success (end of input)
+                  }));
+
+    let x = "left over";
+    assert::equal(&parser::parse_some_of(&*parser::end_of_input(), &x),
+                  &parser::ParseResult::Leaf(parser::LeafResult{
+                      matched: &x[0..0],
+                      then: Some(parser::Unexpected::Char),  // not at end of input!
+                  }));
+
+    // literal
     let x = "freddy was very good";
     let p = parser::literal("freddy");
-    let y = p.parse_some_of(x);
+    let y = parser::parse_some_of(&*p, x);
     assert::equal(&y, &parser::ParseResult::Leaf(parser::LeafResult{
         matched: &x[0..6],
         then: None
     }));
 
     let x = "fredy was very good";
-    let y = p.parse_some_of(x);
+    let y = parser::parse_some_of(&*p, x);
     assert::equal(&y, &parser::ParseResult::Leaf(parser::LeafResult{
         matched: &x[0..4],
         then: Some(parser::Unexpected::Char)
     }));
 
     let x = "fredd";
-    let y = p.parse_some_of(x);
+    let y = parser::parse_some_of(&*p, x);
     assert::equal(&y, &parser::ParseResult::Leaf(parser::LeafResult{
         matched: &x[0..5],
         then: Some(parser::Unexpected::EndOfInput)
     }));
 
+    // p1 + p2 i.e. parse p1 then p2
     let x = "freddy was very good";
     let p1 = parser::literal("freddy");
     let p2 = parser::literal(" was");
     let p = p1.clone() + p2.clone();
-    let y = p.parse_some_of(x);
+    let y = parser::parse_some_of(&*p, x);
     assert::equal(&y, &parser::ParseResult::Composite(
         parser::CompositeResult{
-            matched: Some(&x[0..10]),
+            matched: Some(&x[0..10]),  // success, matched "freddy was"
             components: vec!(
                 (parser::Goal{parser: &*p1, text: x},
                  parser::ParseResult::Leaf(
@@ -59,20 +76,21 @@ fn main() {
             )}));
 
     let x = "fred was very good";
-    let y = p.parse_some_of(x);
+    let y = parser::parse_some_of(&*p, x);
     assert::equal(&y, &parser::ParseResult::Composite(
         parser::CompositeResult{
-            matched: None,
-            components: vec!(
-                (parser::Goal{parser: &*p1, text: x},
-                 parser::ParseResult::Leaf(
-                     parser::LeafResult{
-                         matched: &x[0..4],
-                         then: Some(parser::Unexpected::Char)})),
+            matched: None,  // failed, reason is captured in components 
+            components: vec!(                                 //      |
+                (parser::Goal{parser: &*p1, text: x},         //      |
+                 parser::ParseResult::Leaf(                   //      |
+                     parser::LeafResult{                      //      |
+                         matched: &x[0..4],                   // "fred" looked good...
+                         then: Some(parser::Unexpected::Char) // ... but no "dy" etc
+                     })),
             )}));
 
     let x = "freddy wis very good";
-    let y = p.parse_some_of(x);
+    let y = parser::parse_some_of(&*p, x);
     assert::equal(&y, &parser::ParseResult::Composite(
         parser::CompositeResult{
             matched: None,
@@ -90,7 +108,7 @@ fn main() {
             )}));
 
     let x = "freddy wa";
-    let y = p.parse_some_of(x);
+    let y = parser::parse_some_of(&*p, x);
     assert::equal(&y, &parser::ParseResult::Composite(
         parser::CompositeResult{
             matched: None,
@@ -107,13 +125,14 @@ fn main() {
                          then: Some(parser::Unexpected::EndOfInput)})),
             )}));
 
+    // p3 | p4 i.e. parse either p3 or p4 (trying p3 first)
     let x = "freddy was very good";
     let p1 = parser::literal("freddy");
     let p2 = parser::literal(" was");
     let p3 = parser::literal(" is");
     let p4 = p2.clone() | p3.clone();
     let p = p1.clone() + p4.clone();
-    let y = p.parse_some_of(x);
+    let y = parser::parse_some_of(&*p, x);
     assert::equal(&y, &parser::ParseResult::Composite(
         parser::CompositeResult{
             matched: Some(&x[0..10]),
@@ -140,7 +159,7 @@ fn main() {
     let p3 = parser::literal(" is");
     let p4 = p2.clone() | p3.clone();
     let p = p1.clone() + p4.clone();
-    let y = p.parse_some_of(x);
+    let y = parser::parse_some_of(&*p, x);
     assert::equal(&y, &parser::ParseResult::Composite(
         parser::CompositeResult{
             matched: Some(&x[0..9]),
@@ -173,7 +192,7 @@ fn main() {
     let p3 = parser::literal(" is");
     let p4 = p2.clone() | p3.clone();
     let p = p1.clone() + p4.clone();
-    let y = p.parse_some_of(x);
+    let y = parser::parse_some_of(&*p, x);
     assert::equal(&y, &parser::ParseResult::Composite(
         parser::CompositeResult{
             matched: None,

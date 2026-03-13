@@ -9,59 +9,119 @@
 //
 extern crate ruf_tree;
 extern crate ruf_newtype;
-use std::ptr;
+extern crate ruf_assert;
 
+use std::ptr;
+use std::collections::HashMap;
+
+use ruf_assert as assert;
 use ruf_tree as tree;
 
 pub mod ast;
 
+// parse some of text {text} with parser {p}
+//
+// This is the primary parsing interface, see test.mod for examples of use.
+//
+// Note that where the parse succeeds, the left over text is implied
+// by what was matched, either result.matched (where p is a LeafParser) or
+// result.matched.unwrap() (where p is a composite parser). Note that in the Leaf case
+// result.matched must be interpreted considering result.then; the composite case
+// is explicit since matched is an Option.
+//
+// Use pre-defined end_of_input() parser to ensure all text is consumed.
+//
+// See Stock Parses below for other pre-defined parsers; test.rs has example use of all.
+//
+// Implement Parser (below) to define your own parsers, though combining pre-defined
+// parses via + and | should cover most uses.
+//
+pub fn parse_some_of<'parser, 'text>(
+    p: &'parser dyn Parser, text: &'text str
+) -> ParseResult<'text, 'parser>
+    where 'text: 'parser
+{
+    let mut cache = vec!();
+    cache.resize_with(text.len()+1, ||HashMap::new());
+    p.parse_some_of(text, &mut cache)
+}
+
+
 pub type AST<'text> = tree::Node<ast::Item<'text>>;
 
+impl<'parser> PartialEq for &'parser (dyn Parser+Send+Sync) {
+    fn eq(&self, other: &&'parser (dyn Parser+Send+Sync)) -> bool {
+        ptr::eq(*self, *other)
+    }
+    fn ne(&self, other: &&'parser (dyn Parser+Send+Sync)) -> bool {
+        !ptr::eq(*self, *other)
+    }
+}
+
+#[derive(PartialEq, Clone)]
 pub struct Goal<'text, 'parser> {
     pub parser: &'parser (dyn Parser+Send+Sync),
     pub text: &'text str
 }
-impl<'text, 'parser> PartialEq for Goal<'text, 'parser> {
-    fn eq(&self, other: &Goal<'text, 'parser>) -> bool {
-        ptr::eq(self.parser, other.parser) &&
-            self.text == other.text
-    }
-    fn ne(&self, other: &Goal<'text, 'parser>) -> bool {
-        !ptr::eq(self.parser, other.parser) ||
-            self.text != other.text
-    }
-}
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub enum Unexpected {
     Char,
     EndOfInput
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub struct LeafResult<'text> {
     pub matched: &'text str,
     pub then: Option<Unexpected>
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub struct CompositeResult<'text, 'parser> {
     pub matched: Option<&'text str>,  // None if parse failed, otherwise the match
     pub  components: Vec< (Goal<'text, 'parser>, ParseResult<'text, 'parser>) >
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub enum ParseResult<'text, 'parser> {
     Leaf(LeafResult<'text>),
     Composite(CompositeResult<'text, 'parser>)
 }
 
+pub type Cache<'text, 'parser> = HashMap<usize, ParseResult<'text, 'parser> >;
 
 pub trait Parser
 {
+    // parse some of {text}
+    // pre: cache.size() == text.size()+1
     fn parse_some_of<'text, 'parser>(
         &'parser self,
-        text: &'text str
+        text: &'text str,
+        cache: &mut [Cache<'text, 'parser>]
+    ) -> ParseResult<'text, 'parser>
+    where 'text: 'parser
+    {
+        assert::equal(&cache.len(), &(text.len()+1));
+        let p : *const Self = self;
+        match cache[0].get(&p.addr()) {
+            Some(v) => v.clone(),
+            None => {
+                let v = self.parse_some_of_(text, cache);
+                cache[0].insert(p.addr(), v.clone());
+                v
+            }
+        }
+    }
+    
+    // parse some of {text}
+    // - note result will be cached by parse_some_of
+    // - pass cache to any nested invocations of parse_some_of
+    // pre: cache.size() == text.size()+1
+    //
+    fn parse_some_of_<'text, 'parser>(
+        &'parser self,
+        text: &'text str,
+        cache: &mut [Cache<'text, 'parser>]
     ) -> ParseResult<'text, 'parser>
     where 'text: 'parser;
 }
@@ -170,8 +230,16 @@ impl<'parser> std::ops::BitOr for Ref<'parser> {
     }
 }
 
+// Stock parsers:
+
 // parses x, literally
 pub fn literal(x: &'static str) -> Ref<'static>
 {
     Ref::new(parsers::Literal{x: x})
+}
+
+// parses end-of-input i.e. check that we've consumed all text
+pub fn end_of_input() -> Ref<'static>
+{
+    Ref::new(parsers::EndOfInput{})
 }

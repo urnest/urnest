@@ -1,6 +1,9 @@
 * parser:
-  ~ new type Tag
-    x risk of mixing up tag with something else seem minimal
+  - new type Tag
+    pub struct Tag<'tag> {
+      value: &'tag;
+    }
+
   - should all parser creation functions (and parsers) accept an Option<Tag>?
     - maybe provide tagged_x for each function x?
     - maybe let common function put tag in (give Parser a tag() -> Option<Tag> method)?
@@ -8,17 +11,66 @@
       
   x always return completed IRs on failure
     x with each context entry?
-  - result cache
-    Results=vec<hash_map<&Parser, ParseResult>> // same size as input str
-    ParseResult={
-       succeeded: bool,
-       children: vec<(offset, &Parser)>  // note relative offset 
-    }
 
-    Parser.parse(at: &str[], results: mut &Results[]): ParseResult
-    Parser.tag(): &str[] // static
-    Parser.<<  // context or cause
+  - rejig:
+    Goal: tuple<&Parser, &str>  // goal is for .0 to parse .1
     
+    enum Unexpected {
+      Input,
+      End
+    }
+    LeafResult = {
+      matched: &str,
+      then: Option<Unexpected>
+    }
+    CompositeResult = {
+      matched: Option<&str>,  // None if we failed, otherwise the match
+      components: vec<tuple<Goal, ParseResult>>
+    }
+    - "all of" component results are either all ok, or some oks + one err
+    - "some of" component results are either some errs + one ok, or all errs
+
+    ParseResult = LeafResult | CompositeResult
+
+    parse_some_of(&self, text: &str, cache: mut& Cache) -> ParseResult
+
+    Cache : vec<HashMap<&Parser, ParseResult> >
+
+
+    TaggedGoal = tuple<Tag, &str>  // goal to parse .0 at .1
+
+    ASTNode {
+      goal: TaggedGoal
+      matched: &str
+    }
+    AST = tree<ASTNode>
+    
+    &ParseResult.get_ast() -> Result<AST, ParseErr>
+    
+    ParseErr = LeafErr | AllErr | FirstErrs
+    LeafErr {
+      matched: &str,
+      then: Unexpected
+    }
+    AllErr = {
+      // failure to parse "all of", e.g.
+      //   "A then B then C"
+      //   "n x A"
+      // ... which is always because one of the possibilities failed. Here
+      // are the possibilities that succeeded before the failure
+      // then the failure:
+      matched: vec<tuple<TaggedGoal, AST>>
+      then: tuple<TaggedGoal,ParseErr>
+    }
+    FirstErrs = {
+      // failure to parse "first matching", e.g.:
+      //   A or B or C
+      // which is always because all possibilities
+      // failed, here are all those failures:
+      errs: vec<tuple<TaggedGoal, ParseErr>>
+    }
+    
+
   - primitives from hcp::parser:
     x none
     x listOf(open, x, sep, term)
