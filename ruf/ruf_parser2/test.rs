@@ -12,7 +12,6 @@ extern crate ruf_parser2;
 extern crate ruf_assert;
 
 use ruf_parser2::{
-    parse_some_of,
     ParseResult,
     LeafResult,
     CompositeResult,
@@ -27,14 +26,14 @@ use ruf_assert as assert;
 fn main() {
     // end_of_input
     let x = "";
-    assert::equal(&parse_some_of(&*end_of_input(), &x),
+    assert::equal(&end_of_input().parse(&x),
                   &ParseResult::Leaf(LeafResult{
                       matched: &x,
                       then: None,  // success (end of input)
                   }));
 
     let x = "left over";
-    assert::equal(&parse_some_of(&*end_of_input(), &x),
+    assert::equal(&end_of_input().parse(&x),
                   &ParseResult::Leaf(LeafResult{
                       matched: &x[0..0],
                       then: Some(Unexpected::Char),  // not at end of input!
@@ -43,21 +42,21 @@ fn main() {
     // literal
     let x = "freddy was very good";
     let p = literal("freddy");
-    let y = parse_some_of(&*p, x);
+    let y = p.parse(x);
     assert::equal(&y, &ParseResult::Leaf(LeafResult{
         matched: &x[0..6],
         then: None
     }));
 
     let x = "fredy was very good";
-    let y = parse_some_of(&*p, x);
+    let y = p.parse(x);
     assert::equal(&y, &ParseResult::Leaf(LeafResult{
         matched: &x[0..4],
         then: Some(Unexpected::Char)
     }));
 
     let x = "fredd";
-    let y = parse_some_of(&*p, x);
+    let y = p.parse(x);
     assert::equal(&y, &ParseResult::Leaf(LeafResult{
         matched: &x[0..5],
         then: Some(Unexpected::EndOfInput)
@@ -68,7 +67,7 @@ fn main() {
     let p1 = literal("freddy");
     let p2 = literal(" was");
     let p = p1.clone() + p2.clone();
-    let y = parse_some_of(&*p, x);
+    let y = p.parse(x);
     assert::equal(&y, &ParseResult::Composite(
         CompositeResult{
             matched: Some(&x[0..10]),  // success, matched "freddy was"
@@ -86,7 +85,7 @@ fn main() {
             )}));
 
     let x = "fred was very good";
-    let y = parse_some_of(&*p, x);
+    let y = p.parse(x);
     assert::equal(&y, &ParseResult::Composite(
         CompositeResult{
             matched: None,  // failed, reason is captured in components 
@@ -100,7 +99,7 @@ fn main() {
             )}));
 
     let x = "freddy wis very good";
-    let y = parse_some_of(&*p, x);
+    let y = p.parse(x);
     assert::equal(&y, &ParseResult::Composite(
         CompositeResult{
             matched: None,
@@ -118,7 +117,7 @@ fn main() {
             )}));
 
     let x = "freddy wa";
-    let y = parse_some_of(&*p, x);
+    let y = p.parse(x);
     assert::equal(&y, &ParseResult::Composite(
         CompositeResult{
             matched: None,
@@ -142,7 +141,7 @@ fn main() {
     let p3 = literal(" is");
     let p4 = p2.clone() | p3.clone();
     let p = p1.clone() + p4.clone();
-    let y = parse_some_of(&*p, x);
+    let y = p.parse(x);
     assert::equal(&y, &ParseResult::Composite(
         CompositeResult{
             matched: Some(&x[0..10]),
@@ -169,7 +168,7 @@ fn main() {
     let p3 = literal(" is");
     let p4 = p2.clone() | p3.clone();
     let p = p1.clone() + p4.clone();
-    let y = parse_some_of(&*p, x);
+    let y = p.parse(x);
     assert::equal(&y, &ParseResult::Composite(
         CompositeResult{
             matched: Some(&x[0..9]),
@@ -202,7 +201,7 @@ fn main() {
     let p3 = literal(" is");
     let p4 = p2.clone() | p3.clone();
     let p = p1.clone() + p4.clone();
-    let y = parse_some_of(&*p, x);
+    let y = p.parse(x);
     assert::equal(&y, &ParseResult::Composite(
         CompositeResult{
             matched: None,
@@ -233,7 +232,7 @@ fn main() {
     let x = "freddy was very good";
     let p1 = literal("freddy");
     let p = tagged(&"tag1", p1.clone());
-    let y = parse_some_of(&*p, x);
+    let y = p.parse(x);
     assert::equal(&y, &ParseResult::Composite(
         CompositeResult{
             matched: Some(&x[0..6]),
@@ -249,7 +248,7 @@ fn main() {
     let p2 = literal(" was");
     let p3 = p1.clone() + p2.clone();
     let p = tagged(&"tag1", p3.clone());
-    let y = parse_some_of(&*p, x);
+    let y = p.parse(x);
     assert::equal(&y, &ParseResult::Composite(
         CompositeResult{
             matched: Some(&x[0..10]),
@@ -274,7 +273,7 @@ fn main() {
     let x = "freddy was very good";
     let p1 = literal("jenny");
     let p = tagged(&"tag1", p1.clone());
-    let y = parse_some_of(&*p, x);
+    let y = p.parse(x);
     assert::equal(&y, &ParseResult::Composite(
         CompositeResult{
             matched: None,
@@ -290,7 +289,7 @@ fn main() {
     let p2 = literal(" wasn't");
     let p3 = p1.clone() + p2.clone();
     let p = tagged(&"tag1", p3.clone());
-    let y = parse_some_of(&*p, x);
+    let y = p.parse(x);
     assert::equal(&y, &ParseResult::Composite(
         CompositeResult{
             matched: None,

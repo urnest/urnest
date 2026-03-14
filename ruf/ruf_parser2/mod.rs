@@ -36,7 +36,7 @@ pub mod ast;
 // Implement Parser (below) to define your own parsers, though combining pre-defined
 // parses via + and | should cover most uses.
 //
-pub fn parse_some_of<'parser, 'text>(
+pub fn parse<'parser, 'text>(
     p: &'parser dyn Parser, text: &'text str
 ) -> ParseResult<'text, 'parser>
     where 'text: 'parser
@@ -92,7 +92,6 @@ pub type Cache<'text, 'parser> = HashMap<usize, ParseResult<'text, 'parser> >;
 
 pub trait Parser
 {
-    
     // parse some of {text}
     // - implement this function to define a custom parser
     // - note result will be cached by parse_some_of
@@ -166,6 +165,14 @@ impl<'parser> Ref<'parser>
         let and = std::sync::Arc::new(parsers::Or::<'parser>{ first_term: first_term,
                                                               other_terms: other_terms});
         Ref::<'parser>{ x: and.clone(), op: Operator::Or(and) }
+    }
+    pub fn parse<'text, 'self_ref>(
+        &'self_ref self,
+        text: &'text str
+    ) -> ParseResult<'text, 'self_ref>
+    where 'text: 'self_ref, 'parser: 'self_ref
+    {
+        crate::parse(&*self.x, text)
     }
 }
 impl<'parser> std::ops::Deref for Ref<'parser>
