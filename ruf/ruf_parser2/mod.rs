@@ -92,6 +92,20 @@ pub type Cache<'text, 'parser> = HashMap<usize, ParseResult<'text, 'parser> >;
 
 pub trait Parser
 {
+    
+    // parse some of {text}
+    // - implement this function to define a custom parser
+    // - note result will be cached by parse_some_of
+    // - pass cache to any nested invocations of parse_some_of
+    // pre: cache.size() == text.size()+1
+    //
+    fn parse_some_of_<'text, 'parser>(
+        &'parser self,
+        text: &'text str,
+        cache: &mut [Cache<'text, 'parser>]
+    ) -> ParseResult<'text, 'parser>
+    where 'text: 'parser;
+
     // parse some of {text}
     // pre: cache.size() == text.size()+1
     fn parse_some_of<'text, 'parser>(
@@ -112,18 +126,6 @@ pub trait Parser
             }
         }
     }
-    
-    // parse some of {text}
-    // - note result will be cached by parse_some_of
-    // - pass cache to any nested invocations of parse_some_of
-    // pre: cache.size() == text.size()+1
-    //
-    fn parse_some_of_<'text, 'parser>(
-        &'parser self,
-        text: &'text str,
-        cache: &mut [Cache<'text, 'parser>]
-    ) -> ParseResult<'text, 'parser>
-    where 'text: 'parser;
 }
 
 mod parsers;
@@ -242,4 +244,10 @@ pub fn literal(x: &'static str) -> Ref<'static>
 pub fn end_of_input() -> Ref<'static>
 {
     Ref::new(parsers::EndOfInput{})
+}
+
+// wraps AST produced by content in AST with tag
+pub fn tagged<'parser>(tag: &'static str, content: Ref<'parser>) -> Ref<'parser>
+{
+    Ref::new(parsers::Tagged{ tag: tag, content: content.x })
 }

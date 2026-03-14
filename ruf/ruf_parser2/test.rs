@@ -218,4 +218,87 @@ fn main() {
                                       matched: &x[6..7],
                                       then: Some(parser::Unexpected::Char)})) )})),
             )}));
+
+    // tagged
+    let x = "freddy was very good";
+    let p1 = parser::literal("freddy");
+    let p = parser::tagged(&"tag1", p1.clone());
+    let y = parser::parse_some_of(&*p, x);
+    assert::equal(&y, &parser::ParseResult::Composite(
+        parser::CompositeResult{
+            matched: Some(&x[0..6]),
+            components: vec!(
+                (parser::Goal{ parser: &*p1, text: &x},
+                 parser::ParseResult::Leaf(parser::LeafResult{
+                     matched: &x[0..6],
+                     then: None
+                 })),)}));
+
+    let x = "freddy was very good";
+    let p1 = parser::literal("freddy");
+    let p2 = parser::literal(" was");
+    let p3 = p1.clone() + p2.clone();
+    let p = parser::tagged(&"tag1", p3.clone());
+    let y = parser::parse_some_of(&*p, x);
+    assert::equal(&y, &parser::ParseResult::Composite(
+        parser::CompositeResult{
+            matched: Some(&x[0..10]),
+            components: vec!(
+                (parser::Goal{ parser: &*p3, text: &x},
+                 parser::ParseResult::Composite(
+                     parser::CompositeResult{
+                         matched: Some(&x[0..10]),
+                         components: vec!(
+                             (parser::Goal{parser: &*p1, text: x},
+                              parser::ParseResult::Leaf(
+                                  parser::LeafResult{
+                                      matched: &x[0..6],
+                                      then: None})),
+                             (parser::Goal{ parser: &*p2, text: &x[6..]},
+                              parser::ParseResult::Leaf(
+                                  parser::LeafResult{
+                                      matched: &x[6..10],
+                                      then: None})),
+                         )})),)}));
+
+    let x = "freddy was very good";
+    let p1 = parser::literal("jenny");
+    let p = parser::tagged(&"tag1", p1.clone());
+    let y = parser::parse_some_of(&*p, x);
+    assert::equal(&y, &parser::ParseResult::Composite(
+        parser::CompositeResult{
+            matched: None,
+            components: vec!(
+                (parser::Goal{ parser: &*p1, text: &x},
+                 parser::ParseResult::Leaf(parser::LeafResult{
+                     matched: &x[0..0],
+                     then: Some(parser::Unexpected::Char)
+                 })),)}));
+
+    let x = "freddy was very good";
+    let p1 = parser::literal("freddy");
+    let p2 = parser::literal(" wasn't");
+    let p3 = p1.clone() + p2.clone();
+    let p = parser::tagged(&"tag1", p3.clone());
+    let y = parser::parse_some_of(&*p, x);
+    assert::equal(&y, &parser::ParseResult::Composite(
+        parser::CompositeResult{
+            matched: None,
+            components: vec!(
+                (parser::Goal{ parser: &*p3, text: &x},
+                 parser::ParseResult::Composite(
+                     parser::CompositeResult{
+                         matched: None,
+                         components: vec!(
+                             (parser::Goal{parser: &*p1, text: x},
+                              parser::ParseResult::Leaf(
+                                  parser::LeafResult{
+                                      matched: &x[0..6],
+                                      then: None})),
+                             (parser::Goal{ parser: &*p2, text: &x[6..]},
+                              parser::ParseResult::Leaf(
+                                  parser::LeafResult{
+                                      matched: &x[6..10],
+                                      then: Some(parser::Unexpected::Char)})),
+                         )})),)}));
 }
