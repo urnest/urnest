@@ -18,10 +18,14 @@ use ruf_assert as assert;
 use ruf_tree as tree;
 
 pub mod ast;
+pub mod all_of;
+
+use all_of::all_of;
 
 // parse some of text {text} with parser {p}
 //
-// This is the primary parsing interface, see test.mod for examples of use.
+// This is the primary parsing interface. It is also available via
+// Ref.parse method. See test.mod for examples of use.
 //
 // Note that where the parse succeeds, the left over text is implied
 // by what was matched, either result.matched (where p is a LeafParser) or
@@ -88,6 +92,157 @@ pub enum ParseResult<'text, 'parser> {
     Composite(CompositeResult<'text, 'parser>)
 }
 
+use ParseResult::{Leaf,Composite};
+
+#[derive(PartialEq, Clone)]
+pub struct Context<'text> {
+    pub tag: &'static str,
+    pub text: &'text str
+}
+
+#[derive(PartialEq, Clone)]
+pub struct ParseFailed<'text> {
+    pub at: &'text str,
+    pub why: Unexpected,
+    pub context: Vec<Context<'text>>    // outermost is last
+}
+
+pub fn get_ast<'text, 'parser>(
+    text: &'text str,
+    parse_result: &ParseResult<'text, 'parser>,
+    root_ast_tag: &'static str
+) -> Result<AST<'text>, ParseFailed<'text>>
+{
+    match parse_result {
+        Composite(CompositeResult{ matched: Some(matched), components }) =>
+            Ok(AST::<'text>{
+                value: ast::Item{ tag: root_ast_tag, text: matched },
+                children: get_component_asts(&components)
+            }),
+        
+        Leaf(LeafResult{matched, then: None}) =>
+            Ok(AST::<'text>{
+                value: ast::Item{ tag: root_ast_tag, text: matched },
+                children: vec!()
+            }),
+        
+        Composite(CompositeResult{ matched: None, components }) => {
+            let mut f = find_best_failure(text, components);
+            f.context.push(Context{
+                tag: root_ast_tag,
+                text: text
+            });
+            Err(f)
+        },
+        
+        Leaf(LeafResult{matched, then: Some(unexpected)}) =>
+            Err(ParseFailed{
+                at: all_of(text).after(matched),
+                why: unexpected.clone(),
+                context: vec!()
+            })
+    }
+}
+// pre: components.last succeeded
+fn get_component_asts<'text, 'parser>(
+    components: &Vec< (Goal<'text, 'parser>, ParseResult<'text, 'parser>) >
+)
+    -> Vec<AST<'text>>
+{
+    // go through components and convert each to AST(s) ignoring failed components
+    components.iter().filter_map(
+        |ref component| {
+            match component {
+                // comp ok, not tagged -> all of childrens asts
+                // comp ok, tagged -> add node with tag and child asts
+                (Goal{parser, ..},
+                 Composite(CompositeResult{
+                     matched: Some(matched),
+                     components
+                 })) => {
+                    let child_asts = get_component_asts(components);
+                    match parser.tag() {
+                        None => Some(child_asts),
+                        Some(tag) =>
+                            Some(vec!(AST::<'text>{
+                                value: ast::Item::<'text>{ tag, text: matched },
+                                children: child_asts
+                            }))
+                    }
+                },
+                // comp fail -> ignore
+                // leaf -> ignore (it is implicitly untagged and has no children
+                (Goal{..},
+                 Composite(CompositeResult{ matched: None, .. })) |
+                (Goal{..}, Leaf(LeafResult{ matched: _, then: Some(_)})) |
+                (Goal{..}, Leaf(LeafResult{ matched: _, then: None})) =>
+                    None
+            }
+        }).collect::<Vec<Vec<AST<'text>>>>().concat()
+}
+// pre: components.last failed
+fn find_best_failure<'text, 'parser>(
+    text: &'text str,
+    components: &Vec< (Goal<'text, 'parser>, ParseResult<'text, 'parser>) >
+)
+    -> ParseFailed<'text>
+{
+    let mut result = match components.last().unwrap() {
+        (Goal{parser, text}, Composite(CompositeResult{ matched: None, components })) => {
+            let mut r = find_best_failure(text, &components);
+            match parser.tag() {
+                None => r,
+                Some(tag) => {
+                    r.context.push(Context{tag, text: text});
+                    r
+                }
+            }
+        },
+        (Goal{parser, text}, Leaf(LeafResult{ matched, then: Some(why) })) => 
+            ParseFailed{
+                at: all_of(text).up_to(matched),
+                why: why.clone(),
+                context: match parser.tag() {
+                    None => vec!(),
+                    Some(tag) => vec!(Context{tag, text: text})
+                }
+            },
+        (Goal{..}, Composite(CompositeResult{ matched: Some(_), .. })) |
+        (Goal{..}, Leaf(LeafResult{ matched: _, then: None })) =>
+            assert::never_reached("see pre: above")
+    };
+    components[0..components.len()-1].iter().for_each(|component| {
+        let f = match component {
+            (Goal{parser, text}, Composite(CompositeResult{ matched: None, components })) => {
+                let mut r = find_best_failure(text, &components);
+                match parser.tag() {
+                    None => r,
+                    Some(tag) => {
+                        r.context.push(Context{tag, text: text});
+                        r
+                    }
+                }
+            },
+            (Goal{parser, text}, Leaf(LeafResult{ matched, then: Some(unexpected) })) =>
+                ParseFailed {
+                    at: all_of(text).up_to(matched),
+                    why: unexpected.clone(),
+                    context: match parser.tag() {
+                        None => vec!(),
+                        Some(tag) => vec!(Context{tag,text: text})
+                    }
+                },
+            (Goal{..}, Composite(CompositeResult{ matched: Some(_matched), .. })) |
+            (Goal{..}, Leaf(LeafResult{ matched: _matched, then: None })) =>
+                assert::never_reached("see pre: above")
+        };
+        if all_of(text).up_to(f.at).len() > all_of(text).up_to(result.at).len() {
+            result = f;
+        }
+    });
+    result
+}
+
 pub type Cache<'text, 'parser> = HashMap<usize, ParseResult<'text, 'parser> >;
 
 pub trait Parser
@@ -124,6 +279,10 @@ pub trait Parser
                 v
             }
         }
+    }
+    fn tag(&self) -> Option<&'static str>
+    {
+        None
     }
 }
 

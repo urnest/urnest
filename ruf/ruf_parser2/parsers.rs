@@ -2,8 +2,9 @@
 
 extern crate ruf_assert;
 
-use ruf_assert as assert;
 use std::ops::Deref;
+
+use crate::all_of::all_of;
 
 pub struct And<'parser>
 {
@@ -238,6 +239,10 @@ pub struct Tagged<'parser> {
 }
 impl<'parser> crate::Parser for Tagged<'parser>
 {
+    fn tag(&self) -> Option<&'static str>
+    {
+        Some(self.tag)
+    }
     fn parse_some_of_<'text, 'parser_ref>(
         self: &'parser_ref Self,
         text: &'text str,
@@ -275,33 +280,5 @@ impl<'parser> crate::Parser for Tagged<'parser>
                         components: vec!(
                             (crate::Goal{parser: self.content.deref(), text: text}, result),)}),
         }
-    }
-}
-
-// make some common slicing patterns a bit clearer, e.g.
-//   all_of(x).after(y)  for x[y.len()..]
-//   all_of(x).up_to(y)  for x[..y.len()]
-fn all_of<'x>(x: &'x str) -> AllOf<'x>{ AllOf {x:x} }
-
-struct AllOf<'x>
-{
-    x: &'x str
-}
-
-impl<'x> AllOf<'x>
-{
-    // return remainder of self after removing leading y
-    fn after(&self, y: &str) -> &'x str
-    {
-        assert::equal(&self.x.as_ptr(), &y.as_ptr());
-        assert::less_equal(&y.len(), &self.x.len());
-        return &self.x[y.len()..];
-    }
-    // return self up to trailing y
-    fn up_to(&self, y: &str) -> &'x str
-    {
-        assert::less_equal(&y.len(), &self.x.len());
-        assert::less_equal(&self.x.as_ptr(), &y.as_ptr());
-        return &self.x[0..self.x.len()-y.len()]
     }
 }

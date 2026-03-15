@@ -12,6 +12,7 @@ extern crate ruf_parser2;
 extern crate ruf_assert;
 
 use ruf_parser2::{
+    AST,
     ParseResult,
     LeafResult,
     CompositeResult,
@@ -20,23 +21,41 @@ use ruf_parser2::{
     literal,
     tagged,
     end_of_input,
+    get_ast,
+    ParseFailed,
 };
+use ruf_parser2::ast::Item;
+use ruf_parser2::all_of::all_of;
+
 use ruf_assert as assert;
 
 fn main() {
+    let root="root";
+
     // end_of_input
     let x = "";
-    assert::equal(&end_of_input().parse(&x),
+    let p = end_of_input();
+    let r = p.parse(&x);
+    assert::equal(&r,
                   &ParseResult::Leaf(LeafResult{
                       matched: &x,
                       then: None,  // success (end of input)
                   }));
-
+    assert::equal(&get_ast(&x, &r, root),
+                  &Ok(AST{ value:Item{ tag: root, text: &x }, children: vec!()}));
+    
     let x = "left over";
-    assert::equal(&end_of_input().parse(&x),
+    let r = p.parse(&x);
+    assert::equal(&r,
                   &ParseResult::Leaf(LeafResult{
                       matched: &x[0..0],
                       then: Some(Unexpected::Char),  // not at end of input!
+                  }));
+    assert::equal(&get_ast(&x, &r, root),
+                  &Err(ParseFailed{
+                      at: all_of(x).after(&x[..0]),
+                      why: Unexpected::Char,
+                      context: vec!()
                   }));
 
     // literal
