@@ -466,6 +466,12 @@ pub fn digit() -> Ref<'static>
     Ref::new(parsers::Digit{})
 }
 
+// at least one x
+pub fn at_least_one<'parser>(x: Ref<'parser>) -> Ref<'parser>{Ref::new(parsers::AtLeastOne{x: x.x})}
+
+// zero or more x
+pub fn zero_or_more<'parser>(x: Ref<'parser>) -> Ref<'parser>{Ref::new(parsers::ZeroOrMore{x: x.x})}
+
 // CharSet is any string but a-f anywhere in the string is interpreted as abcdef, note
 //   f-a (anywhere in the string) just means the three characters f, - and a
 //   f-f (anywhere in the string) just means f

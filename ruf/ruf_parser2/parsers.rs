@@ -390,3 +390,132 @@ impl crate::Parser for Char
         }
     }
 }
+
+pub struct AtLeastOne<'x>
+{
+    pub x: std::sync::Arc<dyn crate::Parser+Send+Sync+'x>,
+}
+
+impl<'parser> crate::Parser for AtLeastOne<'parser>
+{
+    fn parse_some_of_<'text, 'parser_ref>(
+        self: &'parser_ref Self,
+        text: &'text str,
+        cache: &mut [crate::Cache<'text, 'parser_ref>]
+    ) -> crate::Outcome<'text, 'parser_ref>
+    where 'text: 'parser_ref
+    {
+        let result = self.x.parse_some_of(text, cache);
+            match result {
+                crate::Outcome::Leaf{
+                    matched: _,
+                    then: Some(_)
+                } |
+                crate::Outcome::Composite{
+                    matched: None,
+                    components: _
+                } =>
+                    crate::Outcome::Composite{
+                        matched: None,
+                        components: vec!(
+                            (crate::Goal{parser: self.x.deref(), text: text}, result),)},
+
+                crate::Outcome::Leaf{
+                    matched,
+                    then: None
+                } |
+                crate::Outcome::Composite{
+                    matched: Some(matched),
+                    components: _
+                } => {
+                    let mut components = vec!(
+                        (crate::Goal{parser: self.x.deref(), text: text}, result) );
+                    let mut rest: &str = all_of(text).after(matched);
+                    let mut cache = &mut cache[matched.len()..];
+                    loop {
+                        let result = self.x.parse_some_of(rest, cache);
+                        match result {
+                            crate::Outcome::Leaf{
+                                matched: _,
+                                then: Some(_)
+                            } |
+                            crate::Outcome::Composite{
+                                matched: None,
+                                components: _
+                            } =>
+                                return crate::Outcome::Composite{
+                                    matched: Some(all_of(text).up_to(rest)),
+                                    components: components
+                                },
+                            
+                            crate::Outcome::Leaf{
+                                matched,
+                                then: None
+                            } |
+                            crate::Outcome::Composite{
+                                matched: Some(matched),
+                                components: _
+                            } => {
+                                components.push(
+                                    (crate::Goal{parser: self.x.deref(), text: rest}, result) );
+                                rest = all_of(rest).after(matched);
+                                cache = &mut cache[matched.len()..];
+                            }
+                        }
+                    }
+                }
+            }
+    }
+}
+
+pub struct ZeroOrMore<'x>
+{
+    pub x: std::sync::Arc<dyn crate::Parser+Send+Sync+'x>,
+}
+
+impl<'parser> crate::Parser for ZeroOrMore<'parser>
+{
+    fn parse_some_of_<'text, 'parser_ref>(
+        self: &'parser_ref Self,
+        text: &'text str,
+        cache: &mut [crate::Cache<'text, 'parser_ref>]
+    ) -> crate::Outcome<'text, 'parser_ref>
+    where 'text: 'parser_ref
+    {
+        let mut components = vec!();
+        let mut rest = text;
+        let mut cache = cache;
+        loop {
+            let result = self.x.parse_some_of(rest, cache);
+            match result {
+                crate::Outcome::Leaf{
+                    matched: _,
+                    then: Some(_)
+                } |
+                crate::Outcome::Composite{
+                    matched: None,
+                    components: _
+                } =>
+                    return crate::Outcome::Composite{
+                        matched: Some(all_of(text).up_to(rest)),
+                        components: components
+                    },
+                
+                crate::Outcome::Leaf{
+                    matched,
+                    then: None
+                } |
+                crate::Outcome::Composite{
+                    matched: Some(matched),
+                    components: _
+                } => {
+                    components.push(
+                        (crate::Goal{parser: self.x.deref(), text: rest}, result) );
+                    rest = all_of(rest).after(matched);
+                    cache = &mut cache[matched.len()..];
+                }
+            }
+        }
+    }
+}
+
