@@ -26,6 +26,8 @@ use ruf_parser2::{
     Context,
     any_char,
     digit,
+    at_least_one,
+    zero_or_more,
 };
 use ruf_parser2::ast::Item;
 use ruf_parser2::all_of::all_of;
@@ -625,4 +627,106 @@ fn main() {
             matched: &x[0..0],
             then: Some(Unexpected::EndOfInput)
         }});
+
+
+    // at_least_one
+    let x = "1234a";
+    let p1 = digit();
+    let p = at_least_one(p1.clone());
+    let r = p.parse(x);
+    assert::equal(&r, &Parsed {
+        goal: Goal{ parser: &*p, text: &x },
+        outcome: Outcome::Composite{
+            matched: Some(&x[0..4]),
+            components: vec!(
+                (Goal{parser: &*p1, text: x},
+                 Outcome::Leaf{
+                     matched: &x[0..1],
+                     then: None}),
+                (Goal{parser: &*p1, text: &x[1..]},
+                 Outcome::Leaf{
+                     matched: &x[1..2],
+                     then: None}),
+                (Goal{parser: &*p1, text: &x[2..]},
+                 Outcome::Leaf{
+                     matched: &x[2..3],
+                     then: None}),
+                (Goal{parser: &*p1, text: &x[3..]},
+                 Outcome::Leaf{
+                     matched: &x[3..4],
+                     then: None}),
+            )}});
+    
+    let x = "a";
+    let r = p.parse(x);
+    assert::equal(&r, &Parsed {
+        goal: Goal{ parser: &*p, text: &x },
+        outcome: Outcome::Composite{
+            matched: None,
+            components: vec!(
+                (Goal{parser: &*p1, text: x},
+                 Outcome::Leaf{
+                     matched: &x[0..0],
+                     then: Some(Unexpected::Char)}),
+            )}});
+    
+    let x = "";
+    let r = p.parse(x);
+    assert::equal(&r, &Parsed {
+        goal: Goal{ parser: &*p, text: &x },
+        outcome: Outcome::Composite{
+            matched: None,
+            components: vec!(
+                (Goal{parser: &*p1, text: x},
+                 Outcome::Leaf{
+                     matched: &x[0..0],
+                     then: Some(Unexpected::EndOfInput)}),
+            )}});
+    
+    // zero_or_more
+    let x = "1234a";
+    let p1 = digit();
+    let p = zero_or_more(p1.clone());
+    let r = p.parse(x);
+    assert::equal(&r, &Parsed {
+        goal: Goal{ parser: &*p, text: &x },
+        outcome: Outcome::Composite{
+            matched: Some(&x[0..4]),
+            components: vec!(
+                (Goal{parser: &*p1, text: x},
+                 Outcome::Leaf{
+                     matched: &x[0..1],
+                     then: None}),
+                (Goal{parser: &*p1, text: &x[1..]},
+                 Outcome::Leaf{
+                     matched: &x[1..2],
+                     then: None}),
+                (Goal{parser: &*p1, text: &x[2..]},
+                 Outcome::Leaf{
+                     matched: &x[2..3],
+                     then: None}),
+                (Goal{parser: &*p1, text: &x[3..]},
+                 Outcome::Leaf{
+                     matched: &x[3..4],
+                     then: None}),
+            )}});
+    
+    let x = "a";
+    let r = p.parse(x);
+    assert::equal(&r, &Parsed {
+        goal: Goal{ parser: &*p, text: &x },
+        outcome: Outcome::Composite{
+            matched: Some(&x[0..0]),
+            components: vec!(
+            )}});
+    
+    let x = "";
+    let r = p.parse(x);
+    assert::equal(&r, &Parsed {
+        goal: Goal{ parser: &*p, text: &x },
+        outcome: Outcome::Composite{
+            matched: Some(&x[0..0]),
+            components: vec!(
+            )}});
+
 }
