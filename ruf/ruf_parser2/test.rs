@@ -16,18 +16,73 @@ use ruf_parser2::{
     Outcome,
     Unexpected,
     Goal,
+    none,
+    char,
     literal,
     tagged,
     end_of_input,
     ParseFailed,
     Parsed,
     Context,
+    any_char,
+    digit,
 };
 use ruf_parser2::ast::Item;
 use ruf_parser2::all_of::all_of;
 use ruf_assert as assert;
 
+/*
+fn tutorial() {
+    // build a parser like a grammar, marking interesting bits via tagged()
+    // parser; tags are always 'static
+
+    // example:
+    let some_text = "Fred Jones has red eyes and is left handed and right footed.";
+    // interested in ^^^^^^^^^^     ^^^             ^^^^
+
+    // tags for the interesting bits:
+    let full_name = "full name";
+    let first_name = "first name";
+    let last_name = "last name";
+    let eye_colour = "eye colour";
+    let handedness = "handedness";
+    let left_handed = "lefty";
+    let right_handedness = "righty";
+
+    let left = "left";
+    let right = "right";
+    let parse_left = tagged(left, literal(left));
+    let parse_right = tagged(right, literal(right));
+    let ws = whitespace();
+    let parser =
+        tagged(full_name, // nesting makes it easier to search unambiguously
+               tagged(first_name, parse_until(ws)) + ws +
+               tagged(last_name, parse_until(ws))) + ws +
+        tagged(eye_colour, parse_until(ws)) + ws +
+        literal("eyes and is") + ws +
+        tagged(handedness, parse_left | parse_right) +
+        literal(" handed and ") + ws +
+        (parse_left | parse_right) + ws +
+        literal("footed.")+end_of_input();
+
+    // parsing into an tagged tree is two stages:
+    // - parse, which produces a tree of all parser outcomes, including failures
+    // - extracting tagged tree, which has one node for each successful tagged()
+    //   ... or has summary of the "best" match in case parsing failed.
+    // if we're only interested in the final tree, combine the two stages:
+    let ast = parser.parse(some_text).get_ast();
+
+    // REVISIT: then can pull the relevant info out of the tree:
+    
+}
+ */
+
 fn main() {
+    //turorial();
+
+    // below are test cases... not as easy to read as tutorial but
+    // comprehensive.
+    
     let root="root";
     
     // end_of_input
@@ -61,6 +116,61 @@ fn main() {
                       why: Unexpected::Char,
                       context: vec!(Context{tag: root, text: &x})
                   }));
+    
+    // none
+    let x = "f";
+    let p = none();
+    let r = p.parse(x);
+    assert::equal(&r, &Parsed {
+        goal: Goal{ parser: &*p, text: &x },
+        outcome: Outcome::Leaf{
+            matched: &x[0..0],
+            then: None
+        }});
+    assert::equal(&r.get_ast(root),
+                  &Ok(AST{ value:Item{ tag: root, text: &x[0..0] }, children: vec!()}));
+    
+    let x = "";
+    let r = p.parse(x);
+    assert::equal(&r, &Parsed {
+        goal: Goal{ parser: &*p, text: &x },
+        outcome: Outcome::Leaf{
+            matched: &x[0..0],
+            then: None
+        }});
+    assert::equal(&r.get_ast(root),
+                  &Ok(AST{ value:Item{ tag: root, text: &x[0..0] }, children: vec!()}));
+
+
+    // char
+    let x = "fr";
+    let p = char('f');
+    let r = p.parse(x);
+    assert::equal(&r, &Parsed {
+        goal: Goal{ parser: &*p, text: &x },
+        outcome: Outcome::Leaf{
+            matched: &x[0..1],
+            then: None
+        }});
+    
+    let x = "gr";
+    let r = p.parse(x);
+    assert::equal(&r, &Parsed {
+        goal: Goal{ parser: &*p, text: &x },
+        outcome: Outcome::Leaf{
+            matched: &x[0..0],
+            then: Some(Unexpected::Char)
+        }
+    });
+    
+    let x = "";
+    let r = p.parse(x);
+    assert::equal(&r, &Parsed {
+        goal: Goal{ parser: &*p, text: &x },
+        outcome: Outcome::Leaf{
+            matched: &x[0..0],
+            then: Some(Unexpected::EndOfInput)
+        }});
     
     // literal
     let x = "freddy was very good";
@@ -453,4 +563,66 @@ fn main() {
                                     Context{tag: tag4, text: &x},
                                     Context{tag: root, text: &x})
                   }));
+
+    // any_char
+    let x = "fr";
+    let p = any_char();
+    let r = p.parse(x);
+    assert::equal(&r, &Parsed {
+        goal: Goal{ parser: &*p, text: &x },
+        outcome: Outcome::Leaf{
+            matched: &x[0..1],
+            then: None
+        }});
+    
+    let x = "\n";
+    let p = any_char();
+    let r = p.parse(x);
+    assert::equal(&r, &Parsed {
+        goal: Goal{ parser: &*p, text: &x },
+        outcome: Outcome::Leaf{
+            matched: &x[0..1],
+            then: None
+        }});
+    
+    let x = "";
+    let r = p.parse(x);
+    assert::equal(&r, &Parsed {
+        goal: Goal{ parser: &*p, text: &x },
+        outcome: Outcome::Leaf{
+            matched: &x[0..0],
+            then: Some(Unexpected::EndOfInput)
+        }});
+    
+    // digit
+    let x = "0123456789";
+    let p = digit();
+    for (i, _c) in x.chars().enumerate() {
+        let test_str = &x[i..];
+        let r = p.parse(test_str);
+        assert::equal(&r, &Parsed {
+            goal: Goal{ parser: &*p, text: &test_str },
+            outcome: Outcome::Leaf{
+                matched: &test_str[0..1],
+                then: None
+            }});
+    }
+    
+    let x = "A34";
+    let r = p.parse(x);
+    assert::equal(&r, &Parsed {
+        goal: Goal{ parser: &*p, text: &x },
+        outcome: Outcome::Leaf{
+            matched: &x[0..0],
+            then: Some(Unexpected::Char)
+        }});
+    
+    let x = "";
+    let r = p.parse(x);
+    assert::equal(&r, &Parsed {
+        goal: Goal{ parser: &*p, text: &x },
+        outcome: Outcome::Leaf{
+            matched: &x[0..0],
+            then: Some(Unexpected::EndOfInput)
+        }});
 }

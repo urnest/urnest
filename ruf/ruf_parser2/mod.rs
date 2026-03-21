@@ -16,6 +16,7 @@ use std::collections::HashMap;
 
 use ruf_assert as assert;
 use ruf_tree as tree;
+use ruf_newtype as newtype;
 
 pub mod ast;
 pub mod all_of;
@@ -25,7 +26,7 @@ use all_of::all_of;
 // parse some of text {text} with parser {p}
 //
 // This is the primary parsing interface. It is also available via
-// Ref.parse method. See test.mod for examples of use.
+// Ref.parse method. See test.mod tutorial() for overview of use.
 //
 // Note that where the parse succeeds, the left over text is implied
 // by what was matched, either result.matched (where p is a LeafParser) or
@@ -426,6 +427,18 @@ impl<'parser> std::ops::BitOr for Ref<'parser> {
 
 // Stock parsers:
 
+// always matches, consumes nothing
+pub fn none() -> Ref<'static>
+{
+    Ref::new(parsers::None{})
+}
+
+// parses c, literally
+pub fn char(c: char) -> Ref<'static>
+{
+    Ref::new(parsers::Char{x: c})
+}
+
 // parses x, literally
 pub fn literal(x: &'static str) -> Ref<'static>
 {
@@ -443,3 +456,20 @@ pub fn tagged<'parser>(tag: &'static str, content: Ref<'parser>) -> Ref<'parser>
 {
     Ref::new(parsers::Tagged{ tag: tag, content: content.x })
 }
+
+// any character
+pub fn any_char() -> Ref<'static> { Ref::new(parsers::AnyChar{}) }
+
+// 0..9
+pub fn digit() -> Ref<'static>
+{
+    Ref::new(parsers::Digit{})
+}
+
+// CharSet is any string but a-f anywhere in the string is interpreted as abcdef, note
+//   f-a (anywhere in the string) just means the three characters f, - and a
+//   f-f (anywhere in the string) just means f
+//   - at beginning or end of string just means the - character
+pub struct CharSet_; impl newtype::Tag for CharSet_ { type BaseType = &'static str;}
+pub type CharSet = newtype::T<CharSet_>;
+

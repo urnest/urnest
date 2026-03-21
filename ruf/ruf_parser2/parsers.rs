@@ -155,6 +155,24 @@ impl<'or> crate::Parser for Or<'or>
     }
 }
 
+pub struct None {}
+
+impl crate::Parser for None
+{
+    fn parse_some_of_<'text, 'parser_ref>(
+        self: &'parser_ref Self,
+        text: &'text str,
+        _cache: &mut [crate::Cache<'text, 'parser_ref>]
+    ) -> crate::Outcome<'text, 'parser_ref>
+    where 'text: 'parser_ref
+    {
+        crate::Outcome::Leaf{
+            matched: &text[0..0],
+            then: None
+        }
+    }
+}
+
 pub struct Literal<'parser> {
     pub x: &'parser str
 }
@@ -271,6 +289,104 @@ impl<'parser> crate::Parser for Tagged<'parser>
                     matched: None,
                     components: vec!(
                         (crate::Goal{parser: self.content.deref(), text: text}, result),)},
+        }
+    }
+}
+
+
+pub struct AnyChar {}
+impl crate::Parser for AnyChar
+{
+    fn parse_some_of_<'text, 'parser_ref>(
+        self: &'parser_ref Self,
+        text: &'text str,
+        _cache: &mut [crate::Cache<'text, 'parser_ref>]
+    ) -> crate::Outcome<'text, 'parser_ref>
+    where 'text: 'parser_ref
+    {
+        match text.chars().next() {
+            Some(_c) => {
+                return crate::Outcome::Leaf{
+                    matched: &text[0..1],
+                    then: None
+                };
+            },
+            None => {
+                crate::Outcome::Leaf{
+                    matched: &text[0..0],
+                    then: Some(crate::Unexpected::EndOfInput)
+                }
+            }
+        }
+    }
+}
+
+pub struct Digit {}
+
+impl crate::Parser for Digit
+{
+    fn parse_some_of_<'text, 'parser_ref>(
+        self: &'parser_ref Self,
+        text: &'text str,
+        _cache: &mut [crate::Cache<'text, 'parser_ref>]
+    ) -> crate::Outcome<'text, 'parser_ref>
+    where 'text: 'parser_ref
+    {
+        match text.chars().next() {
+            Some(c) => {
+                if '0' <= c && c <= '9' {
+                    return crate::Outcome::Leaf{
+                        matched: &text[0..1],
+                        then: None
+                    };
+                }
+                crate::Outcome::Leaf{
+                    matched: &text[0..0],
+                    then: Some(crate::Unexpected::Char)
+                }
+            },
+            None => {
+                crate::Outcome::Leaf{
+                    matched: &text[0..0],
+                    then: Some(crate::Unexpected::EndOfInput)
+                }
+            }
+        }
+    }
+}
+
+pub struct Char {
+    pub x: char
+}
+
+impl crate::Parser for Char
+{
+    fn parse_some_of_<'text, 'parser_ref>(
+        self: &'parser_ref Self,
+        text: &'text str,
+        _cache: &mut [crate::Cache<'text, 'parser_ref>]
+    ) -> crate::Outcome<'text, 'parser_ref>
+    where 'text: 'parser_ref
+    {
+        match text.chars().next() {
+            Some(c) => {
+                if c == self.x {
+                    return crate::Outcome::Leaf{
+                        matched: &text[0..1],
+                        then: None
+                    };
+                }
+                crate::Outcome::Leaf{
+                    matched: &text[0..0],
+                    then: Some(crate::Unexpected::Char)
+                }
+            },
+            None => {
+                crate::Outcome::Leaf{
+                    matched: &text[0..0],
+                    then: Some(crate::Unexpected::EndOfInput)
+                }
+            }
         }
     }
 }
