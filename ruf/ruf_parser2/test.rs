@@ -28,6 +28,8 @@ use ruf_parser2::{
     digit,
     at_least_one,
     zero_or_more,
+    CharSet,
+    one_of_chars,
 };
 use ruf_parser2::ast::Item;
 use ruf_parser2::all_of::all_of;
@@ -729,4 +731,86 @@ fn main() {
             components: vec!(
             )}});
 
+    // one_of_chars
+    let x = "axy";
+    let p = one_of_chars(CharSet{ value: "a-z0-9_-" });
+    let r = p.parse(x);
+    assert::equal(&r, &Parsed {
+        goal: Goal{ parser: &*p, text: &x },
+        outcome: Outcome::Leaf{
+            matched: &x[0..1],
+            then: None
+        }});
+    
+    let x = "!";
+    let r = p.parse(x);
+    assert::equal(&r, &Parsed {
+        goal: Goal{ parser: &*p, text: &x },
+        outcome: Outcome::Leaf{
+            matched: &x[0..0],
+            then: Some(Unexpected::Char)
+        }});
+    
+    let p = one_of_chars(CharSet{ value: "f-a" });
+    for c in "af-".chars() {
+        let a = format!("{c}x", c=c);
+        let x = a.as_str();
+        let r = p.parse(x);
+        assert::equal(&r, &Parsed {
+            goal: Goal{ parser: &*p, text: &x },
+            outcome: Outcome::Leaf{
+                matched: &x[0..1],
+                then: None
+            }});
+    }
+    let x = "b";
+    let r = p.parse(x);
+    assert::equal(&r, &Parsed {
+        goal: Goal{ parser: &*p, text: &x },
+        outcome: Outcome::Leaf{
+            matched: &x[0..0],
+            then: Some(Unexpected::Char)
+        }});
+    
+    let p = one_of_chars(CharSet{ value: "-af" });
+    for c in "af-".chars() {
+        let a = format!("{c}x", c=c);
+        let x = a.as_str();
+        let r = p.parse(x);
+        assert::equal(&r, &Parsed {
+            goal: Goal{ parser: &*p, text: &x },
+            outcome: Outcome::Leaf{
+                matched: &x[0..1],
+                then: None
+            }});
+    }
+    let x = "b";
+    let r = p.parse(x);
+    assert::equal(&r, &Parsed {
+        goal: Goal{ parser: &*p, text: &x },
+        outcome: Outcome::Leaf{
+            matched: &x[0..0],
+            then: Some(Unexpected::Char)
+        }});
+    
+    let p = one_of_chars(CharSet{ value: "af-" });
+    for c in "af-".chars() {
+        let a = format!("{c}x", c=c);
+        let x = a.as_str();
+        let r = p.parse(x);
+        assert::equal(&r, &Parsed {
+            goal: Goal{ parser: &*p, text: &x },
+            outcome: Outcome::Leaf{
+                matched: &x[0..1],
+                then: None
+            }});
+    }
+    let x = "b";
+    let r = p.parse(x);
+    assert::equal(&r, &Parsed {
+        goal: Goal{ parser: &*p, text: &x },
+        outcome: Outcome::Leaf{
+            matched: &x[0..0],
+            then: Some(Unexpected::Char)
+        }});
 }

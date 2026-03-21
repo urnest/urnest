@@ -1,7 +1,7 @@
 * parser:
 
   - primitives from hcp::parser:
-    none
+    x none
     listOf(open, x, sep, term)
     match
     maybe nonEmptyListOf(x, moreflag)
@@ -15,8 +15,8 @@
     x tagged
      optional
      PR parseAnyChar() throw();
- at_least_one
- zero_or_more
+ x at_least_one
+ x zero_or_more
 * one_of_chars like PR parseOneOfChars(hcp::Chars const& chars) throw();
 * any_char_except like PR parseAnyCharExcept(hcp::Chars const& chars) throw();
  parse_x_until_y PR parseUntil(PR const match, PR const until) throw();

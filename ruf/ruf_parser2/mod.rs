@@ -479,3 +479,8 @@ pub fn zero_or_more<'parser>(x: Ref<'parser>) -> Ref<'parser>{Ref::new(parsers::
 pub struct CharSet_; impl newtype::Tag for CharSet_ { type BaseType = &'static str;}
 pub type CharSet = newtype::T<CharSet_>;
 
+pub fn one_of_chars(chars: CharSet) -> Ref<'static>
+{
+    let s = parsers::parse_charset(&chars);
+    Ref::new(parsers::OneOfChars{ pattern: chars, chars: s })
+}

@@ -519,3 +519,81 @@ impl<'parser> crate::Parser for ZeroOrMore<'parser>
     }
 }
 
+
+pub fn parse_charset(chars: &crate::CharSet) -> std::collections::HashSet<char>
+{
+    let c1 = "c1";
+    let c2 = "c2";
+    let c = "c";
+    let range = "range";
+    let parser = crate::zero_or_more(
+        crate::tagged(range,
+                      crate::tagged(c1, crate::any_char()) +
+                      crate::char('-') +
+                      crate::tagged(c2, crate::any_char()) ) |
+        crate::tagged(c, crate::any_char())) + crate::end_of_input();
+    let x = parser.parse(chars.value).get_ast("root");
+    match x {
+        Ok(ast) => {
+            let mut result = std::collections::HashSet::new();
+            ast.select_by_value(&|v| v.tag == range).iter().for_each(
+                |range_ast| {
+                    let c1 = range_ast.select_by_value(&|v| v.tag == c1).iter().next()
+                        .unwrap().value.text.chars().next().unwrap();
+                    let c2 = range_ast.select_by_value(&|v| v.tag == c2).iter().next()
+                        .unwrap().value.text.chars().next().unwrap();
+                    if c1 <= c2 {
+                        for c in c1..=c2 { result.insert(c); }
+                        result.insert(c2);
+                    }
+                    else {
+                        result.insert(c1);
+                        result.insert('-');
+                        result.insert(c2);
+                    }
+                });
+            ast.select_by_value(&|v| v.tag == c).iter().for_each(
+                |ast| { result.insert(ast.value.text.chars().next().unwrap()); });
+            result
+        },
+        // cannot fail
+        Err(x) => { ruf_assert::never_reached(x); }
+    }
+}
+
+pub struct OneOfChars {
+    pub pattern: crate::CharSet,
+    pub chars: std::collections::HashSet<char>
+}
+
+impl crate::Parser for OneOfChars
+{
+    fn parse_some_of_<'text, 'parser_ref>(
+        self: &'parser_ref Self,
+        text: &'text str,
+        _cache: &mut [crate::Cache<'text, 'parser_ref>]
+    ) -> crate::Outcome<'text, 'parser_ref>
+    where 'text: 'parser_ref
+    {
+        match text.chars().next() {
+            Some(c) => {
+                if self.chars.contains(&c) {
+                    return crate::Outcome::Leaf{
+                        matched: &text[0..1],
+                        then: None
+                    };
+                }
+                crate::Outcome::Leaf{
+                    matched: &text[0..0],
+                    then: Some(crate::Unexpected::Char)
+                }
+            },
+            None => {
+                crate::Outcome::Leaf{
+                    matched: &text[0..0],
+                    then: Some(crate::Unexpected::EndOfInput)
+                }
+            }
+        }
+    }
+}
