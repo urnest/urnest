@@ -26,10 +26,27 @@ use ruf_parser2::{
     Context,
     any_char,
     digit,
+    octal_digit,
+    hex_digit,
     at_least_one,
     zero_or_more,
     CharSet,
     one_of_chars,
+    any_char_except,
+    CR, LF, CRLF,
+    cr, lf, crlf,
+    trailing_space,
+    some_inline_space,
+    any_inline_space,
+    rest_of_line_blank,
+    some_space,
+    any_space,
+    eat_white,
+    TRAILING_SPACE,
+    REST_OF_LINE_BLANK,
+    INLINE_SPACE,
+    WHITESPACE,
+    parse_x_until_y,
 };
 use ruf_parser2::ast::Item;
 use ruf_parser2::all_of::all_of;
@@ -631,6 +648,72 @@ fn main() {
         }});
 
 
+    // octal_digit
+    let x = "01234567";
+    let p = octal_digit();
+    for (i, _c) in x.chars().enumerate() {
+        let test_str = &x[i..];
+        let r = p.parse(test_str);
+        assert::equal(&r, &Parsed {
+            goal: Goal{ parser: &*p, text: &test_str },
+            outcome: Outcome::Leaf{
+                matched: &test_str[0..1],
+                then: None
+            }});
+    }
+    
+    let x = "8c";
+    let r = p.parse(x);
+    assert::equal(&r, &Parsed {
+        goal: Goal{ parser: &*p, text: &x },
+        outcome: Outcome::Leaf{
+            matched: &x[0..0],
+            then: Some(Unexpected::Char)
+        }});
+    
+    let x = "";
+    let r = p.parse(x);
+    assert::equal(&r, &Parsed {
+        goal: Goal{ parser: &*p, text: &x },
+        outcome: Outcome::Leaf{
+            matched: &x[0..0],
+            then: Some(Unexpected::EndOfInput)
+        }});
+
+
+    // hex_digit
+    let x = "0123456789abcdefABCDEF";
+    let p = hex_digit();
+    for (i, _c) in x.chars().enumerate() {
+        let test_str = &x[i..];
+        let r = p.parse(test_str);
+        assert::equal(&r, &Parsed {
+            goal: Goal{ parser: &*p, text: &test_str },
+            outcome: Outcome::Leaf{
+                matched: &test_str[0..1],
+                then: None
+            }});
+    }
+    
+    let x = "g4";
+    let r = p.parse(x);
+    assert::equal(&r, &Parsed {
+        goal: Goal{ parser: &*p, text: &x },
+        outcome: Outcome::Leaf{
+            matched: &x[0..0],
+            then: Some(Unexpected::Char)
+        }});
+    
+    let x = "";
+    let r = p.parse(x);
+    assert::equal(&r, &Parsed {
+        goal: Goal{ parser: &*p, text: &x },
+        outcome: Outcome::Leaf{
+            matched: &x[0..0],
+            then: Some(Unexpected::EndOfInput)
+        }});
+
+
     // at_least_one
     let x = "1234a";
     let p1 = digit();
@@ -813,4 +896,188 @@ fn main() {
             matched: &x[0..0],
             then: Some(Unexpected::Char)
         }});
+
+
+    // any_char_except
+    let x = "!xy";
+    let p = any_char_except(crate::CharSet{ value: "a-z0-9_-" });
+    let r = p.parse(x);
+    assert::equal(&r, &Parsed {
+        goal: Goal{ parser: &*p, text: &x },
+        outcome: Outcome::Leaf{
+            matched: &x[0..1],
+            then: None
+        }});
+    
+    let x = "a";
+    let r = p.parse(x);
+    assert::equal(&r, &Parsed {
+        goal: Goal{ parser: &*p, text: &x },
+        outcome: Outcome::Leaf{
+            matched: &x[0..0],
+            then: Some(Unexpected::Char)
+        }});
+    
+    let p = any_char_except(crate::CharSet{ value: "f-a" });
+    for c in "bce".chars() {
+        let a = format!("{c}x", c=c);
+        let x = a.as_str();
+        let r = p.parse(x);
+        assert::equal(&r, &Parsed {
+            goal: Goal{ parser: &*p, text: &x },
+            outcome: Outcome::Leaf{
+                matched: &x[0..1],
+                then: None
+            }});
+    }
+    for c in "af-".chars() {
+        let a = format!("{c}x", c=c);
+        let x = a.as_str();
+        let r = p.parse(x);
+        assert::equal(&r, &Parsed {
+            goal: Goal{ parser: &*p, text: &x },
+            outcome: Outcome::Leaf{
+                matched: &x[0..0],
+                then: Some(Unexpected::Char)
+            }});
+    }
+    
+    let p = any_char_except(crate::CharSet{ value: "-af" });
+    for c in "bce".chars() {
+        let a = format!("{c}x", c=c);
+        let x = a.as_str();
+        let r = p.parse(x);
+        assert::equal(&r, &Parsed {
+            goal: Goal{ parser: &*p, text: &x },
+            outcome: Outcome::Leaf{
+                matched: &x[0..1],
+                then: None
+            }});
+    }
+    for c in "af-".chars() {
+        let a = format!("{c}x", c=c);
+        let x = a.as_str();
+        let r = p.parse(x);
+        assert::equal(&r, &Parsed {
+            goal: Goal{ parser: &*p, text: &x },
+            outcome: Outcome::Leaf{
+                matched: &x[0..0],
+                then: Some(Unexpected::Char)
+            }});
+    }
+    
+    let p = any_char_except(crate::CharSet{ value: "af-" });
+    for c in "bce".chars() {
+        let a = format!("{c}x", c=c);
+        let x = a.as_str();
+        let r = p.parse(x);
+        assert::equal(&r, &Parsed {
+            goal: Goal{ parser: &*p, text: &x },
+            outcome: Outcome::Leaf{
+                matched: &x[0..1],
+                then: None
+            }});
+    }
+    for c in "af-".chars() {
+        let a = format!("{c}x", c=c);
+        let x = a.as_str();
+        let r = p.parse(x);
+        assert::equal(&r, &Parsed {
+            goal: Goal{ parser: &*p, text: &x },
+            outcome: Outcome::Leaf{
+                matched: &x[0..0],
+                then: Some(Unexpected::Char)
+            }});
+    }
+
+    // cr / lf / crlf
+    let x = "\r\n\r\n";
+    let p = cr() + lf() + crlf();
+    let r = p.parse(x);
+    assert::equal(&r.get_ast(root),
+                  &Ok(AST{ value:Item{ tag: root, text: &x[0..4] },
+                           children: vec!(
+                               AST{ value:Item{ tag: CR, text: &x[0..1] }, children: vec!() },
+                               AST{ value:Item{ tag: LF, text: &x[1..2] }, children: vec!() },
+                               AST{ value:Item{ tag: CRLF, text: &x[2..4] }, children: vec!() },
+                           )}));
+
+    // trailing_space, some_inline_space, any_inline_space, rest_of_line_blank,
+    // some_space, any_space, eat_white
+    let x = r###"
+{
+  "a": 1,
+  8: a 
+}
+"###;
+    let a = "a";
+    let p = trailing_space()+
+        any_inline_space()+char('{')+any_space()+
+        tagged(a,literal("\"a\""))+eat_white()+char(':')+some_space()+char('1')+any_space()+
+        char(',')+rest_of_line_blank()+
+        some_inline_space()+literal("8:")+any_inline_space()+char('a')+eat_white()+char('}')+trailing_space()+
+        end_of_input();
+    let r = p.parse(x);
+    assert::equal(
+        &r.get_ast(root),
+        &Ok(
+            AST{ value:Item{ tag: root, text: x },
+                 children: vec!(
+                     AST{ value:Item{ tag: TRAILING_SPACE, text: &x[0..1] }, children: vec!(
+                         AST{ value:Item{ tag: REST_OF_LINE_BLANK, text: &x[0..1] }, children: vec!(
+                             AST{ value:Item{ tag: INLINE_SPACE, text: &x[0..0] }, children: vec!()},
+                             AST{ value:Item{ tag: LF, text: &x[0..1] }, children: vec!()},
+                         )}
+                     )},
+                     AST{ value:Item{ tag: INLINE_SPACE, text: &x[1..1] }, children: vec!()},
+                     AST{ value:Item{ tag: WHITESPACE, text: &x[2..5] }, children: vec!()},
+                     AST{ value:Item{ tag: a, text: &x[5..8] }, children: vec!()}, // "a"
+                     AST{ value:Item{ tag: WHITESPACE, text: &x[9..10] }, children: vec!()},
+                     // 1
+                     AST{ value:Item{ tag: WHITESPACE, text: &x[11..11] }, children: vec!()},
+                     // ,
+                     AST{ value:Item{ tag: REST_OF_LINE_BLANK, text: &x[12..13] }, children: vec!(
+                             AST{ value:Item{ tag: INLINE_SPACE, text: &x[12..12] }, children: vec!()},
+                             AST{ value:Item{ tag: LF, text: &x[12..13] }, children: vec!()},
+                     )},
+                     AST{ value:Item{ tag: INLINE_SPACE, text: &x[13..15] }, children: vec!()},
+                     // 8:  [16..18]
+                     AST{ value:Item{ tag: INLINE_SPACE, text: &x[19..20] }, children: vec!()},
+                     // a + eat white + }
+                     AST{ value:Item{ tag: TRAILING_SPACE, text: &x[22..23] }, children: vec!(
+                         AST{ value:Item{ tag: REST_OF_LINE_BLANK, text: &x[22..23] }, children: vec!(
+                             AST{ value:Item{ tag: INLINE_SPACE, text: &x[22..22] }, children: vec!()},
+                             AST{ value:Item{ tag: LF, text: &x[22..23] }, children: vec!()},
+                         )}
+                     )})}));
+
+    let x = "y";
+    let p1 = char('x');
+    let p2 = char('y');
+    let p = parse_x_until_y(p1, p2);
+    let r = p.parse(x);
+    assert::equal(&r.get_ast(root), 
+        &Ok(
+            AST{ value:Item{ tag: root, text: x },
+                 children: vec!()
+            }));
+
+    let x = "xxxy";
+    let r = p.parse(x);
+    assert::equal(&r.get_ast(root), 
+        &Ok(
+            AST{ value:Item{ tag: root, text: x },
+                 children: vec!()
+            }));
+
+    let x = "xby";
+    let r = p.parse(x);
+    assert::equal(&r.get_ast(root), 
+                  &Err(
+                      ParseFailed{
+                          at: all_of(x).after(&x[0..1]),
+                          why: Unexpected::Char,
+                          context: vec!(Context{tag: root, text: &x})
+                      }));
+    
 }

@@ -2,7 +2,8 @@
 
   - primitives from hcp::parser:
     x none
-    listOf(open, x, sep, term)
+    listOf(open, x, sep, term) = (open + term) | (open + x + zero_or_more(sep + x) + term)
+      listOfWithTrailingSepAllowed  = (open + term) | (open + x + zero_or_more(sep + x) + optional(sep) + term)
     match
     maybe nonEmptyListOf(x, moreflag)
     maybe not?
@@ -13,26 +14,34 @@
     x literal
     x digit
     x tagged
-     optional
-     PR parseAnyChar() throw();
+x     optional
+x     PR parseAnyChar() throw();
  x at_least_one
  x zero_or_more
-* one_of_chars like PR parseOneOfChars(hcp::Chars const& chars) throw();
-* any_char_except like PR parseAnyCharExcept(hcp::Chars const& chars) throw();
- parse_x_until_y PR parseUntil(PR const match, PR const until) throw();
- whitespace_char like PR whitespaceChar() throw();
- PR digit() throw();
- PR octalDigit() throw();
- PR hexDigit() throw();
+ x one_of_chars like PR parseOneOfChars(hcp::Chars const& chars) throw();
+x any_char_except like PR parseAnyCharExcept(hcp::Chars const& chars) throw();
+x parse_x_until_y PR parseUntil(PR const match, PR const until) throw();
+x should that include y in return? nah
+~ whitespace_char like PR whitespaceChar() throw();
+/ PR octalDigit() throw();  one_of_chars()
+/ PR hexDigit() throw();  one_of_chars()
 ~ PR alpha() throw();
- PR cr() throw(); tagged(CR, literal("\r"));
- PR lf() throw();
- PR crlf() throw();
+/ PR cr() throw(); tagged(CR, literal("\r"));   tag all the whitespace elements
+/ PR lf() throw();
+/ PR crlf() throw();
  PR usAsciiPrintable() throw(); // 32-127 per US ASCII, ANSI X3.4-1986 (ISO 646)
- inline_space()
- blank_line()
- some_space()
- any_space()
+x some_inline_space()
+x any_inline_space()
+x blank_line()
+x some_space()
+x any_space()
+
+... optimise the pre-tagged, and digit etc to remove the
+2nd dyn lookup (copilot)
+... optimise whitespace that use CharSet, much smaller and quicker to use
+explicit match (copilot)
+... optimise hex_digit, octal_digit (make like digit)
+
 
 * tree:
 

@@ -466,6 +466,18 @@ pub fn digit() -> Ref<'static>
     Ref::new(parsers::Digit{})
 }
 
+// 0..7
+pub fn octal_digit() -> Ref<'static>
+{
+    one_of_chars(CharSet{ value: "0-7" })
+}
+
+// 0..9 a-f A-F
+pub fn hex_digit() -> Ref<'static>
+{
+    one_of_chars(CharSet{ value: "0-9a-fA-F" })
+}
+
 // at least one x
 pub fn at_least_one<'parser>(x: Ref<'parser>) -> Ref<'parser>{Ref::new(parsers::AtLeastOne{x: x.x})}
 
@@ -482,5 +494,102 @@ pub type CharSet = newtype::T<CharSet_>;
 pub fn one_of_chars(chars: CharSet) -> Ref<'static>
 {
     let s = parsers::parse_charset(&chars);
-    Ref::new(parsers::OneOfChars{ pattern: chars, chars: s })
+    Ref::new(parsers::OneOfChars{ chars: s })
+}
+
+pub fn any_char_except(chars: CharSet) -> Ref<'static>
+{
+    let s = parsers::parse_charset(&chars);
+    Ref::new(parsers::AnyCharExcept{ chars: s })
+}
+
+pub const CR: &str = "carriage-return (\\r)";
+
+// cr is tagged CR
+pub fn cr() -> Ref<'static>
+{
+    tagged(CR, char('\r'))
+}
+
+pub const LF: &str = "newline (\\n)";
+
+// LF is tagged LF
+pub fn lf() -> Ref<'static>
+{
+    tagged(LF, char('\n'))
+}
+
+pub const CRLF: &str = "\\r\\n";
+
+// crlf is tagged CRLF
+pub fn crlf() -> Ref<'static>
+{
+    tagged(CRLF, literal("\r\n"))
+}
+
+pub const INLINE_SPACE: &str = "inline whitspace";
+pub fn some_inline_space() -> Ref<'static>
+{
+    tagged(INLINE_SPACE,
+           at_least_one(one_of_chars(CharSet{ value: " \t" })))
+}
+pub fn any_inline_space() -> Ref<'static>
+{
+    tagged(INLINE_SPACE,
+           zero_or_more(one_of_chars(CharSet{ value: " \t" })))
+}
+
+pub const REST_OF_LINE_BLANK: &str = "rest of line blank";
+// - includes trailing [\r]\n
+// - does not match blanks at end of file (without trailing \n]
+pub fn rest_of_line_blank() -> Ref<'static>
+{
+    tagged(REST_OF_LINE_BLANK,
+           any_inline_space() + (crlf() | lf()))
+}
+
+pub const TRAILING_SPACE: &str = "trailing whitespace";
+// trailing whitespace to end of line + blank lines following
+// but excluding leading space of next non-blank line
+pub fn trailing_space() -> Ref<'static>
+{
+    tagged(TRAILING_SPACE,
+           rest_of_line_blank()+zero_or_more(rest_of_line_blank()))
+}
+
+pub const WHITESPACE: &str = "whitespace";
+// at least one whitespace char
+// - note this does not tag contained cr/lf
+pub fn some_space() -> Ref<'static>
+{
+    tagged(WHITESPACE,
+           at_least_one(one_of_chars(CharSet{ value: " \t\r\n"})))
+}
+// zero or more whitespace char
+// - note this does not tag contained cr/lf
+pub fn any_space() -> Ref<'static>
+{
+    tagged(WHITESPACE,
+           zero_or_more(one_of_chars(CharSet{ value: " \t\r\n"})))
+}
+
+// zero or more whitespace char, not tagged
+// - note this does not tag contained cr/lf
+pub fn eat_white() -> Ref<'static>
+{
+    zero_or_more(one_of_chars(CharSet{ value: " \t\r\n"}))
+}
+
+// parse all x (repeated) until y
+// - including just y without any x
+pub fn parse_x_until_y<'x, 'y, 'z>(x: Ref<'x>, y: Ref<'y>) -> Ref<'z>
+    where 'x: 'z, 'y: 'z
+{
+    zero_or_more(x) + y
+}
+
+// optionally x
+pub fn optional<'x>(x: Ref<'x>) -> Ref<'x>
+{
+    x | none()
 }

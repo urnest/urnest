@@ -562,7 +562,6 @@ pub fn parse_charset(chars: &crate::CharSet) -> std::collections::HashSet<char>
 }
 
 pub struct OneOfChars {
-    pub pattern: crate::CharSet,
     pub chars: std::collections::HashSet<char>
 }
 
@@ -586,6 +585,42 @@ impl crate::Parser for OneOfChars
                 crate::Outcome::Leaf{
                     matched: &text[0..0],
                     then: Some(crate::Unexpected::Char)
+                }
+            },
+            None => {
+                crate::Outcome::Leaf{
+                    matched: &text[0..0],
+                    then: Some(crate::Unexpected::EndOfInput)
+                }
+            }
+        }
+    }
+}
+
+pub struct AnyCharExcept {
+    pub chars: std::collections::HashSet<char>
+}
+
+impl crate::Parser for AnyCharExcept
+{
+    fn parse_some_of_<'text, 'parser_ref>(
+        self: &'parser_ref Self,
+        text: &'text str,
+        _cache: &mut [crate::Cache<'text, 'parser_ref>]
+    ) -> crate::Outcome<'text, 'parser_ref>
+    where 'text: 'parser_ref
+    {
+        match text.chars().next() {
+            Some(c) => {
+                if self.chars.contains(&c) {
+                    return crate::Outcome::Leaf{
+                        matched: &text[0..0],
+                        then: Some(crate::Unexpected::Char)
+                    };
+                }
+                crate::Outcome::Leaf{
+                    matched: &text[0..1],
+                    then: None
                 }
             },
             None => {
