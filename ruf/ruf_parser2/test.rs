@@ -48,6 +48,7 @@ use ruf_parser2::{
     WHITESPACE,
     parse_x_until_y,
     us_ascii_printable,
+    list_of,
 };
 
 use ruf_parser2::ast::Item;
@@ -1081,7 +1082,8 @@ fn main() {
                           why: Unexpected::Char,
                           context: vec!(Context{tag: root, text: &x})
                       }));
-    
+
+    // us_ascii_printable
     let x = " g~";
     let p = parse_x_until_y(us_ascii_printable(), end_of_input());
     let r = p.parse(x);
@@ -1090,4 +1092,28 @@ fn main() {
             AST{ value:Item{ tag: root, text: x },
                  children: vec!()
             }));
+
+    // list_of
+    let x = "{ a, b, c }";
+    let p = list_of(char('{')+eat_white(),
+                    one_of_chars(CharSet{ value: "abc" })+eat_white(),
+                    char(',')+eat_white(),
+                    char('}')+eat_white());
+    let r = p.parse(x);
+    assert::equal(&r.get_ast(root), 
+        &Ok(
+            AST{ value:Item{ tag: root, text: x },
+                 children: vec!()
+            }));
+    let x = "{ a, b,, }";
+    let r = p.parse(x);
+    assert::equal(&r.get_ast(root), 
+                  &Err(
+                      ParseFailed{
+                          at: all_of(x).after(&x[0..7]),
+                          why: Unexpected::Char,
+                          context: vec!(Context{tag: root, text: &x})
+                      }));
+            
+    
 }

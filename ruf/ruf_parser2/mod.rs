@@ -487,6 +487,11 @@ pub fn hex_digit() -> Ref<'static>
 pub fn at_least_one<'parser>(x: Ref<'parser>) -> Ref<'parser>{Ref::new(parsers::AtLeastOne{x: x.x})}
 
 // zero or more x
+// - use this with care, as it tends to result in errors that
+//   seem "too early", e.g. zero_or_more(a) + b will not include
+//   any partial a, like (zero_or_more(literal("fred"))+literal("end")).parse("freckle")
+//   will give error pointing to the start of freckle, when we would rather have error
+//   pointing after "fre"
 pub fn zero_or_more<'parser>(x: Ref<'parser>) -> Ref<'parser>{Ref::new(parsers::ZeroOrMore{x: x.x})}
 
 // CharSet is any string but a-f anywhere in the string is interpreted as abcdef, note
@@ -590,11 +595,24 @@ pub fn eat_white() -> Ref<'static>
 pub fn parse_x_until_y<'x, 'y, 'z>(x: Ref<'x>, y: Ref<'y>) -> Ref<'z>
     where 'x: 'z, 'y: 'z
 {
-    zero_or_more(x) + y
+    Ref::new(parsers::ParseXUntilY{x: x.x, y: y.x})
 }
 
 // optionally x
 pub fn optional<'x>(x: Ref<'x>) -> Ref<'x>
 {
     x | none()
+}
+
+// list comprising open, items separated by separator, close
+pub fn list_of<'open, 'item, 'sep, 'close, 'p>(
+    open: Ref<'open>,
+    item: Ref<'item>,
+    sep: Ref<'sep>,
+    close: Ref<'close>
+) -> Ref<'p>
+    where 'open: 'p, 'item: 'p, 'sep: 'p, 'close: 'p
+{
+    (open.clone() + close.clone()) |
+    (open + item.clone() + parse_x_until_y(sep + item, close))
 }
