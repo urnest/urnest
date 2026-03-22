@@ -2,15 +2,15 @@
 
   - primitives from hcp::parser:
     x none
-    listOf(open, x, sep, term) = (open + term) | (open + x + zero_or_more(sep + x) + term)
+    - listOf(open, x, sep, term) = (open + term) | (open + x + zero_or_more(sep + x) + term)
       listOfWithTrailingSepAllowed  = (open + term) | (open + x + zero_or_more(sep + x) + optional(sep) + term)
-    match
+    - match
     maybe nonEmptyListOf(x, moreflag)
     maybe not?
     maybe and/or &str
     maybe n_to_m (could use 0..3 * xx()?)
-    PR balanced(PR until, pairs, content) throw();
-  - prims from ruf_parser:
+    - PR balanced_content_until(balance_pairs, content, PR until) throw();
+  x prims from ruf_parser:
     x literal
     x digit
     x tagged
@@ -23,13 +23,13 @@ x any_char_except like PR parseAnyCharExcept(hcp::Chars const& chars) throw();
 x parse_x_until_y PR parseUntil(PR const match, PR const until) throw();
 x should that include y in return? nah
 ~ whitespace_char like PR whitespaceChar() throw();
-/ PR octalDigit() throw();  one_of_chars()
-/ PR hexDigit() throw();  one_of_chars()
+x PR octalDigit() throw();  one_of_chars()
+x PR hexDigit() throw();  one_of_chars()
 ~ PR alpha() throw();
-/ PR cr() throw(); tagged(CR, literal("\r"));   tag all the whitespace elements
-/ PR lf() throw();
-/ PR crlf() throw();
- PR usAsciiPrintable() throw(); // 32-127 per US ASCII, ANSI X3.4-1986 (ISO 646)
+x PR cr() throw(); tagged(CR, literal("\r"));   tag all the whitespace elements
+x PR lf() throw();
+x PR crlf() throw();
+x PR usAsciiPrintable() throw(); // 32-127 per US ASCII, ANSI X3.4-1986 (ISO 646)
 x some_inline_space()
 x any_inline_space()
 x blank_line()

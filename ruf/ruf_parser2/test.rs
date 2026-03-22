@@ -47,7 +47,9 @@ use ruf_parser2::{
     INLINE_SPACE,
     WHITESPACE,
     parse_x_until_y,
+    us_ascii_printable,
 };
+
 use ruf_parser2::ast::Item;
 use ruf_parser2::all_of::all_of;
 use ruf_assert as assert;
@@ -1080,4 +1082,12 @@ fn main() {
                           context: vec!(Context{tag: root, text: &x})
                       }));
     
+    let x = " g~";
+    let p = parse_x_until_y(us_ascii_printable(), end_of_input());
+    let r = p.parse(x);
+    assert::equal(&r.get_ast(root), 
+        &Ok(
+            AST{ value:Item{ tag: root, text: x },
+                 children: vec!()
+            }));
 }

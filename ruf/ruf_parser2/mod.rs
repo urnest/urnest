@@ -460,6 +460,11 @@ pub fn tagged<'parser>(tag: &'static str, content: Ref<'parser>) -> Ref<'parser>
 // any character
 pub fn any_char() -> Ref<'static> { Ref::new(parsers::AnyChar{}) }
 
+// US ASCII printable, 32-126 inclusive
+pub fn us_ascii_printable() -> Ref<'static> {
+    one_of_chars(CharSet{ value: " -~"})
+}
+
 // 0..9
 pub fn digit() -> Ref<'static>
 {
