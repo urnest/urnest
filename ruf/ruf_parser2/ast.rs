@@ -11,7 +11,7 @@ extern crate ruf_tree;
 
 use ruf_tree as tree;
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, Copy)]
 pub struct Item<'text>
 {
     pub tag: &'static str,

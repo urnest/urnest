@@ -7,9 +7,9 @@
     - match
     maybe nonEmptyListOf(x, moreflag)
     maybe not?
-    maybe and/or &str
+    * maybe and/or &str and show in tutorial
     maybe n_to_m (could use 0..3 * xx()?)
-    - PR balanced_content_until(balance_pairs, content, PR until) throw();
+    x PR balanced_content_until(balance_pairs, content, PR until) throw();
   x prims from ruf_parser:
     x literal
     x digit
@@ -35,6 +35,7 @@ x any_inline_space()
 x blank_line()
 x some_space()
 x any_space()
+- back ref (recursive)
 
 ... optimise the pre-tagged, and digit etc to remove the
 2nd dyn lookup (copilot)

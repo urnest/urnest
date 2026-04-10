@@ -592,6 +592,7 @@ pub fn eat_white() -> Ref<'static>
 
 // parse all x (repeated) until y
 // - including just y without any x
+// - note result does not consume y
 pub fn parse_x_until_y<'x, 'y, 'z>(x: Ref<'x>, y: Ref<'y>) -> Ref<'z>
     where 'x: 'z, 'y: 'z
 {
@@ -614,5 +615,15 @@ pub fn list_of<'open, 'item, 'sep, 'close, 'p>(
     where 'open: 'p, 'item: 'p, 'sep: 'p, 'close: 'p
 {
     (open.clone() + close.clone()) |
-    (open + item.clone() + parse_x_until_y(sep + item, close))
+    (open + item.clone() + parse_x_until_y(sep + item, close.clone()) + close)
+}
+
+// parse repeated content with nested open + content + close until y
+pub fn parse_balanced_until_y<'v, 'content, 'y, 'p>(
+    balance_pairs: Vec<(Ref<'v>, Ref<'v>)>,
+    content: Ref<'content>,
+    y: Ref<'y>) -> Ref<'p>
+where 'v: 'p, 'content: 'p, 'y: 'p
+{
+    Ref::new(parsers::ParseBalancedUntilY{balance_pairs, content, y})
 }

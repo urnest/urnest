@@ -49,13 +49,13 @@ use ruf_parser2::{
     parse_x_until_y,
     us_ascii_printable,
     list_of,
+    parse_balanced_until_y,
 };
 
 use ruf_parser2::ast::Item;
 use ruf_parser2::all_of::all_of;
 use ruf_assert as assert;
 
-/*
 fn tutorial() {
     // build a parser like a grammar, marking interesting bits via tagged()
     // parser; tags are always 'static
@@ -70,39 +70,61 @@ fn tutorial() {
     let last_name = "last name";
     let eye_colour = "eye colour";
     let handedness = "handedness";
-    let left_handed = "lefty";
-    let right_handedness = "righty";
+    let lefty = "lefty";
+    let righty = "righty";
 
-    let left = "left";
-    let right = "right";
-    let parse_left = tagged(left, literal(left));
-    let parse_right = tagged(right, literal(right));
-    let ws = whitespace();
+    // parsers for components, defined as functions so we don't litter the
+    // following definition with clone() calls
+    let eyes = || literal("eyes");
+    let is = || literal("is");
+    let has = || literal("has");
+    let and = || literal("and");
+    let handed = || literal("handed");
+    let footed = || literal("footed.");
+    let left = || literal("left");
+    let right = || literal("right");
+    let parse_left = || tagged(lefty, left());
+    let parse_right = || tagged(righty, right());
+    let ws = || some_space();
     let parser =
         tagged(full_name, // nesting makes it easier to search unambiguously
-               tagged(first_name, parse_until(ws)) + ws +
-               tagged(last_name, parse_until(ws))) + ws +
-        tagged(eye_colour, parse_until(ws)) + ws +
-        literal("eyes and is") + ws +
-        tagged(handedness, parse_left | parse_right) +
-        literal(" handed and ") + ws +
-        (parse_left | parse_right) + ws +
-        literal("footed.")+end_of_input();
+               tagged(first_name, parse_x_until_y(any_char(), ws())) + ws() +
+               tagged(last_name, parse_x_until_y(any_char(), ws() + has()))) + ws() + has() + ws() +
+        tagged(eye_colour, parse_x_until_y(any_char(), ws()+eyes())) +
+        ws()+eyes()+ws()+and()+ws()+is()+ws()+
+        tagged(handedness, parse_left() | parse_right()) + ws() + handed() + ws() + and() + ws() +
+        (parse_left() | parse_right()) + ws() + footed() + end_of_input();
 
     // parsing into an tagged tree is two stages:
     // - parse, which produces a tree of all parser outcomes, including failures
     // - extracting tagged tree, which has one node for each successful tagged()
     //   ... or has summary of the "best" match in case parsing failed.
     // if we're only interested in the final tree, combine the two stages:
-    let ast = parser.parse(some_text).get_ast();
-
-    // REVISIT: then can pull the relevant info out of the tree:
+    let ast = parser.parse(some_text).get_ast("root").ok().unwrap();
     
+    // then can pull the relevant info out of the tree:
+    assert::equal(
+        &vec!(
+            ast.select_by_value(&|v| v.tag == first_name)
+                .copy_selected_values().first().unwrap().text.to_string(),
+            ast.select_by_value(&|v| v.tag == last_name)
+                .copy_selected_values().first().unwrap().text.to_string(),
+            ast.select_by_value(&|v| v.tag == eye_colour)
+                .copy_selected_values().first().unwrap().text.to_string(),
+            ast.select_by_value(&|v| v.tag == handedness)
+                .copy_selected_values().first().unwrap().text.to_string(),
+        ),
+        &vec!(
+            "Fred".to_string(),
+            "Jones".to_string(),
+            "red".to_string(),
+            "left".to_string(),
+        )
+    )
 }
- */
 
 fn main() {
-    //turorial();
+    tutorial();
 
     // below are test cases... not as easy to read as tutorial but
     // comprehensive.
@@ -1061,7 +1083,7 @@ fn main() {
     let r = p.parse(x);
     assert::equal(&r.get_ast(root), 
         &Ok(
-            AST{ value:Item{ tag: root, text: x },
+            AST{ value:Item{ tag: root, text: &x[0..0] },
                  children: vec!()
             }));
 
@@ -1069,7 +1091,7 @@ fn main() {
     let r = p.parse(x);
     assert::equal(&r.get_ast(root), 
         &Ok(
-            AST{ value:Item{ tag: root, text: x },
+            AST{ value:Item{ tag: root, text: &x[0..3] },
                  children: vec!()
             }));
 
@@ -1114,6 +1136,79 @@ fn main() {
                           why: Unexpected::Char,
                           context: vec!(Context{tag: root, text: &x})
                       }));
-            
+
+    // parse_balanced_until_y
+    let p = parse_balanced_until_y(
+        [
+            (char('['), char(']')),
+            (char('('), char(')')),
+        ].to_vec(),
+        digit() | char('+'),
+        char(']')
+    );
+    let x = "123]"; // no nesting
+    let r = p.parse(x);
+    assert::equal(&r.get_ast(root), 
+        &Ok(
+            AST{ value:Item{ tag: root, text: &x[..x.len()-1] },
+                 children: vec!()
+            }));
+    let x = "1[23]7([8]9)0]"; // nesting
+    let r = p.parse(x);
+    assert::equal(&r.get_ast(root), 
+        &Ok(
+            AST{ value:Item{ tag: root, text: &x[..x.len()-1] },
+                 children: vec!()
+            }));
+
+    let x = "123)]"; // unbalanced )
+    let r = p.parse(x);
+    assert::equal(&r.get_ast(root), 
+                  &Err(
+                      ParseFailed{
+                          at: all_of(x).after(&x[0..3]),
+                          why: Unexpected::Char,
+                          context: vec!(Context{tag: root, text: &x})
+                      }));
     
+
+    let x = "1[23)]a]"; // unbalanced )
+    let r = p.parse(x);
+    assert::equal(&r.get_ast(root), 
+                  &Err(
+                      ParseFailed{
+                          at: all_of(x).after(&x[0..4]),
+                          why: Unexpected::Char,
+                          context: vec!(Context{tag: root, text: &x})
+                      }));
+    
+    let x = "123x"; // missing close
+    let r = p.parse(x);
+    assert::equal(&r.get_ast(root), 
+                  &Err(
+                      ParseFailed{
+                          at: all_of(x).after(&x[0..3]),
+                          why: Unexpected::Char,
+                          context: vec!(Context{tag: root, text: &x})
+                      }));
+    
+    let x = "1(23"; // missing nested close
+    let r = p.parse(x);
+    assert::equal(&r.get_ast(root), 
+                  &Err(
+                      ParseFailed{
+                          at: all_of(x).after(&x[0..4]),
+                          why: Unexpected::EndOfInput,
+                          context: vec!(Context{tag: root, text: &x})
+                      }));
+    
+    let x = "1(23]"; // missing nested close
+    let r = p.parse(x);
+    assert::equal(&r.get_ast(root), 
+                  &Err(
+                      ParseFailed{
+                          at: all_of(x).after(&x[0..4]),
+                          why: Unexpected::Char,
+                          context: vec!(Context{tag: root, text: &x})
+                      }));
 }

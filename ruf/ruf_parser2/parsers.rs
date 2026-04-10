@@ -3,13 +3,14 @@
 extern crate ruf_assert;
 
 use std::ops::Deref;
+use std::sync::Arc;
 
 use crate::all_of::all_of;
 
 pub struct And<'parser>
 {
-    pub first_term: std::sync::Arc<dyn crate::Parser+Send+Sync+'parser>,
-    pub other_terms: Vec<std::sync::Arc<dyn crate::Parser+Send+Sync+'parser>>
+    pub first_term: Arc<dyn crate::Parser+Send+Sync+'parser>,
+    pub other_terms: Vec<Arc<dyn crate::Parser+Send+Sync+'parser>>
 }
 impl<'parser> crate::Parser for And<'parser>
 {
@@ -86,8 +87,8 @@ impl<'parser> crate::Parser for And<'parser>
 
 pub struct Or<'parser>
 {
-    pub first_term: std::sync::Arc<dyn crate::Parser+Send+Sync+'parser>,
-    pub other_terms: Vec<std::sync::Arc<dyn crate::Parser+Send+Sync+'parser>>
+    pub first_term: Arc<dyn crate::Parser+Send+Sync+'parser>,
+    pub other_terms: Vec<Arc<dyn crate::Parser+Send+Sync+'parser>>
 }
 impl<'or> crate::Parser for Or<'or>
 {
@@ -247,7 +248,7 @@ impl crate::Parser for EndOfInput
 
 pub struct Tagged<'parser> {
     pub tag: &'static str,
-    pub content: std::sync::Arc<dyn crate::Parser+Send+Sync+'parser>
+    pub content: Arc<dyn crate::Parser+Send+Sync+'parser>
 }
 impl<'parser> crate::Parser for Tagged<'parser>
 {
@@ -393,7 +394,7 @@ impl crate::Parser for Char
 
 pub struct AtLeastOne<'x>
 {
-    pub x: std::sync::Arc<dyn crate::Parser+Send+Sync+'x>,
+    pub x: Arc<dyn crate::Parser+Send+Sync+'x>,
 }
 
 impl<'parser> crate::Parser for AtLeastOne<'parser>
@@ -470,7 +471,7 @@ impl<'parser> crate::Parser for AtLeastOne<'parser>
 
 pub struct ZeroOrMore<'x>
 {
-    pub x: std::sync::Arc<dyn crate::Parser+Send+Sync+'x>,
+    pub x: Arc<dyn crate::Parser+Send+Sync+'x>,
 }
 
 impl<'parser> crate::Parser for ZeroOrMore<'parser>
@@ -634,8 +635,8 @@ impl crate::Parser for AnyCharExcept
 }
 
 pub struct ParseXUntilY<'x, 'y> {
-    pub x: std::sync::Arc<dyn crate::Parser+Send+Sync+'x>,
-    pub y: std::sync::Arc<dyn crate::Parser+Send+Sync+'y>,
+    pub x: Arc<dyn crate::Parser+Send+Sync+'x>,
+    pub y: Arc<dyn crate::Parser+Send+Sync+'y>,
 }
 
 impl<'x, 'y> crate::Parser for ParseXUntilY<'x, 'y>
@@ -653,9 +654,8 @@ impl<'x, 'y> crate::Parser for ParseXUntilY<'x, 'y>
         loop {
             let close = self.y.parse_some_of(rest, cache);
             match close {
-                crate::Outcome::Leaf{ matched, then: None } |
-                crate::Outcome::Composite{ matched: Some(matched), components: _ } => {
-                    rest = all_of(rest).after(matched);
+                crate::Outcome::Leaf{ matched: _, then: None } |
+                crate::Outcome::Composite{ matched: Some(_), components: _ } => {
                     return crate::Outcome::Composite{
                         matched: Some(all_of(text).up_to(rest)),
                         components: components
@@ -683,6 +683,137 @@ impl<'x, 'y> crate::Parser for ParseXUntilY<'x, 'y>
                             cache = &mut cache[matched.len()..];
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+pub struct ParseBalancedUntilY<'x, 'y, 'v> {
+    pub balance_pairs: Vec<(crate::Ref<'v>, crate::Ref<'v>)>,
+    pub content: crate::Ref<'x>,
+    pub y: crate::Ref<'y>,
+}
+
+struct CompositeResult<'text, 'parser> {
+    pub matched: Option<&'text str>,  // None if parse failed, otherwise the match
+    pub components: Vec< (crate::Goal<'text, 'parser>, crate::Outcome<'text, 'parser>) >
+}
+
+impl<'x, 'y, 'v> crate::Parser for ParseBalancedUntilY<'x, 'y, 'v>
+{
+    // does not consume self.y
+    fn parse_some_of_<'text, 'parser_ref>(
+        self: &'parser_ref Self,
+        text: &'text str,
+        cache: &mut [crate::Cache<'text, 'parser_ref>]
+    ) -> crate::Outcome<'text, 'parser_ref>
+    where 'text: 'parser_ref, 'x: 'parser_ref, 'y: 'parser_ref
+    {
+        let result = self.parse_to_y(self.y.deref(), text, cache);
+        crate::Outcome::Composite{
+            matched: result.matched,
+            components: result.components
+        }
+    }
+}
+
+impl<'x, 'y, 'v> ParseBalancedUntilY<'x, 'y, 'v>
+{
+    // does not consume y
+    fn parse_to_y<'text, 'parser_ref>(
+        self: &'parser_ref Self,
+        y: &'y dyn crate::Parser,
+        text: &'text str,
+        cache: &mut [crate::Cache<'text, 'parser_ref>]
+    ) -> CompositeResult<'text, 'parser_ref>
+    where 'text: 'parser_ref, 'x: 'parser_ref, 'y: 'parser_ref
+    {
+        let mut components = vec!();
+        let mut rest = text;
+        let mut cache = cache;
+        loop {
+            let end = y.parse_some_of(rest, cache);
+            match end {
+                crate::Outcome::Leaf{ matched: _, then: None } |
+                crate::Outcome::Composite{ matched: Some(_), components: _ } => {
+                    // do not consume y
+                    return CompositeResult{
+                        matched: Some(all_of(text).up_to(rest)),
+                        components
+                    }
+                },
+                crate::Outcome::Leaf{ matched: _, then: Some(_) } |
+                crate::Outcome::Composite{ matched: None, components: _ } => {
+                    let mut nested = vec!();
+                    for (ref p_open, ref p_close) in &self.balance_pairs {
+                        let open = p_open.x.parse_some_of(rest, cache);
+                        match open {
+                            crate::Outcome::Leaf{ matched: _, then: Some(_) } |
+                            crate::Outcome::Composite{ matched: None, components: _ } =>
+                                (),
+                            
+                            crate::Outcome::Leaf{ matched, then: None } |
+                            crate::Outcome::Composite{ matched: Some(matched), components: _ } => {
+                                nested.push((crate::Goal{parser: p_open.deref(), text: rest}, open));
+                                rest = all_of(rest).after(matched);
+                                cache = &mut cache[matched.len()..];
+                                match self.parse_to_y(p_close.x.deref(), rest, cache) {
+                                    CompositeResult{ matched: None, components: nested_components } => {
+                                        return CompositeResult{
+                                            matched: None,
+                                            components: [components, nested, nested_components].concat()
+                                        };
+                                    },
+                                    
+                                    CompositeResult{ matched: Some(matched), components: _ } => {
+                                        rest = all_of(rest).after(matched);
+                                        cache = &mut cache[matched.len()..];
+                                        // parse_to does not consume close
+                                        let close = p_close.parse_some_of(rest, cache);
+                                        match close {
+                                            crate::Outcome::Leaf{ matched: _, then: Some(_) } |
+                                            crate::Outcome::Composite{ matched: None, components: _ } =>
+                                                ruf_assert::never_reached(&close),
+                                            crate::Outcome::Leaf{ matched, then: None } |
+                                            crate::Outcome::Composite{
+                                                matched: Some(matched), components: _
+                                            } => {
+                                                rest = all_of(rest).after(matched);
+                                                cache = &mut cache[matched.len()..];
+                                                nested.push(
+                                                    (crate::Goal{parser: p_close.deref(), text: rest},
+                                                     close));
+                                            }
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if nested.len() == 0 {
+                        let content = self.content.x.parse_some_of(rest, cache);
+                        match content {
+                            crate::Outcome::Leaf{ matched: _, then: Some(_) } |
+                            crate::Outcome::Composite{ matched: None, .. } => {
+                                components.push(
+                                    (crate::Goal{parser: self.content.deref(), text: rest}, content));
+                                return CompositeResult{
+                                    matched: None,
+                                    components
+                                };
+                            },
+                            crate::Outcome::Leaf{ matched, then: None } |
+                            crate::Outcome::Composite{ matched: Some(matched), .. } => {
+                                nested.push(
+                                    (crate::Goal{parser: self.content.deref(), text: rest}, content));
+                                rest = all_of(rest).after(matched);
+                                cache = &mut cache[matched.len()..];
+                            }
+                        }
+                    }
+                    components = [components, nested].concat();
                 }
             }
         }
