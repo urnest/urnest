@@ -50,7 +50,7 @@ pub fn parse<'parser, 'text>(
     cache.resize_with(text.len()+1, ||HashMap::new());
     Parsed {
         goal: Goal { parser, text },
-        outcome: parser.parse_some_of(text, &mut cache)
+        outcome: parser.parse_some_of(text, &mut cache, &[])
     }
 }
 
@@ -272,6 +272,8 @@ fn find_best_failure<'text, 'parser>(
 
 pub type Cache<'text, 'parser> = HashMap<usize, Outcome<'text, 'parser> >;
 
+pub type BackReffable<'parser> = (&'static str, Ref<'parser>);
+
 pub trait Parser
 {
     // parse some of {text}
@@ -280,28 +282,30 @@ pub trait Parser
     // - pass cache to any nested invocations of parse_some_of
     // pre: cache.size() == text.size()+1
     //
-    fn parse_some_of_<'text, 'parser>(
+    fn parse_some_of_<'text, 'parser, 'backrefs, 'result>(
         &'parser self,
         text: &'text str,
-        cache: &mut [Cache<'text, 'parser>]
-    ) -> Outcome<'text, 'parser>
-    where 'text: 'parser;
+        cache: &mut [Cache<'text, 'parser>],
+        backrefs: &'parser [BackReffable<'backrefs>]
+    ) -> Outcome<'text, 'result>
+    where 'text: 'parser, 'backrefs: 'parser, 'backrefs: 'result, 'parser: 'result;
 
     // parse some of {text}
     // pre: cache.size() == text.size()+1
-    fn parse_some_of<'text, 'parser>(
+    fn parse_some_of<'text, 'parser, 'backrefs, 'result>(
         &'parser self,
         text: &'text str,
-        cache: &mut [Cache<'text, 'parser>]
-    ) -> Outcome<'text, 'parser>
-    where 'text: 'parser
+        cache: &mut [Cache<'text, 'result>],
+        backrefs: &'parser [BackReffable<'backrefs>]
+    ) -> Outcome<'text, 'result>
+    where 'text: 'parser, 'backrefs: 'parser, 'backrefs: 'result, 'parser: 'result
     {
         assert::equal(&cache.len(), &(text.len()+1));
         let p : *const Self = self;
         match cache[0].get(&p.addr()) {
             Some(v) => v.clone(),
             None => {
-                let v = self.parse_some_of_(text, cache);
+                let v = self.parse_some_of_(text, cache, backrefs);
                 cache[0].insert(p.addr(), v.clone());
                 v
             }
@@ -326,7 +330,7 @@ pub enum Operator<'parser>
 #[derive(Clone)]
 pub struct Ref<'parser>
 {
-    x: std::sync::Arc<dyn Parser+Send+Sync+'parser>,
+    pub x: std::sync::Arc<dyn Parser+Send+Sync+'parser>,
     op: Operator<'parser>
 }
 impl<'parser> Ref<'parser>
@@ -351,6 +355,10 @@ impl<'parser> Ref<'parser>
         let and = std::sync::Arc::new(parsers::Or::<'parser>{ first_term: first_term,
                                                               other_terms: other_terms});
         Ref::<'parser>{ x: and.clone(), op: Operator::Or(and) }
+    }
+    pub fn new_backref(data: std::sync::Arc<dyn crate::Parser+Send+Sync+'parser>) -> Ref<'parser>
+    {
+        Ref::<'parser>{ x: data, op: Operator::None }
     }
     pub fn parse<'text, 'self_ref>(
         &'self_ref self,
@@ -626,4 +634,38 @@ pub fn parse_balanced_until_y<'v, 'content, 'y, 'p>(
 where 'v: 'p, 'content: 'p, 'y: 'p
 {
     Ref::new(parsers::ParseBalancedUntilY{balance_pairs, content, y})
+}
+
+// backref allowing recursion - see test.rs
+pub fn backrefs<'backrefs, 'parser>(
+    backrefs: Vec<BackReffable<'backrefs>>, parser: Ref<'parser>
+) -> Ref<'parser>
+where 'backrefs: 'parser
+{
+    Ref::new(parsers::BackRefs{ backrefs: backrefs, parser: parser})
+}
+
+pub fn backref(id: &'static str) -> Ref<'static>
+{
+    Ref::new(BackRef{ id: id })
+}
+
+pub struct BackRef {
+    id: &'static str
+}
+
+impl crate::Parser for BackRef
+{
+    // does not consume self.y
+    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'result>(
+        self: &'parser_ref Self,
+        text: &'text str,
+        cache: &mut [crate::Cache<'text, 'parser_ref>],
+        backrefs: &'parser_ref [BackReffable<'backrefs>]
+    ) -> crate::Outcome<'text, 'result>
+    where 'text: 'parser_ref, 'backrefs: 'parser_ref, 'backrefs: 'parser_ref, 'backrefs: 'result, 'parser_ref: 'result
+    {
+        backrefs.iter().find(|&x| { x.0 == self.id }).unwrap().1.parse_some_of(
+            text, cache, backrefs)
+    }
 }

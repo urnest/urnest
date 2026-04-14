@@ -50,6 +50,8 @@ use ruf_parser2::{
     us_ascii_printable,
     list_of,
     parse_balanced_until_y,
+    backref,
+    backrefs,
 };
 
 use ruf_parser2::ast::Item;
@@ -1160,7 +1162,6 @@ fn main() {
             AST{ value:Item{ tag: root, text: &x[..x.len()-1] },
                  children: vec!()
             }));
-
     let x = "123)]"; // unbalanced )
     let r = p.parse(x);
     assert::equal(&r.get_ast(root), 
@@ -1170,8 +1171,6 @@ fn main() {
                           why: Unexpected::Char,
                           context: vec!(Context{tag: root, text: &x})
                       }));
-    
-
     let x = "1[23)]a]"; // unbalanced )
     let r = p.parse(x);
     assert::equal(&r.get_ast(root), 
@@ -1181,7 +1180,6 @@ fn main() {
                           why: Unexpected::Char,
                           context: vec!(Context{tag: root, text: &x})
                       }));
-    
     let x = "123x"; // missing close
     let r = p.parse(x);
     assert::equal(&r.get_ast(root), 
@@ -1191,7 +1189,6 @@ fn main() {
                           why: Unexpected::Char,
                           context: vec!(Context{tag: root, text: &x})
                       }));
-    
     let x = "1(23"; // missing nested close
     let r = p.parse(x);
     assert::equal(&r.get_ast(root), 
@@ -1201,7 +1198,6 @@ fn main() {
                           why: Unexpected::EndOfInput,
                           context: vec!(Context{tag: root, text: &x})
                       }));
-    
     let x = "1(23]"; // missing nested close
     let r = p.parse(x);
     assert::equal(&r.get_ast(root), 
@@ -1211,4 +1207,40 @@ fn main() {
                           why: Unexpected::Char,
                           context: vec!(Context{tag: root, text: &x})
                       }));
+
+    // backref (recursion)
+    let b1id = "b1";
+    let b2id = "b2";
+
+    let b1 = digit() | (char('(') + backref(&b2id) + char(')'));
+    let b2 = digit() | (char('[') + (backref(&b1id) | backref(&b2id)) + char(']'));
+    let p  = backrefs([(b1id, b1.clone()),(b2id, b2.clone())].to_vec(), b1 | b2);
+    let x = "1";
+    let r = p.parse(x);
+    assert::equal(&r.get_ast(root), 
+        &Ok(
+            AST{ value:Item{ tag: root, text: x },
+                 children: vec!()
+            }));
+    let x = "(1)";
+    let r = p.parse(x);
+    assert::equal(&r.get_ast(root), 
+        &Ok(
+            AST{ value:Item{ tag: root, text: x },
+                 children: vec!()
+            }));
+    let x = "([(1)])";
+    let r = p.parse(x);
+    assert::equal(&r.get_ast(root), 
+        &Ok(
+            AST{ value:Item{ tag: root, text: x },
+                 children: vec!()
+            }));
+    let x = "[[([1])]]";
+    let r = p.parse(x);
+    assert::equal(&r.get_ast(root), 
+        &Ok(
+            AST{ value:Item{ tag: root, text: x },
+                 children: vec!()
+            }));
 }
