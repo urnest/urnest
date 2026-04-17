@@ -36,7 +36,7 @@ use all_of::all_of;
 //
 // Use pre-defined end_of_input() parser to ensure all text is consumed.
 //
-// See Stock Parses below for other pre-defined parsers; test.rs has example use of all.
+// See Stock Parsers below for other pre-defined parsers; test.rs has example use of all.
 //
 // Implement Parser (below) to define your own parsers, though combining pre-defined
 // parses via + and | should cover most uses.
@@ -282,13 +282,18 @@ pub trait Parser
     // - pass cache to any nested invocations of parse_some_of
     // pre: cache.size() == text.size()+1
     //
-    fn parse_some_of_<'text, 'parser, 'backrefs, 'result>(
+    fn parse_some_of_<'text, 'parser, 'backrefs, 'b, 'result>(
         &'parser self,
         text: &'text str,
         cache: &mut [Cache<'text, 'parser>],
-        backrefs: &'parser [BackReffable<'backrefs>]
+        backrefs: &'backrefs [BackReffable<'b>]
     ) -> Outcome<'text, 'result>
-    where 'text: 'parser, 'backrefs: 'parser, 'backrefs: 'result, 'parser: 'result;
+    where
+        'text: 'parser,
+        'b: 'parser,
+        'b: 'result,
+        'parser: 'result,
+        'backrefs: 'parser + 'result;
 
     // parse some of {text}
     // pre: cache.size() == text.size()+1
@@ -433,7 +438,7 @@ impl<'parser> std::ops::BitOr for Ref<'parser> {
     }
 }
 
-// Stock parsers:
+// Stock Parsers:
 
 // always matches, consumes nothing
 pub fn none() -> Ref<'static>
@@ -657,13 +662,19 @@ pub struct BackRef {
 impl crate::Parser for BackRef
 {
     // does not consume self.y
-    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'result>(
+    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
         text: &'text str,
         cache: &mut [crate::Cache<'text, 'parser_ref>],
-        backrefs: &'parser_ref [BackReffable<'backrefs>]
+        backrefs: &'backrefs [BackReffable<'b>]
     ) -> crate::Outcome<'text, 'result>
-    where 'text: 'parser_ref, 'backrefs: 'parser_ref, 'backrefs: 'parser_ref, 'backrefs: 'result, 'parser_ref: 'result
+    where
+        'text: 'parser_ref,
+        'b: 'parser_ref,
+        'b: 'parser_ref,
+        'b: 'result,
+        'parser_ref: 'result,
+        'backrefs: 'parser_ref + 'result
     {
         backrefs.iter().find(|&x| { x.0 == self.id }).unwrap().1.parse_some_of(
             text, cache, backrefs)

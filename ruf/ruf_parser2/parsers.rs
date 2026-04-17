@@ -6,21 +6,28 @@ use std::ops::Deref;
 use std::sync::Arc;
 
 use crate::all_of::all_of;
+use crate::{Cache, BackReffable, Outcome};
 
 pub struct And<'parser>
 {
     pub first_term: Arc<dyn crate::Parser+Send+Sync+'parser>,
     pub other_terms: Vec<Arc<dyn crate::Parser+Send+Sync+'parser>>
 }
-impl<'parser> crate::Parser for And<'parser>
+impl<'and> crate::Parser for And<'and>
 {
-    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'result>(
-        self: &'parser_ref Self,
+    fn parse_some_of_<'text, 'parser, 'backrefs, 'b, 'result>(
+        &'parser self,
         text: &'text str,
-        cache: &mut [crate::Cache<'text, 'parser_ref>],
-        backrefs: &'parser_ref [crate::BackReffable<'backrefs>]
-    ) -> crate::Outcome<'text, 'result>
-    where 'parser: 'parser_ref, 'text: 'parser_ref, 'backrefs: 'parser_ref, 'backrefs: 'result, 'parser_ref: 'result
+        cache: &mut [Cache<'text, 'parser>],
+        backrefs: &'backrefs [BackReffable<'b>]
+    ) -> Outcome<'text, 'result>
+    where
+        'text: 'parser,
+        'b: 'parser,
+        'b: 'result,
+        'parser: 'result,
+        'backrefs: 'parser + 'result,
+        'and: 'parser + 'result
     {
         let result_of_first_term = self.first_term.parse_some_of(text, cache, backrefs);
         match result_of_first_term {
@@ -93,13 +100,19 @@ pub struct Or<'parser>
 }
 impl<'or> crate::Parser for Or<'or>
 {
-    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'result>(
+    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
         text: &'text str,
         cache: &mut [crate::Cache<'text, 'parser_ref>],
-        backrefs: &'parser_ref [crate::BackReffable<'backrefs>]
+        backrefs: &'backrefs [crate::BackReffable<'b>]
     ) -> crate::Outcome<'text, 'result>
-    where 'text: 'parser_ref, 'or: 'parser_ref, 'backrefs: 'parser_ref, 'backrefs: 'result, 'parser_ref: 'result
+    where
+        'text: 'parser_ref,
+        'or: 'parser_ref,
+        'b: 'parser_ref,
+        'b: 'result,
+        'parser_ref: 'result,
+        'backrefs: 'parser_ref + 'result
     {
         let result_of_first_term = self.first_term.parse_some_of(text, cache, backrefs);
         match result_of_first_term {
@@ -162,13 +175,17 @@ pub struct None {}
 
 impl crate::Parser for None
 {
-    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'result>(
+    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
         text: &'text str,
         _cache: &mut [crate::Cache<'text, 'parser_ref>],
-        _backrefs: &[crate::BackReffable<'backrefs>]
+        _backrefs: &'backrefs [crate::BackReffable<'b>]
     ) -> crate::Outcome<'text, 'result>
-    where 'text: 'parser_ref, 'backrefs: 'result, 'parser_ref: 'result
+    where
+        'text: 'parser_ref,
+        'b: 'result,
+        'parser_ref: 'result,
+        'backrefs: 'parser_ref + 'result
     {
         crate::Outcome::Leaf{
             matched: &text[0..0],
@@ -183,13 +200,18 @@ pub struct Literal<'parser> {
 
 impl<'parser> crate::Parser for Literal<'parser>
 {
-    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'result>(
+    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
         text: &'text str,
         _cache: &mut [crate::Cache<'text, 'parser_ref>],
-        _backrefs: &[crate::BackReffable<'backrefs>]
+        _backrefs: &'backrefs [crate::BackReffable<'b>]
     ) -> crate::Outcome<'text, 'result>
-    where 'parser: 'parser_ref, 'text: 'parser_ref, 'backrefs: 'result, 'parser_ref: 'result
+    where
+        'parser: 'parser_ref,
+        'text: 'parser_ref,
+        'b: 'result,
+        'parser_ref: 'result,
+        'backrefs: 'parser_ref + 'result
     {
         // we would use starts_with but when it doesn't start with we want the longest
         // having_parsed we can in error, so we use our own loop.
@@ -229,13 +251,17 @@ pub struct EndOfInput {
 
 impl crate::Parser for EndOfInput
 {
-    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'result>(
+    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
         text: &'text str,
         _cache: &mut [crate::Cache],
-        _backrefs: &[crate::BackReffable<'backrefs>]
+        _backrefs: &'backrefs [crate::BackReffable<'b>]
     ) -> crate::Outcome<'text, 'result>
-    where 'text: 'parser_ref, 'backrefs: 'result, 'parser_ref: 'result
+    where
+        'text: 'parser_ref,
+        'b: 'result,
+        'parser_ref: 'result,
+        'backrefs: 'parser_ref + 'result
     {
         match text {
             "" => {
@@ -261,13 +287,19 @@ impl<'parser> crate::Parser for Tagged<'parser>
     {
         Some(self.tag)
     }
-    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'result>(
+    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
         text: &'text str,
         cache: &mut [crate::Cache<'text, 'parser_ref>],
-        backrefs: &'parser_ref [crate::BackReffable<'backrefs>]
+        backrefs: &'backrefs [crate::BackReffable<'b>]
     ) -> crate::Outcome<'text, 'result>
-    where 'parser: 'parser_ref, 'text: 'parser_ref, 'backrefs: 'parser_ref, 'backrefs: 'result, 'parser_ref: 'result
+    where
+        'parser: 'parser_ref,
+        'text: 'parser_ref,
+        'b: 'parser_ref,
+        'b: 'result,
+        'parser_ref: 'result,
+        'backrefs: 'parser_ref + 'result
     {
         let result = self.content.parse_some_of(text, cache, backrefs);
         match result {
@@ -304,13 +336,17 @@ impl<'parser> crate::Parser for Tagged<'parser>
 pub struct AnyChar {}
 impl crate::Parser for AnyChar
 {
-    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'result>(
+    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
         text: &'text str,
         _cache: &mut [crate::Cache<'text, 'parser_ref>],
-        _backrefs: &'parser_ref [crate::BackReffable<'backrefs>]
+        _backrefs: &'backrefs [crate::BackReffable<'b>]
     ) -> crate::Outcome<'text, 'result>
-    where 'text: 'parser_ref, 'backrefs: 'result, 'parser_ref: 'result
+    where
+        'text: 'parser_ref,
+        'b: 'result,
+        'parser_ref: 'result,
+        'backrefs: 'parser_ref + 'result
     {
         match text.chars().next() {
             Some(_c) => {
@@ -333,13 +369,17 @@ pub struct Digit {}
 
 impl crate::Parser for Digit
 {
-    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'result>(
+    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
         text: &'text str,
         _cache: &mut [crate::Cache<'text, 'parser_ref>],
-        _backrefs: &'parser_ref [crate::BackReffable<'backrefs>]
+        _backrefs: &'backrefs [crate::BackReffable<'b>]
     ) -> crate::Outcome<'text, 'result>
-    where 'text: 'parser_ref, 'backrefs: 'result, 'parser_ref: 'result
+    where
+        'text: 'parser_ref,
+        'b: 'result,
+        'parser_ref: 'result,
+        'backrefs: 'parser_ref + 'result
     {
         match text.chars().next() {
             Some(c) => {
@@ -370,13 +410,17 @@ pub struct Char {
 
 impl crate::Parser for Char
 {
-    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'result>(
+    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
         text: &'text str,
         _cache: &mut [crate::Cache<'text, 'parser_ref>],
-        _backrefs: &'parser_ref [crate::BackReffable<'backrefs>]
+        _backrefs: &'backrefs [crate::BackReffable<'b>]
     ) -> crate::Outcome<'text, 'result>
-    where 'text: 'parser_ref, 'backrefs: 'result, 'parser_ref: 'result
+    where
+        'text: 'parser_ref,
+        'b: 'result,
+        'parser_ref: 'result,
+        'backrefs: 'parser_ref + 'result
     {
         match text.chars().next() {
             Some(c) => {
@@ -408,13 +452,18 @@ pub struct AtLeastOne<'x>
 
 impl<'parser> crate::Parser for AtLeastOne<'parser>
 {
-    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'result>(
+    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
         text: &'text str,
         cache: &mut [crate::Cache<'text, 'parser_ref>],
-        backrefs: &'parser_ref [crate::BackReffable<'backrefs>]
+        backrefs: &'backrefs [crate::BackReffable<'b>]
     ) -> crate::Outcome<'text, 'result>
-    where 'text: 'parser_ref, 'backrefs: 'parser_ref, 'backrefs: 'result, 'parser_ref: 'result
+    where
+        'text: 'parser_ref,
+        'b: 'parser_ref,
+        'b: 'result,
+        'parser_ref: 'result,
+        'backrefs: 'parser_ref + 'result
     {
         let result = self.x.parse_some_of(text, cache, backrefs);
             match result {
@@ -486,13 +535,18 @@ pub struct ZeroOrMore<'x>
 
 impl<'parser> crate::Parser for ZeroOrMore<'parser>
 {
-    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'result>(
+    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
         text: &'text str,
         cache: &mut [crate::Cache<'text, 'parser_ref>],
-        backrefs: &'parser_ref [crate::BackReffable<'backrefs>]
+        backrefs: &'parser_ref [crate::BackReffable<'b>]
     ) -> crate::Outcome<'text, 'result>
-    where 'text: 'parser_ref, 'backrefs: 'parser_ref, 'backrefs: 'result, 'parser_ref: 'result
+    where
+        'text: 'parser_ref,
+        'b: 'parser_ref,
+        'b: 'result,
+        'parser_ref: 'result,
+        'backrefs: 'parser_ref + 'result
     {
         let mut components = vec!();
         let mut rest = text;
@@ -579,13 +633,17 @@ pub struct OneOfChars {
 
 impl crate::Parser for OneOfChars
 {
-    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'result>(
+    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
         text: &'text str,
         _cache: &mut [crate::Cache<'text, 'parser_ref>],
-        _backrefs: &'parser_ref [crate::BackReffable<'backrefs>]
+        _backrefs: &'backrefs [crate::BackReffable<'b>]
     ) -> crate::Outcome<'text, 'result>
-    where 'text: 'parser_ref, 'backrefs: 'result, 'parser_ref: 'result
+    where
+        'text: 'parser_ref,
+        'b: 'result,
+        'parser_ref: 'result,
+        'backrefs: 'parser_ref + 'result
     {
         match text.chars().next() {
             Some(c) => {
@@ -616,13 +674,17 @@ pub struct AnyCharExcept {
 
 impl crate::Parser for AnyCharExcept
 {
-    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'result>(
+    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
         text: &'text str,
         _cache: &mut [crate::Cache<'text, 'parser_ref>],
-        _backrefs: &'parser_ref [crate::BackReffable<'backrefs>]
+        _backrefs: &'backrefs [crate::BackReffable<'b>]
     ) -> crate::Outcome<'text, 'result>
-    where 'text: 'parser_ref, 'backrefs: 'result, 'parser_ref: 'result
+    where
+        'text: 'parser_ref,
+        'b: 'result,
+        'parser_ref: 'result,
+        'backrefs: 'parser_ref + 'result
     {
         match text.chars().next() {
             Some(c) => {
@@ -654,13 +716,20 @@ pub struct ParseXUntilY<'x, 'y> {
 
 impl<'x, 'y> crate::Parser for ParseXUntilY<'x, 'y>
 {
-    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'result>(
+    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
         text: &'text str,
         cache: &mut [crate::Cache<'text, 'parser_ref>],
-        backrefs: &'parser_ref [crate::BackReffable<'backrefs>]
+        backrefs: &'backrefs [crate::BackReffable<'b>]
     ) -> crate::Outcome<'text, 'result>
-    where 'text: 'parser_ref, 'x: 'parser_ref, 'y: 'parser_ref, 'backrefs: 'parser_ref, 'backrefs: 'result, 'parser_ref: 'result
+    where
+        'text: 'parser_ref,
+        'x: 'parser_ref,
+        'y: 'parser_ref,
+        'b: 'parser_ref,
+        'b: 'result,
+        'parser_ref: 'result,
+        'backrefs: 'parser_ref + 'result
     {
         let mut components = vec!();
         let mut rest = text;
@@ -717,13 +786,20 @@ struct CompositeResult<'text, 'parser> {
 impl<'x, 'y, 'v> crate::Parser for ParseBalancedUntilY<'x, 'y, 'v>
 {
     // does not consume self.y
-    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'result>(
+    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
         text: &'text str,
         cache: &mut [crate::Cache<'text, 'parser_ref>],
-        backrefs: &'parser_ref [crate::BackReffable<'backrefs>]
+        backrefs: &'backrefs [crate::BackReffable<'b>]
     ) -> crate::Outcome<'text, 'result>
-    where 'text: 'parser_ref, 'x: 'parser_ref, 'y: 'parser_ref, 'backrefs: 'parser_ref, 'backrefs: 'result, 'parser_ref: 'result
+    where
+        'text: 'parser_ref,
+        'x: 'parser_ref,
+        'y: 'parser_ref,
+        'b: 'parser_ref,
+        'b: 'result,
+        'parser_ref: 'result,
+        'backrefs: 'parser_ref + 'result
     {
         let result = self.parse_to_y(self.y.deref(), text, cache, backrefs);
         crate::Outcome::Composite{
@@ -843,13 +919,19 @@ pub struct BackRefs<'parser, 'backrefs> {
     
 impl<'parser, 'backrefs1> crate::Parser for BackRefs<'parser, 'backrefs1>
 {
-    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'result>(
+    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
         text: &'text str,
         cache: &mut [crate::Cache<'text, 'parser_ref>],
-        _backrefs: &'parser_ref [crate::BackReffable<'backrefs>]
+        _backrefs: &'backrefs [crate::BackReffable<'b>]
     ) -> crate::Outcome<'text, 'result>
-    where 'text: 'parser_ref, 'parser: 'parser_ref, 'backrefs: 'parser_ref, 'backrefs: 'result, 'parser_ref: 'result
+    where
+        'text: 'parser_ref,
+        'parser: 'parser_ref,
+        'b: 'parser_ref,
+        'b: 'result,
+        'parser_ref: 'result,
+        'backrefs: 'parser_ref + 'result
     {
         self.parser.parse_some_of(
             text,

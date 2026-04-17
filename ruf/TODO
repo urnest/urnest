@@ -2,8 +2,10 @@
 
   - primitives from hcp::parser:
     x none
-    - listOf(open, x, sep, term) = (open + term) | (open + x + zero_or_more(sep + x) + term)
+    x listOf(open, x, sep, term) = (open + term) | (open + x + zero_or_more(sep + x) + term)
       listOfWithTrailingSepAllowed  = (open + term) | (open + x + zero_or_more(sep + x) + optional(sep) + term)
+    - looking_at
+      ... then revert parse_until etc so they all consume end
     - match
     maybe nonEmptyListOf(x, moreflag)
     maybe not?
@@ -35,7 +37,7 @@ x any_inline_space()
 x blank_line()
 x some_space()
 x any_space()
-- back ref (recursive)
+x back ref (recursive)
 
 ... optimise the pre-tagged, and digit etc to remove the
 2nd dyn lookup (copilot)
