@@ -53,6 +53,8 @@ use ruf_parser2::{
     backref,
     backrefs,
     switch,
+    looking_at,
+    not,
 };
 
 use ruf_parser2::ast::Item;
@@ -91,13 +93,17 @@ fn tutorial() {
     let ws = || some_space();
     let parser =
         tagged(full_name, // nesting makes it easier to search unambiguously
-               tagged(first_name, parse_x_until_y(any_char(), ws())) + ws() +
-               tagged(last_name, parse_x_until_y(any_char(), ws() + has()))) + ws() + has() + ws() +
-        tagged(eye_colour, parse_x_until_y(any_char(), ws()+eyes())) +
+               tagged(first_name, parse_x_until_y(any_char(), looking_at(ws()))) + ws() +
+               // looking at excludes ws() from tagged content ^^^^^^^^^^^^^^
+               tagged(last_name, parse_x_until_y(any_char(), looking_at(ws() + has())))) + ws() + has() + ws() +
+        tagged(eye_colour, parse_x_until_y(any_char(), looking_at(ws()+eyes()))) +
         ws()+eyes()+ws()+and()+ws()+is()+ws()+
         tagged(handedness, parse_left() | parse_right()) + ws() + handed() + ws() + and() + ws() +
         (parse_left() | parse_right()) + ws() + footed() + end_of_input();
 
+    let r = parser.parse(some_text).get_ast("root");
+    assert::equal(&r.err(), &None);
+    
     // parsing into an tagged tree is two stages:
     // - parse, which produces a tree of all parser outcomes, including failures
     // - extracting tagged tree, which has one node for each successful tagged()
@@ -127,7 +133,6 @@ fn tutorial() {
 }
 
 fn main() {
-    tutorial();
 
     // below are test cases... not as easy to read as tutorial but
     // comprehensive.
@@ -1082,11 +1087,11 @@ fn main() {
     let x = "y";
     let p1 = char('x');
     let p2 = char('y');
-    let p = parse_x_until_y(p1, p2);
+    let p = parse_x_until_y(p1.clone(), p2.clone());
     let r = p.parse(x);
     assert::equal(&r.get_ast(root), 
         &Ok(
-            AST{ value:Item{ tag: root, text: &x[0..0] },
+            AST{ value:Item{ tag: root, text: &x[0..1] },
                  children: vec!()
             }));
 
@@ -1094,7 +1099,7 @@ fn main() {
     let r = p.parse(x);
     assert::equal(&r.get_ast(root), 
         &Ok(
-            AST{ value:Item{ tag: root, text: &x[0..3] },
+            AST{ value:Item{ tag: root, text: &x[0..4] },
                  children: vec!()
             }));
 
@@ -1107,6 +1112,15 @@ fn main() {
                           why: Unexpected::Char,
                           context: vec!(Context{tag: root, text: &x})
                       }));
+    let x = "xxxy";
+    let p = parse_x_until_y(p1, looking_at(p2.clone()))+p2;
+    let r = p.parse(x);
+    assert::equal(&r.get_ast(root), 
+        &Ok(
+            AST{ value:Item{ tag: root, text: &x[0..4] },
+                 children: vec!()
+            }));
+
 
     // us_ascii_printable
     let x = " g~";
@@ -1279,7 +1293,6 @@ fn main() {
             AST{ value:Item{ tag: root, text: x },
                  children: vec!(
                      AST{ value:Item{ tag: bird, text: &x[3..8] }, children: vec!()})}));
-
     let x = "an fox cub";
     let r = p.parse(x);
     assert::equal(&r.get_ast(root), 
@@ -1290,5 +1303,59 @@ fn main() {
                           context: vec!(Context{tag: owl, text: &x[2..]},
                                         Context{tag: root, text: &x})
                       }));
+
+    // looking at
+    let p = looking_at(tagged(owl, literal("owl"))) + char('o');
+    let x = "owl";
+    let r = p.parse(x);
+    assert::equal(
+        &r.get_ast(root),
+        &Ok(
+            AST{ value:Item{ tag: root, text: &x[..1] },
+                 children: vec!()}));
+    let p = looking_at(tagged(owl, literal("owl"))) + char('o');
+    let x = "owmo";
+    let r = p.parse(x);
+    assert::equal(
+        &r.get_ast(root),
+        &Err(
+            ParseFailed{
+                at: &x[2..],
+                why: Unexpected::Char,
+                context: vec!(Context{tag: owl, text: &x},
+                              Context{tag: root, text: &x})
+            }));
+
+    // not
+    let p = not(tagged(owl, literal("owl")));
+    let x = "own";
+    let r = p.parse(x);
+    assert::equal(
+        &r.get_ast(root),
+        &Ok(
+            AST{ value:Item{ tag: root, text: &x[..0] },
+                 children: vec!()}));
+    let x = "owl";
+    let r = p.parse(x);
+    assert::equal(
+        &r.get_ast(root),
+        &Err(
+            ParseFailed{
+                at: &x[0..],
+                why: Unexpected::Char,
+                context: vec!(Context{tag: root, text: &x})
+            }));
+    let x = "";
+    let p = not(end_of_input());
+    let r = p.parse(x);
+    assert::equal(
+        &r.get_ast(root),
+        &Err(
+            ParseFailed{
+                at: &x[0..],
+                why: Unexpected::EndOfInput,
+                context: vec!(Context{tag: root, text: &x})
+            }));
     
+    tutorial();
 }

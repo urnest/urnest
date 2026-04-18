@@ -19,7 +19,7 @@ impl<'x> AllOf<'x>
         assert::less_equal(&y.len(), &self.x.len());
         return &self.x[y.len()..];
     }
-    // return self up to trailing y
+    // return self up to trailing y, where x ends with y
     pub fn up_to(&self, y: &str) -> &'x str
     {
         assert::less_equal(&y.len(), &self.x.len());
@@ -29,6 +29,11 @@ impl<'x> AllOf<'x>
     // return self through to the end of y
     pub fn through(&self, y: &str) -> &'x str
     {
-        return &self.x[0..self.up_to(y).len()+y.len()];
+        let ux = self.x.as_ptr() as usize;
+        let uy = (y.as_ptr() as usize) + y.len();
+        assert::greater_equal(&uy, &ux);
+        let offset = uy - ux;
+        assert::less_equal(&offset, &self.x.len());
+        &self.x[..offset]
     }
 }

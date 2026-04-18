@@ -1,9 +1,16 @@
 * parser:
   - capture
-  - looking_at
+  x looking_at
     ... then revert parse_until etc so they all consume end
   x match (switch)
-  - not
+  x not
+  - need better errors ... need more detail e.g. if not() fails
+    want to see something like "unexpected comment"... maybe not
+    should be an operator so that we can do that? Not sure it will work anyway. I
+    guess we can use tagged, e.g. tagged("not end of input", not(end_of_input())).
+    Also want a "verbose" option that includes full(?) context, so we can see
+    exactly why parse failed. Like
+    "failed to parse literal" is not that useful... failed to parse \"fred\" is?
 
   - primitives from hcp::parser:
     x none
@@ -11,8 +18,8 @@
       listOfWithTrailingSepAllowed  = (open + term) | (open + x + zero_or_more(sep + x) + optional(sep) + term)
     maybe nonEmptyListOf(x, moreflag)
     maybe not?
-    * maybe and/or &str and show in tutorial
-    maybe n_to_m (could use 0..3 * xx()?)
+    * maybe and/or &str and show in tutorial... can rust do that?
+    - maybe n_to_m (could use 0..3 * xx()?)
     x PR balanced_content_until(balance_pairs, content, PR until) throw();
   x prims from ruf_parser:
     x literal

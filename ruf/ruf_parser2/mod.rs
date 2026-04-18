@@ -20,6 +20,7 @@ use ruf_newtype as newtype;
 
 pub mod ast;
 pub mod all_of;
+pub mod c;
 
 use all_of::all_of;
 
@@ -609,9 +610,8 @@ pub fn eat_white() -> Ref<'static>
     zero_or_more(one_of_chars(CharSet{ value: " \t\r\n"}))
 }
 
-// parse all x (repeated) until y
+// parse all x (repeated) until and including y
 // - including just y without any x
-// - note result does not consume y
 pub fn parse_x_until_y<'x, 'y, 'z>(x: Ref<'x>, y: Ref<'y>) -> Ref<'z>
     where 'x: 'z, 'y: 'z
 {
@@ -634,7 +634,7 @@ pub fn list_of<'open, 'item, 'sep, 'close, 'p>(
     where 'open: 'p, 'item: 'p, 'sep: 'p, 'close: 'p
 {
     (open.clone() + close.clone()) |
-    (open + item.clone() + parse_x_until_y(sep + item, close.clone()) + close)
+    (open + item.clone() + parse_x_until_y(sep + item, close))
 }
 
 // parse repeated content with nested open + content + close until y
@@ -669,4 +669,18 @@ pub fn switch<'v, 'r>(
 where 'v: 'r
 {
     Ref::new(parsers::Switch{first_case, other_cases})
+}
+
+// matches but does not consume x
+pub fn looking_at<'v, 'r>(x: Ref<'v>) -> Ref<'r>
+where 'v: 'r
+{
+    Ref::new(parsers::LookingAt{x})
+}
+
+// succeeds unless x matches
+pub fn not<'v, 'r>(x: Ref<'v>) -> Ref<'r>
+where 'v: 'r
+{
+    Ref::new(parsers::Not{x})
 }

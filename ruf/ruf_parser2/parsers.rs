@@ -15,14 +15,14 @@ use std::ops::Deref;
 use std::sync::Arc;
 
 use crate::all_of::all_of;
-use crate::{Cache, BackReffable, Outcome, Goal};
+use crate::{Cache, BackReffable, Outcome, Goal, Parser, Unexpected, Ref};
 
 pub struct And<'parser>
 {
-    pub first_term: Arc<dyn crate::Parser+Send+Sync+'parser>,
-    pub other_terms: Vec<Arc<dyn crate::Parser+Send+Sync+'parser>>
+    pub first_term: Arc<dyn Parser+Send+Sync+'parser>,
+    pub other_terms: Vec<Arc<dyn Parser+Send+Sync+'parser>>
 }
-impl<'and> crate::Parser for And<'and>
+impl<'and> Parser for And<'and>
 {
     fn parse_some_of_<'text, 'parser, 'backrefs, 'b, 'result>(
         &'parser self,
@@ -104,10 +104,10 @@ impl<'and> crate::Parser for And<'and>
 
 pub struct Or<'parser>
 {
-    pub first_term: Arc<dyn crate::Parser+Send+Sync+'parser>,
-    pub other_terms: Vec<Arc<dyn crate::Parser+Send+Sync+'parser>>
+    pub first_term: Arc<dyn Parser+Send+Sync+'parser>,
+    pub other_terms: Vec<Arc<dyn Parser+Send+Sync+'parser>>
 }
-impl<'or> crate::Parser for Or<'or>
+impl<'or> Parser for Or<'or>
 {
     fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
@@ -182,7 +182,7 @@ impl<'or> crate::Parser for Or<'or>
 
 pub struct None {}
 
-impl crate::Parser for None
+impl Parser for None
 {
     fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
@@ -207,7 +207,7 @@ pub struct Literal<'parser> {
     pub x: &'parser str
 }
 
-impl<'parser> crate::Parser for Literal<'parser>
+impl<'parser> Parser for Literal<'parser>
 {
     fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
@@ -243,11 +243,11 @@ impl<'parser> crate::Parser for Literal<'parser>
                             if c1 == c2 { continue; }
                             return Outcome::Leaf
                                 { matched: &text[0..n],
-                                  then: Some(crate::Unexpected::Char)};
+                                  then: Some(Unexpected::Char)};
                         },
                         None => return crate::Leaf
                             { matched: &text[0..n],
-                              then: Some(crate::Unexpected::EndOfInput)}
+                              then: Some(Unexpected::EndOfInput)}
                     }
                 }
             }
@@ -258,7 +258,7 @@ impl<'parser> crate::Parser for Literal<'parser>
 pub struct EndOfInput {
 }
 
-impl crate::Parser for EndOfInput
+impl Parser for EndOfInput
 {
     fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
@@ -280,7 +280,7 @@ impl crate::Parser for EndOfInput
             _ => {
                 return Outcome::Leaf
                     { matched: &text[0..0],
-                      then: Some(crate::Unexpected::Char)};
+                      then: Some(Unexpected::Char)};
             }
         }
     }
@@ -288,9 +288,9 @@ impl crate::Parser for EndOfInput
 
 pub struct Tagged<'parser> {
     pub tag: &'static str,
-    pub content: Arc<dyn crate::Parser+Send+Sync+'parser>
+    pub content: Arc<dyn Parser+Send+Sync+'parser>
 }
-impl<'parser> crate::Parser for Tagged<'parser>
+impl<'parser> Parser for Tagged<'parser>
 {
     fn tag(&self) -> Option<&'static str>
     {
@@ -343,7 +343,7 @@ impl<'parser> crate::Parser for Tagged<'parser>
 
 
 pub struct AnyChar {}
-impl crate::Parser for AnyChar
+impl Parser for AnyChar
 {
     fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
@@ -367,7 +367,7 @@ impl crate::Parser for AnyChar
             None => {
                 Outcome::Leaf{
                     matched: &text[0..0],
-                    then: Some(crate::Unexpected::EndOfInput)
+                    then: Some(Unexpected::EndOfInput)
                 }
             }
         }
@@ -376,7 +376,7 @@ impl crate::Parser for AnyChar
 
 pub struct Digit {}
 
-impl crate::Parser for Digit
+impl Parser for Digit
 {
     fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
@@ -400,13 +400,13 @@ impl crate::Parser for Digit
                 }
                 Outcome::Leaf{
                     matched: &text[0..0],
-                    then: Some(crate::Unexpected::Char)
+                    then: Some(Unexpected::Char)
                 }
             },
             None => {
                 Outcome::Leaf{
                     matched: &text[0..0],
-                    then: Some(crate::Unexpected::EndOfInput)
+                    then: Some(Unexpected::EndOfInput)
                 }
             }
         }
@@ -417,7 +417,7 @@ pub struct Char {
     pub x: char
 }
 
-impl crate::Parser for Char
+impl Parser for Char
 {
     fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
@@ -441,13 +441,13 @@ impl crate::Parser for Char
                 }
                 Outcome::Leaf{
                     matched: &text[0..0],
-                    then: Some(crate::Unexpected::Char)
+                    then: Some(Unexpected::Char)
                 }
             },
             None => {
                 Outcome::Leaf{
                     matched: &text[0..0],
-                    then: Some(crate::Unexpected::EndOfInput)
+                    then: Some(Unexpected::EndOfInput)
                 }
             }
         }
@@ -456,10 +456,10 @@ impl crate::Parser for Char
 
 pub struct AtLeastOne<'x>
 {
-    pub x: Arc<dyn crate::Parser+Send+Sync+'x>,
+    pub x: Arc<dyn Parser+Send+Sync+'x>,
 }
 
-impl<'parser> crate::Parser for AtLeastOne<'parser>
+impl<'parser> Parser for AtLeastOne<'parser>
 {
     fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
@@ -539,10 +539,10 @@ impl<'parser> crate::Parser for AtLeastOne<'parser>
 
 pub struct ZeroOrMore<'x>
 {
-    pub x: Arc<dyn crate::Parser+Send+Sync+'x>,
+    pub x: Arc<dyn Parser+Send+Sync+'x>,
 }
 
-impl<'parser> crate::Parser for ZeroOrMore<'parser>
+impl<'parser> Parser for ZeroOrMore<'parser>
 {
     fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
@@ -640,7 +640,7 @@ pub struct OneOfChars {
     pub chars: std::collections::HashSet<char>
 }
 
-impl crate::Parser for OneOfChars
+impl Parser for OneOfChars
 {
     fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
@@ -664,13 +664,13 @@ impl crate::Parser for OneOfChars
                 }
                 Outcome::Leaf{
                     matched: &text[0..0],
-                    then: Some(crate::Unexpected::Char)
+                    then: Some(Unexpected::Char)
                 }
             },
             None => {
                 Outcome::Leaf{
                     matched: &text[0..0],
-                    then: Some(crate::Unexpected::EndOfInput)
+                    then: Some(Unexpected::EndOfInput)
                 }
             }
         }
@@ -681,7 +681,7 @@ pub struct AnyCharExcept {
     pub chars: std::collections::HashSet<char>
 }
 
-impl crate::Parser for AnyCharExcept
+impl Parser for AnyCharExcept
 {
     fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
@@ -700,7 +700,7 @@ impl crate::Parser for AnyCharExcept
                 if self.chars.contains(&c) {
                     return Outcome::Leaf{
                         matched: &text[0..0],
-                        then: Some(crate::Unexpected::Char)
+                        then: Some(Unexpected::Char)
                     };
                 }
                 Outcome::Leaf{
@@ -711,7 +711,7 @@ impl crate::Parser for AnyCharExcept
             None => {
                 Outcome::Leaf{
                     matched: &text[0..0],
-                    then: Some(crate::Unexpected::EndOfInput)
+                    then: Some(Unexpected::EndOfInput)
                 }
             }
         }
@@ -719,11 +719,11 @@ impl crate::Parser for AnyCharExcept
 }
 
 pub struct ParseXUntilY<'x, 'y> {
-    pub x: Arc<dyn crate::Parser+Send+Sync+'x>,
-    pub y: Arc<dyn crate::Parser+Send+Sync+'y>,
+    pub x: Arc<dyn Parser+Send+Sync+'x>,
+    pub y: Arc<dyn Parser+Send+Sync+'y>,
 }
 
-impl<'x, 'y> crate::Parser for ParseXUntilY<'x, 'y>
+impl<'x, 'y> Parser for ParseXUntilY<'x, 'y>
 {
     fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
@@ -746,10 +746,11 @@ impl<'x, 'y> crate::Parser for ParseXUntilY<'x, 'y>
         loop {
             let close = self.y.parse_some_of(rest, cache, backrefs);
             match close {
-                Outcome::Leaf{ matched: _, then: None } |
-                Outcome::Composite{ matched: Some(_), components: _ } => {
+                Outcome::Leaf{ matched, then: None } |
+                Outcome::Composite{ matched: Some(matched), components: _ } => {
+                    components.push((Goal{parser: self.y.deref(), text: rest}, close));
                     return Outcome::Composite{
-                        matched: Some(all_of(text).up_to(rest)),
+                        matched: Some(all_of(text).through(matched)),
                         components: components
                     }
                 },
@@ -782,9 +783,9 @@ impl<'x, 'y> crate::Parser for ParseXUntilY<'x, 'y>
 }
 
 pub struct ParseBalancedUntilY<'x, 'y, 'v> {
-    pub balance_pairs: Vec<(crate::Ref<'v>, crate::Ref<'v>)>,
-    pub content: crate::Ref<'x>,
-    pub y: crate::Ref<'y>,
+    pub balance_pairs: Vec<(Ref<'v>, Ref<'v>)>,
+    pub content: Ref<'x>,
+    pub y: Ref<'y>,
 }
 
 struct CompositeResult<'text, 'parser> {
@@ -792,7 +793,7 @@ struct CompositeResult<'text, 'parser> {
     pub components: Vec< (Goal<'text, 'parser>, Outcome<'text, 'parser>) >
 }
 
-impl<'x, 'y, 'v> crate::Parser for ParseBalancedUntilY<'x, 'y, 'v>
+impl<'x, 'y, 'v> Parser for ParseBalancedUntilY<'x, 'y, 'v>
 {
     // does not consume self.y
     fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
@@ -823,7 +824,7 @@ impl<'x, 'y, 'v> ParseBalancedUntilY<'x, 'y, 'v>
     // does not consume y
     fn parse_to_y<'text, 'parser_ref, 'backrefs, 'result>(
         self: &'parser_ref Self,
-        y: &'y dyn crate::Parser,
+        y: &'y dyn Parser,
         text: &'text str,
         cache: &mut [Cache<'text, 'parser_ref>],
         backrefs: &'parser_ref [BackReffable<'backrefs>]
@@ -923,10 +924,10 @@ impl<'x, 'y, 'v> ParseBalancedUntilY<'x, 'y, 'v>
 
 pub struct BackRefs<'parser, 'backrefs> {
     pub backrefs: Vec<BackReffable<'backrefs>>,
-    pub parser: crate::Ref<'parser>
+    pub parser: Ref<'parser>
 }
     
-impl<'parser, 'backrefs1> crate::Parser for BackRefs<'parser, 'backrefs1>
+impl<'parser, 'backrefs1> Parser for BackRefs<'parser, 'backrefs1>
 {
     fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
@@ -954,7 +955,7 @@ pub struct BackRef {
     pub id: &'static str
 }
 
-impl crate::Parser for BackRef
+impl Parser for BackRef
 {
     // does not consume self.y
     fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
@@ -977,11 +978,11 @@ impl crate::Parser for BackRef
 }
 
 pub struct Switch<'v> {
-    pub first_case: (crate::Ref<'v>, crate::Ref<'v>),
-    pub other_cases: Vec<(crate::Ref<'v>, crate::Ref<'v>)>,
+    pub first_case: (Ref<'v>, Ref<'v>),
+    pub other_cases: Vec<(Ref<'v>, Ref<'v>)>,
 }
 
-impl<'v> crate::Parser for Switch<'v>
+impl<'v> Parser for Switch<'v>
 {
     // does not consume self.y
     fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
@@ -1051,6 +1052,79 @@ impl<'v> crate::Parser for Switch<'v>
                 }
                 Outcome::Composite{matched: None,components: components}
             }
+        }
+    }
+}
+
+pub struct LookingAt<'v> {
+    pub x: Ref<'v>
+}
+
+impl<'v> Parser for LookingAt<'v>
+{
+    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
+        self: &'parser_ref Self,
+        text: &'text str,
+        cache: &mut [Cache<'text, 'parser_ref>],
+        backrefs: &'backrefs [BackReffable<'b>]
+    ) -> Outcome<'text, 'result>
+    where
+        'v: 'parser_ref,
+        'text: 'parser_ref,
+        'b: 'result,
+        'parser_ref: 'result,
+        'backrefs: 'parser_ref + 'result
+    {
+        let r = self.x.parse_some_of(text, cache, backrefs);
+        match r {
+            Outcome::Leaf{ matched: _, then: None } |
+            Outcome::Composite{ matched: Some(_), components: _ } => {
+                Outcome::Leaf{ matched: &text[..0], then: None }
+            },
+            Outcome::Leaf{ matched: _, then: Some(_)} |
+            Outcome::Composite{ matched: None, components: _ } => {
+                Outcome::Composite{
+                    matched: None,
+                    components : vec!(
+                        (Goal{parser: self.x.deref(), text: text}, r))
+                }
+            },
+        }
+    }
+}
+
+pub struct Not<'v> {
+    pub x: Ref<'v>
+}
+
+impl<'v> Parser for Not<'v>
+{
+    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
+        self: &'parser_ref Self,
+        text: &'text str,
+        cache: &mut [Cache<'text, 'parser_ref>],
+        backrefs: &'backrefs [BackReffable<'b>]
+    ) -> Outcome<'text, 'result>
+    where
+        'v: 'parser_ref,
+        'text: 'parser_ref,
+        'b: 'result,
+        'parser_ref: 'result,
+        'backrefs: 'parser_ref + 'result
+    {
+        let r = self.x.parse_some_of(text, cache, backrefs);
+        match r {
+            Outcome::Leaf{ matched: _, then: None } |
+            Outcome::Composite{ matched: Some(_), components: _ } => {
+                Outcome::Leaf{ matched: &text[..0], then: Some(match text.len() {
+                    0 => Unexpected::EndOfInput,
+                    _ => Unexpected::Char
+                })}
+            },
+            Outcome::Leaf{ matched: _, then: Some(_)} |
+            Outcome::Composite{ matched: None, components: _ } => {
+                Outcome::Leaf{ matched: &text[..0], then: None }
+            },
         }
     }
 }
