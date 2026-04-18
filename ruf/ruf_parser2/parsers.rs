@@ -15,7 +15,7 @@ use std::ops::Deref;
 use std::sync::Arc;
 
 use crate::all_of::all_of;
-use crate::{Cache, BackReffable, Outcome};
+use crate::{Cache, BackReffable, Outcome, Goal};
 
 pub struct And<'parser>
 {
@@ -50,14 +50,14 @@ impl<'and> crate::Parser for And<'and>
             } =>
                 Outcome::Composite{
                     matched: None,
-                    components: vec!( (crate::Goal{parser: self.first_term.deref(), text: text},
+                    components: vec!( (Goal{parser: self.first_term.deref(), text: text},
                                        result_of_first_term) )},
             Outcome::Leaf{ matched: first_term_matched, then: None} |
             Outcome::Composite{
                 matched: Some(first_term_matched),
                 components: _
             } => {
-                let mut components = vec!( (crate::Goal{parser: self.first_term.deref(), text: text},
+                let mut components = vec!( (Goal{parser: self.first_term.deref(), text: text},
                                             result_of_first_term) );
                 let mut rest: &str = all_of(text).after(first_term_matched);
                 let mut cache = &mut cache[first_term_matched.len()..];
@@ -73,7 +73,7 @@ impl<'and> crate::Parser for And<'and>
                             components: _
                         } =>
                         {
-                            components.push( (crate::Goal{parser: term.deref(), text: rest},result_of_term) );
+                            components.push( (Goal{parser: term.deref(), text: rest},result_of_term) );
                             return Outcome::Composite{
                                 matched: None,
                                 components: components};
@@ -88,7 +88,7 @@ impl<'and> crate::Parser for And<'and>
                         } => {
                             let t = all_of(rest).after(matched);
                             let c = &mut cache[matched.len()..];
-                            components.push( (crate::Goal{parser: term.deref(), text: rest},result_of_term) );
+                            components.push( (Goal{parser: term.deref(), text: rest},result_of_term) );
                             rest = t;
                             cache = c;
                         }
@@ -135,7 +135,7 @@ impl<'or> crate::Parser for Or<'or>
             } =>
                 Outcome::Composite{
                     matched: Some(matched),
-                    components: vec!( (crate::Goal{parser: self.first_term.deref(), text: text},
+                    components: vec!( (Goal{parser: self.first_term.deref(), text: text},
                                        result_of_first_term) )},
 
             Outcome::Leaf{ matched: _, then: Some(_)} |
@@ -143,7 +143,7 @@ impl<'or> crate::Parser for Or<'or>
                 matched: None,
                 components: _
             } => {
-                let mut components = vec!( (crate::Goal{parser: self.first_term.deref(), text: text}, result_of_first_term) );
+                let mut components = vec!( (Goal{parser: self.first_term.deref(), text: text}, result_of_first_term) );
                 for term in self.other_terms.iter() {
                     let result_of_term = term.parse_some_of(text, cache, backrefs);
                     match result_of_term {
@@ -156,7 +156,7 @@ impl<'or> crate::Parser for Or<'or>
                             components: _
                         } =>
                         {
-                            components.push( (crate::Goal{parser: term.deref(), text: text}, result_of_term) );
+                            components.push( (Goal{parser: term.deref(), text: text}, result_of_term) );
                             return Outcome::Composite{
                                 matched: Some(matched),
                                 components: components};
@@ -169,7 +169,7 @@ impl<'or> crate::Parser for Or<'or>
                             matched: None,
                             components: _
                         } =>
-                            components.push( (crate::Goal{parser: term.deref(), text: text}, result_of_term) )
+                            components.push( (Goal{parser: term.deref(), text: text}, result_of_term) )
                     }
                 }
                 Outcome::Composite{
@@ -323,7 +323,7 @@ impl<'parser> crate::Parser for Tagged<'parser>
                 Outcome::Composite{
                     matched: Some(matched),
                     components: vec!(
-                        (crate::Goal{parser: self.content.deref(), text: text}, result),)},
+                        (Goal{parser: self.content.deref(), text: text}, result),)},
 
             Outcome::Leaf{
                 matched: _,
@@ -336,7 +336,7 @@ impl<'parser> crate::Parser for Tagged<'parser>
                 Outcome::Composite{
                     matched: None,
                     components: vec!(
-                        (crate::Goal{parser: self.content.deref(), text: text}, result),)},
+                        (Goal{parser: self.content.deref(), text: text}, result),)},
         }
     }
 }
@@ -487,7 +487,7 @@ impl<'parser> crate::Parser for AtLeastOne<'parser>
                     Outcome::Composite{
                         matched: None,
                         components: vec!(
-                            (crate::Goal{parser: self.x.deref(), text: text}, result),)},
+                            (Goal{parser: self.x.deref(), text: text}, result),)},
 
                 Outcome::Leaf{
                     matched,
@@ -498,7 +498,7 @@ impl<'parser> crate::Parser for AtLeastOne<'parser>
                     components: _
                 } => {
                     let mut components = vec!(
-                        (crate::Goal{parser: self.x.deref(), text: text}, result) );
+                        (Goal{parser: self.x.deref(), text: text}, result) );
                     let mut rest: &str = all_of(text).after(matched);
                     let mut cache = &mut cache[matched.len()..];
                     loop {
@@ -526,7 +526,7 @@ impl<'parser> crate::Parser for AtLeastOne<'parser>
                                 components: _
                             } => {
                                 components.push(
-                                    (crate::Goal{parser: self.x.deref(), text: rest}, result) );
+                                    (Goal{parser: self.x.deref(), text: rest}, result) );
                                 rest = all_of(rest).after(matched);
                                 cache = &mut cache[matched.len()..];
                             }
@@ -585,7 +585,7 @@ impl<'parser> crate::Parser for ZeroOrMore<'parser>
                     components: _
                 } => {
                     components.push(
-                        (crate::Goal{parser: self.x.deref(), text: rest}, result) );
+                        (Goal{parser: self.x.deref(), text: rest}, result) );
                     rest = all_of(rest).after(matched);
                     cache = &mut cache[matched.len()..];
                 }
@@ -760,8 +760,8 @@ impl<'x, 'y> crate::Parser for ParseXUntilY<'x, 'y>
                     match item {
                         Outcome::Leaf{ matched: _, then: Some(_) } |
                         Outcome::Composite{ matched: None, components: _ } => {
-                            components.push((crate::Goal{parser: self.y.deref(), text: rest}, close));
-                            components.push((crate::Goal{parser: self.x.deref(), text: rest}, item));
+                            components.push((Goal{parser: self.y.deref(), text: rest}, close));
+                            components.push((Goal{parser: self.x.deref(), text: rest}, item));
                             return Outcome::Composite{
                                 matched: None,
                                 components: components
@@ -770,7 +770,7 @@ impl<'x, 'y> crate::Parser for ParseXUntilY<'x, 'y>
                 
                         Outcome::Leaf{ matched, then: None } |
                         Outcome::Composite{ matched: Some(matched), components: _ } => {
-                            components.push((crate::Goal{parser: self.x.deref(), text: rest}, item) );
+                            components.push((Goal{parser: self.x.deref(), text: rest}, item) );
                             rest = all_of(rest).after(matched);
                             cache = &mut cache[matched.len()..];
                         }
@@ -789,7 +789,7 @@ pub struct ParseBalancedUntilY<'x, 'y, 'v> {
 
 struct CompositeResult<'text, 'parser> {
     pub matched: Option<&'text str>,  // None if parse failed, otherwise the match
-    pub components: Vec< (crate::Goal<'text, 'parser>, Outcome<'text, 'parser>) >
+    pub components: Vec< (Goal<'text, 'parser>, Outcome<'text, 'parser>) >
 }
 
 impl<'x, 'y, 'v> crate::Parser for ParseBalancedUntilY<'x, 'y, 'v>
@@ -856,7 +856,7 @@ impl<'x, 'y, 'v> ParseBalancedUntilY<'x, 'y, 'v>
                             
                             Outcome::Leaf{ matched, then: None } |
                             Outcome::Composite{ matched: Some(matched), components: _ } => {
-                                nested.push((crate::Goal{parser: p_open.deref(), text: rest}, open));
+                                nested.push((Goal{parser: p_open.deref(), text: rest}, open));
                                 rest = all_of(rest).after(matched);
                                 cache = &mut cache[matched.len()..];
                                 match self.parse_to_y(p_close.x.deref(), rest, cache, backrefs) {
@@ -883,7 +883,7 @@ impl<'x, 'y, 'v> ParseBalancedUntilY<'x, 'y, 'v>
                                                 rest = all_of(rest).after(matched);
                                                 cache = &mut cache[matched.len()..];
                                                 nested.push(
-                                                    (crate::Goal{parser: p_close.deref(), text: rest},
+                                                    (Goal{parser: p_close.deref(), text: rest},
                                                      close));
                                             }
                                         }
@@ -899,7 +899,7 @@ impl<'x, 'y, 'v> ParseBalancedUntilY<'x, 'y, 'v>
                             Outcome::Leaf{ matched: _, then: Some(_) } |
                             Outcome::Composite{ matched: None, .. } => {
                                 components.push(
-                                    (crate::Goal{parser: self.content.deref(), text: rest}, content));
+                                    (Goal{parser: self.content.deref(), text: rest}, content));
                                 return CompositeResult{
                                     matched: None,
                                     components
@@ -908,7 +908,7 @@ impl<'x, 'y, 'v> ParseBalancedUntilY<'x, 'y, 'v>
                             Outcome::Leaf{ matched, then: None } |
                             Outcome::Composite{ matched: Some(matched), .. } => {
                                 nested.push(
-                                    (crate::Goal{parser: self.content.deref(), text: rest}, content));
+                                    (Goal{parser: self.content.deref(), text: rest}, content));
                                 rest = all_of(rest).after(matched);
                                 cache = &mut cache[matched.len()..];
                             }
@@ -973,5 +973,79 @@ impl crate::Parser for BackRef
     {
         backrefs.iter().find(|&x| { x.0 == self.id }).unwrap().1.parse_some_of(
             text, cache, backrefs)
+    }
+}
+
+pub struct Switch<'v> {
+    pub first_case: (crate::Ref<'v>, crate::Ref<'v>),
+    pub other_cases: Vec<(crate::Ref<'v>, crate::Ref<'v>)>,
+}
+
+impl<'v> crate::Parser for Switch<'v>
+{
+    // does not consume self.y
+    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
+        self: &'parser_ref Self,
+        text: &'text str,
+        cache: &mut [Cache<'text, 'parser_ref>],
+        backrefs: &'backrefs [BackReffable<'b>]
+    ) -> Outcome<'text, 'result>
+    where
+        'text: 'parser_ref,
+        'b: 'parser_ref,
+        'b: 'result,
+        'parser_ref: 'result,
+        'backrefs: 'parser_ref + 'result
+    {
+        let result_of_first_term = self.first_term.0.parse_some_of(text, cache, backrefs);
+        match result_of_first_term {
+            Outcome::Leaf{
+                matched,
+                then: None
+            } |
+            Outcome::Composite{
+                matched: Some(matched),
+                components: _
+            } => {
+                let rest = all_of(rest).after(matched);
+                let cache = &mut cache[matched.len()..];
+                Outcome::Composite{
+                    matched: Some(matched),
+                    components: vec!(
+                        (Goal{parser: self.first_term.0.deref(), text: text}, result_of_first_term),
+                        (Goal{parser: self.first_term.0.deref(), text: rest},
+                         self.first_term.1.parse_some_of(rest, cache, backrefs) ))}
+            },
+            Outcome::Leaf{ matched: _, then: Some(_)} |
+            Outcome::Composite{
+                matched: None,
+                components: _
+            } => {
+                let mut components = vec!(
+                    (Goal{parser: self.first_term.0.deref(), text: text}, result_of_first_term) );
+                for term, content in self.other_terms.iter() {
+                    let result_of_term = term.parse_some_of(text, cache, backrefs);
+                    match result_of_term {
+                        Outcome::Leaf{matched, then: None} |
+                        Outcome::Composite{matched: Some(matched),components: _} => {
+                            let rest = all_of(rest).after(matched);
+                            let cache = &mut cache[matched.len()..];
+                            components.push(
+                                Outcome::Composite{
+                                    matched: Some(matched),
+                                    components: vec!(
+                                        (Goal{parser: self.term.deref(), text: text}, result_of_term),
+                                        (Goal{parser: self.term.deref(), text: rest},
+                                         self.content.parse_some_of(rest, cache, backrefs) ))});
+                            return components;
+                        },
+                        Outcome::Leaf{matched: _,then: Some(_)} |
+                        Outcome::Composite{matched: None,components: _} => {
+                            components.push( (Goal{parser: term.deref(), text: text}, result_of_term) );
+                    }
+                }
+                Outcome::Composite{matched: None,components: components}
+            }
+        }
     }
 }

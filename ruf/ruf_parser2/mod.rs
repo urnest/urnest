@@ -496,6 +496,12 @@ pub fn hex_digit() -> Ref<'static>
     one_of_chars(CharSet{ value: "0-9a-fA-F" })
 }
 
+// "
+pub fn double_quote() -> Ref<'static>
+{
+    char('"')
+}
+
 // at least one x
 pub fn at_least_one<'parser>(x: Ref<'parser>) -> Ref<'parser>{Ref::new(parsers::AtLeastOne{x: x.x})}
 
@@ -653,4 +659,14 @@ where 'backrefs: 'parser
 pub fn backref(id: &'static str) -> Ref<'static>
 {
     Ref::new(parsers::BackRef{ id: id })
+}
+
+// parse repeated content with nested open + content + close until y
+pub fn switch<'v>(
+    first_case: (Ref<'v>, Ref<'v>),
+    other_cases: Vec<(Ref<'v>, Ref<'v>)>
+) -> Ref<'r>
+where 'v: 'r
+{
+    Ref::new(parsers::Switch{fist_case, other_cases})
 }

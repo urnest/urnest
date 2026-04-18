@@ -1,12 +1,14 @@
 * parser:
+  - capture
+  - looking_at
+    ... then revert parse_until etc so they all consume end
+  - match (switch)
+  - not
 
   - primitives from hcp::parser:
     x none
     x listOf(open, x, sep, term) = (open + term) | (open + x + zero_or_more(sep + x) + term)
       listOfWithTrailingSepAllowed  = (open + term) | (open + x + zero_or_more(sep + x) + optional(sep) + term)
-    - looking_at
-      ... then revert parse_until etc so they all consume end
-    - match
     maybe nonEmptyListOf(x, moreflag)
     maybe not?
     * maybe and/or &str and show in tutorial
@@ -44,6 +46,7 @@ x back ref (recursive)
 ... optimise whitespace that use CharSet, much smaller and quicker to use
 explicit match (copilot)
 ... optimise hex_digit, octal_digit (make like digit)
+... use OnceLock where possible (copilot)
 
 
 * tree:

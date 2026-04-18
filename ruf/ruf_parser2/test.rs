@@ -52,6 +52,7 @@ use ruf_parser2::{
     parse_balanced_until_y,
     backref,
     backrefs,
+    switch,
 };
 
 use ruf_parser2::ast::Item;
@@ -1243,4 +1244,22 @@ fn main() {
             AST{ value:Item{ tag: root, text: x },
                  children: vec!()
             }));
+
+    // switch
+    // where there is a constraint that says
+    //   if it starts with x then it must x y and nothing else
+    let owl = "owl";
+    let fox_cub = "fox cub";
+    let p = switch(
+        (literal("an"), tagged(owl, literal(" owl"))),
+        [literal("a"), tagged(fox_cub, literal(" fox cub"))]);
+    let x = "an owl";
+    let r = p.parse(x);
+    assert::equal(
+        &r.get_ast(root),
+        &Ok(
+            AST{ value:Item{ tag: root, text: x },
+                 children: vec!(
+                     AST{ value:Item{ tag: owl, text: &x[2..6] }, children: vec!()})}));
+    
 }
