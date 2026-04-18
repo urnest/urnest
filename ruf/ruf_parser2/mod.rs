@@ -652,31 +652,5 @@ where 'backrefs: 'parser
 
 pub fn backref(id: &'static str) -> Ref<'static>
 {
-    Ref::new(BackRef{ id: id })
-}
-
-pub struct BackRef {
-    id: &'static str
-}
-
-impl crate::Parser for BackRef
-{
-    // does not consume self.y
-    fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
-        self: &'parser_ref Self,
-        text: &'text str,
-        cache: &mut [crate::Cache<'text, 'parser_ref>],
-        backrefs: &'backrefs [BackReffable<'b>]
-    ) -> crate::Outcome<'text, 'result>
-    where
-        'text: 'parser_ref,
-        'b: 'parser_ref,
-        'b: 'parser_ref,
-        'b: 'result,
-        'parser_ref: 'result,
-        'backrefs: 'parser_ref + 'result
-    {
-        backrefs.iter().find(|&x| { x.0 == self.id }).unwrap().1.parse_some_of(
-            text, cache, backrefs)
-    }
+    Ref::new(parsers::BackRef{ id: id })
 }
