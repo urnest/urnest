@@ -26,4 +26,9 @@ impl<'x> AllOf<'x>
         assert::less_equal(&self.x.as_ptr(), &y.as_ptr());
         return &self.x[0..self.x.len()-y.len()]
     }
+    // return self through to the end of y
+    pub fn through(&self, y: &str) -> &'x str
+    {
+        return &self.x[0..self.up_to(y).len()+y.len()];
+    }
 }

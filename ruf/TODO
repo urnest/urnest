@@ -2,7 +2,7 @@
   - capture
   - looking_at
     ... then revert parse_until etc so they all consume end
-  - match (switch)
+  x match (switch)
   - not
 
   - primitives from hcp::parser:

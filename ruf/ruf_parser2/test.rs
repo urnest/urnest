@@ -1250,9 +1250,11 @@ fn main() {
     //   if it starts with x then it must x y and nothing else
     let owl = "owl";
     let fox_cub = "fox cub";
+    let bird = "bird";
     let p = switch(
         (literal("an"), tagged(owl, literal(" owl"))),
-        [literal("a"), tagged(fox_cub, literal(" fox cub"))]);
+        [(literal("a"), tagged(fox_cub, literal(" fox cub"))),
+         (literal("the"), tagged(bird, literal(" bird")))].to_vec());
     let x = "an owl";
     let r = p.parse(x);
     assert::equal(
@@ -1261,5 +1263,32 @@ fn main() {
             AST{ value:Item{ tag: root, text: x },
                  children: vec!(
                      AST{ value:Item{ tag: owl, text: &x[2..6] }, children: vec!()})}));
+    let x = "a fox cub";
+    let r = p.parse(x);
+    assert::equal(
+        &r.get_ast(root),
+        &Ok(
+            AST{ value:Item{ tag: root, text: x },
+                 children: vec!(
+                     AST{ value:Item{ tag: fox_cub, text: &x[1..9] }, children: vec!()})}));
+    let x = "the bird";
+    let r = p.parse(x);
+    assert::equal(
+        &r.get_ast(root),
+        &Ok(
+            AST{ value:Item{ tag: root, text: x },
+                 children: vec!(
+                     AST{ value:Item{ tag: bird, text: &x[3..8] }, children: vec!()})}));
+
+    let x = "an fox cub";
+    let r = p.parse(x);
+    assert::equal(&r.get_ast(root), 
+                  &Err(
+                      ParseFailed{
+                          at: all_of(x).after(&x[0..3]),
+                          why: Unexpected::Char,
+                          context: vec!(Context{tag: owl, text: &x[2..]},
+                                        Context{tag: root, text: &x})
+                      }));
     
 }

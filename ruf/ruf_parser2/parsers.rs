@@ -997,51 +997,56 @@ impl<'v> crate::Parser for Switch<'v>
         'parser_ref: 'result,
         'backrefs: 'parser_ref + 'result
     {
-        let result_of_first_term = self.first_term.0.parse_some_of(text, cache, backrefs);
-        match result_of_first_term {
-            Outcome::Leaf{
-                matched,
-                then: None
-            } |
-            Outcome::Composite{
-                matched: Some(matched),
-                components: _
-            } => {
-                let rest = all_of(rest).after(matched);
+        let result_of_first_case = self.first_case.0.parse_some_of(text, cache, backrefs);
+        let mut components = vec!(
+            (Goal{parser: self.first_case.0.deref(), text: text}, result_of_first_case) );
+        match components.last().unwrap().1 {
+            Outcome::Leaf{ matched, then: None } |
+            Outcome::Composite{ matched: Some(matched), components: _ } => {
+                let rest = all_of(text).after(matched);
                 let cache = &mut cache[matched.len()..];
-                Outcome::Composite{
-                    matched: Some(matched),
-                    components: vec!(
-                        (Goal{parser: self.first_term.0.deref(), text: text}, result_of_first_term),
-                        (Goal{parser: self.first_term.0.deref(), text: rest},
-                         self.first_term.1.parse_some_of(rest, cache, backrefs) ))}
+                components.push(
+                    (Goal{parser: self.first_case.1.deref(), text: rest},
+                     self.first_case.1.parse_some_of(rest, cache, backrefs) ));
+                match components.last().unwrap().1 {
+                    Outcome::Leaf{ matched: _, then: Some(_)} |
+                    Outcome::Composite{ matched: None, components: _ } => {
+                        return Outcome::Composite{ matched: None, components };
+                    },
+                    Outcome::Leaf{ matched, then: None } |
+                    Outcome::Composite{ matched: Some(matched), components: _ } => {
+                        return Outcome::Composite{
+                            matched: Some(all_of(text).through(matched)), components };
+                    }
+                }
             },
             Outcome::Leaf{ matched: _, then: Some(_)} |
-            Outcome::Composite{
-                matched: None,
-                components: _
-            } => {
-                let mut components = vec!(
-                    (Goal{parser: self.first_term.0.deref(), text: text}, result_of_first_term) );
-                for term, content in self.other_terms.iter() {
-                    let result_of_term = term.parse_some_of(text, cache, backrefs);
-                    match result_of_term {
+            Outcome::Composite{ matched: None, components: _ } => {
+                for (case, content) in self.other_cases.iter() {
+                    let result_of_case = case.parse_some_of(text, cache, backrefs);
+                    components.push((Goal{parser: case.deref(), text: text}, result_of_case));
+                    match components.last().unwrap().1 {
                         Outcome::Leaf{matched, then: None} |
                         Outcome::Composite{matched: Some(matched),components: _} => {
-                            let rest = all_of(rest).after(matched);
+                            let rest = all_of(text).after(matched);
                             let cache = &mut cache[matched.len()..];
                             components.push(
-                                Outcome::Composite{
-                                    matched: Some(matched),
-                                    components: vec!(
-                                        (Goal{parser: self.term.deref(), text: text}, result_of_term),
-                                        (Goal{parser: self.term.deref(), text: rest},
-                                         self.content.parse_some_of(rest, cache, backrefs) ))});
-                            return components;
+                                (Goal{parser: content.deref(), text: rest},
+                                 content.parse_some_of(rest, cache, backrefs) ));
+                            match components.last().unwrap().1 {
+                                Outcome::Leaf{ matched: _, then: Some(_)} |
+                                Outcome::Composite{ matched: None, components: _ } => {
+                                    return Outcome::Composite{ matched: None, components };
+                                },
+                                Outcome::Leaf{ matched, then: None } |
+                                Outcome::Composite{ matched: Some(matched), components: _ } => {
+                                    return Outcome::Composite{
+                                        matched: Some(all_of(text).through(matched)), components };
+                                }
+                            }
                         },
                         Outcome::Leaf{matched: _,then: Some(_)} |
-                        Outcome::Composite{matched: None,components: _} => {
-                            components.push( (Goal{parser: term.deref(), text: text}, result_of_term) );
+                        Outcome::Composite{matched: None,components: _} => ()
                     }
                 }
                 Outcome::Composite{matched: None,components: components}

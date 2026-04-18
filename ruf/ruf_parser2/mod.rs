@@ -662,11 +662,11 @@ pub fn backref(id: &'static str) -> Ref<'static>
 }
 
 // parse repeated content with nested open + content + close until y
-pub fn switch<'v>(
+pub fn switch<'v, 'r>(
     first_case: (Ref<'v>, Ref<'v>),
     other_cases: Vec<(Ref<'v>, Ref<'v>)>
 ) -> Ref<'r>
 where 'v: 'r
 {
-    Ref::new(parsers::Switch{fist_case, other_cases})
+    Ref::new(parsers::Switch{first_case, other_cases})
 }
