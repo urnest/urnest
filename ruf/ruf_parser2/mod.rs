@@ -557,7 +557,7 @@ pub fn crlf() -> Ref<'static>
     tagged(CRLF, literal("\r\n"))
 }
 
-pub const INLINE_SPACE: &str = "inline whitspace";
+pub const INLINE_SPACE: &str = "inline whitespace";
 pub fn some_inline_space() -> Ref<'static>
 {
     tagged(INLINE_SPACE,

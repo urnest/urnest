@@ -53,7 +53,7 @@ pub fn s_char() -> Ref<'static>
         string_escape_sequence()).clone()
 }
 
-pub const S_CHARS: &str = "string escape sequence";
+pub const S_CHARS: &str = "string chars";
 
 // sequence of string chars i.e. content of c-string literal
 // tagged S_CHARS
@@ -61,7 +61,7 @@ pub fn s_chars() -> Ref<'static>
 {
     static RESULT: OnceLock<Ref<'static>> = OnceLock::new();
     RESULT.get_or_init(
-        || tagged(S_CHARS, parse_x_until_y(s_char(), double_quote()))).clone()
+        || tagged(S_CHARS, parse_x_until_y(s_char(), looking_at(double_quote())))).clone()
 }
 
 // matches nothing or something, tagged WHITESPACE

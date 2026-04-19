@@ -2,6 +2,10 @@
 
 %all.tree==<<
 %test.output
+%test-c.output
 
 %test == test.rs+(..%rs-opts):exe
 %test.output == ()+cmd=RUST_BACKTRACE\=full (%test):exec.output
+
+%test-c == test-c.rs+(..%rs-opts):exe
+%test-c.output == ()+cmd=RUST_BACKTRACE\=full (%test-c):exec.output
