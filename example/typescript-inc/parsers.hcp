@@ -232,7 +232,7 @@ PR implementsClause() noexcept{
   return result;
 }
 
-PR DeclarationElementcx() noexcept{
+PR DeclarationElement() noexcept{
   static PR const result(
     exportAssignment()|
     (kw_export()+interfaceDeclaration())|
