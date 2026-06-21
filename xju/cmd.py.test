@@ -49,9 +49,9 @@ try:
 except CmdFailed as e:
     Assert(e.argv)==['/bin/cat',__file__,'/dev/non-existent']
     Assert(e.status)!=0
-    Assert(e.stderr)=="/bin/cat: /dev/non-existent: No such file or directory\n"
+    Assert(e.stderr)=="cat: /dev/non-existent: No such file or directory\n"
     Assert(b'lsssss').isIn(e.stdout)
-    Assert(readable_repr(e))==f"Failed to do non-shell command ['/bin/cat', '{__file__}', '/dev/non-existent'] because\nnon-shell command ['/bin/cat', '{__file__}', '/dev/non-existent'] failed with exit status 1 and stderr /bin/cat: /dev/non-existent: No such file or directory\n."
+    Assert(readable_repr(e))==f"Failed to do non-shell command ['/bin/cat', '{__file__}', '/dev/non-existent'] because\nnon-shell command ['/bin/cat', '{__file__}', '/dev/non-existent'] failed with exit status 1 and stderr cat: /dev/non-existent: No such file or directory\n."
 else:
     assert False
     pass

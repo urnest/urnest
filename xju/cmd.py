@@ -32,9 +32,12 @@ class CmdFailed(Exception):
 
 def do_cmd(argv:Sequence[str])->Tuple[bytes,  # stdout
                                       str]:   # stderr
-    '''do non-shell command {argv!r}'''
-    '''returns (stdout,stderr) on zero exit status'''
-    '''raises CmdFailed on non-zero exit'''
+    '''
+    do non-shell command {argv!r}
+
+    - returns (stdout,stderr) on zero exit status
+    - raises CmdFailed on non-zero exit
+    '''
     try:
         try:
             p=subprocess.Popen(args=argv,
