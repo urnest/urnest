@@ -1,5 +1,9 @@
 * parser:
   - capture
+    let Locked<indent> = Locked<Vec<&str>>::new(vec!(""));
+    let p = capturing(&indent, captured(&indent)+some_inline_space(),
+                      statement() + parse_x_until_y(captured(&indent)+statement()));
+    
   x looking_at
     ... then revert parse_until etc so they all consume end
   x match (switch)
