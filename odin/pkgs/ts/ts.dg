@@ -9,7 +9,7 @@
 :ts 'typescript'? => :FILE;
 :list.ts ':ts files in list' => <:LIST>;
 
-:ts-deps.view_desc 'view description of ts reference paths' => :FILE;
+:ts-deps.view_desc 'view description of ts reference+import paths' => :FILE;
 :ts-deps 'list of direct reference paths'? => :LIST;
 :ts-deps-all 'list of transitive reference paths'? => :LIST;
 

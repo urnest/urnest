@@ -21,6 +21,7 @@ use ruf_newtype as newtype;
 pub mod ast;
 pub mod all_of;
 pub mod c;
+pub mod typescript;
 
 use all_of::all_of;
 

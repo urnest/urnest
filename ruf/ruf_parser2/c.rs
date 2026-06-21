@@ -28,6 +28,7 @@ use crate::{
     some_space,
     any_inline_space,
     any_char,
+    zero_or_more,
 };
 
 pub const STRING_ESCAPE_SEQUENCE: &str = "string escape sequence";
@@ -115,6 +116,17 @@ pub fn star_slash() -> Ref<'static>
         || literal("*/")).clone()
 }
 
+// c++ comment line ( // ...)
+pub fn cxx_comment_line() -> Ref<'static>
+{
+    static RESULT: OnceLock<Ref<'static>> = OnceLock::new();
+    RESULT.get_or_init(
+        || any_inline_space() + double_slash() + parse_x_until_y(
+            any_char_except(CharSet{ value: "\n"}),
+            crate::char('\n'))).clone()
+}
+
+
 // c++ comment ( // ...), tagged CXX_COMMENT
 pub const CXX_COMMENT: &str = "c++ comment";
 pub fn cxx_comment() -> Ref<'static>
@@ -123,10 +135,7 @@ pub fn cxx_comment() -> Ref<'static>
     RESULT.get_or_init(
         || tagged(
             CXX_COMMENT,
-            at_least_one(
-                any_inline_space() + double_slash() + parse_x_until_y(
-                    any_char_except(CharSet{ value: "\n"}),
-                    crate::char('\n'))))).clone()
+            at_least_one(cxx_comment_line()))).clone()
 }
 
 // c comment ( /* ... */), tagged C_COMMENT
@@ -140,4 +149,14 @@ pub fn c_comment() -> Ref<'static>
             any_inline_space() + slash_star() + parse_x_until_y(
                     any_char(),
                     star_slash()))).clone()
+}
+
+// identifier
+pub const IDENTIFIER: &str = "identifier";
+pub fn identifier() -> Ref<'static>
+{
+    static RESULT: OnceLock<Ref<'static>> = OnceLock::new();
+    RESULT.get_or_init(
+        || tagged(IDENTIFIER, one_of_chars(CharSet{value: "a-zA-Z_"}) +
+            zero_or_more(one_of_chars(CharSet{value: "a-zA-Z_0-9"})))).clone()
 }

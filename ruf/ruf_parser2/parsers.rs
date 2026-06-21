@@ -957,7 +957,6 @@ pub struct BackRef {
 
 impl Parser for BackRef
 {
-    // does not consume self.y
     fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
         text: &'text str,
@@ -984,7 +983,6 @@ pub struct Switch<'v> {
 
 impl<'v> Parser for Switch<'v>
 {
-    // does not consume self.y
     fn parse_some_of_<'text, 'parser_ref, 'backrefs, 'b, 'result>(
         self: &'parser_ref Self,
         text: &'text str,
