@@ -25,6 +25,6 @@ from xju.xn import in_context
 #(see Odinfile for use)
 try:
     sys.exit('not found')
-except:
+except Exception:
     raise in_context('jock') from None
 pass

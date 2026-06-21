@@ -540,13 +540,13 @@ Assert(codec(O).encode(O.b))==7
 try:
     x=codec(O).decode(8)
 except Exception as e:
-    Assert(readable_repr(e))=="Failed to decode 8 to a <enum 'O'> because\nfailed to decode 8 as enum O value because\n- failed to decode as O.a because\n  failed to decode 8 as O.a because\n  8 (of type <class 'int'>) is not a <class 'str'>; and\n- failed to decode as O.b because\n  failed to decode 8 as O.b because\n  8 is not 7."
+    Assert(readable_repr(e))=="Failed to decode 8 to a <enum 'O'> because\nfailed to decode 8 as enum O value because\nall failed:\n- failed to decode as O.a because\n  failed to decode 8 as O.a because\n  8 (of type <class 'int'>) is not a <class 'str'>; and\n- failed to decode as O.b because\n  failed to decode 8 as O.b because\n  8 is not 7."
 else:
     assert False, x
 try:
     x=codec(O).decode('jock')
 except Exception as e:
-    Assert(readable_repr(e))=="Failed to decode jock to a <enum 'O'> because\nfailed to decode 'jock' as enum O value because\n- failed to decode as O.a because\n  failed to decode 'jock' as O.a because\n  'jock' is not 'fred'; and\n- failed to decode as O.b because\n  failed to decode 'jock' as O.b because\n  'jock' (of type <class 'str'>) is not a <class 'int'>."
+    Assert(readable_repr(e))=="Failed to decode jock to a <enum 'O'> because\nfailed to decode 'jock' as enum O value because\nall failed:\n- failed to decode as O.a because\n  failed to decode 'jock' as O.a because\n  'jock' is not 'fred'; and\n- failed to decode as O.b because\n  failed to decode 'jock' as O.b because\n  'jock' (of type <class 'str'>) is not a <class 'int'>."
 else:
     assert False, x
 try:
@@ -594,7 +594,14 @@ Assert(union_codec.encode(9))==9
 try:
     x=union_codec.decode(5.7)
 except Exception as e:
-    Assert(str(e)).matches("failed to decode 5.7 to a str | int because.*failed to decode as <class 'str'> because 5.7 (of type <class 'float'>) is not a <class 'str'> and failed to decode as <class 'int'> because 5.7 (of type <class 'float'>) is not a <class 'int'>")
+    Assert(readable_repr(e))=="""\
+Failed to decode 5.7 to a str | int because
+failed to decode 5.7 as one of (<class 'str'>, <class 'int'>) because
+all failed:
+- failed to decode as <class 'str'> because
+  5.7 (of type <class 'float'>) is not a <class 'str'>; and
+- failed to decode as <class 'int'> because
+  5.7 (of type <class 'float'>) is not a <class 'int'>."""
 else:
     assert False, x
     pass
@@ -716,7 +723,14 @@ try:
     FredOrAnn=Literal['fred','ann']
     x=codec(FredOrAnn).decode('jock')
 except Exception as e:
-    Assert(readable_repr(e))=="Failed to decode jock to a typing.Literal['fred', 'ann'] because\nfailed to decode 'jock' as one of ('fred', 'ann') because\n- failed to decode as 'fred' because\n  'jock' is not 'fred'; and\n- failed to decode as 'ann' because\n  'jock' is not 'ann'."
+    Assert(readable_repr(e))=="""\
+Failed to decode jock to a typing.Literal['fred', 'ann'] because
+failed to decode 'jock' as one of ('fred', 'ann') because
+all failed:
+- failed to decode as 'fred' because
+  'jock' is not 'fred'; and
+- failed to decode as 'ann' because
+  'jock' is not 'ann'."""
 else:
     assert False, x
     pass
@@ -724,7 +738,14 @@ try:
     SixOrSeven=Literal[6,7]
     x=codec(SixOrSeven).decode(8)
 except Exception as e:
-    Assert(readable_repr(e))=="Failed to decode 8 to a typing.Literal[6, 7] because\nfailed to decode 8 as one of (6, 7) because\n- failed to decode as 6 because\n  8 is not 6; and\n- failed to decode as 7 because\n  8 is not 7."
+    Assert(readable_repr(e))=="""\
+Failed to decode 8 to a typing.Literal[6, 7] because
+failed to decode 8 as one of (6, 7) because
+all failed:
+- failed to decode as 6 because
+  8 is not 6; and
+- failed to decode as 7 because
+  8 is not 7."""
 else:
     assert False, x
     pass
@@ -1516,7 +1537,15 @@ else:
         jsonschema.validate(
         {'k': 1, 'v': 'jock'},codec(MixedEnum).get_json_schema())
     except Exception as e:
-        Assert(readable_repr(e))=="{'k': 1, 'v': 'jock'} is not valid under any of the given schemas\n\nFailed validating 'oneOf' in schema:\n    {'oneOf': [{'$ref': '#/definitions/MixedEnum.a'},\n               {'$ref': '#/definitions/MixedEnum.b'}]}\n\nOn instance:\n    {'k': 1, 'v': 'jock'}"
+        Assert(readable_repr(e))=="""\
+{'k': 1, 'v': 'jock'} is not valid under any of the given schemas
+
+Failed validating 'oneOf' in schema:
+    {'oneOf': [{'$ref': '#/definitions/MixedEnum.a'},
+               {'$ref': '#/definitions/MixedEnum.b'}]}
+
+On instance:
+    {'k': 1, 'v': 'jock'}"""
     else:
         assert False
     pass

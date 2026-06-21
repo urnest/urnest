@@ -51,7 +51,7 @@ async def test1() -> None:
         except asyncio.CancelledError as e:
             print('g')
             Assert(result.result())==7
-            Assert(readable_repr(e))=="fred"
+            Assert(str(e))=="fred"
         else:
             assert False
             pass
@@ -108,7 +108,7 @@ async def test3() -> None:
         except asyncio.CancelledError as e:
             print('g')
             Assert(result.result())==7
-            Assert(readable_repr(e))=="fred"
+            Assert(str(e))=="fred"
         else:
             assert False
             pass

@@ -14,100 +14,50 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
+from json import JSONDecodeError
 import traceback
 import sys
 import string
-from typing import Sequence,Callable,Literal,Dict,List,Tuple,Any,Type
+from typing import Sequence,Callable,Literal,Dict,List,Tuple,Any,Type,overload
 from types import TracebackType
 
-class FileAndLine(object):
-    def __init__(self,file:str|None=None,line:int|None=None,readable:bool=True)->None:
-        self.file=file
-        self.line=line
-        self.readable=readable
-        pass
-    def setTo(self,file:str,line:int)->None:
-        self.file=file
-        self.line=line
-        pass
-    def __str__(self)->str:
-        if self.file:
-            return '{file}:{line}: '.format(**self.__dict__)
-        return ''
-    pass
-
-class Xn(BaseException):
-    """Capture cause and context.
+def readable_repr(e:Exception)->str:
     """
-    def __init__(self, cause:object)->None:
-        '''cause is convertable to a string using str'''
-        ''' e.g. cause can be an exception or a string like "file not found"'''
-        '''cause can also have a xju_xn_readable_repr() method, in which case that'''
-        '''will be used by xju_xn_readable_repr() below'''
-        self.cause = (cause,FileAndLine()) # file,line set below
-        self.context:List[Tuple[str,FileAndLine]] = [] # (text,FileAndLine)
-        pass
+    non-programmer friendly muli-line representation of {e}
 
-    def __str__(self)->str:
-        '''programmer friendly format, each context and cause includes
-        file and line, and intermediate stack entries are included
-        - see unit test below for example'''
-        result = ''
-        x = ''.join([
-            '{fl}failed to {s} because\n'.format(**vars())
-            for s,fl in reversed(self.context)])
-        m = str(self.cause[0]) or type(self.cause[0]).__name__
-        y = f'{self.cause[1]}{m}'
-        return x+y
-
-    def xju_xn_readable_repr(self)->str:
-        '''human (non-programmer) readable representation, omitting file
-        and line, omitting intermediate stack entries, and producing a
-        proper sentence i.e. capitalised and ending in full stop
-        - see unit test below for example'''
-        result = ''
-        x:str = ''.join([
-            'failed to {s} because\n'.format(**vars())
-            for s,fl in reversed(self.context)
-            if fl.readable])
-        if hasattr(self.cause[0], 'xju_xn_readable_repr'):
-            y:str=self.cause[0].xju_xn_readable_repr()
-        else:
-            # some python library exceptions have pretty useless str()
-            match self.cause[0]:
-                case KeyError():
-                    y=repr(self.cause[0])
-                    pass
-                case TimeoutError():
-                    y=type(self.cause[0]).__name__
-                    pass
-                case _:
-                    y = str(self.cause[0]) or type(self.cause[0]).__name__
-                    pass
-            pass
-        return capitalise(x+y+'.')
-    pass
-
-def readable_repr(e:BaseException)->str:
+    - forms a sentence if {e} contains context (see in_context/in_function_context)
+    - otherwise str(e)
+    """
     r=getattr(e,'xju_xn_readable_repr',None)
     if callable(r):
-        return str(r())
+        return r()
+    r2=getattr(e,'xju_xn',None)
+    if isinstance(r2, Xn):
+        return capitalise(f"{phrase_repr(e)}.")
     return str(e)
 
-def capitalise(s:str)->str:
-    if s and s[0]!=s[0].upper():
-        return s[0].upper()+s[1:]
-    return s
+def phrase_repr(e:Exception)->str:
+    """
+    non-programmer friendly muli-line phrase representation of {e}
+
+    - like readable_repr but not "sentenced"
+    """
+    r=getattr(e,'xju_xn_readable_repr',None)
+    if callable(r):
+        return r()
+    r2=getattr(e,'xju_xn',None)
+    if isinstance(r2, Xn):
+        return r2.phrase_repr()
+    return str(e)
 
 def in_function_context(function:Callable,
                         vars:Dict[str,Any],
                         exceptionInfo:None|tuple[Type[BaseException],BaseException,TracebackType]=None,
-                        fl:None|tuple[str,int]=None)->BaseException:
-    """Make a Xn that includes exception info and context as first_para_of(f.__doc__).format(**vars()).
+                        fl:None|tuple[str,int]=None)->Exception:
+    """
+    like in_context(), building context built as first_para_of(function.__doc__).format(**vars()).
 
-       - if exceptionInfo[1] is already a Xn just add context
-       - otherwise use exceptionInfo as cause for a new Xn
-       - exceptionInfo defaults to sys.exc_info()
+    Again this function must only be called from handlers of Exception, not BaseException.
     """
     if function.__doc__ is None:
         return in_context(f"{function.__name__}() (note function is missing doc-string!)",
@@ -125,12 +75,17 @@ def in_function_context(function:Callable,
 
 def in_context(context:str,
                exceptionInfo:None|tuple[Type[BaseException],BaseException,TracebackType]=None,
-               fl:None|tuple[str,int]=None)->BaseException:
-    """Make a Xn that includes exception info and context.
+               fl:None|tuple[str,int]=None)->Exception:
+    """Make a exception that includes exception info and context.
 
        - if exceptionInfo[1] is already a Xn just add context
-       - otherwise use exceptionInfo as cause for a new Xn
+       - otherwise use exceptionInfo as cause for a new exception:
+         - that inherits from exceptionInfo[1]'s class
+         - that tries to copy all attribute values of exceptionInfo[1]
        - exceptionInfo defaults to sys.exc_info()
+
+       Note that this function must only be called in handlers of Exception,
+       not in handlers of BaseException.
     """
     if exceptionInfo is None:
         t, e, b = sys.exc_info()
@@ -140,54 +95,217 @@ def in_context(context:str,
         exceptionInfo=(t,e,b)
     exceptionType,r,traceBack=exceptionInfo
 
-    if not isinstance(r,Xn):
-        #build new exception type derived from both original and Xn
-        name=exceptionType.__name__
-        def init(self,v):
-            Xn.__init__(self,v)
-            for a in set.difference(set(dir(v)),set(dir(Xn)).union({'cause','context'})):
-                try:
-                    setattr(self,a,getattr(v,a))
-                except AttributeError:  #pragma NO COVER
+    assert isinstance(r, Exception), (type(r), r)
+
+    xn = getattr(r, "xju_xn", None)
+    if xn is None:
+        try:
+            xn_cause: XnGroupCause | XnCause
+            args: tuple
+            match r:
+                case JSONDecodeError():
+                    args = (r.msg, r.doc, r.pos)
+                case _:
+                    args = r.args
+            match r:
+                case ExceptionGroup():
+                    xn_cause = XnGroupCause(r.message, r.exceptions)
                     pass
-                pass
-            pass
-        def str_(self)->str:
-            return Xn.__str__(self)
-        def xju_xn_readable_repr(self)->str:
-            return Xn.xju_xn_readable_repr(self)
-        r=type(name,
-               (Xn,exceptionType),
-               {
-                   '__init__':init,
-                   '__str__':str_,
-                   'xju_xn_readable_repr':xju_xn_readable_repr
-               })(r)
-    
+                    
+                case Exception():
+                    # some python library exceptions have pretty useless str()
+                    match r:
+                        case KeyError():
+                            s = repr(r)  # capture in case it calls __str__
+                            simple_phrase = lambda: s
+                            pass
+                        case TimeoutError():
+                            t_r = type(r)  # capture before we override
+                            simple_phrase = lambda: t_r.__name__
+                            pass
+                        case _:
+                            r_str = r.__str__  # capture before we override
+                            r_class_name = r.__class__.__name__
+                            simple_phrase = lambda: (r_str() or r_class_name)
+                            pass
+                    xn_cause = XnCause(simple_phrase)
+                    pass
+                case _:
+                    return r
+
+            xn = Xn(xn_cause)
+
+            def str_(_) -> str:
+                return str(xn)
+            # it would be easier if we could just:
+            # setattr(r, "__str__", str_)
+            # setattr(r, "xju_xn_readable_repr", xju_xn_readable_repr)
+            # ... but __str__ can't be replaced in general, so
+            # create a new type to get the effect, noting
+            # ExceptionGroup and Exception are very different
+            match r:
+                case ExceptionGroup():
+                    def new_(cls, *args):
+                        self = r.__class__.__new__(cls, *args)
+                        self.xju_xn = xn
+                        return self
+                    r=type(f"{exceptionType.__name__}WithContext",
+                           (exceptionType,),
+                           {
+                               '__new__':new_,
+                               '__str__':str_,
+                           })(*args)
+                case Exception():
+                    def init_(self, v):
+                        self.xju_xn = xn
+                        # note we can't tell what arguments to pass to super().__init__
+                        # so resort to copying as much as we can
+                        for a in set.difference(set(dir(v)),set(dir(self)).union({'xju_xn'})):
+                            try:
+                                setattr(self,a,getattr(v,a))
+                            except AttributeError:  #pragma NO COVER
+                                pass
+                            pass
+                        pass
+                    r=type(f"{exceptionType.__name__}WithContext",
+                           (exceptionType,),
+                           {
+                               '__init__':init_,
+                               '__str__':str_,
+                           })(r)
+        except Exception:
+            return r
+        pass
+    if not isinstance(xn, Xn):
+        return r
+
     st=[tuple(_) for _ in traceback.extract_tb(traceBack)]
     # fill in most recent file,line (latest context or cause if no context)
     f,l=st[-1][0:2]
-    assert isinstance(r, Xn)
-    if r.context:
-        if not r.context[-1][1].file:
-            r.context[-1][1].file=f
+    if xn.context:
+        if not xn.context[-1][1].file:
+            xn.context[-1][1].file=f
             pass
-        if not r.context[-1][1].line:
-            r.context[-1][1].line=l
+        if not xn.context[-1][1].line:
+            xn.context[-1][1].line=l
             pass
     else:
-        r.cause[1].setTo(f,l)
+        xn.cause.file_and_line.setTo(f,l)
         pass
     # add context entries for any in-between stack entries
     newContext=[(text,FileAndLine(file,line,False))
                 for file,line,fname,text in reversed(st[0:-1])]
-    r.context.extend(newContext)
+    xn.context.extend(newContext)
     # add the supplied context, with unknown file and line
     f2=fl[0] if fl else None
     l2=fl[1] if fl else None
-    r.context.append( (context,FileAndLine(f2,l2)) )
-    r.__traceback__=Exception().__traceback__
+    xn.context.append( (context,FileAndLine(f2,l2)) )
     return r
+
+class FileAndLine(object):
+    def __init__(self,file:str|None=None,line:int|None=None,readable:bool=True)->None:
+        self.file=file
+        self.line=line
+        self.readable=readable
+        pass
+    def setTo(self,file:str,line:int)->None:
+        self.file=file
+        self.line=line
+        pass
+    def __str__(self)->str:
+        if self.file:
+            return '{file}:{line}: '.format(**self.__dict__)
+        return ''
+    pass
+
+class XnCause:
+    cause_phrase: Callable[[], str]
+    file_and_line: FileAndLine
+
+    def __init__(self, cause_phrase: Callable[[], str]) -> None:
+        self.cause_phrase = cause_phrase
+        self.file_and_line = FileAndLine() # set by in_context()
+        pass
+
+    def __str__(self)->str:
+        """programmer friendly format, includes file and line"""
+        return f'{self.file_and_line}{self.cause_phrase()}'
+
+    def phrase_repr(self) -> str:
+        """non-programmer friendly format - no file and line"""
+        return self.cause_phrase()
+    pass
+
+class XnGroupCause:
+    msg: str
+    causes: Sequence[Exception]
+    file_and_line: FileAndLine
+
+    def __init__(self, msg: str, causes: Sequence[Exception]) -> None:
+        self.msg = msg
+        self.causes = causes
+        self.file_and_line = FileAndLine() # set by in_context()
+        pass
+
+    def __str__(self)->str:
+        """programmer friendly format, includes file and line"""
+        return (
+            (f"{self.file_and_line}{self.msg}:\n" if self.msg else "")+
+            '\nAND\n'.join([
+                '  '+indent('  ', f'{self.file_and_line}{str(cause) or type(cause).__name__}')
+                for cause in self.causes
+            ])
+        )
+
+    def phrase_repr(self) -> str:
+        """non-programmer friendly format - no file and line"""
+        return (
+            (f"{self.msg}:\n" if self.msg else "")+
+            '; and\n'.join('- '+indent('  ', phrase_repr(cause))
+                           for cause in self.causes)
+        )
+    pass
+
+class Xn:
+    """Capture cause and context.
+    """
+    cause: XnGroupCause | XnCause
+    context: List[Tuple[str,FileAndLine]]
+
+    def __init__(self, cause: XnGroupCause | XnCause) -> None:
+        self.cause = cause
+        self.context = []
+        pass
+
+    def __str__(self)->str:
+        '''programmer friendly format, each context and cause includes
+        file and line, and intermediate stack entries are included
+        - see unit test below for example'''
+        result = ''
+        x = ''.join([
+            '{fl}failed to {s} because\n'.format(**vars())
+            for s,fl in reversed(self.context)])
+        return f"{x}{self.cause}"
+
+    def phrase_repr(self)->str:
+        '''human (non-programmer) readable representation, omitting file
+        and line, omitting intermediate stack entries, and producing a
+        proper sentence i.e. capitalised and ending in full stop
+        - see unit test below for example'''
+        result = ''
+        x:str = ''.join([
+            'failed to {s} because\n'.format(**vars())
+            for s,fl in reversed(self.context)
+            if fl.readable])
+        cause = self.cause.phrase_repr()
+        return f"{x}{cause}"
+    pass
+
+
+def capitalise(s:str)->str:
+    if s and s[0]!=s[0].upper():
+        return s[0].upper()+s[1:]
+    return s
 
 def first_line_of(x:Any)->str:
     '''return first non-empty line of str({x}) stripped of leading and trailing whitespace'''
@@ -202,24 +320,24 @@ def first_para_of(x:Any)->str:
     end=lines.index('')
     return ' '.join(lines[0:end])
 
-def desentence(s:str)->str:
-    '''remove any trailing '.' and down-case first characters of {s}'''
-    if s.endswith('.'): s=s[:-1]
-    return s[0:1].lower()+s[1:]
-
 def indent(prefix:str,s:str)->str:
     '''prefix all but first line of s by specified prefix'''
     return s.replace('\n','\n'+prefix)
 
-class AllFailed(Exception):
-    def __init__(self,causes:Sequence[BaseException])->None:
-        self.causes=causes
-        pass
-    def __str__(self)->str:
-        return ', and\n'.join([str(cause) for cause in self.causes])
-    def xju_xn_readable_repr(self)->str:
-        return '; and\n'.join(['- '+
-                               indent('  ',desentence(readable_repr(cause)))
-                               for cause in self.causes])
+class AllFailed(ExceptionGroup):
+    """deprecated now that python has ExceptionGroup"""
+    @overload
+    def __new__(cls,msg:str,causes:Sequence[Exception]):
+        ...
+    @overload
+    def __new__(cls,causes:Sequence[Exception]):
+        ...
+    def __new__(cls,*args):
+        if type(args[0]) is str:
+            return ExceptionGroup.__new__(AllFailed, args[0], args[1])
+        return ExceptionGroup.__new__(AllFailed, '', args[0])
+    def __str__(self) -> str:
+        if self.message:
+            return f"{self.message}:\n  {'\nAND\n'.join('  '+indent('  ',str(cause)) for cause in self.exceptions)}"
+        return ', and\n'.join('- '+indent('  ',str(cause)) for cause in self.exceptions)
     pass
-

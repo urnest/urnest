@@ -749,7 +749,18 @@ c=codec(dict[int|bool,float])
 try:
     c.decode({'fred':8.2})
 except Exception as e:
-    Assert(readable_repr(e))=="Failed to decode {'fred': 8.2} to a dict[int | bool, float] because\n- failed to decode key 'fred' via json.loads because\n  Expecting value: line 1 column 1 (char 0); and\n- failed to decode key 'fred' directly because\n  failed to decode 'fred' as one of (<class 'int'>, <class 'bool'>) because\n  - failed to decode as <class 'int'> because\n    'fred' (of type <class 'str'>) is not a <class 'int'>; and\n  - failed to decode as <class 'bool'> because\n    'fred' (of type <class 'str'>) is not a <class 'bool'>."
+    Assert(readable_repr(e))=="""\
+Failed to decode {'fred': 8.2} to a dict[int | bool, float] because
+all failed:
+- failed to decode key 'fred' via json.loads because
+  Expecting value: line 1 column 1 (char 0); and
+- failed to decode key 'fred' directly because
+  failed to decode 'fred' as one of (<class 'int'>, <class 'bool'>) because
+  all failed:
+  - failed to decode as <class 'int'> because
+    'fred' (of type <class 'str'>) is not a <class 'int'>; and
+  - failed to decode as <class 'bool'> because
+    'fred' (of type <class 'str'>) is not a <class 'bool'>."""
 else:
     assert False
     pass

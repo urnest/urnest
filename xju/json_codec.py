@@ -33,7 +33,7 @@ from dataclasses import dataclass, Field, MISSING, field
 from inspect import getmro
 from typing import NewType,NamedTuple
 from xju.time import Timestamp
-from xju.xn import Xn,in_context,in_function_context,readable_repr, AllFailed
+from xju.xn import Xn,in_context,in_function_context,readable_repr
 from typing import TypeVar, Generic, Type, cast, Any, Protocol, Self, Callable, get_type_hints
 from typing import Sequence, Literal, NewType, Final, Mapping
 from typing import _LiteralGenericAlias  # type: ignore  # mypy 1.1.1
@@ -766,7 +766,7 @@ class UnionCodecImpl:
     def encode(self,x) -> JsonType:
         'encode {x!r} as one of {self.allowed_types}'
         try:
-            exceptions=list[BaseException]()
+            exceptions=list[Exception]()
             for t, c in self.value_codecs.items():
                 try:
                     return c.encode(x)
@@ -774,14 +774,14 @@ class UnionCodecImpl:
                     exceptions.append(in_context(f'decode as {t!r}'))
                     pass
                 pass
-            raise AllFailed(exceptions)
+            raise ExceptionGroup("all failed", exceptions)
         except Exception:
             raise in_function_context(UnionCodecImpl.encode,vars()) from None
         pass
     def decode(self,x) -> tuple:
         '''decode {x!r} as one of {self.allowed_types}'''
         try:
-            exceptions=list[BaseException]()
+            exceptions=list[Exception]()
             for t, c in self.value_codecs.items():
                 try:
                     return c.decode(x)
@@ -789,7 +789,7 @@ class UnionCodecImpl:
                     exceptions.append(in_context(f'decode as {t!r}'))
                     pass
                 pass
-            raise AllFailed(exceptions)
+            raise ExceptionGroup("all failed", exceptions)
         except Exception:
             raise in_function_context(UnionCodecImpl.decode,vars()) from None
         pass
@@ -896,7 +896,7 @@ class DictCodecImpl:
             except Exception:
                 exceptions.append(in_context(
                     f"decode key {k!r} directly"))
-            raise AllFailed(exceptions)
+            raise ExceptionGroup("all failed", exceptions)
         return self.key_codec.decode(k)
 
     def decode(self,x)->dict:
@@ -2358,7 +2358,7 @@ class EnumCodecImpl:
                     exceptions.append(in_context(f'decode as {self.t.__name__}.{n}'))
                     pass
                 pass
-            raise AllFailed(exceptions)
+            raise ExceptionGroup("all failed", exceptions)
         except Exception:
             raise in_function_context(EnumCodecImpl.decode,vars()) from None
         pass
@@ -2487,7 +2487,7 @@ class LiteralEnumCodecImpl:
                     exceptions.append(in_context(f'decode as {self.t.__name__}.{n}'))
                     pass
                 pass
-            raise AllFailed(exceptions)
+            raise ExceptionGroup("all failed", exceptions)
         except Exception:
             raise in_function_context(LiteralEnumCodecImpl.decode,vars()) from None
         pass

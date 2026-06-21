@@ -39,7 +39,7 @@ def test1(prog=sys.argv[0]):
         pass
     try:
         c()
-    except:
+    except Exception:
         e=in_context('jock')
         Assert(readable_repr(e))=='''\
 Failed to jock because
@@ -63,7 +63,7 @@ def test2():
     try:
         try:
             raise E()
-        except:
+        except Exception:
             raise in_context('await message') from None
         pass
     except E as e:
@@ -78,17 +78,17 @@ def test3():
         try:
             try:
                 raise E()
-            except:
+            except Exception:
                 raise in_context('await message') from None
             pass
         except E as e:
             try:
                 raise Exception('open failed')
-            except:
+            except Exception:
                 raise AllFailed([e,in_context('read default file')]) from None
             pass
         pass
-    except:
+    except Exception:
         Assert(readable_repr(in_context('get content')))=='''\
 Failed to get content because
 - failed to await message because
@@ -131,7 +131,7 @@ def test4(prog=sys.argv[0]):
         pass
     try:
         c()
-    except:
+    except Exception:
         e=in_context('jock')
     else:
         assert False, 'c should have raised'
@@ -197,7 +197,7 @@ def test8():
     pass
 
 def test9():
-    Assert(str(AllFailed([Exception('fred'),Exception('jock')])))=="fred, and\njock"
+    Assert(str(AllFailed([Exception('fred'),Exception('jock')])))=="- fred, and\n- jock"
     pass
 
 def test10():
@@ -257,7 +257,7 @@ def test13():
 def test14():
     try:
         raise Exception('fred')
-    except:
+    except Exception:
         Assert(readable_repr(
             in_function_context(test14,vars())  # type: ignore
         ))=="Failed to test14() (note function is missing doc-string!) because\nfred."
@@ -268,7 +268,7 @@ def test15():
     "test 15 with {x}"
     try:
         raise Exception('fred')
-    except:
+    except Exception:
         Assert(readable_repr(
             in_function_context(test15,vars())  # type: ignore
         ))=="Failed to test15() (note that function's doc-string 'test 15 with {x}' is unformattable - check its params/vars v its doc string) because\nfred."
@@ -538,10 +538,10 @@ def test25():
         try:
             try:
                 json.loads('fred')
-            except:
+            except Exception:
                 raise in_context('load via json.loads')
             pass
-        except:
+        except Exception:
             raise in_function_context(test25, vars())
         pass
     except Exception as e:
@@ -554,7 +554,7 @@ def test27():
     """check that in_context works with jsonschema.ValidationError"""
     try:
         import jsonschema # type: ignore
-    except:
+    except Exception:
         print('WARNING: skipped json_codec json_schema tests because jsonschema not importable',
               file=sys.stderr)
     else:
@@ -566,7 +566,145 @@ def test27():
             pass
         pass
     pass
+
+
+def test28():
+    """check that in_context works with ExceptionGroup"""
+    e1 = Exception('fred')
+    e2 = Exception('jock')
+    try:
+        try:
+            raise ExceptionGroup('both failed', [e1, e2])
+        except Exception:
+            raise in_context('sal') from None
+        pass
+    except Exception as e:
+        Assert((readable_repr(e), type(e)) )==(
+            """\
+Failed to sal because
+both failed:
+- fred; and
+- jock.""", type(e))
+        Assert(e).isInstanceOf(ExceptionGroup)
+        Assert(str(e)).matches("""\
+failed to sal because
+[^:]*/xn.py.test:577: both failed:
+  [^:]*/xn.py.test:577: fred
+AND
+  [^:]*/xn.py.test:577: jock""")
+
+        pass
+
+    try:
+        try:
+            raise ExceptionGroup('', [e1, e2])
+        except Exception:
+            raise in_context('sal') from None
+        pass
+    except Exception as e:
+        Assert( (readable_repr(e), type(e)) )==("""\
+Failed to sal because
+- fred; and
+- jock.""", type(e))
+        Assert(e).isInstanceOf(ExceptionGroup)
+        Assert(str(e)).matches("""\
+failed to sal because
+  [^:]*/xn.py.test:600: fred
+AND
+  [^:]*/xn.py.test:600: jock""")
+        pass
+    pass
     
+def test29():
+    """check that in_context works with ExceptionGroup containing Xns"""
+    try:
+        raise Exception('fred')
+    except Exception:
+        e1 = in_context("anyone but fred")
+        pass
+    try:
+        raise Exception('jock')
+    except Exception:
+        e2 = in_context("anyone but jock")
+        pass
+    try:
+        try:
+            raise ExceptionGroup('both failed', [e1, e2])
+        except Exception:
+            raise in_context('sal') from None
+        pass
+    except Exception as e:
+        Assert((readable_repr(e), type(e)) )==(
+            """\
+Failed to sal because
+both failed:
+- failed to anyone but fred because
+  fred; and
+- failed to anyone but jock because
+  jock.""", type(e)
+        )
+        Assert(e).isInstanceOf(ExceptionGroup)
+        Assert(str(e)).matches("""\
+failed to sal because
+[^:]*/xn.py.test:632: both failed:
+  [^:]*/xn.py.test:632: failed to anyone but fred because
+  [^:]*/xn.py.test:621: fred
+AND
+  [^:]*/xn.py.test:632: failed to anyone but jock because
+  [^:]*/xn.py.test:626: jock""")
+
+        pass
+
+    try:
+        try:
+            raise ExceptionGroup('', [e1, e2])
+        except Exception:
+            raise in_context('sal') from None
+        pass
+    except Exception as e:
+        Assert( (readable_repr(e), type(e)) )==("""\
+Failed to sal because
+- failed to anyone but fred because
+  fred; and
+- failed to anyone but jock because
+  jock.""", type(e))
+        Assert(e).isInstanceOf(ExceptionGroup)
+        Assert(str(e)).matches("""\
+failed to sal because
+  [^:]*/xn.py.test:660: failed to anyone but fred because
+  [^:]*/xn.py.test:621: fred
+AND
+  [^:]*/xn.py.test:660: failed to anyone but jock because
+  [^:]*/xn.py.test:626: jock""")
+        pass
+    pass
+
+
+from dataclasses import dataclass
+
+@dataclass(frozen=True)
+class FrozenError(Exception):
+    def __init__(self, msg):
+        super().__init__(msg)
+        pass
+
+def test30():
+    def thaw():
+        "thaw"
+        try:
+            raise FrozenError("still frozen")
+        except Exception:
+            raise in_function_context(thaw, vars()) from None
+        pass
+    try:
+        thaw()
+    except FrozenError as e:
+        Assert(readable_repr(e)) == "Failed to thaw because\nstill frozen."
+    else:
+        assert False
+        pass
+    pass
+
 tests=[var for name,var in sorted(vars().items())
        if name.startswith('test') and callable(var)]
 for t in tests: t()
