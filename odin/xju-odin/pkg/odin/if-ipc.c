@@ -36,9 +36,6 @@ geoff@boulder.colorado.edu
 #include <string.h>
 
 
-time_t time();
-char *ctime();
-
 #define		stdin_fd 0
 #define		IPC_MT_Reply 1
 

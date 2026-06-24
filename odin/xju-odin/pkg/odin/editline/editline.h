@@ -77,9 +77,9 @@ extern int	rl_quit;
 #ifdef DO_SIGTSTP
 extern int	rl_susp;
 #endif	/* defined(DO_SIGTSTP) */
-extern char	*rl_complete();
-extern int	rl_list_possib();
-extern void	rl_ttyset();
-extern void	rl_add_slash();
+extern char	*rl_complete(char*, int*);
+extern int	rl_list_possib(char*, char***);
+extern void	rl_ttyset(int);
+extern void	rl_add_slash(char*, char*);
 
 #endif

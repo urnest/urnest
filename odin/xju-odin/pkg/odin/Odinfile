@@ -5,7 +5,7 @@
 inc%check
 boot%check
 
-%isnstall-all! == <<
+%install-all! == <<
    %install-rbs; ../tregrm%install; %install-odin; %lint
 
 %install-odin! == <<
@@ -60,8 +60,9 @@ main.cc;
 if-nod.c==../gmc/xxx-nod.c+cmd=sed -e 's=xxx/inc/NodTyp_.h=odin/inc/OC_NodTyp_.h=g' -e 's=xxx/inc/TokTyp_.h=odin/inc/OC_TokTyp_.h=g':stdout
 
 %rbs.c.sm == <<
-   rbs.c; if-dir.c; ../gmc/if-err-no-ipc.c
+   rbs.c; if-dir.c; ../gmc/err-no-ipc.c
    if-system.c; ../gmc/inotify-stub.c
+    ../gmc/gmc.c; file.c
 
 version == \
    inc/Version.h  +cmd='sed \'s/^.*VERSION_STR "\\(.*\\)"/\\1/\'' :stdout

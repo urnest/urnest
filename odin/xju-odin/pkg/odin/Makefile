@@ -1,18 +1,20 @@
-FILES = main.o if-bcast.o if-build.o if-candrv.o if-client.o if-cmd.o \
-  if-depend.o if-drvgrf.o if-dir.o if-drvpth.o if-drvspc.o \
-  if-edg.o if-env.o if-err.o if-exec.o if-execint.o if-execspc.o \
-  if-fhacc.o if-fhnam.o if-fhnew.o if-fhsrc.o if-fhstat.o \
-  if-file.o if-filelm.o if-filhdr.o if-filinp.o if-filprm.o if-filpval.o \
-  if-filtyp.o if-ft.o if-get.o if-help.o if-hook.o \
-  if-info.o if-ipc.o if-lex.o ../dg/if-lvl.o if-main.o \
-  if-nod.o if-oclex.o if-pfilhdr.o if-prmtyp.o if-rbs.o \
-  if-symbol.o if-sysdep.o if-system.o if-systools.o \
-  if-update.o if-util.o if-var.o if-yylex.o \
-  LookupPlainAbsPath.o \
-  if-inotify.o file.c ../gmc/gmc.o \
-  boot/fsys-yacc.o boot/client-yacc.o boot/default-dg.o \
-  boot/stub-in.o boot/stub-out.o \
-  editline/editline.o editline/complete.o editline/sysunix.o
+FILES = main.o \
+   if-bcast.o if-build.o if-candrv.o if-client.o if-cmd.o \
+   if-depend.o if-drvgrf.o if-dir.o if-drvpth.o if-drvspc.o \
+   if-edg.o if-env.o if-exec.o if-execint.o if-execspc.o \
+   if-fhacc.o if-fhnam.o if-fhnew.o if-fhsrc.o if-fhstat.o \
+   if-filelm.o if-filhdr.o if-filinp.o \
+   if-filprm.o if-filpval.o if-filtyp.o if-ft.o if-get.o \
+   if-help.o if-hook.o if-info.o if-ipc.o \
+   if-lex.o ../dg/if-lvl.o if-main.o if-oclex.o \
+   if-pfilhdr.o if-prmtyp.o if-rbs.o \
+   if-system.o if-systools.o \
+   if-update.o if-util.o if-var.o if-yylex.o \
+   editline/editline.o editline/complete.o editline/sysunix.o \
+   boot/client-yacc.o boot/default-dg.o boot/fsys-yacc.o boot/stub-in.o boot/stub-out.o \
+   LookupPlainAbsPath.o \
+   if-inotify.o ../gmc/gmc.o \
+   if-nod.o file.o
 
 all: nested odin.exe
 
