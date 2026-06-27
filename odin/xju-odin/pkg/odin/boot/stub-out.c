@@ -508,7 +508,7 @@ Get_OdinFile(
    if (IPC_Abort) IPC_Do_Abort();
    IPC_Write_Str(&IPC_Abort, OdinExpr);
    if (IPC_Abort) IPC_Do_Abort();
-   IPC_Write_Int(&IPC_Abort, NeedsData);
+   IPC_Write_Bool(&IPC_Abort, NeedsData);
    if (IPC_Abort) IPC_Do_Abort();
    IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);
    FORBIDDEN(IPC_Cmd_Abort);

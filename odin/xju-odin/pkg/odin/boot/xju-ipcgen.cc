@@ -678,8 +678,11 @@ int main(int argc, char* argv[])
           else if (paramType=="int") {
             inStubs << "      *IPC_IArg"<<i<<" = " << paramName << ";\n";
           }
-          else{
+          else if (paramType=="bool") {
             inStubs << "      *IPC_BArg"<<i<<" = " << paramName << ";\n";
+          }
+          else{
+            xju::assert_never_reached();
           }
           ++i;
         }
@@ -699,8 +702,14 @@ int main(int argc, char* argv[])
           if (paramType=="str"){
             inStubs << "   IPC_Write_Str(&IPC_Abort, " << paramName << ");\n";
           }
-          else{
+          else if (paramType=="int") {
             inStubs << "   IPC_Write_Int(&IPC_Abort, " << paramName << ");\n";
+          }
+          else if (paramType=="bool") {
+            inStubs << "   IPC_Write_Bool(&IPC_Abort, " << paramName << ");\n";
+          }
+          else{
+            xju::assert_never_reached();
           }
           inStubs << "   if (IPC_Abort) IPC_Do_Abort();\n";
           ++i;
@@ -855,6 +864,10 @@ int main(int argc, char* argv[])
               s << "   int* " << paramName << "";
               t << "   int* " << paramName << "\n";
             }
+            else if (paramType=="bool *"){
+              s << "   bool* " << paramName << "";
+              t << "   bool* " << paramName << "\n";
+            }
             else if (paramType=="tp_Status *"){
               s << "   tp_Status* " << paramName << "";
               t << "   tp_Status* " << paramName << "\n";
@@ -958,6 +971,9 @@ int main(int argc, char* argv[])
             else if (paramType=="tp_JobID "){
               s << "   tp_JobID " << paramName << "";
             }
+            else if (paramType=="int "){
+              s << "   int " << paramName << "";
+            }
             else if (paramType=="bool "){
               s << "   bool " << paramName << "";
             }
@@ -1049,7 +1065,7 @@ int main(int argc, char* argv[])
         outStubs << "   if (IPC_Abort) IPC_Do_Abort();\n";
         outStubs << "   IPC_Write_Str(&IPC_Abort, OdinExpr);\n";
         outStubs << "   if (IPC_Abort) IPC_Do_Abort();\n";
-        outStubs << "   IPC_Write_Int(&IPC_Abort, NeedsData);\n";
+        outStubs << "   IPC_Write_Bool(&IPC_Abort, NeedsData);\n";
         outStubs << "   if (IPC_Abort) IPC_Do_Abort();\n";
         outStubs << "   IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);\n";
         outStubs << "   FORBIDDEN(IPC_Cmd_Abort);\n";
