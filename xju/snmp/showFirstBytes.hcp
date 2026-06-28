@@ -12,6 +12,7 @@
 #include <xju/format.hh> //impl
 #include <string>
 #include <vector>
+#include <cstdint>
 #include <algorithm> //impl
 
 namespace xju

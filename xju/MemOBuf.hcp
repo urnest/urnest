@@ -71,8 +71,8 @@ private:
   std::vector<uint8_t> buf_;
   size_t valid_;
   
-  inline uint8_t const* begin() const noexcept{return &buf_[0];}
-  inline uint8_t*       begin()       noexcept{return &buf_[0];}
+  inline uint8_t const* begin() const noexcept{return buf_.data();}
+  inline uint8_t*       begin()       noexcept{return buf_.data();}
   inline uint8_t const* mark() const noexcept {return begin()+valid_;}
   inline uint8_t*       mark()       noexcept {return begin()+valid_;}
   inline uint8_t const* end() const noexcept  {return begin()+buf_.size();}

@@ -45,7 +45,7 @@ void test1() {
         auto const begin(&data[0]);
         auto const end(begin+data.size());
         auto x(begin);
-        while(x<&data[data.size()]){
+        while(x<data.data()+data.size()){
           auto s((::rand()%(data.size()-(x-begin)))+1);
           xju::assert_less_equal(x+s,end);
           s=p.second->write(x,s,deadline);

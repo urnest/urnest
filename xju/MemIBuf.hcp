@@ -53,7 +53,7 @@ private:
   std::vector<uint8_t> const data_;
   size_t const inc_;
   size_t rem_;
-  inline uint8_t const* end() const noexcept{ return &data_[data_.size()];}
+  inline uint8_t const* end() const noexcept{ return data_.data()+data_.size();}
   inline uint8_t const* mark() const noexcept{ return end()-rem_; }
 };
 
