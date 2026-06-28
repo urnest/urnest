@@ -100,13 +100,7 @@ version = "$rev"
 description = "xwl library"
 readme = "README.rst"
 authors = [{ name = "Trevor Taylor"}]
-license = { file = "MIT-LICENCE" }
-classifiers = [
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
-    "Development Status :: 5 - Production/Stable"
-]
+license = "MIT"
 requires-python = ">=3.11"
 dependencies = [ "xju>=2" ]
 [project.urls]
@@ -119,7 +113,6 @@ namespaces = true  # to disable scanning PEP 420 namespaces (true by default)
 [tool.setuptools.package-data]
 xwl = [ $tests_package_data "./py.typed", "example/*", "./xwl.js" ]
 EOF
-cp $licence xwl-$rev/MIT-LICENCE
 cp $readme xwl-$rev/README.rst
 tar czf xwl-$rev.tar.gz xwl-$rev
 XXXX

@@ -205,13 +205,7 @@ version = "$rev"
 description = "xju library"
 readme = "README.rst"
 authors = [{ name = "Trevor Taylor"}]
-license = { file = "MIT-LICENCE" }
-classifiers = [
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
-    "Development Status :: 5 - Production/Stable"
-]
+license = "MIT"
 requires-python = ">=3.11"
 [project.urls]
 Homepage = "https://github.com/urnest/urnest"
@@ -223,7 +217,6 @@ namespaces = true  # to disable scanning PEP 420 namespaces (true by default)
 [tool.setuptools.package-data]
 xju = [ $tests_package_data $typescript_package_data "py.typed"]
 EOF
-cp $licence xju-$rev/MIT-LICENCE
 cp $readme xju-$rev/README.rst
 tar czf xju-$rev.tar.gz xju-$rev
 XXXX
