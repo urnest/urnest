@@ -31,7 +31,6 @@ from typing import Mapping, Type, List, Generic, Any, Callable, Awaitable, Self
 from collections import OrderedDict
 from collections.abc import Coroutine
 from subprocess import Popen, STDOUT, DEVNULL, PIPE
-from signal import SIGKILL
 import builtins
 import threading
 from xju.time import Duration
