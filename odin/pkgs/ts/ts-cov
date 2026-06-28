@@ -8,7 +8,20 @@ from dataclasses import dataclass
 
 source_map, js_cov = sys.argv[1:]
 
-uncovered_lines=json.loads(Path(js_cov).read_text())
+def parse_uncovered(u: str) -> list[int]:
+    """turn '31 45-47 99-100' into [31, 45, 46, 47, 99, 100]"""
+    result: list[int] = []
+    for item in u.split():
+        if '-' in item:
+            a, b = item.split('-')
+            result.extend(list(range(int(a), int(b)+1)))
+        else:
+            result.append(int(item))
+            pass
+        pass
+    return result
+
+uncovered_lines=parse_uncovered(Path(js_cov).read_text())
 
 LineNumber = NewType('LineNumber', int)
 

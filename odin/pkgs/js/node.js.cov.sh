@@ -22,11 +22,11 @@ then
   false
 fi &&
 
-if x=$(NODE_V8_COVERAGE=. $cmd)
+if x=$(NODE_V8_COVERAGE=. $cmd </dev/null)
 then
   echo "$x" | grep "/$(basename $js) " | (
     read a b c d e f g h i lines_not_covered
-    echo -n "[$lines_not_covered]"
+    echo -n "$lines_not_covered"
   ) > node.js.cov
 else
   echo "$x" >&2
