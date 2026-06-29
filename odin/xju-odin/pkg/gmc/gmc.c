@@ -507,17 +507,6 @@ void MakeDirFile(bool* AbortPtr,tp_FileName FileName)
    }/*MakeDirFile*/
 
 
-char *getcwd();
-
-void GetWorkingDir(bool* AbortPtr,tp_Str DirName)
-{
-   char *WDstat;
-
-   WDstat = getcwd(DirName, MAX_Str);
-   *AbortPtr = (WDstat == 0);
-   }/*GetWorkingDir*/
-
-
 #ifndef HAVE_GETCWD
 char *
 getcwd(
@@ -534,6 +523,15 @@ getcwd(
    return result;
    }/*getcwd*/
 #endif
+
+
+void GetWorkingDir(bool* AbortPtr,tp_Str DirName)
+{
+   char *WDstat;
+
+   WDstat = getcwd(DirName, MAX_Str);
+   *AbortPtr = (WDstat == 0);
+   }/*GetWorkingDir*/
 
 
 void ChangeDir(bool* AbortPtr,tp_FileName DirName)
