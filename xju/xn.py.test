@@ -19,7 +19,7 @@ import asyncio
 from sys import path
 from os.path import dirname
 if path[0]==dirname(__file__): path.pop(0)
-from xju.xn import in_context,readable_repr,AllFailed,in_function_context,Xn,capitalise,first_para_of, first_line_of
+from xju.xn import in_context,readable_repr,AllFailed,in_function_context,Xn,capitalise,first_para_of, first_line_of,phrase_repr
 from xju.assert_ import Assert
 from typing import cast, overload
 
@@ -705,6 +705,51 @@ def test30():
         pass
     pass
 
+def test31():
+    # miasc coverage
+    class Ne(Exception):
+        def xju_xn_readable_repr(self) -> str:
+            return "bee eye"
+        pass
+    Assert(readable_repr(Ne("x")))=="bee eye"
+    Assert(phrase_repr(Ne("x")))=="bee eye"
+
+def test32():
+    class Ge(ExceptionGroup):
+        count = 0
+        def __new__(cls, a: str, b: str):
+            self = super().__new__(Ge, a + b, [Exception("fred")])
+            Ge.count += 1
+            if Ge.count == 2:
+                raise Exception("2")
+            return self
+        pass
+
+    try:
+        raise Ge("a", "b")
+    except Exception:
+        y = in_context("g")
+        pass
+    Assert(readable_repr(y))=="ab (1 sub-exception)"
+    pass
+
+def test33():
+    class E(Exception):
+        def xju_xn(self) -> None:
+            return None
+        pass
+    try:
+        raise E("fred")
+    except Exception as e:
+        Assert(readable_repr(in_context("x"))) == "fred"
+        pass
+    pass
+
+def test34():
+    Assert(str(AllFailed("ann", [Exception('fred'),Exception('jock')])))=="ann:\n    fred\nAND\n  jock"
+    pass
+
+    
 tests=[var for name,var in sorted(vars().items())
        if name.startswith('test') and callable(var)]
 for t in tests: t()

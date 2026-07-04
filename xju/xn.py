@@ -130,8 +130,6 @@ def in_context(context:str,
                             pass
                     xn_cause = XnCause(simple_phrase)
                     pass
-                case _:
-                    return r
 
             xn = Xn(xn_cause)
 
