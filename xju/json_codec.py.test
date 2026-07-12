@@ -53,7 +53,7 @@ from xju.json_codec import (
 )
 
 from typing import cast,Type,Literal,Any,Self,NewType,Generic,TypeVar,Callable,Union,Final,ClassVar
-from typing import Final, Sequence, Protocol
+from typing import Final, Sequence, Protocol, NamedTuple
 from types import NoneType
 from dataclasses import dataclass, field
 import re
@@ -2336,3 +2336,13 @@ nodes: dict[TypeScriptNamespaceFQN, DependsOnTypeScriptNamespaces]={
 }
 # python set ordering is not deterministic
 Assert(sort_typescript_namespaces(nodes))==[n_F, n_D, n_C, n_E, n_A, n_G]
+
+
+# named tuple
+class NT(NamedTuple):
+    a: int
+    b: str
+    pass
+
+Assert(codec(NT).encode(NT(3, 'fred')))=={'a': 3, 'b': 'fred'}
+Assert(codec(NT).decode({'a': 3, 'b': 'fred'}))==NT(3, 'fred')

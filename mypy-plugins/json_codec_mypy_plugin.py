@@ -461,15 +461,22 @@ def verify_type_encodable(
                 assert isinstance(t.args[0], KnownExpressionType.__args__)
                 verify_dict_key_type(t.args[0],checker_api,seen)
                 return True
-            for base in t.type.bases:
-                if base.type._fullname != 'builtins.object':
-                    if not isinstance(base, (LiteralType,UnionType,Instance,TypeAliasType,TupleType,NoneType,TypeVarType,AnyType)):
-                        raise CodecParamInvalid(f"unexpected base class type {base.type}")
-                    verify_type_encodable(base,checker_api,seen)
+            if not t.type.is_named_tuple:
+                for base in t.type.bases:
+                    if base.type._fullname != 'builtins.object':
+                        if not isinstance(base, (LiteralType,UnionType,Instance,TypeAliasType,TupleType,NoneType,TypeVarType,AnyType)):
+                            raise CodecParamInvalid(f"unexpected base class type {base.type}")
+                        verify_type_encodable(base,checker_api,seen)
+                        pass
+                    pass
+                pass
             for attr_name, attr_node in t.type.names.items():
                 if attr_name not in (
                     '__init__', '__match_args__', '__dataclass_fields__', '__mypy-replace', '__doc__',
-                    '_DT',
+                    '_DT'
+                ) and not (
+                    # named tuple adds various fields, some are trouble
+                    t.type.is_named_tuple and attr_name == f'_{t.type.name}'
                 ):
                     match attr_node.node:
                         case SymbolNode() if isinstance(attr_node.node, Var) and attr_node.node.is_classvar:
