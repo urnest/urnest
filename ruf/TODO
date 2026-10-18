@@ -60,6 +60,13 @@ explicit match (copilot)
 ... use OnceLock where possible (copilot)
 
 
+- ruf_error {
+    cause: &'static str,
+    context: Vec<String>
+  }
+  ... with formatters, add_context, function context wrapper
+
+
 * tree:
 
   x rename it to ruf_tree,

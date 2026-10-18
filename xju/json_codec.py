@@ -2973,3 +2973,45 @@ def format_typescript_defs(
                 f"}}"
             )
     pass
+
+class RustUQNTag:pass
+class RustUQN(xju.newtype.Str[RustUQNTag]):pass
+type TypeScriptFQN=tuple[RustUQN, ...]
+
+class RustSourceCodeTag:pass
+class RustSourceCode(xju.newtype.Str[RustSourceCodeTag]):pass
+
+type RustCrateFQN = TypeScriptFQN
+type DependsOnRustCrates = list[RustCrateFQN]
+
+@dataclass
+class RustModule:
+    dir: Path
+    defs: dict[RustUQN, RustSourceCode | Self]
+
+    def get_module_of(self,fqn:Sequence[RustUQN]) -> Self:
+        match len(fqn):
+            case 1:
+                return self
+            case _:
+                m=self.defs.setdefault(fqn[0],self.__class__(dir=self.dir/fqn[0].val, defs={}))
+                assert isinstance(m,self.__class__)
+                return m.get_module_of(fqn[1:])
+        pass
+
+    def write_formatted_defs(self)->None:
+        '''write crate source code files to {self.crate_dir}'''
+        try:
+            self.dir.mkdir()
+        except FileExistsError:
+            pass
+        (self.dir / "mod.rs").write_text(
+            '\n'.join(src for src in self.defs.values() if isinstance(src, RustSourceCode)))
+        modules = {
+            name: module for name, module in self.defs.values()
+            if isinstance(module, RustModule)
+        }
+        for name, module in modules:
+            module.write_formatted_defs()
+            pass
+    pass
