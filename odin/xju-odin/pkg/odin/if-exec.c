@@ -177,6 +177,7 @@ done:;
    for (i=0; i<NumOuts; i++) Ret_FilHdr(OutFilHdrs[i]);
    Ret_FilHdr(FilHdr);
    Del_Job(Job);
+   Do_ToBroadcast();
    }/*Local_Job_Done*/
 
 
